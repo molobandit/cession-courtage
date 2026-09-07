@@ -72,6 +72,7 @@ enum ListingStatus {
   DRAFT
   PUBLISHED
   OFFERS_OPEN
+  OFFERS_CLOSED
   UNDER_NEGOTIATION
   SOLD
   WITHDRAWN
@@ -205,7 +206,8 @@ model User {
   offers                  Offer[]
   dealsAsSeller           Deal[]              @relation("DealSeller")
   dealsAsBuyer            Deal[]              @relation("DealBuyer")
-  messages                Message[]
+  messages                Message[]           @relation("MessageSender")
+  messagesReceived        Message[]           @relation("MessageRecipient")
   documentsUploaded       Document[]
   notifications           Notification[]
   subscriptions           Subscription[]
@@ -547,20 +549,23 @@ model RetentionReport {
 }
 
 model Message {
-  id        String   @id @default(cuid())
-  dealId    String?
-  listingId String?
-  senderId  String
-  body      String   @db.Text
-  createdAt DateTime @default(now())
+  id          String   @id @default(cuid())
+  dealId      String?
+  listingId   String?
+  senderId    String
+  recipientId String?
+  body        String   @db.Text
+  createdAt   DateTime @default(now())
 
-  deal    Deal?    @relation(fields: [dealId], references: [id], onDelete: Cascade)
-  listing Listing? @relation(fields: [listingId], references: [id], onDelete: Cascade)
-  sender  User     @relation(fields: [senderId], references: [id], onDelete: Restrict)
+  deal      Deal?    @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  listing   Listing? @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  sender    User     @relation("MessageSender", fields: [senderId], references: [id], onDelete: Restrict)
+  recipient User?    @relation("MessageRecipient", fields: [recipientId], references: [id], onDelete: SetNull)
 
   @@index([dealId, createdAt])
   @@index([listingId, createdAt])
   @@index([senderId])
+  @@index([recipientId])
 }
 
 // ---------------------------------------------------------------------------

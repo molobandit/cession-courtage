@@ -1359,7 +1359,7 @@ async function main() {
       { dealId: "deal_dataroom", senderId: "user_seller_07", body: "L'accord de confidentialité est signé. La salle de données contient la répartition par compagnie (aucune donnée nominative).", createdAt: daysAgo(12) },
       { dealId: "deal_dataroom", senderId: "user_buyer_06", body: "Merci. Nous examinons le fichier de répartition et reviendrons avec nos questions de due diligence.", createdAt: daysAgo(11) },
       { dealId: "deal_loi", senderId: "user_buyer_04", body: "Lettre d'intention déposée. Nous proposons un rendez-vous pour caler le calendrier de transfert des codes de production.", createdAt: daysAgo(6) },
-      { listingId: "lst_05", senderId: "user_seller_05", body: "La fenêtre d'offres est close. Nous comparons les propositions reçues et reviendrons vers les acquéreurs retenus.", createdAt: daysAgo(1) },
+      { listingId: "lst_05", senderId: "user_seller_05", recipientId: "user_buyer_01", body: "La fenêtre d'offres est close. Nous comparons les propositions reçues et reviendrons vers les acquéreurs retenus.", createdAt: daysAgo(1) },
     ],
   });
 

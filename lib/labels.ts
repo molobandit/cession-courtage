@@ -46,6 +46,7 @@ export const LISTING_STATUS_LABELS: Record<ListingStatus, string> = {
   DRAFT: "Brouillon",
   PUBLISHED: "Publiée",
   OFFERS_OPEN: "Offres ouvertes",
+  OFFERS_CLOSED: "Fenêtre close",
   UNDER_NEGOTIATION: "En négociation",
   SOLD: "Cédée",
   WITHDRAWN: "Retirée",
