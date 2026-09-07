@@ -68,6 +68,15 @@ npx tsx scripts/verify-import.ts
 
 Vitest : `lib/valuation/compute.test.ts` (cascade + facteurs), `lib/matching/score.test.ts`, `lib/retention/adjust.test.ts`, `lib/authz/policies.test.ts`.
 
+## En ligne
+
+- **GitHub** : https://github.com/molobandit/cession-courtage
+- **Cloudflare Workers** : https://cession-courtage.molobandit.workers.dev
+
+Déploiement : `npm run deploy` (OpenNext + Wrangler). Secrets Cloudflare : `DATABASE_URL`, `AUTH_SECRET`, `AUTH_URL`.
+
+La base Prisma Postgres de démo expire en 24 h tant qu'elle n'est pas réclamée (URL de claim affichée au provisionnement).
+
 ## Hors périmètre
 
-Pas de Stripe, pas de Playwright, pas d'e-mail SMTP, pas de déploiement (ni GitHub Pages, ni Cloudflare) dans ce dépôt tant que ce n'est pas demandé explicitement hors brief.
+Pas de Stripe. Pas de Playwright. Pas d'e-mail SMTP.

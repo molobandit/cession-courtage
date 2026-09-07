@@ -43,6 +43,16 @@ uploads/**
 # vercel
 .vercel
 
+# cloudflare / opennext
+.open-next
+.wrangler
+.dev.vars
+.deploy.env
+.deploy.auth_secret
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+.deploy.auth_secret
+.deploy.database_url
