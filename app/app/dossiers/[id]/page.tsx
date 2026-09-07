@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import {
-  AdvanceStageButton,
+  ConfirmSignatureButton,
+  ConfirmTransferButton,
   DataRoomUpload,
   EscrowButtons,
   KycButton,
@@ -9,8 +10,10 @@ import {
   MessageForm,
   NdaButton,
   SignDocButton,
+  SignLoiButton,
+  ValidateDeedButton,
 } from "@/components/deal/deal-forms";
-import { findMyDeal, getActor, isOriasVerified } from "@/lib/authz";
+import { counterpartyDisplayName, findMyDeal, getActor, isOriasVerified } from "@/lib/authz";
 import { formatDate, formatEuro } from "@/lib/format/fr";
 import { DEAL_STAGE_LABELS, DEAL_STAGE_ORDER, ESCROW_STAGE_LABELS } from "@/lib/labels";
 import { isStageAtLeast } from "@/lib/authz/policies";
@@ -26,8 +29,7 @@ export default async function DealPage({ params }: { params: Promise<{ id: strin
   if (!deal) notFound();
 
   const counterparty = deal.sellerId === actor.id ? deal.buyer : deal.seller;
-  const counterpartyLabel =
-    counterparty.kind === "alias" ? counterparty.label : counterparty.fullName ?? counterparty.email;
+  const counterpartyLabel = counterpartyDisplayName(counterparty);
   const isSeller = deal.sellerId === actor.id;
   const roomOpen = isStageAtLeast(deal.stage, "DATA_ROOM");
 
@@ -76,9 +78,7 @@ export default async function DealPage({ params }: { params: Promise<{ id: strin
 
       <section className="mt-6 space-y-3">
         {deal.stage === "NDA" ? <NdaButton dealId={deal.id} /> : null}
-        {deal.stage === "DATA_ROOM" || deal.stage === "LOI" ? (
-          <AdvanceStageButton dealId={deal.id} label="Passer à l'étape suivante" />
-        ) : null}
+        {deal.stage === "DATA_ROOM" ? <SignLoiButton dealId={deal.id} /> : null}
         {deal.stage === "KYC" || deal.stage === "LOI" ? <KycButton dealId={deal.id} /> : null}
         {deal.stage === "ESCROW" || deal.escrowStage !== "NONE" ? (
           <div>
@@ -89,9 +89,9 @@ export default async function DealPage({ params }: { params: Promise<{ id: strin
             <EscrowButtons dealId={deal.id} />
           </div>
         ) : null}
-        {deal.stage === "DEED" || deal.stage === "SIGNATURE" || deal.stage === "TRANSFER" ? (
-          <AdvanceStageButton dealId={deal.id} label="Valider l'étape (mock)" />
-        ) : null}
+        {deal.stage === "DEED" ? <ValidateDeedButton dealId={deal.id} /> : null}
+        {deal.stage === "SIGNATURE" ? <ConfirmSignatureButton dealId={deal.id} /> : null}
+        {deal.stage === "TRANSFER" ? <ConfirmTransferButton dealId={deal.id} /> : null}
         {deal.stage === "RETENTION" || deal.stage === "CLOSED" ? (
           <p className="text-sm">
             <Link href={`/app/dossiers/${deal.id}/retention`} className="underline-offset-2 hover:underline">

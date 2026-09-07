@@ -34,6 +34,17 @@ export function identitiesRevealed(stage: DealStage): boolean {
   return isStageAtLeast(stage, "LOI");
 }
 
+export function hasOfferWindowExpired(listing: {
+  status: ListingStatus;
+  offerWindowClosesAt: Date | null;
+  now?: Date;
+}): boolean {
+  const now = listing.now ?? new Date();
+  if (listing.status !== "OFFERS_OPEN") return false;
+  if (!listing.offerWindowClosesAt) return false;
+  return listing.offerWindowClosesAt.getTime() <= now.getTime();
+}
+
 /**
  * Sealed-offer rule (query-level, not display-only):
  * while the window is open, nobody sees other buyers' offers,
@@ -44,10 +55,44 @@ export function isOfferWindowSealed(listing: {
   offerWindowClosesAt: Date | null;
   now?: Date;
 }): boolean {
-  const now = listing.now ?? new Date();
   if (listing.status !== "OFFERS_OPEN") return false;
-  if (!listing.offerWindowClosesAt) return true;
-  return listing.offerWindowClosesAt.getTime() > now.getTime();
+  if (hasOfferWindowExpired(listing)) return false;
+  return true;
+}
+
+export function isPublicListingStatus(status: ListingStatus): boolean {
+  return (
+    status === "PUBLISHED" ||
+    status === "OFFERS_OPEN" ||
+    status === "OFFERS_CLOSED" ||
+    status === "UNDER_NEGOTIATION"
+  );
+}
+
+/** Published (or owner). Never use this to leak existence via 403 — return 404 instead. */
+export function canViewListing(
+  actor: Actor | null,
+  listing: { status: ListingStatus; portfolio: { firmId: string } },
+): boolean {
+  if (isPublicListingStatus(listing.status)) return true;
+  return Boolean(actor && ownsFirm(actor, listing.portfolio.firmId));
+}
+
+export function canManageListing(
+  actor: Actor,
+  listing: { portfolio: { firmId: string } },
+): boolean {
+  return ownsFirm(actor, listing.portfolio.firmId);
+}
+
+export function isListingMessageParty(input: {
+  actorFirmId: string | null;
+  listingFirmId: string;
+  hasOffer: boolean;
+  hasDeal: boolean;
+}): boolean {
+  if (input.actorFirmId && input.actorFirmId === input.listingFirmId) return true;
+  return input.hasOffer || input.hasDeal;
 }
 
 export type OfferAccess = "none" | "own" | "full" | "sealed";
@@ -58,6 +103,7 @@ export function offerAccessFor(
     status: ListingStatus;
     offerWindowClosesAt: Date | null;
     portfolio: { firmId: string };
+    now?: Date;
   },
 ): OfferAccess {
   const seller = ownsFirm(actor, listing.portfolio.firmId);

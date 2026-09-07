@@ -2,12 +2,20 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { MessageForm } from "@/components/deal/deal-forms";
 import { SubmitOfferForm } from "@/components/offer/offer-forms";
-import { canBuy, getActor, getPublicListing, isOriasVerified, listOffersForListing } from "@/lib/authz";
+import {
+  canBuy,
+  getActor,
+  getListingByPublicNumber,
+  isListingMailboxParty,
+  isOriasVerified,
+  listListingMailboxRecipients,
+  listListingMessages,
+  listOffersForListing,
+} from "@/lib/authz";
 import { isOfferWindowSealed, ownsFirm } from "@/lib/authz/policies";
 import { formatEuro, formatPercent } from "@/lib/format/fr";
 import { LISTING_STATUS_LABELS, RISK_TYPE_LABELS } from "@/lib/labels";
 import { profileFromLinesWithClients } from "@/lib/listing/profile";
-import { prisma } from "@/lib/prisma";
 
 export const metadata = { title: "Dossier" };
 
@@ -19,7 +27,8 @@ export default async function PublicListingPage({
   const { numero } = await params;
   const publicNumber = Number(numero);
   if (!Number.isFinite(publicNumber)) notFound();
-  const listing = await getPublicListing(publicNumber);
+  const actor = await getActor();
+  const listing = await getListingByPublicNumber(publicNumber, actor);
   if (!listing) notFound();
 
   let sourceLines = listing.portfolio.contractLines;
@@ -34,7 +43,6 @@ export default async function PublicListingPage({
     })),
   );
 
-  const actor = await getActor();
   const verified = actor ? isOriasVerified(actor) : false;
   const isSeller = Boolean(actor && ownsFirm(actor, listing.portfolio.firmId));
   const sealed = isOfferWindowSealed(listing);
@@ -46,12 +54,9 @@ export default async function PublicListingPage({
     if (result?.access === "own") ownOffer = result.offers[0] ?? null;
   }
 
-  const messages = await prisma.message.findMany({
-    where: { listingId: listing.id },
-    orderBy: { createdAt: "asc" },
-    include: { sender: { select: { publicAlias: true } } },
-    take: 50,
-  });
+  const mailboxOk = Boolean(actor && verified && (await isListingMailboxParty(actor, listing.id)));
+  const messages = mailboxOk && actor ? await listListingMessages(listing.id, actor) : [];
+  const recipients = mailboxOk && actor && isSeller ? await listListingMailboxRecipients(listing.id, actor) : [];
 
   return (
     <main className="mx-auto max-w-4xl px-4 py-6">
@@ -132,9 +137,10 @@ export default async function PublicListingPage({
         </p>
       ) : null}
 
-      {verified ? (
+      {mailboxOk && actor ? (
         <section className="mt-8">
           <h2 className="font-serif text-lg text-navy">Messages</h2>
+          <p className="text-xs text-muted">Fil réservé au cédant et aux acquéreurs ayant déposé une offre.</p>
           <ul className="mt-2 space-y-2 text-sm">
             {messages.map((m) => (
               <li key={m.id} className="border border-line bg-paper p-2">
@@ -144,7 +150,7 @@ export default async function PublicListingPage({
             ))}
           </ul>
           <div className="mt-3">
-            <MessageForm listingId={listing.id} />
+            <MessageForm listingId={listing.id} recipients={isSeller ? recipients : undefined} />
           </div>
         </section>
       ) : null}

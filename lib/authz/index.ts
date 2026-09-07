@@ -19,8 +19,26 @@ export {
 export { listMyPortfolios, getMyPortfolio, findMyPortfolio, listMyListings } from "@/lib/authz/portfolios";
 export { listMyImports, findMyImport, getMyImport, ensureSellerFirm } from "@/lib/authz/imports";
 export { listMyOffers, listOffersForListing } from "@/lib/authz/offers";
-export { listMyDeals, getMyDeal, findMyDeal } from "@/lib/authz/deals";
+export { listMyDeals, getMyDeal, findMyDeal, counterpartyDisplayName } from "@/lib/authz/deals";
 export { listMyMandates, getMyMandate } from "@/lib/authz/mandates";
 export { listPendingOriasUsers, verifyOrias, rejectOrias } from "@/lib/authz/admin";
-export { listPublicListings, getPublicListing, findMyListing, listBuyerMatches } from "@/lib/authz/listings";
-export { offerAccessFor, isOfferWindowSealed, identitiesRevealed } from "@/lib/authz/policies";
+export {
+  listPublicListings,
+  getPublicListing,
+  getListingByPublicNumber,
+  findMyListing,
+  listBuyerMatches,
+  closeExpiredOfferWindows,
+} from "@/lib/authz/listings";
+export {
+  listListingMessages,
+  listListingMailboxRecipients,
+  isListingMailboxParty,
+} from "@/lib/authz/messages";
+export {
+  offerAccessFor,
+  isOfferWindowSealed,
+  identitiesRevealed,
+  canViewListing,
+  canManageListing,
+} from "@/lib/authz/policies";

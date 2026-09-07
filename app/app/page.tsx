@@ -2,6 +2,7 @@ import Link from "next/link";
 import {
   canBuy,
   canSell,
+  counterpartyDisplayName,
   getActor,
   isOriasVerified,
   listMyDeals,
@@ -216,13 +217,9 @@ export default async function MemberHomePage() {
                 </tr>
               ) : (
                 deals.map((d) => {
-                  const counterparty = d.seller.kind === "identified" && d.seller.id === actor.id
-                    ? d.buyer
-                    : d.seller;
-                  const label =
-                    counterparty.kind === "alias"
-                      ? counterparty.label
-                      : counterparty.fullName ?? counterparty.email;
+                  const counterparty =
+                    d.seller.kind === "identified" && d.seller.id === actor.id ? d.buyer : d.seller;
+                  const label = counterpartyDisplayName(counterparty);
                   return (
                     <tr key={d.id} className="border-t border-line">
                       <td className="px-2 py-1.5">

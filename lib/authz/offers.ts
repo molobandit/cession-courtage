@@ -2,6 +2,7 @@ import "server-only";
 import { prisma } from "@/lib/prisma";
 import { requireOriasVerified, type Actor } from "@/lib/authz/actor";
 import { ForbiddenError } from "@/lib/authz/errors";
+import { closeExpiredOfferWindows } from "@/lib/authz/listings";
 import { offerAccessFor } from "@/lib/authz/policies";
 
 export async function listMyOffers(actor?: Actor) {
@@ -35,6 +36,7 @@ export async function listMyOffers(actor?: Actor) {
  */
 export async function listOffersForListing(listingId: string, actor?: Actor) {
   const user = actor ?? (await requireOriasVerified());
+  await closeExpiredOfferWindows();
   const listing = await prisma.listing.findUnique({
     where: { id: listingId },
     select: {

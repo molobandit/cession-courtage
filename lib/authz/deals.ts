@@ -84,9 +84,18 @@ function presentParty(
   return {
     kind: "alias" as const,
     label: side === "buyer" ? deal.buyerAlias : deal.sellerAlias,
-    publicAlias: party.publicAlias,
-    id: party.id,
   };
+}
+
+export function counterpartyDisplayName(party: {
+  kind: "alias" | "identified";
+  label?: string;
+  firmName?: string | null;
+  fullName?: string | null;
+  email?: string;
+}): string {
+  if (party.kind === "alias") return party.label ?? "Contrepartie";
+  return party.firmName ?? party.fullName ?? party.email ?? "Contrepartie";
 }
 
 function presentDeal(

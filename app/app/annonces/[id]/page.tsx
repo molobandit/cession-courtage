@@ -2,11 +2,18 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { OpenOffersButton, PublishListingButton, WithdrawListingButton } from "@/components/listing/listing-forms";
 import { MessageForm } from "@/components/deal/deal-forms";
-import { canSell, findMyListing, getActor, isOriasVerified, listOffersForListing } from "@/lib/authz";
+import {
+  canSell,
+  findMyListing,
+  getActor,
+  isOriasVerified,
+  listListingMailboxRecipients,
+  listListingMessages,
+  listOffersForListing,
+} from "@/lib/authz";
 import { isOfferWindowSealed } from "@/lib/authz/policies";
 import { formatDate, formatEuro } from "@/lib/format/fr";
 import { LISTING_STATUS_LABELS, OFFER_STATUS_LABELS } from "@/lib/labels";
-import { prisma } from "@/lib/prisma";
 import { AcceptOfferButton } from "@/components/offer/offer-forms";
 
 export const metadata = { title: "Annonce" };
@@ -22,11 +29,8 @@ export default async function SellerListingPage({ params }: { params: Promise<{ 
 
   const sealed = isOfferWindowSealed(listing);
   const offers = await listOffersForListing(id, actor);
-  const messages = await prisma.message.findMany({
-    where: { listingId: id },
-    orderBy: { createdAt: "asc" },
-    include: { sender: { select: { publicAlias: true } } },
-  });
+  const messages = await listListingMessages(id, actor);
+  const recipients = await listListingMailboxRecipients(id, actor);
 
   return (
     <main className="mx-auto max-w-4xl px-4 py-6">
@@ -111,7 +115,7 @@ export default async function SellerListingPage({ params }: { params: Promise<{ 
           ))}
         </ul>
         <div className="mt-3">
-          <MessageForm listingId={listing.id} />
+          <MessageForm listingId={listing.id} recipients={recipients} />
         </div>
       </section>
     </main>

@@ -3,14 +3,17 @@
 import { useActionState } from "react";
 import {
   acceptNdaAction,
-  advanceDealStageAction,
+  confirmSignatureAction,
+  confirmTransferAction,
   mockEscrowAction,
   mockKycAction,
   mockSignDealDocAction,
   recordDataRoomViewAction,
   sendDealMessageAction,
   sendListingMessageAction,
+  signLoiAction,
   uploadDataRoomFileAction,
+  validateDeedAction,
   type DealFormState,
 } from "@/app/actions/deals";
 import { submitRetentionReportAction, type RetentionFormState } from "@/app/actions/retention";
@@ -33,10 +36,18 @@ export function NdaButton({ dealId }: { dealId: string }) {
   );
 }
 
-export function AdvanceStageButton({ dealId, label }: { dealId: string; label: string }) {
-  const [state, action, pending] = useActionState(advanceDealStageAction, initial);
+function StageActionButton({
+  dealId,
+  action,
+  label,
+}: {
+  dealId: string;
+  action: (prev: DealFormState, formData: FormData) => Promise<DealFormState>;
+  label: string;
+}) {
+  const [state, formAction, pending] = useActionState(action, initial);
   return (
-    <form action={action}>
+    <form action={formAction}>
       <input type="hidden" name="dealId" value={dealId} />
       <Button type="submit" variant="outline" size="sm" disabled={pending}>
         {pending ? "…" : label}
@@ -44,6 +55,22 @@ export function AdvanceStageButton({ dealId, label }: { dealId: string; label: s
       {state.error ? <p className="mt-1 text-xs text-danger">{state.error}</p> : null}
     </form>
   );
+}
+
+export function SignLoiButton({ dealId }: { dealId: string }) {
+  return <StageActionButton dealId={dealId} action={signLoiAction} label="Signer la lettre d'intention (mock)" />;
+}
+
+export function ValidateDeedButton({ dealId }: { dealId: string }) {
+  return <StageActionButton dealId={dealId} action={validateDeedAction} label="Valider le protocole (mock)" />;
+}
+
+export function ConfirmSignatureButton({ dealId }: { dealId: string }) {
+  return <StageActionButton dealId={dealId} action={confirmSignatureAction} label="Confirmer la signature (mock)" />;
+}
+
+export function ConfirmTransferButton({ dealId }: { dealId: string }) {
+  return <StageActionButton dealId={dealId} action={confirmTransferAction} label="Confirmer le transfert ORIAS (mock)" />;
 }
 
 export function KycButton({ dealId }: { dealId: string }) {
@@ -133,9 +160,11 @@ export function DataRoomUpload({ dealId }: { dealId: string }) {
 export function MessageForm({
   dealId,
   listingId,
+  recipients,
 }: {
   dealId?: string;
   listingId?: string;
+  recipients?: { id: string; publicAlias: string }[];
 }) {
   const action = dealId ? sendDealMessageAction : sendListingMessageAction;
   const [state, formAction, pending] = useActionState(action, initial);
@@ -143,6 +172,20 @@ export function MessageForm({
     <form action={formAction} className="grid gap-2">
       {dealId ? <input type="hidden" name="dealId" value={dealId} /> : null}
       {listingId ? <input type="hidden" name="listingId" value={listingId} /> : null}
+      {recipients && recipients.length > 0 ? (
+        <select
+          name="recipientId"
+          className="flex h-9 rounded-sm border border-line bg-paper px-2.5 text-sm"
+          defaultValue=""
+        >
+          <option value="">Tous les acquéreurs ayant offert</option>
+          {recipients.map((r) => (
+            <option key={r.id} value={r.id}>
+              #{r.publicAlias}
+            </option>
+          ))}
+        </select>
+      ) : null}
       <textarea
         name="body"
         required
