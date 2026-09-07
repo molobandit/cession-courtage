@@ -1,0 +1,42 @@
+@import "tailwindcss";
+
+:root {
+  --navy: #0b1f3a;
+  --navy-muted: #163354;
+  --cream: #f4f1ea;
+  --paper: #fbfaf7;
+  --ink: #1c1917;
+  --muted: #5c574e;
+  --line: #ddd6c8;
+  --copper: #b4532a;
+  --ok: #1f6b4a;
+  --danger: #9b1c1c;
+}
+
+@theme inline {
+  --color-navy: var(--navy);
+  --color-navy-muted: var(--navy-muted);
+  --color-cream: var(--cream);
+  --color-paper: var(--paper);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-copper: var(--copper);
+  --color-ok: var(--ok);
+  --color-danger: var(--danger);
+  --font-sans: var(--font-ibm-plex-sans);
+  --font-serif: var(--font-source-serif);
+}
+
+html,
+body {
+  background: var(--cream);
+  color: var(--ink);
+  font-family: var(--font-sans), "Segoe UI", sans-serif;
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+a {
+  color: inherit;
+}
