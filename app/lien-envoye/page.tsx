@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { findLatestDemoLink } from "@/lib/integrations/mailer";
 
 export const metadata = { title: "Lien envoyé" };
@@ -29,6 +30,11 @@ export default async function LinkSentPage({
           </a>
         </div>
       ) : null}
+      <p className="mt-6 text-sm">
+        <Link href="/boite-demo" className="underline-offset-2 hover:underline">
+          Ouvrir la boîte démo
+        </Link>
+      </p>
     </main>
   );
 }
