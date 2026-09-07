@@ -7,8 +7,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider = "sqlite"
+  url      = "file:./prisma/dev.db"
 }
 
 // ---------------------------------------------------------------------------
@@ -233,7 +233,7 @@ model Firm {
   region            String
   foundedAt         DateTime?
   headcount         Int?
-  annualRevenue     Decimal?         @db.Decimal(14, 2)
+  annualRevenue     Decimal?
   distributionMode  DistributionMode
   complianceScore   Int
   createdAt         DateTime         @default(now())
@@ -255,9 +255,9 @@ model Portfolio {
   label              String
   contractCount      Int
   clientCount        Int
-  annualCommissions  Decimal  @db.Decimal(14, 2)
+  annualCommissions  Decimal
   averageAgeMonths   Int
-  churnRate12m       Decimal  @db.Decimal(5, 4)
+  churnRate12m       Decimal
   importedAt         DateTime @default(now())
   sourceFileName     String?
 
@@ -279,9 +279,9 @@ model ContractLine {
   portfolioId      String
   carrier          String
   riskType         RiskType
-  premium          Decimal        @db.Decimal(14, 2)
-  commissionRate   Decimal        @db.Decimal(6, 4)
-  annualCommission Decimal        @db.Decimal(14, 2)
+  premium          Decimal
+  commissionRate   Decimal
+  annualCommission Decimal
   effectiveDate    DateTime
   renewalDate      DateTime
   clientSegment    ClientSegment
@@ -332,7 +332,7 @@ model PortfolioImport {
 model ValuationMultiple {
   id          String   @id @default(cuid())
   riskType    RiskType @unique
-  multiple    Decimal  @db.Decimal(4, 2)
+  multiple    Decimal
   updatedAt   DateTime @updatedAt
   updatedById String?
 
@@ -343,10 +343,10 @@ model Valuation {
   id               String   @id @default(cuid())
   portfolioId      String
   computedAt       DateTime @default(now())
-  grossValue       Decimal  @db.Decimal(14, 2)
-  lowValue         Decimal  @db.Decimal(14, 2)
-  midValue         Decimal  @db.Decimal(14, 2)
-  highValue        Decimal  @db.Decimal(14, 2)
+  grossValue       Decimal
+  lowValue         Decimal
+  midValue         Decimal
+  highValue        Decimal
   qualityScore     Int
   breakdown        Json
   algorithmVersion String
@@ -368,7 +368,7 @@ model Valuation {
 model Listing {
   id                   String        @id @default(cuid())
   portfolioId          String
-  askingPrice          Decimal       @db.Decimal(14, 2)
+  askingPrice          Decimal
   displayedZone        String
   status               ListingStatus @default(DRAFT)
   isPartial            Boolean       @default(false)
@@ -376,14 +376,16 @@ model Listing {
   offerWindowClosesAt  DateTime?
 
   /// Public anonymous reference shown like Assurdeal "Dossier #10261".
-  publicNumber Int @unique @default(autoincrement())
+  /// Assigned in application code (SQLite/D1 cannot autoincrement a non-PK).
+  publicNumber Int @unique
 
   /// Seller accompaniment in months: 0 / 3 / 6+. Valuation factor.
   sellerSupportMonths Int @default(0)
 
   /// Denormalised at publish time so matching does not scan every contract line.
-  departments   String[] @default([])
-  regions       String[] @default([])
+  /// JSON string[] — SQLite/D1 does not support native arrays.
+  departments   Json @default("[]")
+  regions       Json @default("[]")
   isNationwide  Boolean  @default(false)
 
   createdAt DateTime @default(now())
@@ -416,14 +418,15 @@ model ListingLine {
 model BuyerMandate {
   id             String         @id @default(cuid())
   buyerId        String
-  maxBudget      Decimal        @db.Decimal(14, 2)
-  minCommissions Decimal        @db.Decimal(14, 2)
-  maxCommissions Decimal        @db.Decimal(14, 2)
-  riskTypes      RiskType[]
-  carriers       String[]
+  maxBudget      Decimal
+  minCommissions Decimal
+  maxCommissions Decimal
+  /// JSON RiskType[] / string[] / ClientSegment[] — SQLite/D1 has no native arrays.
+  riskTypes      Json
+  carriers       Json
   /// "NATIONAL" | region code (e.g. "IDF") | department code (e.g. "75")
-  zones          String[]
-  clientSegments ClientSegment[]
+  zones          Json
+  clientSegments Json
   financingMode  FinancingMode
   alertsEnabled  Boolean        @default(true)
   createdAt      DateTime       @default(now())
@@ -458,9 +461,9 @@ model Offer {
   id             String      @id @default(cuid())
   listingId      String
   buyerId        String
-  amount         Decimal     @db.Decimal(14, 2)
-  upfrontPercent Decimal     @db.Decimal(5, 2)
-  message        String      @db.Text
+  amount         Decimal
+  upfrontPercent Decimal
+  message        String
   status         OfferStatus @default(SUBMITTED)
   submittedAt    DateTime    @default(now())
 
@@ -481,9 +484,9 @@ model Deal {
   listingId     String
   sellerId      String
   buyerId       String
-  agreedPrice   Decimal   @db.Decimal(14, 2)
-  upfrontAmount Decimal   @db.Decimal(14, 2)
-  deferredAmount Decimal  @db.Decimal(14, 2)
+  agreedPrice   Decimal
+  upfrontAmount Decimal
+  deferredAmount Decimal
   stage         DealStage
   createdAt     DateTime  @default(now())
 
@@ -493,9 +496,8 @@ model Deal {
 
   ndaAcceptedAt            DateTime?
   /// Recalculated after retention reports: deferred × (rate / 0.90), clamped 50–100%.
-  adjustedDeferredAmount   Decimal?  @db.Decimal(14, 2)
-  retentionTargetRate      Decimal   @default(0.90) @db.Decimal(4, 2)
-
+  adjustedDeferredAmount   Decimal?
+  retentionTargetRate      Decimal   @default(0.90)
   escrowStage       EscrowStage @default(NONE)
   escrowProviderRef String?
 
@@ -539,8 +541,8 @@ model RetentionReport {
   monthIndex           Int
   contractsRetained    Int
   contractsTransferred Int
-  actualCommissions    Decimal  @db.Decimal(14, 2)
-  retentionRate        Decimal  @db.Decimal(5, 4)
+  actualCommissions    Decimal
+  retentionRate        Decimal
   reportedAt           DateTime @default(now())
 
   deal Deal @relation(fields: [dealId], references: [id], onDelete: Cascade)
@@ -554,7 +556,7 @@ model Message {
   listingId   String?
   senderId    String
   recipientId String?
-  body        String   @db.Text
+  body        String
   createdAt   DateTime @default(now())
 
   deal      Deal?    @relation(fields: [dealId], references: [id], onDelete: Cascade)
@@ -576,7 +578,7 @@ model Subscription {
   id         String             @id @default(cuid())
   userId     String
   plan       SubscriptionPlan
-  feeRate    Decimal            @db.Decimal(5, 4)
+  feeRate    Decimal
   /// null = unlimited (GROWTH)
   dealQuota  Int?
   dealsUsed  Int                @default(0)
@@ -593,7 +595,7 @@ model Notification {
   userId    String
   type      NotificationType
   title     String
-  body      String           @db.Text
+  body      String
   href      String?
   readAt    DateTime?
   matchId   String?          @unique
@@ -657,7 +659,7 @@ model OutboundEmail {
   id        String   @id @default(cuid())
   to        String
   subject   String
-  bodyText  String   @db.Text
+  bodyText  String
   purpose   String
   createdAt DateTime @default(now())
 

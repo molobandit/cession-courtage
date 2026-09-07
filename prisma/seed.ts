@@ -36,7 +36,23 @@ import {
 import { ALGORITHM_VERSION } from "../lib/valuation/types";
 import { adjustedDeferredAmount } from "../lib/retention/adjust";
 
-const prisma = new PrismaClient();
+let prisma: PrismaClient;
+let disposePlatform: (() => Promise<void>) | undefined;
+
+async function createPrismaClient(): Promise<PrismaClient> {
+  if (process.env.SEED_D1 === "1") {
+    const { getPlatformProxy } = await import("wrangler");
+    const { PrismaD1 } = await import("@prisma/adapter-d1");
+    type D1 = ConstructorParameters<typeof PrismaD1>[0];
+    const proxy = await getPlatformProxy<{ DB: D1 }>();
+    disposePlatform = proxy.dispose;
+    if (!proxy.env.DB) {
+      throw new Error("Binding D1 DB manquant (wrangler.jsonc).");
+    }
+    return new PrismaClient({ adapter: new PrismaD1(proxy.env.DB) });
+  }
+  return new PrismaClient();
+}
 
 const DEMO_PASSWORD = "Demo2026!";
 const NOW = new Date("2026-09-07T10:00:00.000Z");
@@ -750,6 +766,7 @@ function saveValuation(
 }
 
 async function main() {
+  prisma = await createPrismaClient();
   console.info("Seeding cession-courtage demo data…");
   const passwordHash = await bcrypt.hash(DEMO_PASSWORD, 10);
 
@@ -778,10 +795,6 @@ async function main() {
     prisma.user.deleteMany(),
     prisma.firm.deleteMany(),
   ]);
-
-  await prisma.$executeRawUnsafe(
-    `ALTER SEQUENCE IF EXISTS "Listing_publicNumber_seq" RESTART WITH 10001`,
-  );
 
   for (const [riskType, multiple] of Object.entries({
     HEALTH_INDIVIDUAL: 3.1,
@@ -1018,7 +1031,7 @@ async function main() {
       clientKey: l.clientKey,
       department: l.department,
     }));
-    const chunk = 400;
+    const chunk = 6;
     for (let i = 0; i < payload.length; i += chunk) {
       await prisma.contractLine.createMany({ data: payload.slice(i, i + chunk) });
     }
@@ -1077,6 +1090,7 @@ async function main() {
     const departments = [...new Set(lines.map((l) => l.department))];
     const regions = departments.map((d) => GEO_ZONES.find((g) => g.department === d)?.regionCode ?? d);
     const zone = displayedZoneFor(departments, regions);
+    const listingOrdinal = Number.parseInt(def.id.replace("lst_", ""), 10);
 
     await prisma.listing.create({
       data: {
@@ -1089,6 +1103,7 @@ async function main() {
         publishedAt: def.publishedAt,
         offerWindowClosesAt: def.offerWindowClosesAt,
         sellerSupportMonths: def.sellerSupportMonths,
+        publicNumber: 10_000 + listingOrdinal,
         departments,
         regions: [...new Set(regions)],
         isNationwide: zone.isNationwide,
@@ -1401,5 +1416,6 @@ main()
     process.exit(1);
   })
   .finally(async () => {
-    await prisma.$disconnect();
+    await prisma?.$disconnect();
+    await disposePlatform?.();
   });

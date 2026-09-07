@@ -11,6 +11,7 @@ import { rematchListing } from "@/lib/matching/run";
 import { prisma } from "@/lib/prisma";
 import { parseFrenchNumber } from "@/lib/import/values";
 import { ASKING_MAX, ASKING_MIN, OFFER_WINDOW_DAYS } from "@/lib/listing/constants";
+import { nextListingPublicNumber } from "@/lib/listing/next-public-number";
 import { valuePortfolio } from "@/lib/valuation/run";
 
 export type ListingFormState = { error?: string };
@@ -61,6 +62,7 @@ export async function createListingAction(
         displayedZone: zone.displayedZone,
         status: ListingStatus.DRAFT,
         sellerSupportMonths,
+        publicNumber: await nextListingPublicNumber(),
         departments,
         regions: zone.regionCodes,
         isNationwide: zone.isNationwide,

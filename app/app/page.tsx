@@ -12,6 +12,7 @@ import {
   listMyPortfolios,
 } from "@/lib/authz";
 import { formatDate, formatEuro } from "@/lib/format/fr";
+import { asStringArray } from "@/lib/json-array";
 import { DEAL_STAGE_LABELS, LISTING_STATUS_LABELS, OFFER_STATUS_LABELS } from "@/lib/labels";
 import { redirect } from "next/navigation";
 
@@ -147,7 +148,7 @@ export default async function MemberHomePage() {
                       <td className="px-2 py-1.5 tabular-nums">{formatEuro(m.maxBudget)}</td>
                       <td className="px-2 py-1.5 text-right tabular-nums">{formatEuro(m.minCommissions)}</td>
                       <td className="px-2 py-1.5 text-right tabular-nums">{formatEuro(m.maxCommissions)}</td>
-                      <td className="px-2 py-1.5">{m.zones.join(", ")}</td>
+                      <td className="px-2 py-1.5">{asStringArray(m.zones).join(", ")}</td>
                       <td className="px-2 py-1.5 text-right tabular-nums">{m._count.matches}</td>
                     </tr>
                   ))

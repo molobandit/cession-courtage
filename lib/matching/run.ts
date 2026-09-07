@@ -1,7 +1,8 @@
 import "server-only";
-import { MatchStatus, NotificationType } from "@prisma/client";
+import { MatchStatus, NotificationType, type ClientSegment, type RiskType } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { displayedZoneFor } from "@/lib/geo";
+import { asStringArray } from "@/lib/json-array";
 import { profileFromLinesWithClients } from "@/lib/listing/profile";
 import { scoreListingAgainstMandate } from "@/lib/matching/score";
 import { sendMail } from "@/lib/integrations/mailer";
@@ -41,13 +42,14 @@ export async function loadListingMatchInput(listingId: string) {
       annualCommission: Number(l.annualCommission),
     })),
   );
-  const zone = displayedZoneFor(listing.departments.length ? listing.departments : profile.departments);
+  const listingDepartments = asStringArray(listing.departments);
+  const zone = displayedZoneFor(listingDepartments.length ? listingDepartments : profile.departments);
   return {
     listing,
     profile: {
       ...profile,
       askingPrice: Number(listing.askingPrice),
-      regionCodes: listing.regions,
+      regionCodes: asStringArray(listing.regions),
       isNationwide: listing.isNationwide || zone.isNationwide,
     },
   };
@@ -67,10 +69,10 @@ export async function rematchListing(listingId: string): Promise<number> {
       maxBudget: Number(mandate.maxBudget),
       minCommissions: Number(mandate.minCommissions),
       maxCommissions: Number(mandate.maxCommissions),
-      riskTypes: mandate.riskTypes,
-      carriers: mandate.carriers,
-      zones: mandate.zones,
-      clientSegments: mandate.clientSegments,
+      riskTypes: asStringArray(mandate.riskTypes) as RiskType[],
+      carriers: asStringArray(mandate.carriers),
+      zones: asStringArray(mandate.zones),
+      clientSegments: asStringArray(mandate.clientSegments) as ClientSegment[],
     });
     if (result.score < 40) continue;
 
@@ -137,10 +139,10 @@ export async function rematchMandate(mandateId: string): Promise<number> {
       maxBudget: Number(mandate.maxBudget),
       minCommissions: Number(mandate.minCommissions),
       maxCommissions: Number(mandate.maxCommissions),
-      riskTypes: mandate.riskTypes,
-      carriers: mandate.carriers,
-      zones: mandate.zones,
-      clientSegments: mandate.clientSegments,
+      riskTypes: asStringArray(mandate.riskTypes) as RiskType[],
+      carriers: asStringArray(mandate.carriers),
+      zones: asStringArray(mandate.zones),
+      clientSegments: asStringArray(mandate.clientSegments) as ClientSegment[],
     });
     if (result.score < 40) continue;
     const existing = await prisma.match.findUnique({

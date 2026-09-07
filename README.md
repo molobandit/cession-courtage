@@ -5,17 +5,17 @@ Place de marché B2B (France) pour céder ou acquérir un portefeuille de courta
 ## Prérequis
 
 - Node.js 20+
-- Docker (PostgreSQL 16) **ou** une URL `DATABASE_URL` PostgreSQL
 - `AUTH_SECRET` (32 octets)
+
+En local la base est un fichier SQLite (`prisma/dev.db`). En production c'est **Cloudflare D1** (même schéma SQLite, binding `DB`).
 
 ## Démarrage (clone neuf)
 
 ```bash
 cp .env.example .env          # renseigner AUTH_SECRET (et NEXTAUTH_SECRET identique)
-docker compose up -d          # PostgreSQL local : cession / cession / cession_courtage
 npm install
 npx prisma generate
-npx prisma migrate deploy
+npx prisma db push
 npm run db:seed
 npm test
 npm run dev                   # http://localhost:3000
@@ -73,9 +73,9 @@ Vitest : `lib/valuation/compute.test.ts` (cascade + facteurs), `lib/matching/sco
 - **GitHub** : https://github.com/molobandit/cession-courtage
 - **Cloudflare Workers** : https://cession-courtage.molobandit.workers.dev
 
-Déploiement : `npm run deploy` (OpenNext + Wrangler). Secrets Cloudflare : `DATABASE_URL`, `AUTH_SECRET`, `AUTH_URL`.
+Déploiement : `npm run deploy` (OpenNext + Wrangler). Secrets Cloudflare : `AUTH_SECRET`, `AUTH_URL` / `NEXTAUTH_URL`. La base est le binding D1 `DB` (pas de `DATABASE_URL` sur le Worker).
 
-La base Prisma Postgres de démo expire en 24 h tant qu'elle n'est pas réclamée (URL de claim affichée au provisionnement).
+Schéma D1 : `npx wrangler d1 migrations apply cession-courtage --remote` puis, après un seed local, `python3 scripts/dump-sqlite-for-d1.py` et `npx wrangler d1 execute cession-courtage --remote --file=prisma/d1-seed.sql`.
 
 ## Hors périmètre
 

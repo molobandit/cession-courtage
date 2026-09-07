@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { MandateForm } from "@/components/mandate/mandate-form";
 import { canBuy, getActor, isOriasVerified, listMyMandates } from "@/lib/authz";
 import { formatEuro } from "@/lib/format/fr";
+import { asStringArray } from "@/lib/json-array";
 
 export const metadata = { title: "Mandat de recherche" };
 
@@ -34,7 +35,7 @@ export default async function MandatesPage() {
             {mandates.map((m) => (
               <tr key={m.id} className="border-t border-line">
                 <td className="px-2 py-1.5">{formatEuro(m.maxBudget)}</td>
-                <td className="px-2 py-1.5">{m.zones.join(", ")}</td>
+                <td className="px-2 py-1.5">{asStringArray(m.zones).join(", ")}</td>
                 <td className="px-2 py-1.5 text-right">{m._count.matches}</td>
               </tr>
             ))}

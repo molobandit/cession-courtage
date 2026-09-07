@@ -14,5 +14,13 @@
   "vars": {
     "DEMO_INBOX": "true",
     "AUTH_TRUST_HOST": "true"
-  }
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "cession-courtage",
+      "database_id": "98d5a611-8101-42ef-9cf5-033fff64ca65",
+      "migrations_dir": "migrations"
+    }
+  ]
 }
