@@ -17,6 +17,9 @@ import { counterpartyDisplayName, findMyDeal, getActor, isOriasVerified } from "
 import { formatDate, formatEuro } from "@/lib/format/fr";
 import { DEAL_STAGE_LABELS, DEAL_STAGE_ORDER, ESCROW_STAGE_LABELS } from "@/lib/labels";
 import { isStageAtLeast } from "@/lib/authz/policies";
+import { DueDiligencePanel } from "@/components/deal/due-diligence-panel";
+import { checklistProgress, type DueDiligenceCategory } from "@/lib/deal/due-diligence";
+import { prisma } from "@/lib/prisma";
 
 export const metadata = { title: "Dossier" };
 
@@ -33,8 +36,16 @@ export default async function DealPage({ params }: { params: Promise<{ id: strin
   const isSeller = deal.sellerId === actor.id;
   const roomOpen = isStageAtLeast(deal.stage, "DATA_ROOM");
 
+  // Bordereau de pièces : visible des deux parties, modifiable par le seul cédant.
+  const checklist = await prisma.dueDiligenceItem.findMany({
+    where: { dealId: deal.id },
+    orderBy: [{ category: "asc" }, { label: "asc" }],
+    select: { id: true, category: true, label: true, required: true, providedAt: true },
+  });
+  const progress = checklistProgress(checklist);
+
   return (
-    <main className="mx-auto max-w-4xl px-4 py-6">
+    <main className="mx-auto max-w-6xl px-4 py-8">
       <p className="text-sm text-muted">
         <Link href="/app" className="underline-offset-2 hover:underline">
           Espace membre
@@ -141,6 +152,17 @@ export default async function DealPage({ params }: { params: Promise<{ id: strin
       ) : (
         <p className="mt-6 text-sm text-muted">Salle de données verrouillée tant que l&apos;NDA n&apos;est pas accepté.</p>
       )}
+
+      {checklist.length > 0 ? (
+        <DueDiligencePanel
+          items={checklist.map((item) => ({
+            ...item,
+            category: item.category as DueDiligenceCategory,
+          }))}
+          canEdit={isSeller}
+          progress={progress}
+        />
+      ) : null}
 
       <section className="mt-8">
         <h2 className="font-serif text-lg text-navy">Messagerie</h2>
