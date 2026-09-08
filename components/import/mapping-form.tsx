@@ -5,7 +5,9 @@ import {
   confirmPortfolioImportAction,
   saveColumnMappingAction,
   type ImportFormState,
+  type ImportPrepareState,
 } from "@/app/actions/import-portfolio";
+import { ImportProgress } from "@/components/import/import-progress";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -30,7 +32,22 @@ export function MappingForm({
   canConfirm: boolean;
 }) {
   const [saveState, saveAction, saving] = useActionState(saveColumnMappingAction, initial);
-  const [confirmState, confirmAction, confirming] = useActionState(confirmPortfolioImportAction, initial);
+  const [confirmState, confirmAction, confirming] = useActionState<ImportPrepareState, FormData>(
+    confirmPortfolioImportAction,
+    {},
+  );
+
+  // Une fois la préparation faite, le formulaire s'efface et le navigateur
+  // enchaîne les lots d'insertion.
+  if (confirmState.ready) {
+    return (
+      <ImportProgress
+        importId={confirmState.ready.importId}
+        totalRows={confirmState.ready.totalRows}
+        processedRows={confirmState.ready.processedRows}
+      />
+    );
+  }
   const error = confirmState.error ?? saveState.error;
 
   return (

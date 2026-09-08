@@ -15,6 +15,15 @@
     "DEMO_INBOX": "true",
     "AUTH_TRUST_HOST": "true"
   },
+  // Fichiers deposes : bordereaux d'import et pieces de salle de donnees.
+  // Workers n'a pas de systeme de fichiers. En local, wrangler simule ce bucket
+  // dans .wrangler/state ; en production il faut que R2 soit active sur le compte.
+  "r2_buckets": [
+    {
+      "binding": "UPLOADS",
+      "bucket_name": "cession-courtage-uploads"
+    }
+  ],
   "d1_databases": [
     {
       "binding": "DB",

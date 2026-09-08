@@ -35,11 +35,25 @@ function cell(row: string[], headers: string[], mapping: ColumnMapping, field: T
   return (row[index] ?? "").trim();
 }
 
+/**
+ * Identifiant stable d'une ligne de contrat : meme portefeuille et meme rang
+ * dans le fichier donnent toujours la meme cle.
+ */
+export function contractLineId(portfolioId: string, rowIndex: number): string {
+  return `${portfolioId}_l${String(rowIndex).padStart(6, "0")}`;
+}
+
+/**
+ * @param rowOffset rang de la premiere ligne de `rows` dans le fichier complet.
+ *   Non nul quand on traite une tranche : les identifiants et les numeros de
+ *   ligne signales a l'utilisateur restent alors ceux du fichier d'origine.
+ */
 export function applyMapping(
   headers: string[],
   rows: string[][],
   mapping: ColumnMapping,
   portfolioId: string,
+  rowOffset = 0,
 ): ApplyMappingResult {
   const errors: MappedLineError[] = [];
   const warnings: string[] = [];
@@ -49,7 +63,7 @@ export function applyMapping(
   let missingClientKey = 0;
 
   rows.forEach((row, i) => {
-    const excelRow = i + 2;
+    const excelRow = rowOffset + i + 2;
     const carrier = cell(row, headers, mapping, "carrier");
     const riskType = parseRiskType(cell(row, headers, mapping, "riskType"));
     let premium = parseFrenchNumber(cell(row, headers, mapping, "premium"));
@@ -118,6 +132,10 @@ export function applyMapping(
     if (ageMonths >= 0) ages.push(ageMonths);
 
     lines.push({
+      // Identifiant derive de la position dans le fichier : un lot rejoue apres
+      // une coupure ne peut donc pas creer de doublon. D1 n'ayant pas de
+      // transaction, c'est ce qui rend la reprise sure.
+      id: contractLineId(portfolioId, rowOffset + i),
       portfolioId,
       carrier,
       riskType,

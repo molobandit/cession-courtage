@@ -4,7 +4,12 @@ import { ImportStatus, Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { applyMapping } from "@/lib/import/apply-mapping";
-import { LINE_CHUNK, MAX_IMPORT_BYTES, MAX_IMPORT_LINES } from "@/lib/import/constants";
+import {
+  IMPORT_BATCH_ROWS,
+  LINE_CHUNK,
+  MAX_IMPORT_BYTES,
+  MAX_IMPORT_LINES,
+} from "@/lib/import/constants";
 import {
   mappingFromForm,
   mappingIsComplete,
@@ -20,6 +25,9 @@ import {
 } from "@/lib/import/persist";
 import { detectNominativeColumns, piiWarningText } from "@/lib/import/pii";
 import { parseFrenchNumber } from "@/lib/import/values";
+import type { ColumnMapping } from "@/lib/import/types";
+import { idSchema } from "@/lib/validations/actions";
+import { sumMoney } from "@/lib/format/money";
 import { canSell, getActor, isOriasVerified } from "@/lib/authz/actor";
 import { ensureSellerFirm, getMyImport } from "@/lib/authz/imports";
 import { ForbiddenError, UnauthenticatedError } from "@/lib/authz/errors";
@@ -28,6 +36,30 @@ import { valuePortfolio } from "@/lib/valuation/run";
 
 export type ImportFormState = {
   error?: string;
+};
+
+/** Retour de la preparation : tout ce dont le navigateur a besoin pour piloter les lots. */
+export type ImportPrepareState = {
+  error?: string;
+  ready?: {
+    importId: string;
+    portfolioId: string;
+    totalRows: number;
+    processedRows: number;
+  };
+};
+
+export type ImportBatchState = {
+  error?: string;
+  processedRows?: number;
+  totalRows?: number;
+  done?: boolean;
+  skipped?: number;
+};
+
+export type ImportFinalizeState = {
+  error?: string;
+  portfolioId?: string;
 };
 
 const ALLOWED_EXT = /\.(csv|xlsx|xls)$/i;
@@ -184,11 +216,18 @@ function parseChurnPercent(raw: string): string | ImportFormState {
   return (n / 100).toFixed(4);
 }
 
+/**
+ * Prépare l'import : valide la correspondance, crée le portefeuille, enregistre
+ * le nombre total de lignes. L'insertion elle-même est faite par lots, ensuite.
+ *
+ * Mesuré sur la base locale : environ 2 ms par ligne, soit près de deux minutes
+ * pour 50 000 lignes. Une seule requête ne peut pas tenir cette durée, d'où le
+ * découpage piloté par le navigateur.
+ */
 export async function confirmPortfolioImportAction(
-  _prev: ImportFormState,
+  _prev: ImportPrepareState,
   formData: FormData,
-): Promise<ImportFormState> {
-  let destination: string | null = null;
+): Promise<ImportPrepareState> {
   try {
     const actor = await requireImportActor();
     const withFirm = await ensureSellerFirm(actor);
@@ -234,95 +273,168 @@ export async function confirmPortfolioImportAction(
       return { error: `Le fichier dépasse ${MAX_IMPORT_LINES.toLocaleString("fr-FR")} lignes.` };
     }
 
-    await prisma.portfolioImport.update({
-      where: { id: record.id },
-      data: { columnMapping: mapping, status: ImportStatus.MAPPED },
-    });
+    // Un import déjà préparé se reprend sur son portefeuille, sans doublon.
+    const portfolio =
+      record.portfolioId !== null
+        ? await prisma.portfolio.findUnique({ where: { id: record.portfolioId } })
+        : await prisma.portfolio.create({
+            data: {
+              firmId: withFirm.firmId,
+              label,
+              contractCount: 0,
+              clientCount: 0,
+              annualCommissions: "0.00",
+              averageAgeMonths: 0,
+              churnRate12m: churn,
+              sourceFileName: record.originalFileName,
+              sourceStorageKey: record.storageKey,
+              sourceSha256: record.sha256,
+            },
+          });
+    if (!portfolio) return { error: "Portefeuille introuvable. Réimportez le fichier." };
 
-    const portfolio = await prisma.portfolio.create({
-      data: {
-        firmId: withFirm.firmId,
-        label,
-        contractCount: 0,
-        clientCount: 0,
-        annualCommissions: "0.00",
-        averageAgeMonths: 0,
-        churnRate12m: churn,
-        sourceFileName: record.originalFileName,
-        sourceStorageKey: record.storageKey,
-        sourceSha256: record.sha256,
-      },
-    });
-
-    const mapped = applyMapping(table.headers, table.rows, mapping, portfolio.id);
-    if (mapped.lines.length === 0) {
-      await prisma.portfolio.delete({ where: { id: portfolio.id } });
-      const first = mapped.errors[0];
-      return {
-        error: first
-          ? `Aucune ligne valide. Ligne ${first.row} : ${first.message}`
-          : "Aucune ligne valide dans le fichier.",
-      };
-    }
-
-    try {
-      for (let i = 0; i < mapped.lines.length; i += LINE_CHUNK) {
-        await prisma.contractLine.createMany({ data: mapped.lines.slice(i, i + LINE_CHUNK) });
-      }
-    } catch (error) {
-      await prisma.portfolio.delete({ where: { id: portfolio.id } });
-      throw error;
-    }
-
-    const clientCount = new Set(mapped.lines.map((line) => line.clientKey)).size;
-    const annualCommissions = mapped.lines.reduce((sum, line) => sum + Number(line.annualCommission), 0);
-
-    await prisma.portfolio.update({
-      where: { id: portfolio.id },
-      data: {
-        contractCount: mapped.lines.length,
-        clientCount,
-        annualCommissions: annualCommissions.toFixed(2),
-        averageAgeMonths: mapped.averageAgeMonths,
-      },
-    });
     await prisma.portfolioImport.update({
       where: { id: record.id },
       data: {
-        status: ImportStatus.COMPLETED,
-        portfolioId: portfolio.id,
-        completedAt: new Date(),
         columnMapping: mapping,
+        status: ImportStatus.MAPPED,
+        portfolioId: portfolio.id,
+        totalRows: table.rows.length,
       },
     });
-    await prisma.auditLog.create({
-      data: {
-        actorId: withFirm.id,
-        action: "portfolio.import.completed",
-        entityType: "Portfolio",
-        entityId: portfolio.id,
-        metadata: {
-          importId: record.id,
-          contractCount: mapped.lines.length,
-          skipped: mapped.errors.length,
-          warnings: mapped.warnings,
-        },
+
+    return {
+      ready: {
+        importId: record.id,
+        portfolioId: portfolio.id,
+        totalRows: table.rows.length,
+        processedRows: record.processedRows,
       },
-    });
-    try {
-      await valuePortfolio(portfolio.id);
-    } catch {
-      // Valuation is derived; the import itself succeeded.
-    }
-    revalidatePath("/app");
-    revalidatePath(`/app/portefeuilles/${portfolio.id}`);
-    destination = `/app/portefeuilles/${portfolio.id}`;
+    };
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      return { error: "Enregistrement impossible. Vérifiez le fichier puis réessayez." };
+      return { error: "Préparation impossible. Vérifiez le fichier puis réessayez." };
     }
     return formError(error);
   }
-  if (!destination) return { error: "Import impossible." };
-  redirect(destination);
+}
+
+/**
+ * Insère une tranche de lignes et renvoie l'avancement.
+ *
+ * Rejouable : les identifiants de ligne dérivent du rang dans le fichier, donc
+ * un lot relancé après une coupure écrase les mêmes lignes au lieu d'en créer
+ * de nouvelles. C'est ce qui permet la reprise sans transaction.
+ */
+export async function importBatchAction(importId: string): Promise<ImportBatchState> {
+  try {
+    const parsed = idSchema.safeParse(importId);
+    if (!parsed.success) return { error: "Identifiant d’import invalide." };
+    const actor = await requireImportActor();
+    // getMyImport verifie l'appartenance : un identifiant devine ne donne rien.
+    const record = await getMyImport(parsed.data, actor);
+    if (!record.portfolioId) return { error: "Import non préparé." };
+    if (record.status === ImportStatus.COMPLETED) {
+      return { processedRows: record.totalRows, totalRows: record.totalRows, done: true };
+    }
+    if (record.storageKey === "deleted") return { error: "Le fichier n'est plus disponible." };
+
+    const mapping = record.columnMapping as ColumnMapping | null;
+    if (!mapping) return { error: "Correspondance des colonnes absente." };
+
+    const buffer = await readImportFile(record.storageKey);
+    const table = parseUploadedTable(buffer, record.originalFileName);
+
+    const offset = record.processedRows;
+    const slice = table.rows.slice(offset, offset + IMPORT_BATCH_ROWS);
+    if (slice.length === 0) {
+      return { processedRows: record.totalRows, totalRows: record.totalRows, done: true };
+    }
+
+    const mapped = applyMapping(table.headers, slice, mapping, record.portfolioId, offset);
+
+    for (let i = 0; i < mapped.lines.length; i += LINE_CHUNK) {
+      const chunk = mapped.lines.slice(i, i + LINE_CHUNK);
+      // Rejeu possible : on efface la tranche avant de la réécrire.
+      await prisma.contractLine.deleteMany({
+        where: { id: { in: chunk.map((line) => String(line.id)) } },
+      });
+      await prisma.contractLine.createMany({ data: chunk });
+    }
+
+    const processedRows = offset + slice.length;
+    await prisma.portfolioImport.update({
+      where: { id: record.id },
+      data: { processedRows },
+    });
+
+    return {
+      processedRows,
+      totalRows: record.totalRows,
+      done: processedRows >= record.totalRows,
+      skipped: mapped.errors.length,
+    };
+  } catch (error) {
+    return formError(error) as ImportBatchState;
+  }
+}
+
+/** Consolide les agrégats une fois toutes les lignes posées, puis valorise. */
+export async function finalizeImportAction(importId: string): Promise<ImportFinalizeState> {
+  try {
+    const parsed = idSchema.safeParse(importId);
+    if (!parsed.success) return { error: "Identifiant d’import invalide." };
+    const actor = await requireImportActor();
+    const record = await getMyImport(parsed.data, actor);
+    if (!record.portfolioId) return { error: "Import non préparé." };
+
+    const portfolioId = record.portfolioId;
+    const lines = await prisma.contractLine.findMany({
+      where: { portfolioId },
+      select: { clientKey: true, annualCommission: true, effectiveDate: true },
+    });
+    if (lines.length === 0) {
+      return { error: "Aucune ligne valide n'a pu être enregistrée." };
+    }
+
+    const now = Date.now();
+    const MONTH_MS = 30.44 * 24 * 60 * 60 * 1000;
+    const ages = lines.map((line) => Math.max(0, (now - line.effectiveDate.getTime()) / MONTH_MS));
+    const averageAgeMonths = Math.round(ages.reduce((s, a) => s + a, 0) / ages.length);
+
+    await prisma.portfolio.update({
+      where: { id: portfolioId },
+      data: {
+        contractCount: lines.length,
+        clientCount: new Set(lines.map((line) => line.clientKey)).size,
+        annualCommissions: sumMoney(lines.map((line) => Number(line.annualCommission))).toFixed(2),
+        averageAgeMonths,
+      },
+    });
+    await prisma.portfolioImport.update({
+      where: { id: record.id },
+      data: { status: ImportStatus.COMPLETED, completedAt: new Date() },
+    });
+    await prisma.auditLog.create({
+      data: {
+        actorId: actor.id,
+        action: "portfolio.import.completed",
+        entityType: "Portfolio",
+        entityId: portfolioId,
+        metadata: { importId: record.id, contractCount: lines.length },
+      },
+    });
+
+    try {
+      await valuePortfolio(portfolioId);
+    } catch {
+      // La valorisation est dérivée : l'import lui-même a réussi.
+    }
+
+    revalidatePath("/app");
+    revalidatePath(`/app/portefeuilles/${portfolioId}`);
+    return { portfolioId };
+  } catch (error) {
+    return formError(error) as ImportFinalizeState;
+  }
 }

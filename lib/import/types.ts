@@ -22,7 +22,7 @@ export type ParsedTable = {
   headers: string[];
   rows: string[][];
   encoding: "utf-8" | "windows-1252";
-  delimiter: "," | ";" | "xlsx";
+  delimiter: string;
 };
 
 export type FieldMeta = {

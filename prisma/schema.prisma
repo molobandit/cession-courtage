@@ -318,6 +318,13 @@ model PortfolioImport {
   createdAt        DateTime     @default(now())
   completedAt      DateTime?
 
+  /// Avancement de l'insertion. D1 ne supporte pas les transactions et un import
+  /// de 50 000 lignes ne tient pas dans une seule requete : les lignes sont
+  /// posees par lots, et ces deux compteurs permettent de reprendre exactement
+  /// la ou l'utilisateur s'est arrete.
+  totalRows     Int @default(0)
+  processedRows Int @default(0)
+
   user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   portfolio Portfolio? @relation(fields: [portfolioId], references: [id], onDelete: SetNull)
 
