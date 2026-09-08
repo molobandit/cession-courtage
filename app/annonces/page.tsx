@@ -5,8 +5,8 @@ import {
   PublicListingList,
   type PublicListingCard,
 } from "@/components/listing/public-listing-list";
-import { listPublicListings } from "@/lib/authz";
-import { LISTING_STATUS_LABELS } from "@/lib/labels";
+import { listPublicListingFacets, listPublicListings } from "@/lib/authz";
+import { LISTING_STATUS_LABELS, RISK_TYPE_LABELS, SEGMENT_LABELS } from "@/lib/labels";
 
 export const metadata: Metadata = {
   title: "Annonces de portefeuilles de courtage",
@@ -25,8 +25,15 @@ function daysUntil(date: Date | null): number | null {
 
 export default async function PublicListingsPage() {
   const listings = await listPublicListings();
+  const facets = await listPublicListingFacets(listings.map((l) => l.portfolioId));
 
-  const cards: PublicListingCard[] = listings.map((item) => ({
+  const cards: PublicListingCard[] = listings.map((item) => {
+    const facet = facets.get(item.portfolioId) ?? {
+      carriers: [],
+      riskTypes: [],
+      clientSegments: [],
+    };
+    return {
     id: item.id,
     publicNumber: item.publicNumber,
     status: item.status,
@@ -40,7 +47,15 @@ export default async function PublicListingsPage() {
     isNationwide: item.isNationwide,
     sellerSupportMonths: item.sellerSupportMonths,
     daysLeft: daysUntil(item.offerWindowClosesAt),
-  }));
+    carriers: facet.carriers,
+    riskTypes: facet.riskTypes.map(
+      (r) => RISK_TYPE_LABELS[r as keyof typeof RISK_TYPE_LABELS] ?? r,
+    ),
+    clientSegments: facet.clientSegments.map(
+      (s) => SEGMENT_LABELS[s as keyof typeof SEGMENT_LABELS] ?? s,
+    ),
+    };
+  });
 
   return (
     <main>

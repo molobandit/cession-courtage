@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { ChipGroup } from "@/components/listing/chips";
 import { formatCount, formatEuroWhole } from "@/lib/format/number";
 
 export type PublicListingCard = {
@@ -17,8 +18,11 @@ export type PublicListingCard = {
   isPartial: boolean;
   isNationwide: boolean;
   sellerSupportMonths: number;
-  /** Jours restants avant la clôture, calculé côté serveur. null si aucune fenêtre. */
+  /** Jours restants avant la clôture, calculé côté serveur. */
   daysLeft: number | null;
+  carriers: string[];
+  riskTypes: string[];
+  clientSegments: string[];
 };
 
 type SortKey = "recent" | "price-asc" | "price-desc" | "commissions-desc";
@@ -38,11 +42,34 @@ function windowLabel(daysLeft: number | null): string | null {
   return `Clôture dans ${daysLeft} jours`;
 }
 
+const SELECT_CLASS =
+  "mt-2 h-11 w-full rounded-full border border-line bg-cream px-4 text-[15px] text-ink";
+
 export function PublicListingList({ listings }: { listings: PublicListingCard[] }) {
   const [zone, setZone] = useState("");
+  const [carrier, setCarrier] = useState("");
+  const [risk, setRisk] = useState("");
+  const [segment, setSegment] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [openOnly, setOpenOnly] = useState(false);
   const [sort, setSort] = useState<SortKey>("recent");
+
+  // Les listes de filtres viennent des annonces réelles : jamais d'option vide.
+  const options = useMemo(() => {
+    const carriers = new Set<string>();
+    const risks = new Set<string>();
+    const segments = new Set<string>();
+    for (const item of listings) {
+      item.carriers.forEach((c) => carriers.add(c));
+      item.riskTypes.forEach((r) => risks.add(r));
+      item.clientSegments.forEach((s) => segments.add(s));
+    }
+    return {
+      carriers: [...carriers].sort((a, b) => a.localeCompare(b, "fr")),
+      risks: [...risks].sort((a, b) => a.localeCompare(b, "fr")),
+      segments: [...segments].sort((a, b) => a.localeCompare(b, "fr")),
+    };
+  }, [listings]);
 
   const visible = useMemo(() => {
     const zoneQuery = zone.trim().toLowerCase();
@@ -51,6 +78,9 @@ export function PublicListingList({ listings }: { listings: PublicListingCard[] 
     const filtered = listings.filter((item) => {
       if (zoneQuery && !item.zone.toLowerCase().includes(zoneQuery)) return false;
       if (ceiling !== null && Number.isFinite(ceiling) && item.askingPrice > ceiling) return false;
+      if (carrier && !item.carriers.includes(carrier)) return false;
+      if (risk && !item.riskTypes.includes(risk)) return false;
+      if (segment && !item.clientSegments.includes(segment)) return false;
       if (openOnly && !(item.status === "OFFERS_OPEN" && (item.daysLeft ?? -1) >= 0)) return false;
       return true;
     });
@@ -61,12 +91,77 @@ export function PublicListingList({ listings }: { listings: PublicListingCard[] 
     if (sort === "commissions-desc")
       sorted.sort((a, b) => b.annualCommissions - a.annualCommissions);
     return sorted;
-  }, [listings, zone, maxPrice, openOnly, sort]);
+  }, [listings, zone, carrier, risk, segment, maxPrice, openOnly, sort]);
+
+  const activeFilters = [zone, carrier, risk, segment, maxPrice].filter(Boolean).length + (openOnly ? 1 : 0);
+
+  function reset() {
+    setZone("");
+    setCarrier("");
+    setRisk("");
+    setSegment("");
+    setMaxPrice("");
+    setOpenOnly(false);
+  }
 
   return (
     <>
-      <div className="mt-6 rounded-3xl border border-line bg-paper p-5">
-        <div className="grid gap-4 lg:grid-cols-4">
+      <div className="mt-6 rounded-3xl border border-line bg-paper p-6">
+        <div className="grid gap-4 lg:grid-cols-3">
+          <div>
+            <label htmlFor="carrier" className="block text-[15px] font-medium text-ink">
+              Compagnie
+            </label>
+            <select
+              id="carrier"
+              value={carrier}
+              onChange={(e) => setCarrier(e.target.value)}
+              className={SELECT_CLASS}
+            >
+              <option value="">Toutes</option>
+              {options.carriers.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label htmlFor="risk" className="block text-[15px] font-medium text-ink">
+              Branche
+            </label>
+            <select
+              id="risk"
+              value={risk}
+              onChange={(e) => setRisk(e.target.value)}
+              className={SELECT_CLASS}
+            >
+              <option value="">Toutes</option>
+              {options.risks.map((r) => (
+                <option key={r} value={r}>
+                  {r}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label htmlFor="segment" className="block text-[15px] font-medium text-ink">
+              Clientèle
+            </label>
+            <select
+              id="segment"
+              value={segment}
+              onChange={(e) => setSegment(e.target.value)}
+              className={SELECT_CLASS}
+            >
+              <option value="">Toutes</option>
+              {options.segments.map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </select>
+          </div>
           <div>
             <label htmlFor="zone" className="block text-[15px] font-medium text-ink">
               Zone
@@ -74,7 +169,7 @@ export function PublicListingList({ listings }: { listings: PublicListingCard[] 
             <input
               id="zone"
               value={zone}
-              onChange={(event) => setZone(event.target.value)}
+              onChange={(e) => setZone(e.target.value)}
               placeholder="Rhône, Nord, Île-de-France"
               className="mt-2 h-11 w-full rounded-full border border-line bg-cream px-4 text-[15px] text-ink"
             />
@@ -87,7 +182,7 @@ export function PublicListingList({ listings }: { listings: PublicListingCard[] 
               id="maxPrice"
               inputMode="numeric"
               value={maxPrice}
-              onChange={(event) => setMaxPrice(event.target.value)}
+              onChange={(e) => setMaxPrice(e.target.value)}
               placeholder="50 000"
               className="tabular mt-2 h-11 w-full rounded-full border border-line bg-cream px-4 text-right text-[15px] text-ink"
             />
@@ -99,8 +194,8 @@ export function PublicListingList({ listings }: { listings: PublicListingCard[] 
             <select
               id="sort"
               value={sort}
-              onChange={(event) => setSort(event.target.value as SortKey)}
-              className="mt-2 h-11 w-full rounded-full border border-line bg-cream px-4 text-[15px] text-ink"
+              onChange={(e) => setSort(e.target.value as SortKey)}
+              className={SELECT_CLASS}
             >
               {(Object.keys(SORT_LABELS) as SortKey[]).map((key) => (
                 <option key={key} value={key}>
@@ -109,29 +204,41 @@ export function PublicListingList({ listings }: { listings: PublicListingCard[] 
               ))}
             </select>
           </div>
-          <div className="flex items-end">
-            <label className="flex items-center gap-2.5 text-[15px] text-ink">
-              <input
-                type="checkbox"
-                checked={openOnly}
-                onChange={(event) => setOpenOnly(event.target.checked)}
-                className="h-5 w-5 rounded border-line"
-              />
-              Fenêtre encore ouverte
-            </label>
+        </div>
+
+        <div className="mt-5 flex flex-wrap items-center justify-between gap-4 border-t border-line pt-4">
+          <label className="flex items-center gap-2.5 text-[15px] text-ink">
+            <input
+              type="checkbox"
+              checked={openOnly}
+              onChange={(e) => setOpenOnly(e.target.checked)}
+              className="h-5 w-5 rounded border-line"
+            />
+            Fenêtre d’offres encore ouverte
+          </label>
+          <div className="flex items-center gap-4">
+            <p className="text-[15px] text-muted" aria-live="polite">
+              {visible.length === 0
+                ? "Aucun dossier ne correspond."
+                : `${formatCount(visible.length)} sur ${formatCount(listings.length)}`}
+            </p>
+            {activeFilters > 0 ? (
+              <button
+                type="button"
+                onClick={reset}
+                className="text-[15px] font-medium text-gold-deep underline-offset-4 hover:underline"
+              >
+                Tout effacer
+              </button>
+            ) : null}
           </div>
         </div>
-        <p className="mt-4 text-[15px] text-muted" aria-live="polite">
-          {visible.length === 0
-            ? "Aucun dossier ne correspond à ces critères."
-            : `${formatCount(visible.length)} dossier${visible.length > 1 ? "s" : ""} sur ${formatCount(listings.length)}.`}
-        </p>
       </div>
 
       {visible.length === 0 ? (
-        <p className="mt-8 rounded-3xl border border-line bg-paper p-8 text-[15px] text-muted">
-          Élargissez la zone ou le budget. Vous pouvez aussi déposer un mandat
-          d’achat pour être prévenu dès qu’un dossier correspondant est publié.
+        <p className="mt-8 rounded-3xl border border-line bg-paper p-8 text-[15px] leading-relaxed text-muted">
+          Élargissez la compagnie, la branche ou le budget. Vous pouvez aussi déposer
+          un mandat d’achat pour être prévenu dès qu’un dossier correspondant est publié.
         </p>
       ) : (
         <ul className="mt-6 grid gap-5 lg:grid-cols-2">
@@ -142,7 +249,7 @@ export function PublicListingList({ listings }: { listings: PublicListingCard[] 
               <li key={item.id}>
                 <Link
                   href={`/annonces/${item.publicNumber}`}
-                  className="block rounded-3xl border border-line bg-paper p-6 transition-colors hover:border-gold-deep/50 hover:bg-cream"
+                  className="block h-full rounded-3xl border border-line bg-paper p-6 transition-colors hover:border-gold-deep/50"
                 >
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
@@ -153,7 +260,7 @@ export function PublicListingList({ listings }: { listings: PublicListingCard[] 
                         {item.isNationwide ? "Couverture nationale" : item.zone}
                       </p>
                     </div>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap justify-end gap-2">
                       {item.isPartial ? (
                         <span className="rounded-full border border-line bg-cream px-3 py-1 text-sm text-ink">
                           Cession partielle
@@ -191,6 +298,12 @@ export function PublicListingList({ listings }: { listings: PublicListingCard[] 
                       </dd>
                     </div>
                   </dl>
+
+                  <div className="mt-4 space-y-3 border-t border-line pt-4">
+                    <ChipGroup label="Compagnies" items={item.carriers} />
+                    <ChipGroup label="Branches" items={item.riskTypes} />
+                    <ChipGroup label="Clientèles" items={item.clientSegments} limit={3} />
+                  </div>
 
                   {closing || item.sellerSupportMonths > 0 ? (
                     <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-line pt-4">

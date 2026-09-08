@@ -57,6 +57,7 @@ export async function listPublicListings() {
     orderBy: { publishedAt: "desc" },
     select: {
       id: true,
+      portfolioId: true,
       publicNumber: true,
       status: true,
       askingPrice: true,
@@ -75,6 +76,81 @@ export async function listPublicListings() {
       },
     },
   });
+}
+
+export type PublicListingFacets = {
+  carriers: string[];
+  riskTypes: string[];
+  clientSegments: string[];
+};
+
+/**
+ * Compagnies, branches et clienteles de chaque annonce publiee.
+ *
+ * Agrege par regroupement plutot qu'en chargeant les lignes de contrat : le
+ * catalogue ne doit pas lire 7 000 lignes pour afficher dix cartes.
+ */
+export async function listPublicListingFacets(
+  portfolioIds: string[],
+): Promise<Map<string, PublicListingFacets>> {
+  const result = new Map<string, PublicListingFacets>();
+  if (portfolioIds.length === 0) return result;
+
+  const [carriers, risks, segments] = await Promise.all([
+    prisma.contractLine.groupBy({
+      by: ["portfolioId", "carrier"],
+      where: { portfolioId: { in: portfolioIds } },
+      _sum: { annualCommission: true },
+    }),
+    prisma.contractLine.groupBy({
+      by: ["portfolioId", "riskType"],
+      where: { portfolioId: { in: portfolioIds } },
+      _sum: { annualCommission: true },
+    }),
+    prisma.contractLine.groupBy({
+      by: ["portfolioId", "clientSegment"],
+      where: { portfolioId: { in: portfolioIds } },
+      _sum: { annualCommission: true },
+    }),
+  ]);
+
+  const ensure = (id: string) => {
+    const current = result.get(id) ?? { carriers: [], riskTypes: [], clientSegments: [] };
+    result.set(id, current);
+    return current;
+  };
+
+  // Tri par poids de commissions : la compagnie qui pese le plus vient en tete.
+  const weight = new Map<string, number>();
+  for (const row of carriers) {
+    const entry = ensure(row.portfolioId);
+    entry.carriers.push(row.carrier);
+    weight.set(`c:${row.portfolioId}:${row.carrier}`, Number(row._sum.annualCommission ?? 0));
+  }
+  for (const row of risks) {
+    const entry = ensure(row.portfolioId);
+    entry.riskTypes.push(row.riskType);
+    weight.set(`r:${row.portfolioId}:${row.riskType}`, Number(row._sum.annualCommission ?? 0));
+  }
+  for (const row of segments) {
+    const entry = ensure(row.portfolioId);
+    entry.clientSegments.push(row.clientSegment);
+    weight.set(`s:${row.portfolioId}:${row.clientSegment}`, Number(row._sum.annualCommission ?? 0));
+  }
+
+  for (const [portfolioId, facets] of result) {
+    facets.carriers.sort(
+      (a, b) => (weight.get(`c:${portfolioId}:${b}`) ?? 0) - (weight.get(`c:${portfolioId}:${a}`) ?? 0),
+    );
+    facets.riskTypes.sort(
+      (a, b) => (weight.get(`r:${portfolioId}:${b}`) ?? 0) - (weight.get(`r:${portfolioId}:${a}`) ?? 0),
+    );
+    facets.clientSegments.sort(
+      (a, b) => (weight.get(`s:${portfolioId}:${b}`) ?? 0) - (weight.get(`s:${portfolioId}:${a}`) ?? 0),
+    );
+  }
+
+  return result;
 }
 
 export async function getPublicListing(publicNumber: number) {

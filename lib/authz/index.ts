@@ -30,6 +30,7 @@ export { listMyMandates, getMyMandate } from "@/lib/authz/mandates";
 export { listPendingOriasUsers, verifyOrias, rejectOrias } from "@/lib/authz/admin";
 export {
   listPublicListings,
+  listPublicListingFacets,
   getPublicListing,
   getListingByPublicNumber,
   findMyListing,
