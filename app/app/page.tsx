@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { redirect } from "next/navigation";
 import {
   canBuy,
   canSell,
@@ -11,47 +11,53 @@ import {
   listMyOffers,
   listMyPortfolios,
 } from "@/lib/authz";
-import { formatDate, formatEuro } from "@/lib/format/fr";
-import { nextAction } from "@/lib/dashboard/next-action";
 import { NextActionBanner } from "@/components/dashboard/next-action-banner";
 import { ReadinessPanel } from "@/components/dashboard/readiness-panel";
+import { SummaryList, type SummaryRow } from "@/components/dashboard/summary-list";
+import { nextAction } from "@/lib/dashboard/next-action";
 import { readinessAxes, readinessScore } from "@/lib/dashboard/readiness";
-import { prisma } from "@/lib/prisma";
+import { formatCount, formatEuroWhole } from "@/lib/format/number";
 import { asStringArray } from "@/lib/json-array";
 import { DEAL_STAGE_LABELS, LISTING_STATUS_LABELS, OFFER_STATUS_LABELS } from "@/lib/labels";
-import { redirect } from "next/navigation";
+import { prisma } from "@/lib/prisma";
 
 export const metadata = { title: "Espace membre" };
 
-const roleLabel = {
+const ROLE_LABEL = {
   SELLER: "Cédant",
   BUYER: "Acquéreur",
   BOTH: "Cédant et acquéreur",
   ADMIN: "Administrateur",
 } as const;
 
+const DAY_MS = 24 * 60 * 60 * 1000;
+
 export default async function MemberHomePage() {
   const actor = await getActor();
   if (!actor) redirect("/connexion?next=/app");
   if (!isOriasVerified(actor)) redirect("/en-attente-orias");
+
+  const seller = canSell(actor);
+  const buyer = canBuy(actor);
+
   const [portfolios, listings, mandates, offers, deals] = await Promise.all([
-    canSell(actor) ? listMyPortfolios(actor) : Promise.resolve([]),
-    canSell(actor) ? listMyListings(actor) : Promise.resolve([]),
-    canBuy(actor) ? listMyMandates(actor) : Promise.resolve([]),
-    canBuy(actor) ? listMyOffers(actor) : Promise.resolve([]),
+    seller ? listMyPortfolios(actor) : Promise.resolve([]),
+    seller ? listMyListings(actor) : Promise.resolve([]),
+    buyer ? listMyMandates(actor) : Promise.resolve([]),
+    buyer ? listMyOffers(actor) : Promise.resolve([]),
     listMyDeals(actor),
   ]);
 
-  const DAY_MS = 24 * 60 * 60 * 1000;
   const draft = listings.find((l) => l.status === "DRAFT");
   const openWindow = listings
     .map((l) => l.offerWindowClosesAt)
     .filter((d): d is Date => d !== null && d.getTime() > Date.now())
     .sort((a, b) => a.getTime() - b.getTime())[0];
+  const activeDeals = deals.filter((d) => d.stage !== "CLOSED");
 
   const action = nextAction({
-    canSell: canSell(actor),
-    canBuy: canBuy(actor),
+    canSell: seller,
+    canBuy: buyer,
     portfolioCount: portfolios.length,
     unvaluedPortfolioCount: portfolios.filter((p) => p.valuations.length === 0).length,
     draftListing: draft ? { publicNumber: draft.publicNumber, id: draft.id } : null,
@@ -59,7 +65,7 @@ export default async function MemberHomePage() {
       ? Math.max(0, Math.ceil((openWindow.getTime() - Date.now()) / DAY_MS))
       : null,
     offersToReview: listings.filter((l) => l.status === "OFFERS_CLOSED").length,
-    activeDealCount: deals.filter((d) => d.stage !== "CLOSED").length,
+    activeDealCount: activeDeals.length,
     mandateCount: mandates.length,
     retentionDue: deals.filter((d) => d.stage === "RETENTION").length,
   });
@@ -90,277 +96,190 @@ export default async function MemberHomePage() {
     firstPortfolioId: portfolios[0]?.id ?? null,
   });
 
-  return (
-    <main className="mx-auto max-w-6xl px-4 py-8">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="font-serif text-3xl font-semibold text-ink">Espace membre</h1>
-          <p className="mt-1.5 text-[15px] text-muted">
-            {actor.fullName} · {roleLabel[actor.role]} · ORIAS {actor.oriasNumber} · alias{" "}
-            {actor.publicAlias}
-          </p>
-        </div>
-      </div>
+  // Trois chiffres, pas davantage. Un tableau de bord qui affiche tout n'affiche rien.
+  const totalCommissions = portfolios.reduce((sum, p) => sum + Number(p.annualCommissions), 0);
+  const totalValuation = portfolios.reduce(
+    (sum, p) => sum + (p.valuations[0] ? Number(p.valuations[0].midValue) : 0),
+    0,
+  );
+  const kpis = seller
+    ? [
+        { label: "Commissions annuelles", value: formatEuroWhole(totalCommissions) },
+        { label: "Valorisation médiane", value: formatEuroWhole(totalValuation) },
+        { label: "Dossiers en cours", value: formatCount(activeDeals.length) },
+      ]
+    : [
+        { label: "Mandats déposés", value: formatCount(mandates.length) },
+        { label: "Offres en cours", value: formatCount(offers.length) },
+        { label: "Dossiers en cours", value: formatCount(activeDeals.length) },
+      ];
 
-      <div className="mt-6">
+  const portfolioRows: SummaryRow[] = portfolios.map((p) => ({
+    id: p.id,
+    href: `/app/portefeuilles/${p.id}`,
+    title: p.label,
+    facts: [
+      { label: "Commissions / an", value: formatEuroWhole(Number(p.annualCommissions)) },
+      { label: "Contrats", value: formatCount(p.contractCount) },
+      {
+        label: "Valorisation",
+        value: p.valuations[0]
+          ? formatEuroWhole(Number(p.valuations[0].midValue))
+          : "Non calculée",
+      },
+    ],
+    badge: p.valuations[0] ? undefined : { label: "À valoriser", tone: "attention" },
+  }));
+
+  const listingRows: SummaryRow[] = listings.map((l) => ({
+    id: l.id,
+    href: `/app/annonces/${l.id}`,
+    title: `Portefeuille #${l.publicNumber}`,
+    subtitle: l.portfolio.label,
+    facts: [
+      { label: "Prix demandé", value: formatEuroWhole(Number(l.askingPrice)) },
+      { label: "Zone", value: l.displayedZone },
+    ],
+    badge: {
+      label: LISTING_STATUS_LABELS[l.status],
+      tone: l.status === "DRAFT" ? "attention" : "neutre",
+    },
+  }));
+
+  const mandateRows: SummaryRow[] = mandates.map((m) => ({
+    id: m.id,
+    href: "/app/mandats",
+    title: `Mandat jusqu’à ${formatEuroWhole(Number(m.maxBudget))}`,
+    subtitle: asStringArray(m.zones).join(", ") || "Toutes zones",
+    facts: [
+      {
+        label: "Commissions recherchées",
+        value: `${formatEuroWhole(Number(m.minCommissions))} à ${formatEuroWhole(Number(m.maxCommissions))}`,
+      },
+      { label: "Correspondances", value: formatCount(m._count.matches) },
+    ],
+  }));
+
+  const offerRows: SummaryRow[] = offers.map((o) => ({
+    id: o.id,
+    href: `/annonces/${o.listing.publicNumber}`,
+    title: `Offre sur le portefeuille #${o.listing.publicNumber}`,
+    facts: [
+      { label: "Montant", value: formatEuroWhole(Number(o.amount)) },
+      { label: "Comptant", value: `${Number(o.upfrontPercent).toLocaleString("fr-FR")} %` },
+    ],
+    badge: { label: OFFER_STATUS_LABELS[o.status], tone: "neutre" },
+  }));
+
+  const dealRows: SummaryRow[] = deals.map((d) => {
+    const counterparty =
+      d.seller.kind === "identified" && d.seller.id === actor.id ? d.buyer : d.seller;
+    return {
+      id: d.id,
+      href: `/app/dossiers/${d.id}`,
+      title: `Dossier sur le portefeuille #${d.listing.publicNumber}`,
+      subtitle: `Contrepartie : ${counterpartyDisplayName(counterparty)}`,
+      facts: [
+        { label: "Prix convenu", value: formatEuroWhole(Number(d.agreedPrice)) },
+      ],
+      badge: {
+        label: DEAL_STAGE_LABELS[d.stage],
+        tone: d.stage === "CLOSED" ? "ok" : "attention",
+      },
+    };
+  });
+
+  return (
+    <main className="mx-auto max-w-4xl px-4 py-10">
+      <p className="text-[15px] text-muted">
+        {ROLE_LABEL[actor.role]} · ORIAS {actor.oriasNumber} · alias {actor.publicAlias}
+      </p>
+      <h1 className="mt-1 font-serif text-3xl font-semibold text-ink">
+        Bonjour {actor.fullName?.split(" ")[0] ?? ""}
+      </h1>
+
+      <div className="mt-7">
         <NextActionBanner action={action} />
       </div>
 
-      {canSell(actor) ? (
-        <div className="mt-10">
+      <section
+        aria-label="Chiffres clés"
+        className="mt-8 grid grid-cols-3 gap-px overflow-hidden rounded-3xl border border-line bg-line"
+      >
+        {kpis.map((kpi) => (
+          <div key={kpi.label} className="bg-paper p-5">
+            <p className="text-sm text-muted">{kpi.label}</p>
+            <p className="tabular mt-1.5 font-serif text-xl font-semibold text-ink">{kpi.value}</p>
+          </div>
+        ))}
+      </section>
+
+      {seller ? (
+        <div className="mt-12">
           <ReadinessPanel axes={axes} score={readinessScore(axes)} />
         </div>
       ) : null}
 
-      {canSell(actor) ? (
-        <section className="mt-10">
-          <div className="flex flex-wrap items-end justify-between gap-2">
-            <h2 className="font-serif text-xl font-semibold text-ink">Portefeuilles</h2>
-            <Link href="/app/import" className="text-[15px] font-medium text-gold-deep underline-offset-4 hover:underline">
-              Importer un portefeuille
-            </Link>
-          </div>
-          <div className="mt-3 overflow-x-auto rounded-3xl border border-line bg-paper">
-            <table className="w-full text-sm">
-              <thead className="bg-cream text-left text-xs uppercase tracking-wide text-muted">
-                <tr>
-                  <th className="px-2 py-1.5 font-medium">Libellé</th>
-                  <th className="px-2 py-1.5 text-right font-medium">Contrats</th>
-                  <th className="px-2 py-1.5 text-right font-medium">Clients</th>
-                  <th className="px-2 py-1.5 text-right font-medium">Commissions / an</th>
-                  <th className="px-2 py-1.5 text-right font-medium">Valorisation</th>
-                  <th className="px-2 py-1.5 font-medium">Import</th>
-                </tr>
-              </thead>
-              <tbody>
-                {portfolios.length === 0 ? (
-                  <tr>
-                    <td className="px-2 py-3 text-muted" colSpan={6}>
-                      Aucun portefeuille importé. Tout commence ici : déposez un
-                      bordereau, les colonnes nominatives sont refusées.{" "}
-                      <Link href="/app/import" className="underline-offset-2 hover:underline">
-                        Importer un bordereau
-                      </Link>
-                    </td>
-                  </tr>
-                ) : (
-                  portfolios.map((p) => (
-                    <tr key={p.id} className="border-t border-line">
-                      <td className="px-2 py-1.5">
-                        <Link href={`/app/portefeuilles/${p.id}`} className="underline-offset-2 hover:underline">
-                          {p.label}
-                        </Link>
-                      </td>
-                      <td className="px-2 py-1.5 text-right tabular-nums">{p.contractCount}</td>
-                      <td className="px-2 py-1.5 text-right tabular-nums">{p.clientCount}</td>
-                      <td className="px-2 py-1.5 text-right tabular-nums">
-                        {formatEuro(p.annualCommissions)}
-                      </td>
-                      <td className="px-2 py-1.5 text-right tabular-nums">
-                        {p.valuations[0] ? formatEuro(p.valuations[0].midValue) : "Non calculée"}
-                      </td>
-                      <td className="px-2 py-1.5">{formatDate(p.importedAt)}</td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </section>
+      {seller ? (
+        <SummaryList
+          title="Portefeuilles"
+          action={{ href: "/app/import", label: "Importer" }}
+          rows={portfolioRows}
+          empty={{
+            text: "Tout commence ici. Déposez un bordereau CSV ou XLSX : les colonnes nominatives sont refusées, et la valorisation se calcule aussitôt.",
+            href: "/app/import",
+            label: "Importer un bordereau",
+          }}
+        />
       ) : null}
 
-      {canSell(actor) ? (
-        <section className="mt-10">
-          <div className="flex flex-wrap items-end justify-between gap-2">
-            <h2 className="font-serif text-xl font-semibold text-ink">Annonces</h2>
-            <Link href="/app/annonces/nouvelle" className="text-[15px] font-medium text-gold-deep underline-offset-4 hover:underline">
-              Nouvelle annonce
-            </Link>
-          </div>
-          <ListingTable listings={listings} />
-        </section>
+      {seller ? (
+        <SummaryList
+          title="Annonces"
+          action={{ href: "/app/annonces/nouvelle", label: "Nouvelle annonce" }}
+          rows={listingRows}
+          empty={{
+            text: "Publiez un portefeuille sous alias pour recevoir des offres. Ni raison sociale, ni commune.",
+            href: "/app/annonces/nouvelle",
+            label: "Créer une annonce",
+          }}
+        />
       ) : null}
 
-      {canBuy(actor) ? (
-        <section className="mt-10">
-          <div className="flex flex-wrap items-end justify-between gap-2">
-            <h2 className="font-serif text-xl font-semibold text-ink">Mandats de recherche</h2>
-            <Link href="/app/mandats" className="text-[15px] font-medium text-gold-deep underline-offset-4 hover:underline">
-              Nouveau mandat
-            </Link>
-          </div>
-          <div className="mt-3 overflow-x-auto rounded-3xl border border-line bg-paper">
-            <table className="w-full text-sm">
-              <thead className="bg-cream text-left text-xs uppercase tracking-wide text-muted">
-                <tr>
-                  <th className="px-2 py-1.5 font-medium">Budget max</th>
-                  <th className="px-2 py-1.5 text-right font-medium">Commissions min</th>
-                  <th className="px-2 py-1.5 text-right font-medium">Commissions max</th>
-                  <th className="px-2 py-1.5 font-medium">Zones</th>
-                  <th className="px-2 py-1.5 text-right font-medium">Correspondances</th>
-                </tr>
-              </thead>
-              <tbody>
-                {mandates.length === 0 ? (
-                  <tr>
-                    <td className="px-2 py-3 text-muted" colSpan={5}>
-                      Aucun mandat déposé. Décrivez une fois ce que vous cherchez,
-                      les dossiers correspondants vous seront présentés
-                      automatiquement.{" "}
-                      <Link href="/app/mandats" className="underline-offset-2 hover:underline">
-                        Déposer un mandat
-                      </Link>
-                    </td>
-                  </tr>
-                ) : (
-                  mandates.map((m) => (
-                    <tr key={m.id} className="border-t border-line">
-                      <td className="px-2 py-1.5 tabular-nums">{formatEuro(m.maxBudget)}</td>
-                      <td className="px-2 py-1.5 text-right tabular-nums">{formatEuro(m.minCommissions)}</td>
-                      <td className="px-2 py-1.5 text-right tabular-nums">{formatEuro(m.maxCommissions)}</td>
-                      <td className="px-2 py-1.5">{asStringArray(m.zones).join(", ")}</td>
-                      <td className="px-2 py-1.5 text-right tabular-nums">{m._count.matches}</td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </section>
+      {buyer ? (
+        <SummaryList
+          title="Mandats de recherche"
+          action={{ href: "/app/mandats", label: "Nouveau mandat" }}
+          rows={mandateRows}
+          empty={{
+            text: "Décrivez une fois ce que vous cherchez. Les dossiers correspondants vous seront présentés par score d’adéquation.",
+            href: "/app/mandats",
+            label: "Déposer un mandat",
+          }}
+        />
       ) : null}
 
-      {canBuy(actor) ? (
-        <section className="mt-10">
-          <h2 className="font-serif text-xl font-semibold text-ink">Mes offres</h2>
-          <div className="mt-3 overflow-x-auto rounded-3xl border border-line bg-paper">
-            <table className="w-full text-sm">
-              <thead className="bg-cream text-left text-xs uppercase tracking-wide text-muted">
-                <tr>
-                  <th className="px-2 py-1.5 font-medium">Dossier</th>
-                  <th className="px-2 py-1.5 text-right font-medium">Montant</th>
-                  <th className="px-2 py-1.5 text-right font-medium">Comptant</th>
-                  <th className="px-2 py-1.5 font-medium">Statut</th>
-                </tr>
-              </thead>
-              <tbody>
-                {offers.length === 0 ? (
-                  <tr>
-                    <td className="px-2 py-3 text-muted" colSpan={4}>
-                      Aucune offre déposée. Les annonces dont la fenêtre est
-                      ouverte acceptent une proposition.{" "}
-                      <Link href="/annonces" className="underline-offset-2 hover:underline">
-                        Voir les annonces
-                      </Link>
-                    </td>
-                  </tr>
-                ) : (
-                  offers.map((o) => (
-                    <tr key={o.id} className="border-t border-line">
-                      <td className="px-2 py-1.5">#{o.listing.publicNumber}</td>
-                      <td className="px-2 py-1.5 text-right tabular-nums">{formatEuro(o.amount)}</td>
-                      <td className="px-2 py-1.5 text-right tabular-nums">
-                        {Number(o.upfrontPercent).toLocaleString("fr-FR")} %
-                      </td>
-                      <td className="px-2 py-1.5">{OFFER_STATUS_LABELS[o.status]}</td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </section>
+      {buyer ? (
+        <SummaryList
+          title="Mes offres"
+          rows={offerRows}
+          empty={{
+            text: "Les annonces dont la fenêtre est ouverte acceptent une proposition. Aucun autre candidat ne verra votre montant.",
+            href: "/annonces",
+            label: "Parcourir les annonces",
+          }}
+        />
       ) : null}
 
-      <section className="mt-10">
-        <h2 className="font-serif text-xl font-semibold text-ink">Dossiers</h2>
-        <div className="mt-3 overflow-x-auto rounded-3xl border border-line bg-paper">
-          <table className="w-full text-sm">
-            <thead className="bg-cream text-left text-xs uppercase tracking-wide text-muted">
-              <tr>
-                <th className="px-2 py-1.5 font-medium">Dossier</th>
-                <th className="px-2 py-1.5 font-medium">Étape</th>
-                <th className="px-2 py-1.5 font-medium">Contrepartie</th>
-                <th className="px-2 py-1.5 text-right font-medium">Prix convenu</th>
-              </tr>
-            </thead>
-            <tbody>
-              {deals.length === 0 ? (
-                <tr>
-                  <td className="px-2 py-3 text-muted" colSpan={4}>
-                    Aucun dossier en cours. Un dossier s’ouvre lorsque vous
-                    retenez une offre, ou lorsqu’un cédant retient la vôtre.
-                  </td>
-                </tr>
-              ) : (
-                deals.map((d) => {
-                  const counterparty =
-                    d.seller.kind === "identified" && d.seller.id === actor.id ? d.buyer : d.seller;
-                  const label = counterpartyDisplayName(counterparty);
-                  return (
-                    <tr key={d.id} className="border-t border-line">
-                      <td className="px-2 py-1.5">
-                        <Link href={`/app/dossiers/${d.id}`} className="underline-offset-2 hover:underline">
-                          #{d.listing.publicNumber}
-                        </Link>
-                      </td>
-                      <td className="px-2 py-1.5">{DEAL_STAGE_LABELS[d.stage]}</td>
-                      <td className="px-2 py-1.5">{label}</td>
-                      <td className="px-2 py-1.5 text-right tabular-nums">{formatEuro(Number(d.agreedPrice))}</td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
-      </section>
+      <SummaryList
+        title="Dossiers"
+        rows={dealRows}
+        empty={{
+          text: "Un dossier s’ouvre lorsque vous retenez une offre, ou lorsqu’un cédant retient la vôtre.",
+          href: "/annonces",
+          label: "Voir les annonces",
+        }}
+      />
     </main>
-  );
-}
-
-function ListingTable({
-  listings,
-}: {
-  listings: Awaited<ReturnType<typeof listMyListings>>;
-}) {
-  if (listings.length === 0) {
-    return (
-      <p className="mt-2 text-sm text-muted">
-        Aucune annonce. Publiez un portefeuille importé pour recevoir des offres.{" "}
-        <Link href="/app/annonces/nouvelle" className="underline-offset-2 hover:underline">
-          Créer une annonce
-        </Link>
-      </p>
-    );
-  }
-  return (
-    <div className="mt-3 overflow-x-auto rounded-3xl border border-line bg-paper">
-      <table className="w-full text-sm">
-        <thead className="bg-cream text-left text-xs uppercase tracking-wide text-muted">
-          <tr>
-            <th className="px-2 py-1.5 font-medium">Réf.</th>
-            <th className="px-2 py-1.5 font-medium">Portefeuille</th>
-            <th className="px-2 py-1.5 font-medium">Statut</th>
-            <th className="px-2 py-1.5 text-right font-medium">Prix demandé</th>
-            <th className="px-2 py-1.5 font-medium">Zone</th>
-          </tr>
-        </thead>
-        <tbody>
-          {listings.map((l) => (
-            <tr key={l.id} className="border-t border-line">
-              <td className="px-2 py-1.5">
-                <Link href={`/app/annonces/${l.id}`} className="underline-offset-2 hover:underline">
-                  #{l.publicNumber}
-                </Link>
-              </td>
-              <td className="px-2 py-1.5">{l.portfolio.label}</td>
-              <td className="px-2 py-1.5">{LISTING_STATUS_LABELS[l.status]}</td>
-              <td className="px-2 py-1.5 text-right tabular-nums">{formatEuro(l.askingPrice)}</td>
-              <td className="px-2 py-1.5">{l.displayedZone}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
   );
 }
