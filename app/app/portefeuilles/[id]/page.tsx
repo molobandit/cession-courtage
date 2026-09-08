@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { RankedBars } from "@/components/charts/ranked-bars";
 import { MaturityColumns } from "@/components/charts/maturity-columns";
+import { CarrierCodesPanel } from "@/components/portfolio/carrier-codes-panel";
 import {
   ConcentrationMeter,
   MarketPositionCard,
@@ -32,8 +33,10 @@ import {
   topClientShare,
   type AnalyticsLine,
 } from "@/lib/portfolio/analytics";
+import { buildCarrierCodes, carrierRisk } from "@/lib/portfolio/carrier-codes";
 import { parseValuationBreakdown } from "@/lib/valuation/parse";
 import { valuePortfolio } from "@/lib/valuation/run";
+import { prisma } from "@/lib/prisma";
 
 export const metadata = { title: "Portefeuille" };
 
@@ -85,6 +88,16 @@ export default async function PortfolioPage({ params }: { params: Promise<{ id: 
         dominantSegment(lines),
       )
     : null;
+
+  const knownCodes = await prisma.carrierCode.findMany({
+    where: { portfolioId: portfolio.id },
+    select: { carrier: true, status: true, note: true },
+  });
+  const carrierCodes = buildCarrierCodes(
+    lines.map((l) => ({ carrier: l.carrier, annualCommission: l.annualCommission })),
+    knownCodes,
+  );
+  const codesRisk = carrierRisk(carrierCodes);
 
   const carrierStatus = carrierHhi > 0.6 ? "penalisant" : carrierHhi >= 0.3 ? "surveiller" : "bon";
   const clientStatus = top10 > 0.4 ? "penalisant" : top10 > 0.25 ? "surveiller" : "bon";
@@ -305,6 +318,12 @@ export default async function PortfolioPage({ params }: { params: Promise<{ id: 
           <MaturityColumns buckets={schedule} />
         </div>
       </section>
+
+      <CarrierCodesPanel
+        portfolioId={portfolio.id}
+        rows={carrierCodes}
+        risk={codesRisk}
+      />
 
       {/* Leviers */}
       {breakdown && breakdown.actions.length > 0 ? (

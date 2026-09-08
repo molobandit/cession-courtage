@@ -145,6 +145,24 @@ enum EscrowStage {
   REFUNDED
 }
 
+/// Etat du transfert du code de courtage pour une compagnie donnee.
+/// Le refus d'une compagnie est le premier motif d'echec d'une cession en
+/// France : il coupe la continuite des commissions apres la signature.
+enum CarrierCodeStatus {
+  PENDING
+  NOTIFIED
+  AGREED
+  REFUSED
+}
+
+/// Familles de pieces reclamees en verification prealable.
+enum DueDiligenceCategory {
+  LEGAL
+  FINANCIAL
+  PORTFOLIO
+  OPERATIONAL
+}
+
 enum DataRequestType {
   EXPORT
   DELETION
@@ -270,6 +288,7 @@ model Portfolio {
   valuations    Valuation[]
   listings      Listing[]
   imports       PortfolioImport[]
+  carrierCodes  CarrierCode[]
 
   @@index([firmId])
 }
@@ -517,6 +536,7 @@ model Deal {
   retentionReports RetentionReport[]
   messages         Message[]
   dataRoomViews    DataRoomView[]
+  dueDiligence     DueDiligenceItem[]
 
   /// Un seul dossier par couple annonce/acquereur. Rend l'acceptation d'une
   /// offre rejouable : D1 ne gere pas les transactions, la reprise apres echec
@@ -649,6 +669,40 @@ model DataRoomView {
 
   @@index([dealId, viewedAt])
   @@index([viewerId])
+}
+
+/// Suivi du transfert des codes de courtage, compagnie par compagnie.
+model CarrierCode {
+  id          String            @id @default(cuid())
+  portfolioId String
+  carrier     String
+  status      CarrierCodeStatus @default(PENDING)
+  notifiedAt  DateTime?
+  decidedAt   DateTime?
+  note        String?
+  updatedAt   DateTime          @updatedAt
+
+  portfolio Portfolio @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+
+  @@unique([portfolioId, carrier])
+  @@index([portfolioId, status])
+}
+
+/// Piece attendue en verification prealable, rattachee a un dossier.
+model DueDiligenceItem {
+  id         String               @id @default(cuid())
+  dealId     String
+  category   DueDiligenceCategory
+  label      String
+  required   Boolean              @default(true)
+  providedAt DateTime?
+  note       String?
+  updatedAt  DateTime             @updatedAt
+
+  deal Deal @relation(fields: [dealId], references: [id], onDelete: Cascade)
+
+  @@unique([dealId, label])
+  @@index([dealId, category])
 }
 
 model DataRequest {

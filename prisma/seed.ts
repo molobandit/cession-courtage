@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { hashPassword } from "../lib/auth/password";
+import { buildChecklist } from "../lib/deal/due-diligence";
 import { FREE_PLAN_DEAL_QUOTA, SUCCESS_FEE_RATE } from "../lib/billing/rates";
 import {
   ClientSegment,
@@ -21,12 +22,13 @@ import {
   SubscriptionStatus,
   UserRole,
   type Prisma,
+  CarrierCodeStatus,
+  DueDiligenceCategory,
 } from "@prisma/client";
 import {
   CARRIERS,
   GEO_ZONES,
   RISK_WEIGHTS,
-  SEGMENTS,
   computeSeedValuation,
   money,
   mulberry32,
@@ -1413,12 +1415,114 @@ async function main() {
     ],
   });
 
+  // Suivi des codes de courtage : etat realiste par portefeuille.
+  // Les compagnies sont tirees des lignes reellement importees, jamais inventees,
+  // pour que le suivi corresponde toujours au portefeuille.
+  const codeStates: { portfolioId: string; agreed: number; notified: number; refused: number }[] = [
+    { portfolioId: "pf_02", agreed: 4, notified: 2, refused: 0 },
+    { portfolioId: "pf_03", agreed: 3, notified: 1, refused: 0 },
+    { portfolioId: "pf_05", agreed: 2, notified: 2, refused: 1 },
+    { portfolioId: "pf_07", agreed: 5, notified: 1, refused: 0 },
+    { portfolioId: "pf_08", agreed: 6, notified: 0, refused: 0 },
+    { portfolioId: "pf_09", agreed: 7, notified: 0, refused: 0 },
+  ];
+
+  let carrierCodeCount = 0;
+  for (const state of codeStates) {
+    const carriers = await prisma.contractLine.findMany({
+      where: { portfolioId: state.portfolioId },
+      select: { carrier: true },
+      distinct: ["carrier"],
+      orderBy: { carrier: "asc" },
+    });
+    let index = 0;
+    const rows: {
+      portfolioId: string;
+      carrier: string;
+      status: CarrierCodeStatus;
+      notifiedAt: Date | null;
+      decidedAt: Date | null;
+      note: string | null;
+    }[] = [];
+
+    for (const { carrier } of carriers) {
+      let status: CarrierCodeStatus = CarrierCodeStatus.PENDING;
+      let note: string | null = null;
+      if (index < state.refused) {
+        status = CarrierCodeStatus.REFUSED;
+        note = "La compagnie refuse la réattribution du code au repreneur.";
+      } else if (index < state.refused + state.agreed) {
+        status = CarrierCodeStatus.AGREED;
+      } else if (index < state.refused + state.agreed + state.notified) {
+        status = CarrierCodeStatus.NOTIFIED;
+        note = "Courrier d'information envoyé, réponse attendue.";
+      }
+      const decided =
+        status === CarrierCodeStatus.AGREED || status === CarrierCodeStatus.REFUSED;
+      rows.push({
+        portfolioId: state.portfolioId,
+        carrier,
+        status,
+        notifiedAt: status === CarrierCodeStatus.PENDING ? null : daysAgo(30 - index),
+        decidedAt: decided ? daysAgo(12 - Math.min(index, 10)) : null,
+        note,
+      });
+      index += 1;
+    }
+    for (const row of rows) {
+      await prisma.carrierCode.create({ data: row });
+      carrierCodeCount += 1;
+    }
+  }
+
+  // Bordereau de pieces des dossiers ouverts, partiellement rempli.
+  let dueDiligenceCount = 0;
+  const deals = await prisma.deal.findMany({ select: { id: true, listingId: true } });
+  for (const deal of deals) {
+    const listing = await prisma.listing.findUnique({
+      where: { id: deal.listingId },
+      select: { portfolioId: true },
+    });
+    if (!listing) continue;
+    const carriers = await prisma.contractLine.findMany({
+      where: { portfolioId: listing.portfolioId },
+      select: { carrier: true },
+      distinct: ["carrier"],
+      orderBy: { carrier: "asc" },
+      take: 4,
+    });
+    const hasDecennial =
+      (await prisma.contractLine.count({
+        where: { portfolioId: listing.portfolioId, riskType: RiskType.DECENNIAL },
+      })) > 0;
+
+    const entries = buildChecklist(
+      carriers.map((c) => c.carrier),
+      hasDecennial,
+    );
+    let i = 0;
+    for (const entry of entries) {
+      await prisma.dueDiligenceItem.create({
+        data: {
+          dealId: deal.id,
+          category: entry.category as DueDiligenceCategory,
+          label: entry.label,
+          required: entry.required,
+          // Un dossier en cours a environ la moitie de ses pieces deposees.
+          providedAt: i % 2 === 0 ? daysAgo(20 - (i % 15)) : null,
+        },
+      });
+      dueDiligenceCount += 1;
+      i += 1;
+    }
+  }
+
   const userCount = await prisma.user.count();
   const lineCount = await prisma.contractLine.count();
   const listingCount = await prisma.listing.count();
   const offerCount = await prisma.offer.count();
   const dealCount = await prisma.deal.count();
-  console.info(`Done. users=${userCount} lines=${lineCount} listings=${listingCount} offers=${offerCount} deals=${dealCount}`);
+  console.info(`Done. users=${userCount} lines=${lineCount} listings=${listingCount} offers=${offerCount} deals=${dealCount} carrierCodes=${carrierCodeCount} dueDiligence=${dueDiligenceCount}`);
   console.info(`Demo password for every account: ${DEMO_PASSWORD}`);
 }
 
