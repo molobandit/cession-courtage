@@ -17,19 +17,13 @@
   },
   // Fichiers deposes : bordereaux d'import et pieces de salle de donnees.
   // Workers n'a pas de systeme de fichiers, ces fichiers vivent dans R2.
-  //
-  // Le binding est desactive tant que R2 n'est pas active sur le compte :
-  // `wrangler deploy` refuse un bucket inexistant (code 10085) et le
-  // deploiement entier echouerait. Le reste du site n'en depend pas.
-  //
-  // Pour l'activer, une seule fois :
-  //   1. activer R2 depuis le tableau de bord Cloudflare ;
-  //   2. npx wrangler r2 bucket create cession-courtage-uploads
-  //   3. retirer les commentaires des quatre lignes ci-dessous.
-  //
-  // "r2_buckets": [
-  //   { "binding": "UPLOADS", "bucket_name": "cession-courtage-uploads" }
-  // ],
+  // En local, wrangler simule ce bucket dans .wrangler/state.
+  "r2_buckets": [
+    {
+      "binding": "UPLOADS",
+      "bucket_name": "cession-courtage-uploads"
+    }
+  ],
   "d1_databases": [
     {
       "binding": "DB",
