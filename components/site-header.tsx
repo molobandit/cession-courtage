@@ -2,6 +2,14 @@ import Link from "next/link";
 import { getActor, isAdmin, isOriasVerified } from "@/lib/authz";
 import { logoutAction } from "@/app/actions/auth";
 
+const PUBLIC_LINKS = [
+  { href: "/ceder", label: "Céder" },
+  { href: "/acquerir", label: "Acquérir" },
+  { href: "/valoriser", label: "Valoriser" },
+  { href: "/annonces", label: "Annonces" },
+  { href: "/tarifs", label: "Tarifs" },
+];
+
 export async function SiteHeader() {
   const actor = await getActor();
   const memberHref = actor
@@ -13,37 +21,41 @@ export async function SiteHeader() {
     : "/connexion";
 
   return (
-    <header className="border-b border-line bg-navy text-cream">
-      <div className="mx-auto flex h-12 max-w-6xl items-center justify-between gap-4 px-4">
-        <Link href="/" className="font-serif text-[15px] font-semibold tracking-tight">
-          Cession courtage
+    <header className="border-b border-charcoal-muted bg-charcoal text-cream">
+      <div className="mx-auto flex min-h-14 max-w-6xl flex-wrap items-center justify-between gap-x-6 gap-y-2 px-4 py-2">
+        <Link href="/" className="font-serif text-base font-semibold tracking-tight">
+          Cession <span className="text-gold">courtage</span>
         </Link>
-        <nav className="flex items-center gap-4 text-sm">
-          <Link href="/annonces" className="text-cream/85 hover:text-cream">
-            Annonces
-          </Link>
+
+        <nav className="flex flex-wrap items-center gap-x-5 gap-y-1 text-[15px]">
+          {PUBLIC_LINKS.map((link) => (
+            <Link key={link.href} href={link.href} className="text-cream/80 hover:text-gold">
+              {link.label}
+            </Link>
+          ))}
+
           {actor ? (
             <>
-              <Link href={memberHref} className="text-cream/85 hover:text-cream">
+              <Link href={memberHref} className="text-cream/80 hover:text-gold">
                 {isAdmin(actor) ? "Administration" : "Espace membre"}
               </Link>
-              <span className="hidden text-cream/55 sm:inline">
+              <span className="hidden text-cream/50 lg:inline">
                 {actor.fullName ?? actor.email}
               </span>
               <form action={logoutAction}>
-                <button type="submit" className="text-cream/85 hover:text-cream">
+                <button type="submit" className="text-cream/80 hover:text-gold">
                   Déconnexion
                 </button>
               </form>
             </>
           ) : (
             <>
-              <Link href="/connexion" className="text-cream/85 hover:text-cream">
+              <Link href="/connexion" className="text-cream/80 hover:text-gold">
                 Connexion
               </Link>
               <Link
                 href="/inscription"
-                className="rounded-sm bg-copper px-2.5 py-1 text-sm font-medium text-white hover:bg-copper/90"
+                className="rounded-full bg-gold px-4 py-1.5 font-medium text-charcoal hover:bg-gold/85"
               >
                 Créer un compte
               </Link>

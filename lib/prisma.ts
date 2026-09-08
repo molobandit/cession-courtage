@@ -4,39 +4,31 @@ import { PrismaClient } from "@prisma/client";
 import { PrismaD1 } from "@prisma/adapter-d1";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 
-const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
+type D1Binding = ConstructorParameters<typeof PrismaD1>[0];
 
-function isCloudflareWorker(): boolean {
-  return typeof navigator !== "undefined" && navigator.userAgent === "Cloudflare-Workers";
-}
-
+/**
+ * La base est Cloudflare D1, en local comme en production. En `next dev`, le
+ * binding est fourni par initOpenNextCloudflareForDev() (next.config.ts) et les
+ * donnees vivent dans .wrangler/state/v3/d1. Il n'existe pas de fichier SQLite
+ * de developpement ni de DATABASE_URL.
+ */
 function createPrismaClient(): PrismaClient {
-  if (isCloudflareWorker()) {
-    const { env } = getCloudflareContext();
-    return new PrismaClient({
-      adapter: new PrismaD1((env as { DB: ConstructorParameters<typeof PrismaD1>[0] }).DB),
-      log: ["error"],
-    });
+  const { env } = getCloudflareContext();
+  const db = (env as { DB?: D1Binding }).DB;
+  if (!db) {
+    throw new Error(
+      "Binding D1 `DB` introuvable. Verifiez wrangler.jsonc, puis lancez `npm run db:migrate` et `npm run db:seed`.",
+    );
   }
-  return new PrismaClient({
-    log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
-  });
+  return new PrismaClient({ adapter: new PrismaD1(db), log: ["error"] });
 }
 
+/** Un client par requete : le binding D1 n'est pas partageable entre requetes. */
 const prismaForRequest = cache(createPrismaClient);
 
-function client(): PrismaClient {
-  if (isCloudflareWorker()) {
-    return prismaForRequest();
-  }
-  globalForPrisma.prisma ??= createPrismaClient();
-  return globalForPrisma.prisma;
-}
-
-/** Proxy : un client par requête sur Worker (binding D1), singleton en `next dev`. */
 export const prisma = new Proxy({} as PrismaClient, {
   get(_target, prop, receiver) {
-    const instance = client();
+    const instance = prismaForRequest();
     const value = Reflect.get(instance, prop, receiver);
     return typeof value === "function" ? value.bind(instance) : value;
   },

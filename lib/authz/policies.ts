@@ -95,6 +95,39 @@ export function isListingMessageParty(input: {
   return input.hasOffer || input.hasDeal;
 }
 
+export type ListingMessageWhere = {
+  listingId: string;
+  OR?: ({ senderId: string } | { recipientId: string } | { recipientId: null; senderId: string })[];
+};
+
+/**
+ * Filtre de lecture de la messagerie d'annonce, construit ici pour que la
+ * requete et le test portent sur le meme objet.
+ *
+ * Le cedant lit tout. Un acquereur ne lit que ce qu'il a envoye, ce qui lui est
+ * adresse, et les messages diffuses par le cedant. Un message sans destinataire
+ * emis par un autre acquereur ne doit jamais lui parvenir : deux candidats
+ * concurrents ne peuvent pas se decouvrir.
+ */
+export function listingMessageWhere(input: {
+  listingId: string;
+  actorId: string;
+  isSeller: boolean;
+  sellerUserId: string | null;
+}): ListingMessageWhere {
+  if (input.isSeller) return { listingId: input.listingId };
+
+  const broadcast =
+    input.sellerUserId !== null
+      ? [{ recipientId: null as null, senderId: input.sellerUserId }]
+      : [];
+
+  return {
+    listingId: input.listingId,
+    OR: [{ senderId: input.actorId }, { recipientId: input.actorId }, ...broadcast],
+  };
+}
+
 export type OfferAccess = "none" | "own" | "full" | "sealed";
 
 export function offerAccessFor(

@@ -1,7 +1,7 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
 import { canBuy, type Actor } from "@/lib/authz/actor";
-import { isListingMessageParty, ownsFirm } from "@/lib/authz/policies";
+import { isListingMessageParty, listingMessageWhere, ownsFirm } from "@/lib/authz/policies";
 
 export async function listingSellerUserId(firmId: string): Promise<string | null> {
   const seller = await prisma.user.findFirst({
@@ -61,16 +61,12 @@ export async function listListingMessages(listingId: string, actor: Actor) {
   const seller = ownsFirm(actor, listing.portfolio.firmId);
   if (!seller && !(await isListingMailboxParty(actor, listingId))) return [];
 
-  const where = seller
-    ? { listingId }
-    : {
-        listingId,
-        OR: [
-          { senderId: actor.id },
-          { recipientId: actor.id },
-          { recipientId: null, senderId: { not: actor.id } },
-        ],
-      };
+  const where = listingMessageWhere({
+    listingId,
+    actorId: actor.id,
+    isSeller: seller,
+    sellerUserId: seller ? null : await listingSellerUserId(listing.portfolio.firmId),
+  });
 
   return prisma.message.findMany({
     where,

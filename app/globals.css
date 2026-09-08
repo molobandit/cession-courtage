@@ -1,19 +1,34 @@
 @import "tailwindcss";
 
 :root {
-  --navy: #0b1f3a;
-  --navy-muted: #163354;
-  --cream: #f4f1ea;
-  --paper: #fbfaf7;
-  --ink: #1c1917;
-  --muted: #5c574e;
-  --line: #ddd6c8;
-  --copper: #b4532a;
+  /* Charte : hero charbon, accent or. Contrastes verifies AA. */
+  --charcoal: #15171c;
+  --charcoal-muted: #232830;
+  --gold: #ebd06a;
+  --gold-deep: #b8942f;
+
+  /* Conserve pour les pages existantes : navy pointe desormais sur le charbon. */
+  --navy: #15171c;
+  --navy-muted: #232830;
+
+  --cream: #f5f2ea;
+  --paper: #fffdf8;
+  --ink: #15171c;
+  --muted: #56534b;
+  --line: #ddd6c6;
+
+  /* Amber profond : seul ton d'accent lisible avec du texte blanc. */
+  --copper: #8a5714;
+
   --ok: #1f6b4a;
   --danger: #9b1c1c;
 }
 
 @theme inline {
+  --color-charcoal: var(--charcoal);
+  --color-charcoal-muted: var(--charcoal-muted);
+  --color-gold: var(--gold);
+  --color-gold-deep: var(--gold-deep);
   --color-navy: var(--navy);
   --color-navy-muted: var(--navy-muted);
   --color-cream: var(--cream);
@@ -34,9 +49,26 @@ body {
   color: var(--ink);
   font-family: var(--font-sans), "Segoe UI", sans-serif;
   font-size: 15px;
-  line-height: 1.45;
+  line-height: 1.5;
 }
 
 a {
   color: inherit;
+}
+
+/* Chiffres alignes en colonne dans les tableaux denses de l'espace membre. */
+.tabular {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* Cible de clic confortable : une partie des utilisateurs a plus de 55 ans. */
+button,
+a {
+  touch-action: manipulation;
+}
+
+:focus-visible {
+  outline: 2px solid var(--gold-deep);
+  outline-offset: 2px;
 }

@@ -7,19 +7,22 @@ Place de marché B2B (France) pour céder ou acquérir un portefeuille de courta
 - Node.js 20+
 - `AUTH_SECRET` (32 octets)
 
-En local la base est un fichier SQLite (`prisma/dev.db`). En production c'est **Cloudflare D1** (même schéma SQLite, binding `DB`).
+**La base est Cloudflare D1, en local comme en production.** Il n'y a pas de fichier SQLite de
+développement ni de `DATABASE_URL` : `next dev` reçoit le binding `DB` via
+`initOpenNextCloudflareForDev()` (`next.config.ts`), et les données locales vivent dans
+`.wrangler/state/v3/d1`. Le schéma est appliqué par les migrations de `migrations/`.
 
 ## Démarrage (clone neuf)
 
 ```bash
 cp .env.example .env          # renseigner AUTH_SECRET (et NEXTAUTH_SECRET identique)
 npm install
-npx prisma generate
-npx prisma db push
-npm run db:seed
+npm run setup                 # prisma generate + migrations D1 locales + seed
 npm test
 npm run dev                   # http://localhost:3000
 ```
+
+`npm run db:reset` repart d'une base D1 locale vide.
 
 Mot de passe unique du seed : `Demo2026!`
 
@@ -75,7 +78,7 @@ Vitest : `lib/valuation/compute.test.ts` (cascade + facteurs), `lib/matching/sco
 
 Déploiement : `npm run deploy` (OpenNext + Wrangler). Secrets Cloudflare : `AUTH_SECRET`, `AUTH_URL` / `NEXTAUTH_URL`. La base est le binding D1 `DB` (pas de `DATABASE_URL` sur le Worker).
 
-Schéma D1 : `npx wrangler d1 migrations apply cession-courtage --remote` puis, après un seed local, `python3 scripts/dump-sqlite-for-d1.py` et `npx wrangler d1 execute cession-courtage --remote --file=prisma/d1-seed.sql`.
+Schéma D1 distant : `npm run db:migrate:remote`.
 
 ## Hors périmètre
 

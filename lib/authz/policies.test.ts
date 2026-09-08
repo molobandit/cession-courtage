@@ -4,6 +4,7 @@ import {
   canViewListing,
   hasOfferWindowExpired,
   isListingMessageParty,
+  listingMessageWhere,
   isOfferWindowSealed,
   offerAccessFor,
 } from "@/lib/authz/policies";
@@ -130,5 +131,39 @@ describe("isListingMessageParty", () => {
         hasDeal: false,
       }),
     ).toBe(false);
+  });
+});
+
+describe("listingMessageWhere (fuite entre acquereurs)", () => {
+  const base = { listingId: "listing_1", actorId: "buyer_A", sellerUserId: "seller_1" };
+
+  it("le cedant lit toute la messagerie de son annonce", () => {
+    const where = listingMessageWhere({ ...base, actorId: "seller_1", isSeller: true });
+    expect(where).toEqual({ listingId: "listing_1" });
+    expect(where.OR).toBeUndefined();
+  });
+
+  it("un acquereur ne recoit les messages diffuses que s'ils viennent du cedant", () => {
+    const where = listingMessageWhere({ ...base, isSeller: false });
+    expect(where.OR).toEqual([
+      { senderId: "buyer_A" },
+      { recipientId: "buyer_A" },
+      { recipientId: null, senderId: "seller_1" },
+    ]);
+  });
+
+  it("ne laisse passer aucun message diffuse par un acquereur concurrent", () => {
+    const where = listingMessageWhere({ ...base, isSeller: false });
+    const broadcastClauses = (where.OR ?? []).filter(
+      (clause) => "recipientId" in clause && clause.recipientId === null,
+    );
+    // Une seule clause de diffusion, et elle est nominativement celle du cedant.
+    expect(broadcastClauses).toHaveLength(1);
+    expect(broadcastClauses[0]).toEqual({ recipientId: null, senderId: "seller_1" });
+  });
+
+  it("ne diffuse rien si le cedant n'a pas de compte identifie", () => {
+    const where = listingMessageWhere({ ...base, isSeller: false, sellerUserId: null });
+    expect(where.OR).toEqual([{ senderId: "buyer_A" }, { recipientId: "buyer_A" }]);
   });
 });
