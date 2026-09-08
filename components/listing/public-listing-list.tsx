@@ -4,6 +4,14 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { ChipGroup } from "@/components/listing/chips";
 import { formatCount, formatEuroWhole } from "@/lib/format/number";
+import {
+  EMPTY_FILTERS,
+  countActiveFilters,
+  filterListings,
+  sortListings,
+  type CatalogueFilters,
+  type SortKey,
+} from "@/lib/listing/filter";
 
 export type PublicListingCard = {
   id: string;
@@ -25,8 +33,6 @@ export type PublicListingCard = {
   clientSegments: string[];
 };
 
-type SortKey = "recent" | "price-asc" | "price-desc" | "commissions-desc";
-
 const SORT_LABELS: Record<SortKey, string> = {
   recent: "Les plus récentes",
   "price-asc": "Prix croissant",
@@ -46,13 +52,12 @@ const SELECT_CLASS =
   "mt-2 h-11 w-full rounded-full border border-line bg-cream px-4 text-[15px] text-ink";
 
 export function PublicListingList({ listings }: { listings: PublicListingCard[] }) {
-  const [zone, setZone] = useState("");
-  const [carrier, setCarrier] = useState("");
-  const [risk, setRisk] = useState("");
-  const [segment, setSegment] = useState("");
-  const [maxPrice, setMaxPrice] = useState("");
-  const [openOnly, setOpenOnly] = useState(false);
+  const [filters, setFilters] = useState<CatalogueFilters>(EMPTY_FILTERS);
   const [sort, setSort] = useState<SortKey>("recent");
+
+  const { zone, carrier, risk, segment, maxPrice, openOnly } = filters;
+  const patch = (change: Partial<CatalogueFilters>) =>
+    setFilters((current) => ({ ...current, ...change }));
 
   // Les listes de filtres viennent des annonces réelles : jamais d'option vide.
   const options = useMemo(() => {
@@ -71,37 +76,16 @@ export function PublicListingList({ listings }: { listings: PublicListingCard[] 
     };
   }, [listings]);
 
-  const visible = useMemo(() => {
-    const zoneQuery = zone.trim().toLowerCase();
-    const ceiling = maxPrice.trim() === "" ? null : Number(maxPrice.replace(/[^\d]/g, ""));
+  // Filtrage et tri passent par des fonctions pures, couvertes par des tests.
+  const visible = useMemo(
+    () => sortListings(filterListings(listings, filters), sort),
+    [listings, filters, sort],
+  );
 
-    const filtered = listings.filter((item) => {
-      if (zoneQuery && !item.zone.toLowerCase().includes(zoneQuery)) return false;
-      if (ceiling !== null && Number.isFinite(ceiling) && item.askingPrice > ceiling) return false;
-      if (carrier && !item.carriers.includes(carrier)) return false;
-      if (risk && !item.riskTypes.includes(risk)) return false;
-      if (segment && !item.clientSegments.includes(segment)) return false;
-      if (openOnly && !(item.status === "OFFERS_OPEN" && (item.daysLeft ?? -1) >= 0)) return false;
-      return true;
-    });
-
-    const sorted = [...filtered];
-    if (sort === "price-asc") sorted.sort((a, b) => a.askingPrice - b.askingPrice);
-    if (sort === "price-desc") sorted.sort((a, b) => b.askingPrice - a.askingPrice);
-    if (sort === "commissions-desc")
-      sorted.sort((a, b) => b.annualCommissions - a.annualCommissions);
-    return sorted;
-  }, [listings, zone, carrier, risk, segment, maxPrice, openOnly, sort]);
-
-  const activeFilters = [zone, carrier, risk, segment, maxPrice].filter(Boolean).length + (openOnly ? 1 : 0);
+  const activeFilters = countActiveFilters(filters);
 
   function reset() {
-    setZone("");
-    setCarrier("");
-    setRisk("");
-    setSegment("");
-    setMaxPrice("");
-    setOpenOnly(false);
+    setFilters(EMPTY_FILTERS);
   }
 
   return (
@@ -115,7 +99,7 @@ export function PublicListingList({ listings }: { listings: PublicListingCard[] 
             <select
               id="carrier"
               value={carrier}
-              onChange={(e) => setCarrier(e.target.value)}
+              onChange={(e) => patch({ carrier: e.target.value })}
               className={SELECT_CLASS}
             >
               <option value="">Toutes</option>
@@ -133,7 +117,7 @@ export function PublicListingList({ listings }: { listings: PublicListingCard[] 
             <select
               id="risk"
               value={risk}
-              onChange={(e) => setRisk(e.target.value)}
+              onChange={(e) => patch({ risk: e.target.value })}
               className={SELECT_CLASS}
             >
               <option value="">Toutes</option>
@@ -151,7 +135,7 @@ export function PublicListingList({ listings }: { listings: PublicListingCard[] 
             <select
               id="segment"
               value={segment}
-              onChange={(e) => setSegment(e.target.value)}
+              onChange={(e) => patch({ segment: e.target.value })}
               className={SELECT_CLASS}
             >
               <option value="">Toutes</option>
@@ -169,7 +153,7 @@ export function PublicListingList({ listings }: { listings: PublicListingCard[] 
             <input
               id="zone"
               value={zone}
-              onChange={(e) => setZone(e.target.value)}
+              onChange={(e) => patch({ zone: e.target.value })}
               placeholder="Rhône, Nord, Île-de-France"
               className="mt-2 h-11 w-full rounded-full border border-line bg-cream px-4 text-[15px] text-ink"
             />
@@ -182,7 +166,7 @@ export function PublicListingList({ listings }: { listings: PublicListingCard[] 
               id="maxPrice"
               inputMode="numeric"
               value={maxPrice}
-              onChange={(e) => setMaxPrice(e.target.value)}
+              onChange={(e) => patch({ maxPrice: e.target.value })}
               placeholder="50 000"
               className="tabular mt-2 h-11 w-full rounded-full border border-line bg-cream px-4 text-right text-[15px] text-ink"
             />
@@ -211,7 +195,7 @@ export function PublicListingList({ listings }: { listings: PublicListingCard[] 
             <input
               type="checkbox"
               checked={openOnly}
-              onChange={(e) => setOpenOnly(e.target.checked)}
+              onChange={(e) => patch({ openOnly: e.target.checked })}
               className="h-5 w-5 rounded border-line"
             />
             Fenêtre d’offres encore ouverte
