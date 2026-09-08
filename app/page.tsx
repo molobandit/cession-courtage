@@ -1,7 +1,15 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { GROWTH_PLAN_ANNUAL_EUR, SUCCESS_FEE_RATE } from "@/lib/billing/rates";
 import { OFFER_WINDOW_DAYS } from "@/lib/listing/constants";
+
+export const metadata: Metadata = {
+  title: "Céder ou acquérir un portefeuille de courtage d'assurance",
+  description:
+    "Place de marché B2B réservée aux courtiers ORIAS. Valorisation en cascade, annonce sous alias, offres scellées sur 21 jours et part différée ajustée sur la rétention constatée.",
+  alternates: { canonical: "/" },
+};
 
 const FEE_LABEL = `${(SUCCESS_FEE_RATE * 100).toLocaleString("fr-FR")} % HT`;
 

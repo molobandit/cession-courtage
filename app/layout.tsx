@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { IBM_Plex_Sans, Source_Serif_4 } from "next/font/google";
 import "./globals.css";
 import { SiteHeader } from "@/components/site-header";
+import { siteUrl } from "@/lib/site";
 
 const sans = IBM_Plex_Sans({
   variable: "--font-ibm-plex-sans",
@@ -16,6 +17,7 @@ const serif = Source_Serif_4({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl()),
   title: {
     default: "Cession de portefeuilles de courtage",
     template: "%s · Cession courtage",
