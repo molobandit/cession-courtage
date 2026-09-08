@@ -28,7 +28,7 @@ export default async function ListingOffersPage({
       {result.access === "sealed" ? (
         <p className="mt-4 border border-line bg-paper px-4 py-3 text-sm">
           Fenêtre d&apos;offres en cours. Les montants et le nombre d&apos;offres restent
-          masqués jusqu&apos;à la clôture — y compris pour vous.
+          masqués jusqu&apos;à la clôture, y compris pour vous.
         </p>
       ) : result.offers.length === 0 ? (
         <p className="mt-4 text-sm text-muted">Aucune offre visible.</p>

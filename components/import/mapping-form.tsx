@@ -50,7 +50,7 @@ export function MappingForm({
               defaultValue={mapping[field.key as TargetField] ?? ""}
               className={selectClass}
             >
-              <option value="">— Non associé —</option>
+              <option value="">Non associé</option>
               {headers.map((header) => (
                 <option key={header} value={header}>
                   {header}

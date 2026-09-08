@@ -47,7 +47,7 @@ export default async function AdminOriasPage() {
               pending.map((u) => (
                 <tr key={u.id} className="border-t border-line align-top">
                   <td className="px-2 py-2">
-                    <div>{u.fullName ?? "—"}</div>
+                    <div>{u.fullName ?? "Non renseigné"}</div>
                     <div className="text-xs text-muted">{u.email}</div>
                   </td>
                   <td className="px-2 py-2 font-medium tabular-nums">{u.oriasNumber}</td>

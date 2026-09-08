@@ -72,7 +72,7 @@ export default async function ImportIndexPage() {
                       </Link>
                     </td>
                     <td className="px-2 py-1.5">{STATUS_LABEL[item.status] ?? item.status}</td>
-                    <td className="px-2 py-1.5">{item.portfolio?.label ?? "—"}</td>
+                    <td className="px-2 py-1.5">{item.portfolio?.label ?? "Non associé"}</td>
                     <td className="px-2 py-1.5">{formatDate(item.createdAt)}</td>
                   </tr>
                 ))

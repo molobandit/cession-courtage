@@ -98,7 +98,7 @@ export default async function PublicListingPage({
         </ul>
         <p className="mt-2 text-xs text-muted">
           Compagnies : {profile.carriers.slice(0, 8).join(", ")}
-          {profile.carriers.length > 8 ? "…" : ""} — aucune donnée nominative de client final.
+          {profile.carriers.length > 8 ? "…" : ""}. Aucune donnée nominative de client final.
         </p>
       </section>
 

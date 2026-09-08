@@ -92,7 +92,7 @@ export default async function MemberHomePage() {
                         {formatEuro(p.annualCommissions)}
                       </td>
                       <td className="px-2 py-1.5 text-right tabular-nums">
-                        {p.valuations[0] ? formatEuro(p.valuations[0].midValue) : "—"}
+                        {p.valuations[0] ? formatEuro(p.valuations[0].midValue) : "Non calculée"}
                       </td>
                       <td className="px-2 py-1.5">{formatDate(p.importedAt)}</td>
                     </tr>
