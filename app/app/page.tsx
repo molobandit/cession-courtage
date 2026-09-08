@@ -72,7 +72,8 @@ export default async function MemberHomePage() {
                 {portfolios.length === 0 ? (
                   <tr>
                     <td className="px-2 py-3 text-muted" colSpan={6}>
-                      Aucun portefeuille.{" "}
+                      Aucun portefeuille importé. Tout commence ici : déposez un
+                      bordereau, les colonnes nominatives sont refusées.{" "}
                       <Link href="/app/import" className="underline-offset-2 hover:underline">
                         Importer un bordereau
                       </Link>
@@ -139,7 +140,12 @@ export default async function MemberHomePage() {
                 {mandates.length === 0 ? (
                   <tr>
                     <td className="px-2 py-3 text-muted" colSpan={5}>
-                      Aucun mandat pour le moment.
+                      Aucun mandat déposé. Décrivez une fois ce que vous cherchez,
+                      les dossiers correspondants vous seront présentés
+                      automatiquement.{" "}
+                      <Link href="/app/mandats" className="underline-offset-2 hover:underline">
+                        Déposer un mandat
+                      </Link>
                     </td>
                   </tr>
                 ) : (
@@ -176,7 +182,11 @@ export default async function MemberHomePage() {
                 {offers.length === 0 ? (
                   <tr>
                     <td className="px-2 py-3 text-muted" colSpan={4}>
-                      Aucune offre déposée.
+                      Aucune offre déposée. Les annonces dont la fenêtre est
+                      ouverte acceptent une proposition.{" "}
+                      <Link href="/annonces" className="underline-offset-2 hover:underline">
+                        Voir les annonces
+                      </Link>
                     </td>
                   </tr>
                 ) : (
@@ -213,7 +223,8 @@ export default async function MemberHomePage() {
               {deals.length === 0 ? (
                 <tr>
                   <td className="px-2 py-3 text-muted" colSpan={4}>
-                    Aucun dossier en cours.
+                    Aucun dossier en cours. Un dossier s’ouvre lorsque vous
+                    retenez une offre, ou lorsqu’un cédant retient la vôtre.
                   </td>
                 </tr>
               ) : (
@@ -249,7 +260,14 @@ function ListingTable({
   listings: Awaited<ReturnType<typeof listMyListings>>;
 }) {
   if (listings.length === 0) {
-    return <p className="mt-2 text-sm text-muted">Aucune annonce publiée.</p>;
+    return (
+      <p className="mt-2 text-sm text-muted">
+        Aucune annonce. Publiez un portefeuille importé pour recevoir des offres.{" "}
+        <Link href="/app/annonces/nouvelle" className="underline-offset-2 hover:underline">
+          Créer une annonce
+        </Link>
+      </p>
+    );
   }
   return (
     <div className="mt-2 overflow-x-auto border border-line bg-paper">
