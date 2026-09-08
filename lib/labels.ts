@@ -8,6 +8,7 @@ import {
   OfferStatus,
   RiskType,
   type DistributionMode,
+  type FinancingMode,
 } from "@prisma/client";
 
 export const RISK_TYPE_LABELS: Record<RiskType, string> = {
@@ -106,3 +107,9 @@ export const DEAL_STAGE_ORDER: DealStage[] = [
   "RETENTION",
   "CLOSED",
 ];
+
+export const FINANCING_LABELS: Record<FinancingMode, string> = {
+  CASH: "Comptant",
+  CREDIT: "Crédit",
+  BOTH: "Comptant ou crédit",
+};

@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { hashPassword } from "../lib/auth/password";
 import { buildChecklist } from "../lib/deal/due-diligence";
+import { FIRST_MANDATE_PUBLIC_NUMBER } from "../lib/mandate/public";
 import { FREE_PLAN_DEAL_QUOTA, SUCCESS_FEE_RATE } from "../lib/billing/rates";
 import {
   ClientSegment,
@@ -1240,6 +1241,18 @@ async function main() {
     },
   ];
   await prisma.buyerMandate.createMany({ data: mandates });
+
+  // Publie une partie des mandats comme demandes d'acquisition : le catalogue
+  // reste vivant meme quand peu de cedants ont publie.
+  const published = mandates.slice(0, 5);
+  let mandateNumber = FIRST_MANDATE_PUBLIC_NUMBER;
+  for (const mandate of published) {
+    await prisma.buyerMandate.update({
+      where: { id: String(mandate.id) },
+      data: { isPublic: true, publicNumber: mandateNumber },
+    });
+    mandateNumber += 1;
+  }
 
   const offers: Prisma.OfferCreateManyInput[] = [
     { id: "off_01", listingId: "lst_03", buyerId: "user_buyer_02", amount: money((listingAsk.get("lst_03") ?? 0) * 0.92), upfrontPercent: "70.00", message: "Offre ferme, paiement majoritairement comptant, reprise possible sous 45 jours.", status: OfferStatus.SUBMITTED, submittedAt: daysAgo(3) },

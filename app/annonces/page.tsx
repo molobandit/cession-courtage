@@ -71,6 +71,17 @@ export default async function PublicListingsPage() {
             Toutes les fiches sont anonymes. Ni raison sociale, ni commune. L’identité
             du cédant n’est révélée qu’à la signature de la lettre d’intention.
           </p>
+          <nav className="mt-6 flex flex-wrap gap-2" aria-label="Type d’annonce">
+            <span className="rounded-full bg-gold px-4 py-2 text-[15px] font-medium text-charcoal">
+              Portefeuilles à céder
+            </span>
+            <Link
+              href="/annonces/demandes"
+              className="rounded-full border border-cream/25 px-4 py-2 text-[15px] text-cream/80 hover:border-gold/50 hover:text-gold"
+            >
+              Demandes d’acquisition
+            </Link>
+          </nav>
         </div>
       </section>
 

@@ -459,6 +459,12 @@ model BuyerMandate {
   updatedAt      DateTime       @updatedAt
   isActive       Boolean        @default(true)
 
+  /// Publie le mandat comme demande d'acquisition visible au catalogue.
+  /// L'acquereur reste anonyme : seul son alias public est montre.
+  isPublic Boolean @default(false)
+  /// Reference publique, serie 20001, distincte des annonces de cession (10001).
+  publicNumber Int? @unique
+
   buyer   User    @relation(fields: [buyerId], references: [id], onDelete: Cascade)
   matches Match[]
 
