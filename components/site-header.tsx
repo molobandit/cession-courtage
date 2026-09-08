@@ -8,6 +8,7 @@ const PUBLIC_LINKS = [
   { href: "/valoriser", label: "Valoriser" },
   { href: "/annonces", label: "Annonces" },
   { href: "/tarifs", label: "Tarifs" },
+  { href: "/journal", label: "Journal" },
 ];
 
 export async function SiteHeader() {

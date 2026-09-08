@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { hashPassword } from "../lib/auth/password";
+import { FREE_PLAN_DEAL_QUOTA, SUCCESS_FEE_RATE } from "../lib/billing/rates";
 import {
   ClientSegment,
   CommissionType,
@@ -866,8 +867,8 @@ async function main() {
       data: {
         userId: seller.id,
         plan: SubscriptionPlan.FREE,
-        feeRate: "0.1500",
-        dealQuota: 3,
+        feeRate: SUCCESS_FEE_RATE.toFixed(4),
+        dealQuota: FREE_PLAN_DEAL_QUOTA,
         dealsUsed: 0,
         status: SubscriptionStatus.ACTIVE,
         renewsAt: daysFromNow(300),
@@ -898,8 +899,9 @@ async function main() {
       data: {
         userId: buyer.id,
         plan: buyer.plan,
-        feeRate: buyer.plan === SubscriptionPlan.GROWTH ? "0.1350" : "0.1500",
-        dealQuota: buyer.plan === SubscriptionPlan.GROWTH ? null : 3,
+        // Le taux ne depend pas du forfait : seul le quota de dossiers change.
+        feeRate: SUCCESS_FEE_RATE.toFixed(4),
+        dealQuota: buyer.plan === SubscriptionPlan.GROWTH ? null : FREE_PLAN_DEAL_QUOTA,
         dealsUsed: buyer.plan === SubscriptionPlan.FREE ? 1 : 2,
         status: SubscriptionStatus.ACTIVE,
         renewsAt: daysFromNow(250),
@@ -956,8 +958,8 @@ async function main() {
     data: {
       userId: "user_pending",
       plan: SubscriptionPlan.FREE,
-      feeRate: "0.1500",
-      dealQuota: 3,
+      feeRate: SUCCESS_FEE_RATE.toFixed(4),
+      dealQuota: FREE_PLAN_DEAL_QUOTA,
       dealsUsed: 0,
       status: SubscriptionStatus.ACTIVE,
       renewsAt: daysFromNow(365),

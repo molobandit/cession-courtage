@@ -5,9 +5,13 @@ import { authConfig, requiresSession } from "@/auth.config";
 const { auth } = NextAuth(authConfig);
 
 /**
- * En-tetes de securite poses ici et non par la configuration Next : le
- * `headers()` de next.config n'est pas restitue par le Worker OpenNext, alors
- * que le middleware s'execute a chaque requete.
+ * En-tetes de securite pour le developpement local uniquement.
+ *
+ * En production, c'est worker/index.ts qui les pose : OpenNext reconstruit la
+ * reponse et perd aussi bien le `headers()` de next.config que ceux du
+ * middleware. L'enveloppe du worker est le dernier maillon avant le reseau,
+ * donc le seul endroit fiable. Ici, ils couvrent `next dev`, ou cette
+ * enveloppe ne s'execute pas.
  */
 const SECURITY_HEADERS: Record<string, string> = {
   "Strict-Transport-Security": "max-age=31536000; includeSubDomains",

@@ -7,6 +7,7 @@ import { signIn, signOut } from "@/auth";
 import { allocatePublicAlias } from "@/lib/auth/alias";
 import { issueMagicLink } from "@/lib/auth/magic-link";
 import { hashPassword } from "@/lib/auth/password";
+import { FREE_PLAN_DEAL_QUOTA, SUCCESS_FEE_RATE } from "@/lib/billing/rates";
 import { prisma } from "@/lib/prisma";
 import {
   loginSchema,
@@ -64,8 +65,8 @@ export async function registerAction(_prev: FormState, formData: FormData): Prom
         data: {
           userId: user.id,
           plan: "FREE",
-          feeRate: "0.1500",
-          dealQuota: 3,
+          feeRate: SUCCESS_FEE_RATE.toFixed(4),
+          dealQuota: FREE_PLAN_DEAL_QUOTA,
           dealsUsed: 0,
           status: "ACTIVE",
           renewsAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
