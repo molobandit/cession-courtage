@@ -2,8 +2,6 @@
 
 import { DealStage, DocumentType } from "@prisma/client";
 import { createHash } from "node:crypto";
-import { mkdir, writeFile } from "node:fs/promises";
-import path from "node:path";
 import { revalidatePath } from "next/cache";
 import { getActor, isOriasVerified } from "@/lib/authz/actor";
 import { isDealParticipant, isStageAtLeast, ownsFirm } from "@/lib/authz/policies";
@@ -15,6 +13,7 @@ import {
 } from "@/lib/authz/messages";
 import { mockEscrowHold, mockEscrowRelease, mockSignDocument, mockVerifyKyc } from "@/lib/integrations/mocks";
 import { prisma } from "@/lib/prisma";
+import { putObject } from "@/lib/storage/objects";
 
 export type DealFormState = { error?: string };
 
@@ -73,11 +72,11 @@ export async function uploadDataRoomFileAction(
     const buffer = Buffer.from(await file.arrayBuffer());
     const sha256 = createHash("sha256").update(buffer).digest("hex");
     const safe = file.name.replace(/[^a-zA-Z0-9._-]+/g, "_").slice(0, 80) || "document";
-    const storageKey = path.posix.join("deals", deal.id, `${Date.now()}-${safe}`);
-    const root = path.resolve(process.cwd(), process.env.FILE_STORAGE_DIR ?? "./uploads");
-    const full = path.join(root, storageKey);
-    await mkdir(path.dirname(full), { recursive: true });
-    await writeFile(full, buffer);
+    // Horodatage passe en parametre : le nom de cle ne doit pas dependre de
+    // l'instant d'execution ailleurs que ici.
+    const storageKey = `deals/${deal.id}/${Date.now()}-${safe}`;
+    // Workers n'a pas de systeme de fichiers : le contenu part dans R2.
+    await putObject(storageKey, new Uint8Array(buffer));
     await prisma.document.create({
       data: {
         dealId: deal.id,

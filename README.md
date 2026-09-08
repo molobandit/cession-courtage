@@ -80,6 +80,32 @@ Déploiement : `npm run deploy` (OpenNext + Wrangler). Secrets Cloudflare : `AUT
 
 Schéma D1 distant : `npm run db:migrate:remote`.
 
+## Stockage des fichiers déposés (R2)
+
+Workers n'a pas de système de fichiers. Les bordereaux d'import et les pièces de
+salle de données passent par un bucket **Cloudflare R2**, exposé par le binding
+`UPLOADS`.
+
+**R2 n'est pas encore activé sur le compte.** Tant que c'est le cas, le dépôt de
+fichier renvoie un message explicite (`StorageUnavailableError`) au lieu d'échouer
+sur une erreur système. Mise en service, une seule fois :
+
+```bash
+# 1. Activer R2 depuis le tableau de bord Cloudflare (acceptation des conditions)
+# 2. Créer le bucket
+npx wrangler r2 bucket create cession-courtage-uploads
+```
+
+Puis déclarer le binding dans `wrangler.jsonc` :
+
+```jsonc
+"r2_buckets": [
+  { "binding": "UPLOADS", "bucket_name": "cession-courtage-uploads" }
+]
+```
+
+Le reste du code est déjà en place : `lib/storage/objects.ts`.
+
 ## Hors périmètre
 
 Pas de Stripe. Pas de Playwright. Pas d'e-mail SMTP.

@@ -1,13 +1,17 @@
 import "server-only";
-import { createHash } from "crypto";
-import { mkdir, readFile, rm, writeFile } from "fs/promises";
-import path from "path";
+import { createHash } from "node:crypto";
+import { deletePrefix, getObject, putObject } from "@/lib/storage/objects";
 
-function storageRoot(): string {
-  return path.resolve(process.cwd(), process.env.FILE_STORAGE_DIR ?? "./uploads");
-}
+/**
+ * Acces aux bordereaux deposes. Le contenu vit dans R2 : Workers n'a pas de
+ * systeme de fichiers, toute ecriture disque echouerait en production.
+ */
 
-export function sha256Buffer(buffer: Buffer): string {
+/**
+ * Empreinte SHA-256 du fichier depose. `node:crypto` est disponible sur Workers
+ * grace au drapeau de compatibilite `nodejs_compat` declare dans wrangler.jsonc.
+ */
+export function sha256Buffer(buffer: Buffer | Uint8Array): string {
   return createHash("sha256").update(buffer).digest("hex");
 }
 
@@ -18,30 +22,18 @@ export function safeFileName(original: string): string {
 }
 
 export function importStorageKey(userId: string, importId: string, fileName: string): string {
-  return path.posix.join("imports", userId, importId, safeFileName(fileName));
+  return `imports/${userId}/${importId}/${safeFileName(fileName)}`;
 }
 
-function resolveKey(storageKey: string): string {
-  const root = storageRoot();
-  const resolved = path.resolve(root, storageKey);
-  const relative = path.relative(root, resolved);
-  if (relative.startsWith("..") || path.isAbsolute(relative)) {
-    throw new Error("Clé de stockage invalide.");
-  }
-  return resolved;
-}
-
-export async function writeImportFile(storageKey: string, buffer: Buffer): Promise<void> {
-  const full = resolveKey(storageKey);
-  await mkdir(path.dirname(full), { recursive: true });
-  await writeFile(full, buffer);
+export async function writeImportFile(storageKey: string, buffer: Buffer | Uint8Array): Promise<void> {
+  await putObject(storageKey, buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer));
 }
 
 export async function readImportFile(storageKey: string): Promise<Buffer> {
-  return readFile(resolveKey(storageKey));
+  return Buffer.from(await getObject(storageKey));
 }
 
 export async function deleteImportFile(storageKey: string): Promise<void> {
-  const full = resolveKey(storageKey);
-  await rm(path.dirname(full), { recursive: true, force: true });
+  const prefix = storageKey.slice(0, storageKey.lastIndexOf("/") + 1);
+  await deletePrefix(prefix);
 }
