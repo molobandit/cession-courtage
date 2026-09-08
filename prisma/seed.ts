@@ -1136,7 +1136,10 @@ async function main() {
     });
   }
 
-  for (const spec of PORTFOLIO_SPECS.filter((p) => !listingDefs.some((l) => l.portfolioId === p.id))) {
+  // Chaque portefeuille porte sa propre valorisation, independamment de toute
+  // annonce. Une valorisation rattachee a une annonce ne vaut que pour le
+  // sous-ensemble mis en vente : elle ne remplace pas celle du portefeuille.
+  for (const spec of PORTFOLIO_SPECS) {
     const lines = portfolioLines.get(spec.id)!;
     const firm = SELLERS.find((s) => s.firmId === spec.firmId)!.firm;
     const breakdown = computeSeedValuation(
