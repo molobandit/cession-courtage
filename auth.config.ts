@@ -3,6 +3,14 @@ import type { NextAuthConfig } from "next-auth";
 const PROTECTED_PREFIXES = ["/app", "/admin"];
 const PROTECTED_EXACT = ["/en-attente-orias"];
 
+/** Vrai si le chemin exige une session. Partage avec le middleware. */
+export function requiresSession(pathname: string): boolean {
+  return (
+    PROTECTED_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`)) ||
+    PROTECTED_EXACT.includes(pathname)
+  );
+}
+
 export const authConfig = {
   trustHost: true,
   session: { strategy: "jwt", maxAge: 60 * 60 * 8 },
@@ -23,11 +31,7 @@ export const authConfig = {
       return session;
     },
     authorized({ auth, request }) {
-      const { pathname } = request.nextUrl;
-      const needsSession =
-        PROTECTED_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`)) ||
-        PROTECTED_EXACT.includes(pathname);
-      if (!needsSession) return true;
+      if (!requiresSession(request.nextUrl.pathname)) return true;
       return Boolean(auth?.user?.id);
     },
   },
