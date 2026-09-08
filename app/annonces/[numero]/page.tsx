@@ -87,7 +87,7 @@ export default async function PublicListingPage({
       <section className="hero-charcoal text-cream">
         <div className="mx-auto max-w-4xl px-4 py-12">
           <p className="text-[15px] text-cream/65">
-            <Link href="/annonces" className="underline-offset-4 hover:text-gold hover:underline">
+            <Link href="/annonces" className="underline-offset-4 hover:text-indigo-soft hover:underline">
               Annonces
             </Link>
           </p>

@@ -32,7 +32,7 @@ export function LegalLayout({
     <main>
       <section className="bg-charcoal text-cream">
         <div className="mx-auto max-w-6xl px-4 py-12">
-          <p className="text-[13px] font-medium uppercase tracking-[0.18em] text-gold">
+          <p className="text-[13px] font-medium uppercase tracking-[0.18em] text-indigo-soft">
             {eyebrow}
           </p>
           <h1 className="mt-4 max-w-3xl font-serif text-4xl font-semibold leading-tight">

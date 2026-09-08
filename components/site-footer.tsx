@@ -43,7 +43,7 @@ export function SiteFooter() {
         <div className="grid gap-10 lg:grid-cols-[1.4fr_repeat(4,1fr)]">
           <div>
             <p className="font-serif text-lg font-semibold">
-              Cession <span className="text-gold">courtage</span>
+              Cession <span className="text-indigo-soft">courtage</span>
             </p>
             <p className="mt-3 max-w-xs text-[15px] leading-relaxed text-cream/70">
               Place de marché réservée aux courtiers immatriculés ORIAS. Gratuit
@@ -52,13 +52,13 @@ export function SiteFooter() {
           </div>
           {COLUMNS.map((column) => (
             <nav key={column.title} aria-label={column.title}>
-              <p className="text-[13px] font-medium uppercase tracking-[0.14em] text-gold">
+              <p className="text-[13px] font-medium uppercase tracking-[0.14em] text-indigo-soft">
                 {column.title}
               </p>
               <ul className="mt-3 space-y-2">
                 {column.links.map((link) => (
                   <li key={link.href}>
-                    <Link href={link.href} className="text-[15px] text-cream/75 hover:text-gold">
+                    <Link href={link.href} className="text-[15px] text-cream/75 hover:text-indigo-soft">
                       {link.label}
                     </Link>
                   </li>

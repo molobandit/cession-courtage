@@ -86,13 +86,13 @@ export default function HomePage() {
       <section className="hero-charcoal text-cream">
         <div className="mx-auto grid max-w-6xl gap-14 px-4 py-20 lg:grid-cols-[1.25fr_1fr] lg:items-center lg:py-28">
           <div>
-            <span className="inline-flex items-center gap-2 rounded-full border border-gold/30 bg-gold/10 px-4 py-1.5 text-[13px] font-medium text-gold">
+            <span className="inline-flex items-center gap-2 rounded-full border border-gold/30 bg-gold/10 px-4 py-1.5 text-[13px] font-medium text-indigo-soft">
               Réservé aux courtiers immatriculés ORIAS
             </span>
 
             <h1 className="mt-6 font-serif text-[2.6rem] font-semibold leading-[1.05] sm:text-6xl">
               Cédez votre portefeuille
-              <span className="mt-2 block text-gold">sans que personne ne l’apprenne.</span>
+              <span className="mt-2 block text-indigo-soft">sans que personne ne l’apprenne.</span>
             </h1>
 
             <p className="mt-7 max-w-xl text-lg leading-relaxed text-cream/75">
@@ -122,7 +122,7 @@ export default function HomePage() {
 
           {/* Aperçu de la fourchette : montre le produit plutôt que de le décrire. */}
           <div className="rounded-3xl border border-cream/12 bg-charcoal-muted/80 p-7 shadow-2xl shadow-black/30">
-            <p className="text-[13px] font-medium uppercase tracking-[0.14em] text-gold">
+            <p className="text-[13px] font-medium uppercase tracking-[0.14em] text-indigo-soft">
               Exemple de fourchette
             </p>
             <p className="mt-3 text-[15px] text-cream/65">
@@ -139,8 +139,8 @@ export default function HomePage() {
               </div>
               <div className="rule-gold" />
               <div className="flex items-baseline justify-between gap-4">
-                <span className="text-[15px] font-medium text-gold">Médiane</span>
-                <span className="tabular font-serif text-3xl font-semibold text-gold">
+                <span className="text-[15px] font-medium text-indigo-soft">Médiane</span>
+                <span className="tabular font-serif text-3xl font-semibold text-indigo-soft">
                   {formatEuroWhole(sample.mid)}
                 </span>
               </div>
@@ -220,7 +220,7 @@ export default function HomePage() {
           <ol className="mt-12 grid gap-6 lg:grid-cols-3">
             {STEPS.map((step) => (
               <li key={step.n} className="lift rounded-3xl border border-line bg-cream p-7">
-                <span className="tabular inline-flex h-11 w-11 items-center justify-center rounded-full bg-charcoal font-serif text-[15px] font-semibold text-gold">
+                <span className="tabular inline-flex h-11 w-11 items-center justify-center rounded-full bg-charcoal font-serif text-[15px] font-semibold text-indigo-soft">
                   {step.n}
                 </span>
                 <h3 className="mt-5 font-serif text-lg font-semibold text-ink">{step.title}</h3>
@@ -236,7 +236,7 @@ export default function HomePage() {
         <div className="overflow-hidden rounded-3xl border border-gold-deep/30 bg-gold/10">
           <div className="grid gap-10 p-9 lg:grid-cols-[1.3fr_1fr] lg:items-center lg:p-12">
             <div>
-              <span className="inline-flex rounded-full bg-charcoal px-4 py-1.5 text-[13px] font-medium text-gold">
+              <span className="inline-flex rounded-full bg-charcoal px-4 py-1.5 text-[13px] font-medium text-indigo-soft">
                 Personne d’autre ne le fait
               </span>
               <h2 className="mt-5 font-serif text-4xl font-semibold leading-tight text-ink">
@@ -335,7 +335,7 @@ export default function HomePage() {
         <div className="mx-auto max-w-6xl px-4 py-20">
           <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
             <div>
-              <p className="text-[13px] font-medium uppercase tracking-[0.14em] text-gold">
+              <p className="text-[13px] font-medium uppercase tracking-[0.14em] text-indigo-soft">
                 Tarifs
               </p>
               <h2 className="mt-3 font-serif text-4xl font-semibold leading-tight">
@@ -374,7 +374,7 @@ export default function HomePage() {
                   }
                 >
                   <dt className="text-[15px] text-cream/70">{row.t}</dt>
-                  <dd className="tabular font-serif text-xl font-semibold text-gold">{row.v}</dd>
+                  <dd className="tabular font-serif text-xl font-semibold text-indigo-soft">{row.v}</dd>
                 </div>
               ))}
             </dl>

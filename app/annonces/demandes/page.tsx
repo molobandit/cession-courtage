@@ -42,7 +42,7 @@ export default async function PublicMandatesPage() {
     <main>
       <section className="hero-charcoal text-cream">
         <div className="mx-auto max-w-6xl px-4 py-12">
-          <p className="text-[13px] font-medium uppercase tracking-[0.18em] text-gold">
+          <p className="text-[13px] font-medium uppercase tracking-[0.18em] text-indigo-soft">
             Demandes d’acquisition
           </p>
           <h1 className="mt-4 font-serif text-4xl font-semibold leading-tight">
@@ -56,11 +56,11 @@ export default async function PublicMandatesPage() {
           <nav className="mt-6 flex flex-wrap gap-2" aria-label="Type d’annonce">
             <Link
               href="/annonces"
-              className="rounded-full border border-cream/25 px-4 py-2 text-[15px] text-cream/80 hover:border-gold/50 hover:text-gold"
+              className="rounded-full border border-cream/25 px-4 py-2 text-[15px] text-cream/80 hover:border-gold/50 hover:text-indigo-soft"
             >
               Portefeuilles à céder
             </Link>
-            <span className="rounded-full bg-gold px-4 py-2 text-[15px] font-medium text-charcoal">
+            <span className="rounded-full bg-indigo px-4 py-2 text-[15px] font-medium text-white">
               Demandes d’acquisition
             </span>
           </nav>

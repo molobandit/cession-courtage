@@ -50,7 +50,7 @@ export function ReadinessPanel({
                 </div>
                 <div className="mt-2.5 h-2 w-full rounded-full bg-cream">
                   <div
-                    className={done ? "h-full rounded-full bg-ok" : "h-full rounded-full bg-[#a8862a]"}
+                    className={done ? "h-full rounded-full bg-ok" : "h-full rounded-full bg-indigo"}
                     style={{ width: `${Math.max(axisPercent, done ? 100 : 2)}%` }}
                   />
                 </div>

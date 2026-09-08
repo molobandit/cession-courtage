@@ -52,7 +52,7 @@ export function MaturityColumns({ buckets }: { buckets: MaturityBucket[] }) {
                     </span>
                   ) : null}
                   <div
-                    className="w-full rounded-t bg-[#a8862a]"
+                    className="w-full rounded-t bg-indigo"
                     style={{ height: `${Math.max(height * 0.88, bucket.commissions > 0 ? 2 : 0)}%` }}
                     title={`${bucket.label} : ${formatEuroWhole(bucket.commissions)}, ${bucket.contracts} contrats`}
                   />

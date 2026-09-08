@@ -4,7 +4,7 @@ type Status = "bon" | "surveiller" | "penalisant";
 
 const STATUS_STYLE: Record<Status, { dot: string; text: string; label: string }> = {
   bon: { dot: "bg-ok", text: "text-ok", label: "Favorable" },
-  surveiller: { dot: "bg-[#a8862a]", text: "text-[#7c621c]", label: "À surveiller" },
+  surveiller: { dot: "bg-indigo", text: "text-indigo-dark", label: "À surveiller" },
   penalisant: { dot: "bg-danger", text: "text-danger", label: "Pénalisant" },
 };
 
@@ -53,7 +53,7 @@ export function ConcentrationMeter({
         aria-valuenow={Math.round(percent)}
         aria-label={title}
       >
-        <div className="h-full rounded-full bg-[#a8862a]" style={{ width: `${percent}%` }} />
+        <div className="h-full rounded-full bg-indigo" style={{ width: `${percent}%` }} />
       </div>
       <div className="mt-1.5 flex justify-between text-[11px] text-muted">
         <span>{scaleLabels[0]}</span>
@@ -88,10 +88,10 @@ export function MarketPositionCard({ position }: { position: MarketPosition }) {
 
       <div className="relative mt-6 h-2.5 w-full rounded-full bg-cream">
         {/* Fourchette de marché, en fond. */}
-        <div className="absolute inset-y-0 left-0 right-0 rounded-full bg-[#a8862a]/25" />
+        <div className="absolute inset-y-0 left-0 right-0 rounded-full bg-indigo/25" />
         {/* Position du portefeuille. */}
         <div
-          className="absolute top-1/2 h-5 w-1 -translate-y-1/2 rounded-full bg-[#7c621c]"
+          className="absolute top-1/2 h-5 w-1 -translate-y-1/2 rounded-full bg-indigo-dark"
           style={{ left: `calc(${position.position * 100}% - 2px)` }}
           aria-hidden="true"
         />

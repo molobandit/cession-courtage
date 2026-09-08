@@ -295,7 +295,7 @@ export function PublicListingList({ listings }: { listings: PublicListingCard[] 
                         <span
                           className={
                             urgent
-                              ? "rounded-full bg-gold px-3 py-1 text-sm font-medium text-charcoal"
+                              ? "rounded-full bg-indigo px-3 py-1 text-sm font-medium text-white"
                               : "text-sm text-muted"
                           }
                         >

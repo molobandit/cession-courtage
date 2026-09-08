@@ -68,7 +68,7 @@ export function DueDiligencePanel({
         aria-label="Avancement du bordereau"
       >
         <div
-          className={progress.complete ? "h-full rounded-full bg-ok" : "h-full rounded-full bg-[#a8862a]"}
+          className={progress.complete ? "h-full rounded-full bg-ok" : "h-full rounded-full bg-indigo"}
           style={{ width: `${percent}%` }}
         />
       </div>
