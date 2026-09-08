@@ -58,15 +58,15 @@ const ARTICLES = [
 export default function JournalPage() {
   return (
     <main>
-      <section className="bg-charcoal text-cream">
+      <section className="border-y border-line bg-indigo-soft text-ink">
         <div className="mx-auto max-w-6xl px-4 py-14">
-          <p className="text-[13px] font-medium uppercase tracking-[0.18em] text-indigo-soft">
+          <p className="text-[13px] font-medium uppercase tracking-[0.18em] text-indigo-dark">
             Journal
           </p>
           <h1 className="mt-4 max-w-3xl font-serif text-4xl font-semibold leading-tight">
             Repères de méthode sur la cession de portefeuille
           </h1>
-          <p className="mt-5 max-w-2xl text-lg text-cream/80">
+          <p className="mt-5 max-w-2xl text-lg text-muted">
             Ce que nous constatons dossier après dossier, sur la valorisation, la
             confidentialité et la conduite d’une négociation.
           </p>
@@ -95,7 +95,7 @@ export default function JournalPage() {
           ))}
         </div>
 
-        <div className="mt-12 rounded-3xl border border-gold-deep/40 bg-gold/10 p-7">
+        <div className="mt-12 rounded-3xl border border-indigo-line bg-indigo-soft p-7">
           <h2 className="font-serif text-xl font-semibold text-ink">
             Commencez par une estimation
           </h2>
@@ -105,7 +105,7 @@ export default function JournalPage() {
             ne sont dus que si la cession se conclut.
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
-            <Button asChild variant="gold">
+            <Button asChild variant="primary">
               <Link href="/valoriser">Estimer mon portefeuille</Link>
             </Button>
             <Button asChild variant="outline">

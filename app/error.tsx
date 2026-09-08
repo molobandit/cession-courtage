@@ -28,7 +28,7 @@ export default function GlobalError({
         </p>
       ) : null}
       <div className="mt-8 flex flex-wrap gap-3">
-        <Button variant="gold" onClick={reset}>
+        <Button variant="primary" onClick={reset}>
           Réessayer
         </Button>
         <Button asChild variant="outline">

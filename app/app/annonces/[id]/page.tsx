@@ -76,7 +76,7 @@ export default async function SellerListingPage({ params }: { params: Promise<{ 
           <p className="mt-2 text-sm text-muted">Aucune offre visible.</p>
         ) : (
           <table className="mt-2 w-full text-sm">
-            <thead className="bg-cream text-left text-xs uppercase text-muted">
+            <thead className="bg-surface-alt text-left text-xs uppercase text-muted">
               <tr>
                 <th className="px-2 py-1.5">Alias</th>
                 <th className="px-2 py-1.5 text-right">Montant</th>

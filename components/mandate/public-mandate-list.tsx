@@ -12,7 +12,7 @@ import {
 } from "@/lib/mandate/public";
 
 const SELECT_CLASS =
-  "mt-2 h-11 w-full rounded-full border border-line bg-cream px-4 text-[15px] text-ink";
+  "mt-2 h-11 w-full rounded-full border border-line bg-surface-alt px-4 text-[15px] text-ink";
 
 /**
  * Demandes d'acquisition publiées.
@@ -100,7 +100,7 @@ export function PublicMandateList({ mandates }: { mandates: PublicMandateCard[] 
               value={filters.zone}
               onChange={(e) => patch({ zone: e.target.value })}
               placeholder="Rhône, Nord"
-              className="mt-2 h-11 w-full rounded-full border border-line bg-cream px-4 text-[15px] text-ink"
+              className="mt-2 h-11 w-full rounded-full border border-line bg-surface-alt px-4 text-[15px] text-ink"
             />
           </div>
           <div>
@@ -113,7 +113,7 @@ export function PublicMandateList({ mandates }: { mandates: PublicMandateCard[] 
               value={filters.minBudget}
               onChange={(e) => patch({ minBudget: e.target.value })}
               placeholder="50 000"
-              className="tabular mt-2 h-11 w-full rounded-full border border-line bg-cream px-4 text-right text-[15px] text-ink"
+              className="tabular mt-2 h-11 w-full rounded-full border border-line bg-surface-alt px-4 text-right text-[15px] text-ink"
             />
           </div>
         </div>
@@ -128,7 +128,7 @@ export function PublicMandateList({ mandates }: { mandates: PublicMandateCard[] 
             <button
               type="button"
               onClick={() => setFilters(EMPTY_MANDATE_FILTERS)}
-              className="text-[15px] font-medium text-gold-deep underline-offset-4 hover:underline"
+              className="text-[15px] font-medium text-indigo-dark underline-offset-4 hover:underline"
             >
               Tout effacer
             </button>
@@ -156,7 +156,7 @@ export function PublicMandateList({ mandates }: { mandates: PublicMandateCard[] 
                       {m.isNationwide ? " · couverture nationale" : ""}
                     </p>
                   </div>
-                  <span className="rounded-full border border-gold-deep/40 bg-gold/15 px-3 py-1 text-sm text-gold-deep">
+                  <span className="rounded-full border border-indigo-line bg-indigo-soft px-3 py-1 text-sm text-indigo-dark">
                     Recherche à acquérir
                   </span>
                 </div>

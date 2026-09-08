@@ -60,7 +60,7 @@ export function DueDiligencePanel({
       </p>
 
       <div
-        className="mt-4 h-2.5 w-full max-w-2xl rounded-full bg-cream"
+        className="mt-4 h-2.5 w-full max-w-2xl rounded-full bg-surface-alt"
         role="progressbar"
         aria-valuemin={0}
         aria-valuemax={100}
@@ -122,7 +122,7 @@ export function DueDiligencePanel({
                             className={
                               provided
                                 ? "mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-ok text-sm text-white"
-                                : "mt-0.5 h-6 w-6 shrink-0 rounded-full border border-line bg-cream"
+                                : "mt-0.5 h-6 w-6 shrink-0 rounded-full border border-line bg-surface-alt"
                             }
                           >
                             <span aria-hidden="true">{provided ? "✓" : ""}</span>
@@ -144,7 +144,7 @@ export function DueDiligencePanel({
                             className={
                               provided
                                 ? "mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-ok text-sm text-white"
-                                : "mt-0.5 h-6 w-6 shrink-0 rounded-full border border-line bg-cream"
+                                : "mt-0.5 h-6 w-6 shrink-0 rounded-full border border-line bg-surface-alt"
                             }
                           >
                             {provided ? "✓" : ""}

@@ -164,15 +164,15 @@ const SECTIONS: Section[] = [
 export default function FaqPage() {
   return (
     <main>
-      <section className="bg-charcoal text-cream">
+      <section className="border-y border-line bg-indigo-soft text-ink">
         <div className="mx-auto max-w-6xl px-4 py-14">
-          <p className="text-[13px] font-medium uppercase tracking-[0.18em] text-indigo-soft">
+          <p className="text-[13px] font-medium uppercase tracking-[0.18em] text-indigo-dark">
             Questions fréquentes
           </p>
           <h1 className="mt-4 max-w-3xl font-serif text-4xl font-semibold leading-tight">
             Tout ce qu’un courtier demande avant de se lancer
           </h1>
-          <p className="mt-5 max-w-2xl text-lg text-cream/80">
+          <p className="mt-5 max-w-2xl text-lg text-muted">
             Si votre question n’y figure pas, elle mérite d’y être. Écrivez-nous.
           </p>
         </div>
@@ -186,7 +186,7 @@ export default function FaqPage() {
               <li key={section.title}>
                 <a
                   href={`#${encodeURIComponent(section.title)}`}
-                  className="inline-block rounded-full border border-line bg-cream px-4 py-2 text-[15px] text-ink hover:border-gold-deep/50"
+                  className="inline-block rounded-full border border-line bg-surface-alt px-4 py-2 text-[15px] text-ink hover:border-indigo"
                 >
                   {section.title}
                 </a>
@@ -204,20 +204,20 @@ export default function FaqPage() {
                 {section.questions.map((item) => (
                   <details
                     key={item.q}
-                    className="group rounded-3xl border border-line bg-paper p-5 open:border-gold-deep/40"
+                    className="group rounded-3xl border border-line bg-paper p-5 open:border-indigo-line"
                   >
                     <summary className="cursor-pointer list-none text-[15px] font-medium text-ink marker:content-none">
                       <span className="flex items-start justify-between gap-4">
                         {item.q}
                         <span
                           aria-hidden="true"
-                          className="mt-0.5 shrink-0 text-xl leading-none text-gold-deep group-open:hidden"
+                          className="mt-0.5 shrink-0 text-xl leading-none text-indigo-dark group-open:hidden"
                         >
                           +
                         </span>
                         <span
                           aria-hidden="true"
-                          className="mt-0.5 hidden shrink-0 text-xl leading-none text-gold-deep group-open:inline"
+                          className="mt-0.5 hidden shrink-0 text-xl leading-none text-indigo-dark group-open:inline"
                         >
                           −
                         </span>
@@ -231,7 +231,7 @@ export default function FaqPage() {
           ))}
         </div>
 
-        <div className="mt-12 rounded-3xl border border-gold-deep/40 bg-gold/10 p-7">
+        <div className="mt-12 rounded-3xl border border-indigo-line bg-indigo-soft p-7">
           <h2 className="font-serif text-xl font-semibold text-ink">
             Commencez par une estimation
           </h2>
@@ -240,7 +240,7 @@ export default function FaqPage() {
             raisonnement qui la produit.
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
-            <Button asChild variant="gold">
+            <Button asChild variant="primary">
               <Link href="/valoriser">Estimer mon portefeuille</Link>
             </Button>
             <Button asChild variant="outline">

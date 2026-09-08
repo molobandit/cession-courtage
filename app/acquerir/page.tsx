@@ -40,27 +40,27 @@ const SAFEGUARDS = [
 export default function AcquerirPage() {
   return (
     <main>
-      <section className="bg-charcoal text-cream">
+      <section className="border-y border-line bg-indigo-soft text-ink">
         <div className="mx-auto max-w-6xl px-4 py-14">
-          <p className="text-[13px] font-medium uppercase tracking-[0.18em] text-indigo-soft">
+          <p className="text-[13px] font-medium uppercase tracking-[0.18em] text-indigo-dark">
             Parcours acquéreur
           </p>
           <h1 className="mt-4 max-w-3xl font-serif text-4xl font-semibold leading-tight">
             Croître par acquisition, sans acheter un portefeuille qui fond
           </h1>
-          <p className="mt-5 max-w-2xl text-lg text-cream/80">
+          <p className="mt-5 max-w-2xl text-lg text-muted">
             Vous déposez un mandat une fois. Les dossiers qui vous correspondent
             vous sont présentés avec leur score d’adéquation et le détail des
             critères qui ont joué.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <Button asChild variant="gold" size="lg">
+            <Button asChild variant="primary" size="lg">
               <Link href="/inscription">Déposer un mandat</Link>
             </Button>
             <Button
               asChild
               size="lg"
-              className="border border-cream/25 bg-transparent text-cream hover:bg-cream/10"
+              className="border border-line bg-transparent text-ink hover:bg-surface"
             >
               <Link href="/annonces">Parcourir les annonces</Link>
             </Button>
@@ -114,7 +114,7 @@ export default function AcquerirPage() {
           </h2>
           <div className="mt-8 grid gap-5 lg:grid-cols-2">
             {SAFEGUARDS.map((item) => (
-              <article key={item.title} className="rounded-3xl border border-line bg-cream p-6">
+              <article key={item.title} className="rounded-3xl border border-line bg-surface-alt p-6">
                 <h3 className="font-serif text-xl font-semibold text-ink">{item.title}</h3>
                 <p className="mt-3 text-[15px] leading-relaxed text-muted">{item.body}</p>
               </article>
@@ -135,7 +135,7 @@ export default function AcquerirPage() {
             accès aux alertes prioritaires ainsi qu’au mandat exclusif.
           </p>
           <div className="mt-7 flex flex-wrap gap-3">
-            <Button asChild variant="gold">
+            <Button asChild variant="primary">
               <Link href="/inscription">Créer un compte acquéreur</Link>
             </Button>
             <Button asChild variant="outline">

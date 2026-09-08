@@ -16,8 +16,8 @@ import {
 
 const STATUS_STYLE: Record<CarrierStatus, string> = {
   AGREED: "bg-ok/12 text-ok",
-  NOTIFIED: "bg-gold/20 text-gold-deep",
-  PENDING: "bg-cream text-muted",
+  NOTIFIED: "bg-indigo-soft text-indigo-dark",
+  PENDING: "bg-surface-alt text-muted",
   REFUSED: "bg-danger/10 text-danger",
 };
 
@@ -146,7 +146,7 @@ export function CarrierCodesPanel({
                       id={`statut-${row.carrier}`}
                       name="status"
                       defaultValue={row.status}
-                      className="h-10 rounded-full border border-line bg-cream px-3 text-[15px] text-ink"
+                      className="h-10 rounded-full border border-line bg-surface-alt px-3 text-[15px] text-ink"
                     >
                       {ORDER.map((status) => (
                         <option key={status} value={status}>

@@ -40,15 +40,15 @@ export default async function PublicMandatesPage() {
 
   return (
     <main>
-      <section className="hero-charcoal text-cream">
+      <section className="border-b border-line bg-indigo-soft text-ink">
         <div className="mx-auto max-w-6xl px-4 py-12">
-          <p className="text-[13px] font-medium uppercase tracking-[0.18em] text-indigo-soft">
+          <p className="text-[13px] font-medium uppercase tracking-[0.18em] text-indigo-dark">
             Demandes d’acquisition
           </p>
           <h1 className="mt-4 font-serif text-4xl font-semibold leading-tight">
             Ils cherchent un portefeuille
           </h1>
-          <p className="mt-4 max-w-2xl text-[15px] leading-relaxed text-cream/80">
+          <p className="mt-4 max-w-2xl text-[15px] leading-relaxed text-muted">
             Des acquéreurs ont déjà décrit ce qu’ils recherchent. Si votre
             portefeuille correspond, la demande existe avant même que vous publiiez.
             Les acquéreurs restent anonymes, comme les cédants.
@@ -56,7 +56,7 @@ export default async function PublicMandatesPage() {
           <nav className="mt-6 flex flex-wrap gap-2" aria-label="Type d’annonce">
             <Link
               href="/annonces"
-              className="rounded-full border border-cream/25 px-4 py-2 text-[15px] text-cream/80 hover:border-gold/50 hover:text-indigo-soft"
+              className="rounded-full border border-line px-4 py-2 text-[15px] text-muted hover:border-indigo hover:text-indigo-dark"
             >
               Portefeuilles à céder
             </Link>

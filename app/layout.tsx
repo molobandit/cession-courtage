@@ -30,7 +30,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="fr">
-      <body className={`${sans.variable} ${serif.variable} min-h-screen bg-cream text-ink antialiased`}>
+      <body className={`${sans.variable} ${serif.variable} min-h-screen bg-surface-alt text-ink antialiased`}>
         <SiteHeader />
         {children}
         <SiteFooter />

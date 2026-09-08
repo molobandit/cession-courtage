@@ -9,7 +9,7 @@ export function LegalNotice() {
       </p>
       <p className="mt-2 text-[15px] leading-relaxed text-ink">
         Les mentions obligatoires sont encore des espaces réservés. Renseignez
-        <code className="mx-1 rounded bg-cream px-1.5 py-0.5 text-sm">lib/legal/entity.ts</code>
+        <code className="mx-1 rounded bg-surface-alt px-1.5 py-0.5 text-sm">lib/legal/entity.ts</code>
         avant toute mise en ligne publique : l’article 6-III de la loi pour la
         confiance dans l’économie numérique impose que l’éditeur soit identifiable.
       </p>
@@ -30,16 +30,16 @@ export function LegalLayout({
 }) {
   return (
     <main>
-      <section className="bg-charcoal text-cream">
+      <section className="border-y border-line bg-indigo-soft text-ink">
         <div className="mx-auto max-w-6xl px-4 py-12">
-          <p className="text-[13px] font-medium uppercase tracking-[0.18em] text-indigo-soft">
+          <p className="text-[13px] font-medium uppercase tracking-[0.18em] text-indigo-dark">
             {eyebrow}
           </p>
           <h1 className="mt-4 max-w-3xl font-serif text-4xl font-semibold leading-tight">
             {title}
           </h1>
-          <p className="mt-4 max-w-2xl text-[15px] text-cream/80">{intro}</p>
-          <p className="mt-4 text-sm text-cream/65">
+          <p className="mt-4 max-w-2xl text-[15px] text-muted">{intro}</p>
+          <p className="mt-4 text-sm text-muted">
             Dernière mise à jour : {LAST_UPDATED}
           </p>
         </div>

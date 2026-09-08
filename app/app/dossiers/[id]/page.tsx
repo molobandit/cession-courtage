@@ -61,7 +61,7 @@ export default async function DealPage({ params }: { params: Promise<{ id: strin
           <li
             key={stage}
             className={`rounded-sm px-2 py-1 ${
-              stage === deal.stage ? "bg-navy text-cream" : "bg-cream text-muted"
+              stage === deal.stage ? "bg-navy text-ink" : "bg-surface-alt text-muted"
             }`}
           >
             {DEAL_STAGE_LABELS[stage]}

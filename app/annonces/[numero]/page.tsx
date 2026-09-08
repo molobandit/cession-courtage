@@ -84,10 +84,10 @@ export default async function PublicListingPage({
 
   return (
     <main>
-      <section className="hero-charcoal text-cream">
+      <section className="border-b border-line bg-indigo-soft text-ink">
         <div className="mx-auto max-w-4xl px-4 py-12">
-          <p className="text-[15px] text-cream/65">
-            <Link href="/annonces" className="underline-offset-4 hover:text-indigo-soft hover:underline">
+          <p className="text-[15px] text-muted">
+            <Link href="/annonces" className="underline-offset-4 hover:text-indigo-dark hover:underline">
               Annonces
             </Link>
           </p>
@@ -95,24 +95,24 @@ export default async function PublicListingPage({
             Portefeuille #{listing.publicNumber}
           </h1>
           <div className="mt-4 flex flex-wrap gap-2">
-            <span className="rounded-full border border-cream/20 bg-cream/5 px-3 py-1 text-sm text-cream/80">
+            <span className="rounded-full border border-line bg-surface px-3 py-1 text-sm text-muted">
               {listing.isNationwide ? "Couverture nationale" : listing.displayedZone}
             </span>
-            <span className="rounded-full border border-cream/20 bg-cream/5 px-3 py-1 text-sm text-cream/80">
+            <span className="rounded-full border border-line bg-surface px-3 py-1 text-sm text-muted">
               {LISTING_STATUS_LABELS[listing.status]}
             </span>
             {listing.isPartial ? (
-              <span className="rounded-full border border-cream/20 bg-cream/5 px-3 py-1 text-sm text-cream/80">
+              <span className="rounded-full border border-line bg-surface px-3 py-1 text-sm text-muted">
                 Cession partielle
               </span>
             ) : null}
             {listing.sellerSupportMonths > 0 ? (
-              <span className="rounded-full border border-cream/20 bg-cream/5 px-3 py-1 text-sm text-cream/80">
+              <span className="rounded-full border border-line bg-surface px-3 py-1 text-sm text-muted">
                 Accompagnement de {listing.sellerSupportMonths} mois
               </span>
             ) : null}
           </div>
-          <p className="mt-5 max-w-2xl text-[15px] leading-relaxed text-cream/75">
+          <p className="mt-5 max-w-2xl text-[15px] leading-relaxed text-muted">
             Fiche anonyme. Ni raison sociale, ni commune, et aucune donnée nominative de
             client final. L’identité du cédant est révélée à la signature de la lettre
             d’intention.
@@ -158,7 +158,7 @@ export default async function PublicListingPage({
 
         {/* Offre */}
         {canOffer ? (
-          <section className="mt-8 rounded-3xl border border-gold-deep/40 bg-gold/10 p-7">
+          <section className="mt-8 rounded-3xl border border-indigo-line bg-indigo-soft p-7">
             <h2 className="font-serif text-2xl font-semibold text-ink">Déposer une offre</h2>
             <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-muted">
               Le cédant ne verra ni votre montant ni le nombre de propositions avant la
@@ -194,7 +194,7 @@ export default async function PublicListingPage({
               pour le cédant. Elles s’ouvrent toutes en même temps à la clôture.
             </p>
             {!actor ? (
-              <Button asChild variant="gold" className="mt-5">
+              <Button asChild variant="primary" className="mt-5">
                 <Link href="/connexion">Se connecter pour déposer une offre</Link>
               </Button>
             ) : null}

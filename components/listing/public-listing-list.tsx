@@ -49,7 +49,7 @@ function windowLabel(daysLeft: number | null): string | null {
 }
 
 const SELECT_CLASS =
-  "mt-2 h-11 w-full rounded-full border border-line bg-cream px-4 text-[15px] text-ink";
+  "mt-2 h-11 w-full rounded-full border border-line bg-surface-alt px-4 text-[15px] text-ink";
 
 export function PublicListingList({ listings }: { listings: PublicListingCard[] }) {
   const [filters, setFilters] = useState<CatalogueFilters>(EMPTY_FILTERS);
@@ -155,7 +155,7 @@ export function PublicListingList({ listings }: { listings: PublicListingCard[] 
               value={zone}
               onChange={(e) => patch({ zone: e.target.value })}
               placeholder="Rhône, Nord, Île-de-France"
-              className="mt-2 h-11 w-full rounded-full border border-line bg-cream px-4 text-[15px] text-ink"
+              className="mt-2 h-11 w-full rounded-full border border-line bg-surface-alt px-4 text-[15px] text-ink"
             />
           </div>
           <div>
@@ -168,7 +168,7 @@ export function PublicListingList({ listings }: { listings: PublicListingCard[] 
               value={maxPrice}
               onChange={(e) => patch({ maxPrice: e.target.value })}
               placeholder="50 000"
-              className="tabular mt-2 h-11 w-full rounded-full border border-line bg-cream px-4 text-right text-[15px] text-ink"
+              className="tabular mt-2 h-11 w-full rounded-full border border-line bg-surface-alt px-4 text-right text-[15px] text-ink"
             />
           </div>
           <div>
@@ -210,7 +210,7 @@ export function PublicListingList({ listings }: { listings: PublicListingCard[] 
               <button
                 type="button"
                 onClick={reset}
-                className="text-[15px] font-medium text-gold-deep underline-offset-4 hover:underline"
+                className="text-[15px] font-medium text-indigo-dark underline-offset-4 hover:underline"
               >
                 Tout effacer
               </button>
@@ -233,7 +233,7 @@ export function PublicListingList({ listings }: { listings: PublicListingCard[] 
               <li key={item.id}>
                 <Link
                   href={`/annonces/${item.publicNumber}`}
-                  className="block h-full rounded-3xl border border-line bg-paper p-6 transition-colors hover:border-gold-deep/50"
+                  className="block h-full rounded-3xl border border-line bg-paper p-6 transition-colors hover:border-indigo"
                 >
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
@@ -246,11 +246,11 @@ export function PublicListingList({ listings }: { listings: PublicListingCard[] 
                     </div>
                     <div className="flex flex-wrap justify-end gap-2">
                       {item.isPartial ? (
-                        <span className="rounded-full border border-line bg-cream px-3 py-1 text-sm text-ink">
+                        <span className="rounded-full border border-line bg-surface-alt px-3 py-1 text-sm text-ink">
                           Cession partielle
                         </span>
                       ) : null}
-                      <span className="rounded-full border border-line bg-cream px-3 py-1 text-sm text-ink">
+                      <span className="rounded-full border border-line bg-surface-alt px-3 py-1 text-sm text-ink">
                         {item.statusLabel}
                       </span>
                     </div>

@@ -104,7 +104,7 @@ a {
   outline-offset: 2px;
 }
 
-.rule-gold {
+.rule-accent {
   background-image: linear-gradient(90deg, var(--indigo) 0%, transparent 100%);
   height: 2px;
 }

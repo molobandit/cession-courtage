@@ -12,8 +12,8 @@ export type SummaryRow = {
 };
 
 const BADGE_TONE = {
-  neutre: "border-line bg-cream text-ink",
-  attention: "border-gold-deep/40 bg-gold/15 text-gold-deep",
+  neutre: "border-line bg-surface-alt text-ink",
+  attention: "border-indigo-line bg-indigo-soft text-indigo-dark",
   ok: "border-ok/30 bg-ok/10 text-ok",
 } as const;
 
@@ -53,7 +53,7 @@ export function SummaryList({
         {action ? (
           <Link
             href={action.href}
-            className="text-[15px] font-medium text-gold-deep underline-offset-4 hover:underline"
+            className="text-[15px] font-medium text-indigo-dark underline-offset-4 hover:underline"
           >
             {action.label}
           </Link>
@@ -65,7 +65,7 @@ export function SummaryList({
           <p className="text-[15px] leading-relaxed text-muted">{empty.text}</p>
           <Link
             href={empty.href}
-            className="mt-3 inline-block text-[15px] font-medium text-gold-deep underline-offset-4 hover:underline"
+            className="mt-3 inline-block text-[15px] font-medium text-indigo-dark underline-offset-4 hover:underline"
           >
             {empty.label}
           </Link>
@@ -77,7 +77,7 @@ export function SummaryList({
               <li key={row.id}>
                 <Link
                   href={row.href}
-                  className="block rounded-3xl border border-line bg-paper p-5 transition-colors hover:border-gold-deep/50"
+                  className="block rounded-3xl border border-line bg-paper p-5 transition-colors hover:border-indigo"
                 >
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>

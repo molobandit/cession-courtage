@@ -141,7 +141,7 @@ export default async function ImportDetailPage({ params }: { params: Promise<{ i
         <h2 className="font-serif text-lg text-navy">Aperçu (20 premières lignes)</h2>
         <div className="mt-2 overflow-x-auto border border-line bg-paper">
           <table className="w-full text-xs">
-            <thead className="bg-cream text-left uppercase tracking-wide text-muted">
+            <thead className="bg-surface-alt text-left uppercase tracking-wide text-muted">
               <tr>
                 {table.headers.map((header) => (
                   <th key={header} className="whitespace-nowrap px-2 py-1.5 font-medium">
@@ -170,7 +170,7 @@ export default async function ImportDetailPage({ params }: { params: Promise<{ i
           <h2 className="font-serif text-lg text-navy">Aperçu après correspondance</h2>
           <div className="mt-2 overflow-x-auto border border-line bg-paper">
             <table className="w-full text-xs">
-              <thead className="bg-cream text-left uppercase tracking-wide text-muted">
+              <thead className="bg-surface-alt text-left uppercase tracking-wide text-muted">
                 <tr>
                   <th className="px-2 py-1.5 font-medium">Compagnie</th>
                   <th className="px-2 py-1.5 font-medium">Risque</th>

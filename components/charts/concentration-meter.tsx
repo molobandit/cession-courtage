@@ -46,7 +46,7 @@ export function ConcentrationMeter({
       </p>
 
       <div
-        className="mt-4 h-2.5 w-full rounded-full bg-cream"
+        className="mt-4 h-2.5 w-full rounded-full bg-surface-alt"
         role="meter"
         aria-valuemin={0}
         aria-valuemax={100}
@@ -86,7 +86,7 @@ export function MarketPositionCard({ position }: { position: MarketPosition }) {
         <span className="ml-2 text-lg font-normal text-muted">fois les commissions</span>
       </p>
 
-      <div className="relative mt-6 h-2.5 w-full rounded-full bg-cream">
+      <div className="relative mt-6 h-2.5 w-full rounded-full bg-surface-alt">
         {/* Fourchette de marché, en fond. */}
         <div className="absolute inset-y-0 left-0 right-0 rounded-full bg-indigo/25" />
         {/* Position du portefeuille. */}

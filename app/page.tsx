@@ -83,77 +83,77 @@ export default function HomePage() {
   return (
     <main>
       {/* Hero */}
-      <section className="hero-charcoal text-cream">
+      <section className="border-b border-line bg-indigo-soft text-ink">
         <div className="mx-auto grid max-w-6xl gap-14 px-4 py-20 lg:grid-cols-[1.25fr_1fr] lg:items-center lg:py-28">
           <div>
-            <span className="inline-flex items-center gap-2 rounded-full border border-gold/30 bg-gold/10 px-4 py-1.5 text-[13px] font-medium text-indigo-soft">
+            <span className="inline-flex items-center gap-2 rounded-full border border-indigo-line bg-indigo-soft px-4 py-1.5 text-[13px] font-medium text-indigo-dark">
               Réservé aux courtiers immatriculés ORIAS
             </span>
 
             <h1 className="mt-6 font-serif text-[2.6rem] font-semibold leading-[1.05] sm:text-6xl">
               Cédez votre portefeuille
-              <span className="mt-2 block text-indigo-soft">sans que personne ne l’apprenne.</span>
+              <span className="mt-2 block text-indigo-dark">sans que personne ne l’apprenne.</span>
             </h1>
 
-            <p className="mt-7 max-w-xl text-lg leading-relaxed text-cream/75">
+            <p className="mt-7 max-w-xl text-lg leading-relaxed text-muted">
               Une valorisation que vous pouvez justifier ligne à ligne, une annonce
               anonyme, des offres scellées pendant {OFFER_WINDOW_DAYS} jours, et une
               part différée ajustée sur la rétention réellement constatée.
             </p>
 
             <div className="mt-9 flex flex-wrap items-center gap-3">
-              <Button asChild variant="gold" size="lg">
+              <Button asChild variant="primary" size="lg">
                 <Link href="/valoriser">Estimer mon portefeuille</Link>
               </Button>
               <Button
                 asChild
                 size="lg"
-                className="border border-cream/25 bg-transparent text-cream hover:border-gold/50 hover:bg-cream/5"
+                className="border border-line bg-transparent text-ink hover:border-indigo hover:bg-surface"
               >
                 <Link href="/annonces">Voir les annonces</Link>
               </Button>
             </div>
 
-            <p className="mt-6 text-[15px] text-cream/65">
+            <p className="mt-6 text-[15px] text-muted">
               Gratuit jusqu’à la vente. Honoraires de {FEE_LABEL} au succès, et rien
               si vous ne cédez pas.
             </p>
           </div>
 
           {/* Aperçu de la fourchette : montre le produit plutôt que de le décrire. */}
-          <div className="rounded-3xl border border-cream/12 bg-charcoal-muted/80 p-7 shadow-2xl shadow-black/30">
-            <p className="text-[13px] font-medium uppercase tracking-[0.14em] text-indigo-soft">
+          <div className="rounded-3xl border border-line bg-surface p-7 shadow-2xl shadow-black/30">
+            <p className="text-[13px] font-medium uppercase tracking-[0.14em] text-indigo-dark">
               Exemple de fourchette
             </p>
-            <p className="mt-3 text-[15px] text-cream/65">
+            <p className="mt-3 text-[15px] text-muted">
               {formatEuroWhole(SAMPLE_COMMISSIONS)} de commissions annuelles,
               clientèle de particuliers.
             </p>
 
             <div className="mt-7 space-y-3">
               <div className="flex items-baseline justify-between gap-4">
-                <span className="text-[15px] text-cream/60">Basse</span>
-                <span className="tabular font-serif text-xl text-cream/80">
+                <span className="text-[15px] text-muted">Basse</span>
+                <span className="tabular font-serif text-xl text-muted">
                   {formatEuroWhole(sample.low)}
                 </span>
               </div>
-              <div className="rule-gold" />
+              <div className="rule-accent" />
               <div className="flex items-baseline justify-between gap-4">
-                <span className="text-[15px] font-medium text-indigo-soft">Médiane</span>
-                <span className="tabular font-serif text-3xl font-semibold text-indigo-soft">
+                <span className="text-[15px] font-medium text-indigo-dark">Médiane</span>
+                <span className="tabular font-serif text-3xl font-semibold text-indigo-dark">
                   {formatEuroWhole(sample.mid)}
                 </span>
               </div>
-              <div className="rule-gold" />
+              <div className="rule-accent" />
               <div className="flex items-baseline justify-between gap-4">
-                <span className="text-[15px] text-cream/60">Haute</span>
-                <span className="tabular font-serif text-xl text-cream/80">
+                <span className="text-[15px] text-muted">Haute</span>
+                <span className="tabular font-serif text-xl text-muted">
                   {formatEuroWhole(sample.high)}
                 </span>
               </div>
             </div>
 
-            <p className="mt-7 border-t border-cream/10 pt-5 text-sm leading-relaxed text-cream/65">
+            <p className="mt-7 border-t border-line pt-5 text-sm leading-relaxed text-muted">
               La valorisation complète corrige cette base par sept coefficients, et
               affiche l’impact en euros de chacun.
             </p>
@@ -181,7 +181,7 @@ export default function HomePage() {
       {/* Problèmes */}
       <section className="mx-auto max-w-6xl px-4 py-20">
         <div className="max-w-2xl">
-          <p className="text-[13px] font-medium uppercase tracking-[0.14em] text-gold-deep">
+          <p className="text-[13px] font-medium uppercase tracking-[0.14em] text-indigo-dark">
             Le point de départ
           </p>
           <h2 className="mt-3 font-serif text-4xl font-semibold leading-tight text-ink">
@@ -194,7 +194,7 @@ export default function HomePage() {
               key={item.title}
               className="lift rounded-3xl border border-line bg-paper p-7"
             >
-              <p className="tabular font-serif text-3xl font-semibold text-gold-deep/45">
+              <p className="tabular font-serif text-3xl font-semibold text-indigo-dark/45">
                 {item.number}
               </p>
               <h3 className="mt-4 font-serif text-xl font-semibold leading-snug text-ink">
@@ -210,7 +210,7 @@ export default function HomePage() {
       <section className="bg-paper">
         <div className="mx-auto max-w-6xl px-4 py-20">
           <div className="max-w-2xl">
-            <p className="text-[13px] font-medium uppercase tracking-[0.14em] text-gold-deep">
+            <p className="text-[13px] font-medium uppercase tracking-[0.14em] text-indigo-dark">
               Le déroulé
             </p>
             <h2 className="mt-3 font-serif text-4xl font-semibold leading-tight text-ink">
@@ -219,8 +219,8 @@ export default function HomePage() {
           </div>
           <ol className="mt-12 grid gap-6 lg:grid-cols-3">
             {STEPS.map((step) => (
-              <li key={step.n} className="lift rounded-3xl border border-line bg-cream p-7">
-                <span className="tabular inline-flex h-11 w-11 items-center justify-center rounded-full bg-charcoal font-serif text-[15px] font-semibold text-indigo-soft">
+              <li key={step.n} className="lift rounded-3xl border border-line bg-surface-alt p-7">
+                <span className="tabular inline-flex h-11 w-11 items-center justify-center rounded-full bg-indigo font-serif text-[15px] font-semibold text-white">
                   {step.n}
                 </span>
                 <h3 className="mt-5 font-serif text-lg font-semibold text-ink">{step.title}</h3>
@@ -233,10 +233,10 @@ export default function HomePage() {
 
       {/* Différenciateur principal */}
       <section className="mx-auto max-w-6xl px-4 py-20">
-        <div className="overflow-hidden rounded-3xl border border-gold-deep/30 bg-gold/10">
+        <div className="overflow-hidden rounded-3xl border border-indigo-line bg-indigo-soft">
           <div className="grid gap-10 p-9 lg:grid-cols-[1.3fr_1fr] lg:items-center lg:p-12">
             <div>
-              <span className="inline-flex rounded-full bg-charcoal px-4 py-1.5 text-[13px] font-medium text-indigo-soft">
+              <span className="inline-flex rounded-full bg-indigo px-4 py-1.5 text-[13px] font-medium text-white">
                 Personne d’autre ne le fait
               </span>
               <h2 className="mt-5 font-serif text-4xl font-semibold leading-tight text-ink">
@@ -249,11 +249,11 @@ export default function HomePage() {
                 avec un plancher à 50 %. Le cédant connaît son pire cas dès la
                 signature. L’acquéreur, couvert, accepte un comptant plus élevé.
               </p>
-              <Button asChild variant="gold" className="mt-8">
+              <Button asChild variant="primary" className="mt-8">
                 <Link href="/ceder">Comprendre le mécanisme</Link>
               </Button>
             </div>
-            <dl className="rounded-3xl border border-gold-deep/25 bg-paper p-7">
+            <dl className="rounded-3xl border border-indigo-line bg-paper p-7">
               {[
                 { t: "Cible de rétention", v: "90 %" },
                 { t: "Relevés", v: "M+3, M+6, M+12" },
@@ -281,14 +281,14 @@ export default function HomePage() {
       <section className="bg-paper">
         <div className="mx-auto max-w-4xl px-4 py-20">
           <div className="max-w-2xl">
-            <p className="text-[13px] font-medium uppercase tracking-[0.14em] text-gold-deep">
+            <p className="text-[13px] font-medium uppercase tracking-[0.14em] text-indigo-dark">
               Ce qui nous distingue
             </p>
             <h2 className="mt-3 font-serif text-4xl font-semibold leading-tight text-ink">
               Ce que vous ne trouverez pas ailleurs
             </h2>
           </div>
-          <div className="mt-10 overflow-x-auto rounded-3xl border border-line bg-cream">
+          <div className="mt-10 overflow-x-auto rounded-3xl border border-line bg-surface-alt">
             <table className="w-full min-w-[34rem] border-collapse text-left">
               <thead>
                 <tr className="border-b border-line">
@@ -313,7 +313,7 @@ export default function HomePage() {
                       <span className="sr-only">Disponible</span>
                       <span
                         aria-hidden="true"
-                        className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-gold text-[15px] font-semibold text-charcoal"
+                        className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-indigo text-[15px] font-semibold text-white"
                       >
                         ✓
                       </span>
@@ -331,35 +331,35 @@ export default function HomePage() {
       </section>
 
       {/* Tarifs */}
-      <section className="hero-charcoal text-cream">
+      <section className="border-b border-line bg-indigo-soft text-ink">
         <div className="mx-auto max-w-6xl px-4 py-20">
           <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
             <div>
-              <p className="text-[13px] font-medium uppercase tracking-[0.14em] text-indigo-soft">
+              <p className="text-[13px] font-medium uppercase tracking-[0.14em] text-indigo-dark">
                 Tarifs
               </p>
               <h2 className="mt-3 font-serif text-4xl font-semibold leading-tight">
                 Vous ne payez que si vous cédez
               </h2>
-              <p className="mt-5 max-w-lg text-[15px] leading-relaxed text-cream/75">
+              <p className="mt-5 max-w-lg text-[15px] leading-relaxed text-muted">
                 La valorisation, l’annonce, la mise en relation et la salle de
                 données ne coûtent rien. Si vous renoncez, si aucune offre ne vous
                 convient, ou si vous retirez votre annonce, vous ne devez rien.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
-                <Button asChild variant="gold" size="lg">
+                <Button asChild variant="primary" size="lg">
                   <Link href="/inscription">Créer un compte</Link>
                 </Button>
                 <Button
                   asChild
                   size="lg"
-                  className="border border-cream/25 bg-transparent text-cream hover:border-gold/50 hover:bg-cream/5"
+                  className="border border-line bg-transparent text-ink hover:border-indigo hover:bg-surface"
                 >
                   <Link href="/tarifs">Détail des tarifs</Link>
                 </Button>
               </div>
             </div>
-            <dl className="rounded-3xl border border-cream/12 bg-charcoal-muted/80 p-8">
+            <dl className="rounded-3xl border border-line bg-surface p-8">
               {[
                 { t: "Valorisation et annonce", v: "Gratuit" },
                 { t: "Honoraires à la vente", v: FEE_LABEL },
@@ -370,11 +370,11 @@ export default function HomePage() {
                   className={
                     index === 0
                       ? "flex items-baseline justify-between gap-4 pb-4"
-                      : "flex items-baseline justify-between gap-4 border-t border-cream/10 py-4 last:pb-0"
+                      : "flex items-baseline justify-between gap-4 border-t border-line py-4 last:pb-0"
                   }
                 >
-                  <dt className="text-[15px] text-cream/70">{row.t}</dt>
-                  <dd className="tabular font-serif text-xl font-semibold text-indigo-soft">{row.v}</dd>
+                  <dt className="text-[15px] text-muted">{row.t}</dt>
+                  <dd className="tabular font-serif text-xl font-semibold text-indigo-dark">{row.v}</dd>
                 </div>
               ))}
             </dl>
@@ -392,7 +392,7 @@ export default function HomePage() {
           vous donne une fourchette, et le raisonnement qui la produit.
         </p>
         <div className="mt-9 flex flex-wrap justify-center gap-3">
-          <Button asChild variant="gold" size="lg">
+          <Button asChild variant="primary" size="lg">
             <Link href="/valoriser">Estimer mon portefeuille</Link>
           </Button>
           <Button asChild variant="outline" size="lg">

@@ -62,27 +62,27 @@ const TIMELINE = [
 export default function CederPage() {
   return (
     <main>
-      <section className="bg-charcoal text-cream">
+      <section className="border-y border-line bg-indigo-soft text-ink">
         <div className="mx-auto max-w-6xl px-4 py-14">
-          <p className="text-[13px] font-medium uppercase tracking-[0.18em] text-indigo-soft">
+          <p className="text-[13px] font-medium uppercase tracking-[0.18em] text-indigo-dark">
             Parcours cédant
           </p>
           <h1 className="mt-4 max-w-3xl font-serif text-4xl font-semibold leading-tight">
             Vendre sans que le marché l’apprenne avant vous
           </h1>
-          <p className="mt-5 max-w-2xl text-lg text-cream/80">
+          <p className="mt-5 max-w-2xl text-lg text-muted">
             La discrétion n’est pas un supplément de confort. C’est ce qui vous
             permet de renoncer si les conditions ne vous conviennent pas, sans
             avoir rien abîmé.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <Button asChild variant="gold" size="lg">
+            <Button asChild variant="primary" size="lg">
               <Link href="/valoriser">Estimer mon portefeuille</Link>
             </Button>
             <Button
               asChild
               size="lg"
-              className="border border-cream/25 bg-transparent text-cream hover:bg-cream/10"
+              className="border border-line bg-transparent text-ink hover:bg-surface"
             >
               <Link href="/inscription">Créer un compte</Link>
             </Button>
@@ -113,9 +113,9 @@ export default function CederPage() {
             {TIMELINE.map((item, index) => (
               <li
                 key={item.title}
-                className="flex gap-5 rounded-3xl border border-line bg-cream p-6"
+                className="flex gap-5 rounded-3xl border border-line bg-surface-alt p-6"
               >
-                <span className="tabular shrink-0 font-serif text-2xl font-semibold text-gold-deep">
+                <span className="tabular shrink-0 font-serif text-2xl font-semibold text-indigo-dark">
                   {String(index + 1).padStart(2, "0")}
                 </span>
                 <div>
@@ -129,8 +129,8 @@ export default function CederPage() {
       </section>
 
       <section className="mx-auto max-w-6xl px-4 py-16">
-        <div className="rounded-3xl border border-gold-deep/40 bg-gold/10 p-8">
-          <p className="text-[13px] font-medium uppercase tracking-[0.14em] text-gold-deep">
+        <div className="rounded-3xl border border-indigo-line bg-indigo-soft p-8">
+          <p className="text-[13px] font-medium uppercase tracking-[0.14em] text-indigo-dark">
             Après la cession
           </p>
           <h2 className="mt-3 font-serif text-2xl font-semibold text-ink">
@@ -150,7 +150,7 @@ export default function CederPage() {
             valorisation, l’annonce et la mise en relation ne coûtent rien.
           </p>
           <div className="mt-7 flex flex-wrap gap-3">
-            <Button asChild variant="gold">
+            <Button asChild variant="primary">
               <Link href="/inscription">Ouvrir un compte cédant</Link>
             </Button>
             <Button asChild variant="outline">

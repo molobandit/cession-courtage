@@ -24,7 +24,7 @@ export default async function MandatesPage() {
       </p>
       <div className="mt-4 overflow-x-auto border border-line bg-paper">
         <table className="w-full text-sm">
-          <thead className="bg-cream text-left text-xs uppercase text-muted">
+          <thead className="bg-surface-alt text-left text-xs uppercase text-muted">
             <tr>
               <th className="px-2 py-1.5">Budget</th>
               <th className="px-2 py-1.5">Zones</th>

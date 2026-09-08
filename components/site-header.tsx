@@ -22,41 +22,41 @@ export async function SiteHeader() {
     : "/connexion";
 
   return (
-    <header className="border-b border-charcoal-muted bg-charcoal text-cream">
+    <header className="sticky top-0 z-20 border-b border-line bg-surface/95 text-ink backdrop-blur">
       <div className="mx-auto flex min-h-14 max-w-6xl flex-wrap items-center justify-between gap-x-6 gap-y-2 px-4 py-2">
         <Link href="/" className="font-serif text-base font-semibold tracking-tight">
-          Cession <span className="text-indigo-soft">courtage</span>
+          Cession <span className="text-indigo-dark">courtage</span>
         </Link>
 
         <nav className="flex flex-wrap items-center gap-x-5 gap-y-1 text-[15px]">
           {PUBLIC_LINKS.map((link) => (
-            <Link key={link.href} href={link.href} className="text-cream/80 hover:text-indigo-soft">
+            <Link key={link.href} href={link.href} className="text-muted hover:text-indigo-dark">
               {link.label}
             </Link>
           ))}
 
           {actor ? (
             <>
-              <Link href={memberHref} className="text-cream/80 hover:text-indigo-soft">
+              <Link href={memberHref} className="text-muted hover:text-indigo-dark">
                 {isAdmin(actor) ? "Administration" : "Espace membre"}
               </Link>
-              <span className="hidden text-cream/65 lg:inline">
+              <span className="hidden text-muted lg:inline">
                 {actor.fullName ?? actor.email}
               </span>
               <form action={logoutAction}>
-                <button type="submit" className="text-cream/80 hover:text-indigo-soft">
+                <button type="submit" className="text-muted hover:text-indigo-dark">
                   Déconnexion
                 </button>
               </form>
             </>
           ) : (
             <>
-              <Link href="/connexion" className="text-cream/80 hover:text-indigo-soft">
+              <Link href="/connexion" className="text-muted hover:text-indigo-dark">
                 Connexion
               </Link>
               <Link
                 href="/inscription"
-                className="rounded-full bg-indigo px-4 py-1.5 font-medium text-white hover:bg-gold/85"
+                className="rounded-full bg-indigo px-4 py-1.5 font-medium text-white hover:bg-indigo-dark"
               >
                 Créer un compte
               </Link>

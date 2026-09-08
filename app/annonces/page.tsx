@@ -59,15 +59,15 @@ export default async function PublicListingsPage() {
 
   return (
     <main>
-      <section className="bg-charcoal text-cream">
+      <section className="border-y border-line bg-indigo-soft text-ink">
         <div className="mx-auto max-w-6xl px-4 py-12">
-          <p className="text-[13px] font-medium uppercase tracking-[0.18em] text-indigo-soft">
+          <p className="text-[13px] font-medium uppercase tracking-[0.18em] text-indigo-dark">
             Dossiers en ligne
           </p>
           <h1 className="mt-4 font-serif text-4xl font-semibold leading-tight">
             Portefeuilles à céder
           </h1>
-          <p className="mt-4 max-w-2xl text-[15px] text-cream/80">
+          <p className="mt-4 max-w-2xl text-[15px] text-muted">
             Toutes les fiches sont anonymes. Ni raison sociale, ni commune. L’identité
             du cédant n’est révélée qu’à la signature de la lettre d’intention.
           </p>
@@ -77,7 +77,7 @@ export default async function PublicListingsPage() {
             </span>
             <Link
               href="/annonces/demandes"
-              className="rounded-full border border-cream/25 px-4 py-2 text-[15px] text-cream/80 hover:border-gold/50 hover:text-indigo-soft"
+              className="rounded-full border border-line px-4 py-2 text-[15px] text-muted hover:border-indigo hover:text-indigo-dark"
             >
               Demandes d’acquisition
             </Link>
@@ -96,7 +96,7 @@ export default async function PublicListingsPage() {
               ligne d’un dossier correspondant à vos critères, et jamais plus d’une
               fois par jour.
             </p>
-            <Button asChild variant="gold" className="mt-6">
+            <Button asChild variant="primary" className="mt-6">
               <Link href="/acquerir">Déposer un mandat</Link>
             </Button>
           </div>

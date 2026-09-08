@@ -25,13 +25,13 @@ export function ChipGroup({
         {visible.map((item) => (
           <li
             key={item}
-            className="rounded-full border border-line bg-cream px-3 py-1 text-sm text-ink"
+            className="rounded-full border border-line bg-surface-alt px-3 py-1 text-sm text-ink"
           >
             {item}
           </li>
         ))}
         {hidden > 0 ? (
-          <li className="rounded-full border border-line bg-cream px-3 py-1 text-sm text-muted">
+          <li className="rounded-full border border-line bg-surface-alt px-3 py-1 text-sm text-muted">
             et {hidden} autre{hidden > 1 ? "s" : ""}
           </li>
         ) : null}

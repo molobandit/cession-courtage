@@ -33,15 +33,15 @@ const EXAMPLES = [12000, 34000, 80000, 150000];
 export default function TarifsPage() {
   return (
     <main>
-      <section className="bg-charcoal text-cream">
+      <section className="border-y border-line bg-indigo-soft text-ink">
         <div className="mx-auto max-w-6xl px-4 py-14">
-          <p className="text-[13px] font-medium uppercase tracking-[0.18em] text-indigo-soft">
+          <p className="text-[13px] font-medium uppercase tracking-[0.18em] text-indigo-dark">
             Tarifs
           </p>
           <h1 className="mt-4 max-w-3xl font-serif text-4xl font-semibold leading-tight">
             Vous ne payez que si vous cédez
           </h1>
-          <p className="mt-5 max-w-2xl text-lg text-cream/80">
+          <p className="mt-5 max-w-2xl text-lg text-muted">
             Aucun abonnement obligatoire pour le cédant, aucun frais de dossier,
             aucune commission sur une opération qui ne se fait pas.
           </p>
@@ -50,8 +50,8 @@ export default function TarifsPage() {
 
       <section className="mx-auto max-w-6xl px-4 py-14">
         <div className="grid gap-6 lg:grid-cols-2">
-          <article className="rounded-3xl border border-gold-deep/40 bg-gold/10 p-8">
-            <p className="text-[13px] font-medium uppercase tracking-[0.14em] text-gold-deep">
+          <article className="rounded-3xl border border-indigo-line bg-indigo-soft p-8">
+            <p className="text-[13px] font-medium uppercase tracking-[0.14em] text-indigo-dark">
               Cédant
             </p>
             <p className="tabular mt-4 font-serif text-5xl font-semibold text-ink">
@@ -67,13 +67,13 @@ export default function TarifsPage() {
               {formatEuroWhole(SUCCESS_FEE_FLOOR_EUR)} s’applique sur les très
               petits dossiers.
             </p>
-            <Button asChild variant="gold" className="mt-7">
+            <Button asChild variant="primary" className="mt-7">
               <Link href="/inscription">Ouvrir un compte cédant</Link>
             </Button>
           </article>
 
           <article className="rounded-3xl border border-line bg-paper p-8">
-            <p className="text-[13px] font-medium uppercase tracking-[0.14em] text-gold-deep">
+            <p className="text-[13px] font-medium uppercase tracking-[0.14em] text-indigo-dark">
               Acquéreur
             </p>
             <p className="tabular mt-4 font-serif text-5xl font-semibold text-ink">
@@ -105,7 +105,7 @@ export default function TarifsPage() {
             {INCLUDED.map((item) => (
               <li
                 key={item}
-                className="rounded-3xl border border-line bg-cream px-5 py-4 text-[15px] text-ink"
+                className="rounded-3xl border border-line bg-surface-alt px-5 py-4 text-[15px] text-ink"
               >
                 {item}
               </li>
@@ -162,7 +162,7 @@ export default function TarifsPage() {
           </table>
         </div>
         <div className="mt-9 flex flex-wrap gap-3">
-          <Button asChild variant="gold" size="lg">
+          <Button asChild variant="primary" size="lg">
             <Link href="/valoriser">Estimer mon portefeuille</Link>
           </Button>
           <Button asChild variant="outline" size="lg">

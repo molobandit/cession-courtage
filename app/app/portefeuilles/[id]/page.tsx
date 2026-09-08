@@ -128,7 +128,7 @@ export default async function PortfolioPage({ params }: { params: Promise<{ id: 
         </div>
         <div className="flex flex-wrap gap-3">
           <RecalculateValuationButton portfolioId={portfolio.id} />
-          <Button asChild variant="gold">
+          <Button asChild variant="primary">
             <Link href={`/app/annonces/nouvelle?portfolio=${portfolio.id}`}>
               Créer une annonce
             </Link>
@@ -156,8 +156,8 @@ export default async function PortfolioPage({ params }: { params: Promise<{ id: 
           </p>
 
           <div className="mt-5 grid gap-5 lg:grid-cols-[1.4fr_1fr]">
-            <div className="rounded-3xl border border-gold-deep/40 bg-gold/10 p-6">
-              <p className="text-[13px] font-medium uppercase tracking-[0.14em] text-gold-deep">
+            <div className="rounded-3xl border border-indigo-line bg-indigo-soft p-6">
+              <p className="text-[13px] font-medium uppercase tracking-[0.14em] text-indigo-dark">
                 Fourchette
               </p>
               <div className="mt-4 grid grid-cols-3 gap-4">
@@ -168,7 +168,7 @@ export default async function PortfolioPage({ params }: { params: Promise<{ id: 
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-gold-deep">Médiane</p>
+                  <p className="text-sm font-medium text-indigo-dark">Médiane</p>
                   <p className="tabular mt-1 font-serif text-3xl font-semibold text-ink">
                     {formatEuroWhole(Number(valuation.midValue))}
                   </p>
@@ -180,7 +180,7 @@ export default async function PortfolioPage({ params }: { params: Promise<{ id: 
                   </p>
                 </div>
               </div>
-              <p className="mt-5 border-t border-gold-deep/20 pt-4 text-[15px] leading-relaxed text-muted">
+              <p className="mt-5 border-t border-indigo-line pt-4 text-[15px] leading-relaxed text-muted">
                 Valeur brute issue des multiples par branche :{" "}
                 {formatEuroWhole(Number(valuation.grossValue))}, corrigée par les sept
                 coefficients ci-dessous.
@@ -355,7 +355,7 @@ export default async function PortfolioPage({ params }: { params: Promise<{ id: 
               <li key={listing.id}>
                 <Link
                   href={`/app/annonces/${listing.id}`}
-                  className="flex flex-wrap items-baseline justify-between gap-3 rounded-3xl border border-line bg-paper px-6 py-4 hover:border-gold-deep/50"
+                  className="flex flex-wrap items-baseline justify-between gap-3 rounded-3xl border border-line bg-paper px-6 py-4 hover:border-indigo"
                 >
                   <span className="tabular text-[15px] font-medium text-ink">
                     Portefeuille #{listing.publicNumber}

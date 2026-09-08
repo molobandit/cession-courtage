@@ -50,15 +50,15 @@ const CASCADE_STAGES = [
 export default function ValoriserPage() {
   return (
     <main>
-      <section className="bg-charcoal text-cream">
+      <section className="border-y border-line bg-indigo-soft text-ink">
         <div className="mx-auto max-w-6xl px-4 py-14">
-          <p className="text-[13px] font-medium uppercase tracking-[0.18em] text-indigo-soft">
+          <p className="text-[13px] font-medium uppercase tracking-[0.18em] text-indigo-dark">
             Estimation gratuite, sans inscription
           </p>
           <h1 className="mt-4 max-w-3xl font-serif text-4xl font-semibold leading-tight">
             Ce que vaut votre portefeuille, et pourquoi
           </h1>
-          <p className="mt-5 max-w-2xl text-lg text-cream/80">
+          <p className="mt-5 max-w-2xl text-lg text-muted">
             Nous ne donnons jamais un prix unique. Une cession se négocie dans une
             fourchette, et ce qui compte est de savoir quels postes la déplacent.
           </p>
@@ -143,7 +143,7 @@ export default function ValoriserPage() {
             identifier personne.
           </p>
           <div className="mt-7 flex flex-wrap gap-3">
-            <Button asChild variant="gold">
+            <Button asChild variant="primary">
               <Link href="/inscription">Créer un compte</Link>
             </Button>
             <Button asChild variant="outline">

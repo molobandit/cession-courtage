@@ -87,7 +87,7 @@ export function ImportProgress({ importId, totalRows, processedRows }: ImportPro
       </div>
 
       <div
-        className="mt-4 h-3 w-full overflow-hidden rounded-full bg-cream"
+        className="mt-4 h-3 w-full overflow-hidden rounded-full bg-surface-alt"
         role="progressbar"
         aria-valuemin={0}
         aria-valuemax={totalRows}
@@ -95,7 +95,7 @@ export function ImportProgress({ importId, totalRows, processedRows }: ImportPro
         aria-label="Avancement de l’import"
       >
         <div
-          className="h-full rounded-full bg-gold transition-[width] duration-300"
+          className="h-full rounded-full bg-indigo transition-[width] duration-300"
           style={{ width: `${percent}%` }}
         />
       </div>
@@ -125,7 +125,7 @@ export function ImportProgress({ importId, totalRows, processedRows }: ImportPro
       ) : null}
 
       {phase === "erreur" || phase === "pause" ? (
-        <Button variant="gold" className="mt-5" onClick={() => void run()}>
+        <Button variant="primary" className="mt-5" onClick={() => void run()}>
           Reprendre l’enregistrement
         </Button>
       ) : null}

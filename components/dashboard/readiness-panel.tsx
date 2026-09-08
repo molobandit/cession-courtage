@@ -34,7 +34,7 @@ export function ReadinessPanel({
             <li key={axis.key}>
               <Link
                 href={axis.href}
-                className="block rounded-3xl border border-line bg-paper p-5 transition-colors hover:border-gold-deep/50"
+                className="block rounded-3xl border border-line bg-paper p-5 transition-colors hover:border-indigo"
               >
                 <div className="flex items-baseline justify-between gap-3">
                   <span className="text-[15px] font-medium text-ink">{axis.label}</span>
@@ -48,7 +48,7 @@ export function ReadinessPanel({
                     {done ? "Fait" : `${axisPercent} %`}
                   </span>
                 </div>
-                <div className="mt-2.5 h-2 w-full rounded-full bg-cream">
+                <div className="mt-2.5 h-2 w-full rounded-full bg-surface-alt">
                   <div
                     className={done ? "h-full rounded-full bg-ok" : "h-full rounded-full bg-indigo"}
                     style={{ width: `${Math.max(axisPercent, done ? 100 : 2)}%` }}

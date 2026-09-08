@@ -49,7 +49,7 @@ export function RankedBars({
                     </span>
                   </span>
                 </div>
-                <div className="mt-1.5 h-2.5 w-full rounded-full bg-cream">
+                <div className="mt-1.5 h-2.5 w-full rounded-full bg-surface-alt">
                   <div
                     className="h-full rounded-full bg-indigo"
                     style={{ width: `${Math.max(width, 1.5)}%` }}

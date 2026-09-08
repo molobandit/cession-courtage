@@ -39,7 +39,7 @@ export function PublicEstimator() {
               value={raw}
               onChange={(event) => setRaw(event.target.value)}
               aria-describedby="commissions-aide"
-              className="tabular h-12 w-full rounded-full border border-line bg-cream px-4 text-right text-lg text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-deep/60"
+              className="tabular h-12 w-full rounded-full border border-line bg-surface-alt px-4 text-right text-lg text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo/50"
             />
             <span className="text-lg text-muted">€ HT</span>
           </div>
@@ -63,8 +63,8 @@ export function PublicEstimator() {
                   aria-pressed={active}
                   className={
                     active
-                      ? "rounded-full bg-charcoal px-4 py-2 text-[15px] font-medium text-cream"
-                      : "rounded-full border border-line bg-cream px-4 py-2 text-[15px] text-ink hover:bg-paper"
+                      ? "rounded-full bg-indigo px-4 py-2 text-[15px] font-medium text-white"
+                      : "rounded-full border border-line bg-surface-alt px-4 py-2 text-[15px] text-ink hover:bg-paper"
                   }
                 >
                   {PUBLIC_SEGMENT_LABELS[key]}
@@ -81,23 +81,23 @@ export function PublicEstimator() {
       <div className="mt-8 border-t border-line pt-6">
         {hasResult ? (
           <>
-            <p className="text-[13px] font-medium uppercase tracking-[0.14em] text-gold-deep">
+            <p className="text-[13px] font-medium uppercase tracking-[0.14em] text-indigo-dark">
               Fourchette indicative
             </p>
             <div className="mt-4 grid gap-4 sm:grid-cols-3">
-              <div className="rounded-3xl border border-line bg-cream p-5 text-right">
+              <div className="rounded-3xl border border-line bg-surface-alt p-5 text-right">
                 <p className="text-sm text-muted">Basse</p>
                 <p className="tabular mt-1 font-serif text-2xl font-semibold text-ink">
                   {formatEuroWhole(estimate.low)}
                 </p>
               </div>
-              <div className="rounded-3xl border border-gold-deep/40 bg-gold/15 p-5 text-right">
+              <div className="rounded-3xl border border-indigo-line bg-indigo-soft p-5 text-right">
                 <p className="text-sm text-muted">Médiane</p>
                 <p className="tabular mt-1 font-serif text-2xl font-semibold text-ink">
                   {formatEuroWhole(estimate.mid)}
                 </p>
               </div>
-              <div className="rounded-3xl border border-line bg-cream p-5 text-right">
+              <div className="rounded-3xl border border-line bg-surface-alt p-5 text-right">
                 <p className="text-sm text-muted">Haute</p>
                 <p className="tabular mt-1 font-serif text-2xl font-semibold text-ink">
                   {formatEuroWhole(estimate.high)}
@@ -112,7 +112,7 @@ export function PublicEstimator() {
               ces postes, se calcule après import de votre portefeuille.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
-              <Button asChild variant="gold">
+              <Button asChild variant="primary">
                 <Link href="/inscription">Obtenir la valorisation détaillée</Link>
               </Button>
               <Button asChild variant="outline">
