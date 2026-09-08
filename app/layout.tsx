@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { IBM_Plex_Sans, Source_Serif_4 } from "next/font/google";
 import "./globals.css";
 import { SiteHeader } from "@/components/site-header";
+import { SiteFooter } from "@/components/site-footer";
 import { siteUrl } from "@/lib/site";
 
 const sans = IBM_Plex_Sans({
@@ -32,6 +33,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <body className={`${sans.variable} ${serif.variable} min-h-screen bg-cream text-ink antialiased`}>
         <SiteHeader />
         {children}
+        <SiteFooter />
       </body>
     </html>
   );

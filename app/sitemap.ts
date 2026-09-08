@@ -8,7 +8,11 @@ const PUBLIC_ROUTES = [
   { path: "/valoriser", priority: 0.9 },
   { path: "/annonces", priority: 0.8 },
   { path: "/tarifs", priority: 0.7 },
+  { path: "/faq", priority: 0.8 },
   { path: "/journal", priority: 0.6 },
+  { path: "/mentions-legales", priority: 0.3 },
+  { path: "/conditions-generales", priority: 0.3 },
+  { path: "/confidentialite", priority: 0.3 },
   { path: "/inscription", priority: 0.5 },
 ];
 

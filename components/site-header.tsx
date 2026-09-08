@@ -8,7 +8,7 @@ const PUBLIC_LINKS = [
   { href: "/valoriser", label: "Valoriser" },
   { href: "/annonces", label: "Annonces" },
   { href: "/tarifs", label: "Tarifs" },
-  { href: "/journal", label: "Journal" },
+  { href: "/faq", label: "FAQ" },
 ];
 
 export async function SiteHeader() {
@@ -40,7 +40,7 @@ export async function SiteHeader() {
               <Link href={memberHref} className="text-cream/80 hover:text-gold">
                 {isAdmin(actor) ? "Administration" : "Espace membre"}
               </Link>
-              <span className="hidden text-cream/50 lg:inline">
+              <span className="hidden text-cream/65 lg:inline">
                 {actor.fullName ?? actor.email}
               </span>
               <form action={logoutAction}>

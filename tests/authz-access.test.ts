@@ -8,7 +8,9 @@
  * Prerequis : `npm run db:migrate && npm run db:seed`.
  */
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { prisma, disposePlatformProxy } from "@/lib/prisma";
+import { prisma } from "@/lib/prisma";
+// Importe directement : l'alias de vitest ne vaut pas pour tsc.
+import { disposePlatformProxy } from "./setup/prisma-test";
 import type { Actor } from "@/lib/authz/actor";
 import { getListingByPublicNumber, findMyListing } from "@/lib/authz/listings";
 import { listOffersForListing } from "@/lib/authz/offers";

@@ -2,18 +2,20 @@
 
 :root {
   /* Charte : hero charbon, accent or. Contrastes verifies AA. */
-  --charcoal: #15171c;
-  --charcoal-muted: #232830;
+  --charcoal: #101318;
+  --charcoal-muted: #1b2028;
+  --charcoal-soft: #262c36;
   --gold: #ebd06a;
-  --gold-deep: #b8942f;
+  --gold-soft: #f4e3a8;
+  --gold-deep: #a8862a;
 
   /* Conserve pour les pages existantes : navy pointe desormais sur le charbon. */
-  --navy: #15171c;
-  --navy-muted: #232830;
+  --navy: #101318;
+  --navy-muted: #1b2028;
 
-  --cream: #f5f2ea;
+  --cream: #f6f3ec;
   --paper: #fffdf8;
-  --ink: #15171c;
+  --ink: #14181f;
   --muted: #56534b;
   --line: #ddd6c6;
 
@@ -27,7 +29,9 @@
 @theme inline {
   --color-charcoal: var(--charcoal);
   --color-charcoal-muted: var(--charcoal-muted);
+  --color-charcoal-soft: var(--charcoal-soft);
   --color-gold: var(--gold);
+  --color-gold-soft: var(--gold-soft);
   --color-gold-deep: var(--gold-deep);
   --color-navy: var(--navy);
   --color-navy-muted: var(--navy-muted);
@@ -71,4 +75,28 @@ a {
 :focus-visible {
   outline: 2px solid var(--gold-deep);
   outline-offset: 2px;
+}
+
+/* Filet dore, pour souligner un bloc sans l'encadrer. */
+.rule-gold {
+  background-image: linear-gradient(90deg, var(--gold) 0%, transparent 100%);
+  height: 2px;
+}
+
+/* Grain tres discret sur le charbon : evite l'aplat mort en grand format. */
+.hero-charcoal {
+  background-color: var(--charcoal);
+  background-image:
+    radial-gradient(ellipse 80% 60% at 15% -10%, rgba(235, 208, 106, 0.13), transparent 60%),
+    radial-gradient(ellipse 60% 50% at 95% 0%, rgba(235, 208, 106, 0.07), transparent 55%);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .lift {
+    transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+  }
+  .lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px -18px rgba(16, 19, 24, 0.45);
+  }
 }
