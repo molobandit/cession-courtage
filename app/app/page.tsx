@@ -12,6 +12,8 @@ import {
   listMyPortfolios,
 } from "@/lib/authz";
 import { formatDate, formatEuro } from "@/lib/format/fr";
+import { nextAction } from "@/lib/dashboard/next-action";
+import { NextActionBanner } from "@/components/dashboard/next-action-banner";
 import { asStringArray } from "@/lib/json-array";
 import { DEAL_STAGE_LABELS, LISTING_STATUS_LABELS, OFFER_STATUS_LABELS } from "@/lib/labels";
 import { redirect } from "next/navigation";
@@ -37,26 +39,53 @@ export default async function MemberHomePage() {
     listMyDeals(actor),
   ]);
 
+  const DAY_MS = 24 * 60 * 60 * 1000;
+  const draft = listings.find((l) => l.status === "DRAFT");
+  const openWindow = listings
+    .map((l) => l.offerWindowClosesAt)
+    .filter((d): d is Date => d !== null && d.getTime() > Date.now())
+    .sort((a, b) => a.getTime() - b.getTime())[0];
+
+  const action = nextAction({
+    canSell: canSell(actor),
+    canBuy: canBuy(actor),
+    portfolioCount: portfolios.length,
+    unvaluedPortfolioCount: portfolios.filter((p) => p.valuations.length === 0).length,
+    draftListing: draft ? { publicNumber: draft.publicNumber, id: draft.id } : null,
+    openWindowDaysLeft: openWindow
+      ? Math.max(0, Math.ceil((openWindow.getTime() - Date.now()) / DAY_MS))
+      : null,
+    offersToReview: listings.filter((l) => l.status === "OFFERS_CLOSED").length,
+    activeDealCount: deals.filter((d) => d.stage !== "CLOSED").length,
+    mandateCount: mandates.length,
+    retentionDue: deals.filter((d) => d.stage === "RETENTION").length,
+  });
+
   return (
-    <main className="mx-auto max-w-6xl px-4 py-6">
-      <div className="flex flex-wrap items-end justify-between gap-2">
+    <main className="mx-auto max-w-6xl px-4 py-8">
+      <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="font-serif text-2xl text-navy">Espace membre</h1>
-          <p className="text-sm text-muted">
-            {actor.fullName} · {roleLabel[actor.role]} · ORIAS {actor.oriasNumber} · alias {actor.publicAlias}
+          <h1 className="font-serif text-3xl font-semibold text-ink">Espace membre</h1>
+          <p className="mt-1.5 text-[15px] text-muted">
+            {actor.fullName} · {roleLabel[actor.role]} · ORIAS {actor.oriasNumber} · alias{" "}
+            {actor.publicAlias}
           </p>
         </div>
       </div>
 
+      <div className="mt-6">
+        <NextActionBanner action={action} />
+      </div>
+
       {canSell(actor) ? (
-        <section className="mt-6">
+        <section className="mt-10">
           <div className="flex flex-wrap items-end justify-between gap-2">
-            <h2 className="font-serif text-lg text-navy">Portefeuilles</h2>
-            <Link href="/app/import" className="text-sm underline-offset-2 hover:underline">
+            <h2 className="font-serif text-xl font-semibold text-ink">Portefeuilles</h2>
+            <Link href="/app/import" className="text-[15px] font-medium text-gold-deep underline-offset-4 hover:underline">
               Importer un portefeuille
             </Link>
           </div>
-          <div className="mt-2 overflow-x-auto border border-line bg-paper">
+          <div className="mt-3 overflow-x-auto rounded-3xl border border-line bg-paper">
             <table className="w-full text-sm">
               <thead className="bg-cream text-left text-xs uppercase tracking-wide text-muted">
                 <tr>
@@ -106,10 +135,10 @@ export default async function MemberHomePage() {
       ) : null}
 
       {canSell(actor) ? (
-        <section className="mt-6">
+        <section className="mt-10">
           <div className="flex flex-wrap items-end justify-between gap-2">
-            <h2 className="font-serif text-lg text-navy">Annonces</h2>
-            <Link href="/app/annonces/nouvelle" className="text-sm underline-offset-2 hover:underline">
+            <h2 className="font-serif text-xl font-semibold text-ink">Annonces</h2>
+            <Link href="/app/annonces/nouvelle" className="text-[15px] font-medium text-gold-deep underline-offset-4 hover:underline">
               Nouvelle annonce
             </Link>
           </div>
@@ -118,14 +147,14 @@ export default async function MemberHomePage() {
       ) : null}
 
       {canBuy(actor) ? (
-        <section className="mt-6">
+        <section className="mt-10">
           <div className="flex flex-wrap items-end justify-between gap-2">
-            <h2 className="font-serif text-lg text-navy">Mandats de recherche</h2>
-            <Link href="/app/mandats" className="text-sm underline-offset-2 hover:underline">
+            <h2 className="font-serif text-xl font-semibold text-ink">Mandats de recherche</h2>
+            <Link href="/app/mandats" className="text-[15px] font-medium text-gold-deep underline-offset-4 hover:underline">
               Nouveau mandat
             </Link>
           </div>
-          <div className="mt-2 overflow-x-auto border border-line bg-paper">
+          <div className="mt-3 overflow-x-auto rounded-3xl border border-line bg-paper">
             <table className="w-full text-sm">
               <thead className="bg-cream text-left text-xs uppercase tracking-wide text-muted">
                 <tr>
@@ -166,9 +195,9 @@ export default async function MemberHomePage() {
       ) : null}
 
       {canBuy(actor) ? (
-        <section className="mt-6">
-          <h2 className="font-serif text-lg text-navy">Mes offres</h2>
-          <div className="mt-2 overflow-x-auto border border-line bg-paper">
+        <section className="mt-10">
+          <h2 className="font-serif text-xl font-semibold text-ink">Mes offres</h2>
+          <div className="mt-3 overflow-x-auto rounded-3xl border border-line bg-paper">
             <table className="w-full text-sm">
               <thead className="bg-cream text-left text-xs uppercase tracking-wide text-muted">
                 <tr>
@@ -207,9 +236,9 @@ export default async function MemberHomePage() {
         </section>
       ) : null}
 
-      <section className="mt-6">
-        <h2 className="font-serif text-lg text-navy">Dossiers</h2>
-        <div className="mt-2 overflow-x-auto border border-line bg-paper">
+      <section className="mt-10">
+        <h2 className="font-serif text-xl font-semibold text-ink">Dossiers</h2>
+        <div className="mt-3 overflow-x-auto rounded-3xl border border-line bg-paper">
           <table className="w-full text-sm">
             <thead className="bg-cream text-left text-xs uppercase tracking-wide text-muted">
               <tr>
@@ -270,7 +299,7 @@ function ListingTable({
     );
   }
   return (
-    <div className="mt-2 overflow-x-auto border border-line bg-paper">
+    <div className="mt-3 overflow-x-auto rounded-3xl border border-line bg-paper">
       <table className="w-full text-sm">
         <thead className="bg-cream text-left text-xs uppercase tracking-wide text-muted">
           <tr>
