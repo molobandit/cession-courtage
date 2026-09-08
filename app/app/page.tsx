@@ -14,6 +14,9 @@ import {
 import { formatDate, formatEuro } from "@/lib/format/fr";
 import { nextAction } from "@/lib/dashboard/next-action";
 import { NextActionBanner } from "@/components/dashboard/next-action-banner";
+import { ReadinessPanel } from "@/components/dashboard/readiness-panel";
+import { readinessAxes, readinessScore } from "@/lib/dashboard/readiness";
+import { prisma } from "@/lib/prisma";
 import { asStringArray } from "@/lib/json-array";
 import { DEAL_STAGE_LABELS, LISTING_STATUS_LABELS, OFFER_STATUS_LABELS } from "@/lib/labels";
 import { redirect } from "next/navigation";
@@ -61,6 +64,32 @@ export default async function MemberHomePage() {
     retentionDue: deals.filter((d) => d.stage === "RETENTION").length,
   });
 
+  // Préparation : calculée depuis les données, jamais déclarée par le courtier.
+  const firmId = actor.firmId;
+  const [carrierTotal, carrierDecided, checklistRows] = firmId
+    ? await Promise.all([
+        prisma.carrierCode.count({ where: { portfolio: { firmId } } }),
+        prisma.carrierCode.count({
+          where: { portfolio: { firmId }, status: { in: ["AGREED", "REFUSED"] } },
+        }),
+        prisma.dueDiligenceItem.findMany({
+          where: { deal: { sellerId: actor.id }, required: true },
+          select: { providedAt: true },
+        }),
+      ])
+    : [0, 0, []];
+
+  const axes = readinessAxes({
+    portfolioCount: portfolios.length,
+    valuedCount: portfolios.filter((p) => p.valuations.length > 0).length,
+    publishedListings: listings.filter((l) => l.status !== "DRAFT").length,
+    carrierCodesTotal: carrierTotal,
+    carrierCodesDecided: carrierDecided,
+    checklistRequired: checklistRows.length,
+    checklistProvided: checklistRows.filter((i) => i.providedAt !== null).length,
+    firstPortfolioId: portfolios[0]?.id ?? null,
+  });
+
   return (
     <main className="mx-auto max-w-6xl px-4 py-8">
       <div className="flex flex-wrap items-end justify-between gap-3">
@@ -76,6 +105,12 @@ export default async function MemberHomePage() {
       <div className="mt-6">
         <NextActionBanner action={action} />
       </div>
+
+      {canSell(actor) ? (
+        <div className="mt-10">
+          <ReadinessPanel axes={axes} score={readinessScore(axes)} />
+        </div>
+      ) : null}
 
       {canSell(actor) ? (
         <section className="mt-10">
