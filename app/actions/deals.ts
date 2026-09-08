@@ -8,6 +8,7 @@ import { revalidatePath } from "next/cache";
 import { getActor, isOriasVerified } from "@/lib/authz/actor";
 import { isDealParticipant, isStageAtLeast, ownsFirm } from "@/lib/authz/policies";
 import { ForbiddenError, UnauthenticatedError } from "@/lib/authz/errors";
+import { firstIssue, messageSchema } from "@/lib/validations/actions";
 import {
   isListingMailboxParty,
   listingSellerUserId,
@@ -249,7 +250,9 @@ export async function sendDealMessageAction(
 ): Promise<DealFormState> {
   try {
     const { actor, deal } = await loadDeal(String(formData.get("dealId") ?? ""));
-    const body = String(formData.get("body") ?? "").trim();
+    const parsedBody = messageSchema.safeParse({ body: formData.get("body") });
+    if (!parsedBody.success) return { error: firstIssue(parsedBody.error) };
+    const body = parsedBody.data.body;
     if (body.length < 2) return { error: "Message vide." };
     await prisma.message.create({ data: { dealId: deal.id, senderId: actor.id, body: body.slice(0, 4000) } });
     revalidatePath(`/app/dossiers/${deal.id}`);
@@ -266,7 +269,9 @@ export async function sendListingMessageAction(
   try {
     const actor = await actorOrThrow();
     const listingId = String(formData.get("listingId") ?? "");
-    const body = String(formData.get("body") ?? "").trim();
+    const parsedListingBody = messageSchema.safeParse({ body: formData.get("body") });
+    if (!parsedListingBody.success) return { error: firstIssue(parsedListingBody.error) };
+    const body = parsedListingBody.data.body;
     if (body.length < 2) return { error: "Message vide." };
     const listing = await prisma.listing.findUnique({
       where: { id: listingId },

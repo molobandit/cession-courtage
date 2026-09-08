@@ -1,10 +1,10 @@
 "use server";
 
 import { FinancingMode, type ClientSegment, type RiskType } from "@prisma/client";
+import { firstIssue, mandateSchema } from "@/lib/validations/actions";
 import { redirect } from "next/navigation";
 import { canBuy, getActor, isOriasVerified } from "@/lib/authz";
 import { ForbiddenError, UnauthenticatedError } from "@/lib/authz/errors";
-import { parseFrenchNumber } from "@/lib/import/values";
 import { rematchMandate } from "@/lib/matching/run";
 import { prisma } from "@/lib/prisma";
 
@@ -46,11 +46,15 @@ export async function createMandateAction(
   let destination: string | null = null;
   try {
     const actor = await requireBuyerActor();
-    const maxBudget = parseFrenchNumber(String(formData.get("maxBudget") ?? ""));
-    const minCommissions = parseFrenchNumber(String(formData.get("minCommissions") ?? ""));
-    const maxCommissions = parseFrenchNumber(String(formData.get("maxCommissions") ?? ""));
-    if (maxBudget == null || maxBudget < 2000) return { error: "Budget maximum invalide." };
-    if (minCommissions == null || maxCommissions == null || maxCommissions < minCommissions) {
+    const parsedAmounts = mandateSchema.safeParse({
+      maxBudget: formData.get("maxBudget"),
+      minCommissions: formData.get("minCommissions"),
+      maxCommissions: formData.get("maxCommissions"),
+    });
+    if (!parsedAmounts.success) return { error: firstIssue(parsedAmounts.error) };
+    const { maxBudget, minCommissions, maxCommissions } = parsedAmounts.data;
+    if (maxBudget < 2000) return { error: "Budget maximum invalide." };
+    if (maxCommissions < minCommissions) {
       return { error: "Fourchette de commissions invalide." };
     }
     const riskTypes = formData.getAll("riskTypes").map(String).filter((v) => RISK_VALUES.has(v)) as RiskType[];

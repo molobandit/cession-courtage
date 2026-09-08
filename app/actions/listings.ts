@@ -9,9 +9,9 @@ import { ForbiddenError, UnauthenticatedError } from "@/lib/authz/errors";
 import { displayedZoneFor } from "@/lib/geo";
 import { rematchListing } from "@/lib/matching/run";
 import { prisma } from "@/lib/prisma";
-import { parseFrenchNumber } from "@/lib/import/values";
-import { ASKING_MAX, ASKING_MIN, OFFER_WINDOW_DAYS } from "@/lib/listing/constants";
+import { OFFER_WINDOW_DAYS } from "@/lib/listing/constants";
 import { nextListingPublicNumber } from "@/lib/listing/next-public-number";
+import { firstIssue, listingCreateSchema } from "@/lib/validations/actions";
 import { valuePortfolio } from "@/lib/valuation/run";
 
 export type ListingFormState = { error?: string };
@@ -24,14 +24,6 @@ async function requireSellerActor() {
   return actor;
 }
 
-function parseAsking(raw: string): number | null {
-  const n = parseFrenchNumber(raw);
-  if (n == null) return null;
-  const rounded = Math.round(n);
-  if (rounded < ASKING_MIN || rounded > ASKING_MAX) return null;
-  return rounded;
-}
-
 export async function createListingAction(
   _prev: ListingFormState,
   formData: FormData,
@@ -39,13 +31,15 @@ export async function createListingAction(
   let destination: string | null = null;
   try {
     const actor = await requireSellerActor();
-    const portfolioId = String(formData.get("portfolioId") ?? "");
+    const parsed = listingCreateSchema.safeParse({
+      portfolioId: formData.get("portfolioId"),
+      askingPrice: formData.get("askingPrice"),
+      sellerSupportMonths: formData.get("sellerSupportMonths") ?? 0,
+    });
+    if (!parsed.success) return { error: firstIssue(parsed.error) };
+    const { portfolioId, askingPrice: asking } = parsed.data;
     const portfolio = await getMyPortfolio(portfolioId, actor);
-    const asking = parseAsking(String(formData.get("askingPrice") ?? ""));
-    if (asking == null) {
-      return { error: `Le prix demandé doit être compris entre ${ASKING_MIN.toLocaleString("fr-FR")} et ${ASKING_MAX.toLocaleString("fr-FR")} €.` };
-    }
-    const support = Number(formData.get("sellerSupportMonths") ?? 0);
+    const support = parsed.data.sellerSupportMonths;
     const sellerSupportMonths = support >= 6 ? 6 : support >= 3 ? 3 : 0;
 
     const lines = await prisma.contractLine.findMany({

@@ -7,9 +7,8 @@ import { canBuy, getActor, isOriasVerified, listOffersForListing } from "@/lib/a
 import { ownsFirm } from "@/lib/authz/policies";
 import { isOfferWindowSealed } from "@/lib/authz/policies";
 import { ForbiddenError, UnauthenticatedError } from "@/lib/authz/errors";
-import { parseFrenchNumber } from "@/lib/import/values";
 import { prisma } from "@/lib/prisma";
-import { ASKING_MAX, ASKING_MIN } from "@/lib/listing/constants";
+import { firstIssue, offerIdSchema, offerSchema } from "@/lib/validations/actions";
 
 export type OfferFormState = { error?: string };
 
@@ -27,7 +26,15 @@ export async function submitOfferAction(
 ): Promise<OfferFormState> {
   try {
     const actor = await requireBuyerActor();
-    const listingId = String(formData.get("listingId") ?? "");
+    const parsed = offerSchema.safeParse({
+      listingId: formData.get("listingId"),
+      amount: formData.get("amount"),
+      upfrontPercent: formData.get("upfrontPercent"),
+      message: formData.get("message"),
+    });
+    if (!parsed.success) return { error: firstIssue(parsed.error) };
+    const { listingId, amount, upfrontPercent: upfront, message } = parsed.data;
+
     const listing = await prisma.listing.findUnique({
       where: { id: listingId },
       include: { portfolio: { select: { firmId: true } } },
@@ -39,17 +46,6 @@ export async function submitOfferAction(
     if (listing.status !== ListingStatus.OFFERS_OPEN || !isOfferWindowSealed(listing)) {
       return { error: "La fenêtre d'offres n'est pas ouverte." };
     }
-    const amount = parseFrenchNumber(String(formData.get("amount") ?? ""));
-    const upfront = parseFrenchNumber(String(formData.get("upfrontPercent") ?? ""));
-    const message = String(formData.get("message") ?? "").trim();
-    if (amount == null || amount < ASKING_MIN || amount > ASKING_MAX) {
-      return { error: "Montant d'offre hors fourchette (2 000–200 000 €)." };
-    }
-    if (upfront == null || upfront < 0 || upfront > 100) {
-      return { error: "Le comptant doit être entre 0 et 100 %." };
-    }
-    if (message.length < 10) return { error: "Précisez un message d'au moins 10 caractères." };
-
     await prisma.offer.upsert({
       where: { listingId_buyerId: { listingId, buyerId: actor.id } },
       update: {
@@ -81,7 +77,9 @@ export async function withdrawOfferAction(
 ): Promise<OfferFormState> {
   try {
     const actor = await requireBuyerActor();
-    const offerId = String(formData.get("offerId") ?? "");
+    const parsed = offerIdSchema.safeParse({ offerId: formData.get("offerId") });
+    if (!parsed.success) return { error: firstIssue(parsed.error) };
+    const { offerId } = parsed.data;
     const offer = await prisma.offer.findUnique({ where: { id: offerId } });
     if (!offer || offer.buyerId !== actor.id) return { error: "Offre introuvable." };
     if (offer.status !== OfferStatus.SUBMITTED) return { error: "Cette offre ne peut plus être retirée." };
@@ -101,9 +99,10 @@ export async function acceptOfferAction(
   try {
     const actor = await getActor();
     if (!actor) throw new UnauthenticatedError();
-    const offerId = String(formData.get("offerId") ?? "");
+    const parsedId = offerIdSchema.safeParse({ offerId: formData.get("offerId") });
+    if (!parsedId.success) return { error: firstIssue(parsedId.error) };
     const offer = await prisma.offer.findUnique({
-      where: { id: offerId },
+      where: { id: parsedId.data.offerId },
       include: {
         listing: { include: { portfolio: { select: { firmId: true } } } },
         buyer: { select: { id: true, publicAlias: true } },
