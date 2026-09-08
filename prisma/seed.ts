@@ -630,17 +630,17 @@ const PORTFOLIO_SPECS: {
   advancedShare: number;
 }[] = [
   { id: "pf_01", firmId: "firm_01", sellerId: "user_seller_01", label: "Portefeuille IARD / santé Île-de-France", lineCount: 92, geoIndexes: [0, 1], churnRate: 0.062, avgAgeMonths: 44, advancedShare: 0.05 },
-  { id: "pf_02", firmId: "firm_02", sellerId: "user_seller_02", label: "Portefeuille agence Lyon — santé et IARD", lineCount: 148, geoIndexes: [4, 5], churnRate: 0.041, avgAgeMonths: 78, advancedShare: 0.04 },
-  { id: "pf_03", firmId: "firm_03", sellerId: "user_seller_03", label: "Portefeuille PACA — emprunteur et santé", lineCount: 215, geoIndexes: [2, 3], churnRate: 0.088, avgAgeMonths: 31, advancedShare: 0.12 },
-  { id: "pf_04", firmId: "firm_04", sellerId: "user_seller_04", label: "Portefeuille Atlantique — mixte", lineCount: 287, geoIndexes: [8], churnRate: 0.055, avgAgeMonths: 52, advancedShare: 0.06 },
-  { id: "pf_05", firmId: "firm_05", sellerId: "user_seller_05", label: "Portefeuille Nord — forte concentration AXA", lineCount: 341, geoIndexes: [10], concentratedCarrier: "AXA", churnRate: 0.118, avgAgeMonths: 39, advancedShare: 0.08 },
-  { id: "pf_06", firmId: "firm_06", sellerId: "user_seller_06", label: "Portefeuille Alpes — IARD entreprises", lineCount: 456, geoIndexes: [5, 4], churnRate: 0.049, avgAgeMonths: 61, advancedShare: 0.03 },
-  { id: "pf_07", firmId: "firm_07", sellerId: "user_seller_07", label: "Portefeuille Occitanie — VAD santé", lineCount: 612, geoIndexes: [7, 13], churnRate: 0.172, avgAgeMonths: 14, advancedShare: 0.18 },
-  { id: "pf_08", firmId: "firm_08", sellerId: "user_seller_08", label: "Portefeuille Bretagne — historique agence", lineCount: 788, geoIndexes: [9], churnRate: 0.037, avgAgeMonths: 96, advancedShare: 0.02 },
-  { id: "pf_09", firmId: "firm_09", sellerId: "user_seller_09", label: "Portefeuille Grand Est — clôturé", lineCount: 934, geoIndexes: [11], churnRate: 0.071, avgAgeMonths: 48, advancedShare: 0.07 },
-  { id: "pf_10", firmId: "firm_10", sellerId: "user_seller_10", label: "Portefeuille Aquitaine — retiré de la vente", lineCount: 1102, geoIndexes: [6], churnRate: 0.053, avgAgeMonths: 55, advancedShare: 0.05 },
-  { id: "pf_11", firmId: "firm_11", sellerId: "user_seller_11", label: "Portefeuille Centre — non publié", lineCount: 1288, geoIndexes: [14], churnRate: 0.066, avgAgeMonths: 28, advancedShare: 0.09 },
-  { id: "pf_12", firmId: "firm_12", sellerId: "user_seller_12", label: "Portefeuille Corse — jeune livre", lineCount: 1400, geoIndexes: [15, 2], churnRate: 0.143, avgAgeMonths: 9, advancedShare: 0.15 },
+  { id: "pf_02", firmId: "firm_02", sellerId: "user_seller_02", label: "Portefeuille agence Lyon, santé et IARD", lineCount: 148, geoIndexes: [4, 5], churnRate: 0.041, avgAgeMonths: 78, advancedShare: 0.04 },
+  { id: "pf_03", firmId: "firm_03", sellerId: "user_seller_03", label: "Portefeuille PACA, emprunteur et santé", lineCount: 215, geoIndexes: [2, 3], churnRate: 0.088, avgAgeMonths: 31, advancedShare: 0.12 },
+  { id: "pf_04", firmId: "firm_04", sellerId: "user_seller_04", label: "Portefeuille Atlantique, mixte", lineCount: 287, geoIndexes: [8], churnRate: 0.055, avgAgeMonths: 52, advancedShare: 0.06 },
+  { id: "pf_05", firmId: "firm_05", sellerId: "user_seller_05", label: "Portefeuille Nord, forte concentration AXA", lineCount: 341, geoIndexes: [10], concentratedCarrier: "AXA", churnRate: 0.118, avgAgeMonths: 39, advancedShare: 0.08 },
+  { id: "pf_06", firmId: "firm_06", sellerId: "user_seller_06", label: "Portefeuille Alpes, IARD entreprises", lineCount: 456, geoIndexes: [5, 4], churnRate: 0.049, avgAgeMonths: 61, advancedShare: 0.03 },
+  { id: "pf_07", firmId: "firm_07", sellerId: "user_seller_07", label: "Portefeuille Occitanie, vente à distance santé", lineCount: 612, geoIndexes: [7, 13], churnRate: 0.172, avgAgeMonths: 14, advancedShare: 0.18 },
+  { id: "pf_08", firmId: "firm_08", sellerId: "user_seller_08", label: "Portefeuille Bretagne, historique agence", lineCount: 788, geoIndexes: [9], churnRate: 0.037, avgAgeMonths: 96, advancedShare: 0.02 },
+  { id: "pf_09", firmId: "firm_09", sellerId: "user_seller_09", label: "Portefeuille Grand Est, clôturé", lineCount: 934, geoIndexes: [11], churnRate: 0.071, avgAgeMonths: 48, advancedShare: 0.07 },
+  { id: "pf_10", firmId: "firm_10", sellerId: "user_seller_10", label: "Portefeuille Aquitaine, retiré de la vente", lineCount: 1102, geoIndexes: [6], churnRate: 0.053, avgAgeMonths: 55, advancedShare: 0.05 },
+  { id: "pf_11", firmId: "firm_11", sellerId: "user_seller_11", label: "Portefeuille Centre, non publié", lineCount: 1288, geoIndexes: [14], churnRate: 0.066, avgAgeMonths: 28, advancedShare: 0.09 },
+  { id: "pf_12", firmId: "firm_12", sellerId: "user_seller_12", label: "Portefeuille Corse, clientèle récente", lineCount: 1400, geoIndexes: [15, 2], churnRate: 0.143, avgAgeMonths: 9, advancedShare: 0.15 },
 ];
 
 type BuiltLine = {
@@ -683,7 +683,13 @@ function buildLines(spec: (typeof PORTFOLIO_SPECS)[number]): BuiltLine[] {
     const annualCommission = premium * rate;
     const ageJitter = spec.avgAgeMonths + (rand() - 0.5) * spec.avgAgeMonths * 0.5;
     const effectiveDate = addMonths(NOW, -Math.max(3, Math.round(ageJitter)));
-    const renewalDate = addMonths(effectiveDate, 12 * (1 + Math.floor(rand() * 3)));
+    // Echeance principale : prochaine date anniversaire a venir. Un contrat en
+    // vigueur se rejoue chaque annee, son echeance n'est donc jamais dans le
+    // passe. C'est ce qui alimente l'echeancier des renouvellements.
+    let renewalDate = addMonths(effectiveDate, 12);
+    while (renewalDate.getTime() <= NOW.getTime()) {
+      renewalDate = addMonths(renewalDate, 12);
+    }
     const clientSeq = 1 + Math.floor(rand() * clientCount);
 
     lines.push({
@@ -1242,9 +1248,9 @@ async function main() {
     { id: "off_09", listingId: "lst_05", buyerId: "user_buyer_03", amount: money((listingAsk.get("lst_05") ?? 0) * 0.79), upfrontPercent: "90.00", message: "Offre conservatrice au vu du churn et de la concentration.", status: OfferStatus.SUBMITTED, submittedAt: daysAgo(2) },
     { id: "off_10", listingId: "lst_06", buyerId: "user_buyer_03", amount: money((listingAsk.get("lst_06") ?? 0) * 0.96), upfrontPercent: "65.00", message: "Offre retenue pour ouverture de dossier.", status: OfferStatus.ACCEPTED, submittedAt: daysAgo(20) },
     { id: "off_11", listingId: "lst_06", buyerId: "user_buyer_01", amount: money((listingAsk.get("lst_06") ?? 0) * 0.9), upfrontPercent: "50.00", message: "Proposition alternative, non retenue.", status: OfferStatus.DECLINED, submittedAt: daysAgo(21) },
-    { id: "off_12", listingId: "lst_07", buyerId: "user_buyer_06", amount: money((listingAsk.get("lst_07") ?? 0) * 0.85), upfrontPercent: "70.00", message: "VAD santé Occitanie : bon complément de notre livre.", status: OfferStatus.ACCEPTED, submittedAt: daysAgo(16) },
-    { id: "off_13", listingId: "lst_08", buyerId: "user_buyer_04", amount: money((listingAsk.get("lst_08") ?? 0) * 1.0), upfrontPercent: "60.00", message: "Livre historique Bretagne, alignment agence.", status: OfferStatus.ACCEPTED, submittedAt: daysAgo(30) },
-    { id: "off_14", listingId: "lst_09", buyerId: "user_buyer_02", amount: money((listingAsk.get("lst_09") ?? 0) * 0.97), upfrontPercent: "75.00", message: "Dossier clôturé — offre d'origine.", status: OfferStatus.ACCEPTED, submittedAt: daysAgo(185) },
+    { id: "off_12", listingId: "lst_07", buyerId: "user_buyer_06", amount: money((listingAsk.get("lst_07") ?? 0) * 0.85), upfrontPercent: "70.00", message: "Vente à distance santé Occitanie, bon complément de notre portefeuille.", status: OfferStatus.ACCEPTED, submittedAt: daysAgo(16) },
+    { id: "off_13", listingId: "lst_08", buyerId: "user_buyer_04", amount: money((listingAsk.get("lst_08") ?? 0) * 1.0), upfrontPercent: "60.00", message: "Portefeuille historique Bretagne, aligné sur notre réseau d'agences.", status: OfferStatus.ACCEPTED, submittedAt: daysAgo(30) },
+    { id: "off_14", listingId: "lst_09", buyerId: "user_buyer_02", amount: money((listingAsk.get("lst_09") ?? 0) * 0.97), upfrontPercent: "75.00", message: "Dossier clôturé, offre d'origine.", status: OfferStatus.ACCEPTED, submittedAt: daysAgo(185) },
     { id: "off_15", listingId: "lst_02", buyerId: "user_buyer_03", amount: money((listingAsk.get("lst_02") ?? 0) * 0.93), upfrontPercent: "80.00", message: "Marquage d'intérêt avant ouverture de la fenêtre d'offres.", status: OfferStatus.SUBMITTED, submittedAt: daysAgo(4) },
   ];
   await prisma.offer.createMany({ data: offers });
@@ -1402,7 +1408,7 @@ async function main() {
 
   await prisma.notification.createMany({
     data: [
-      { userId: "user_seller_05", type: NotificationType.OFFER_WINDOW_CLOSED, title: "Fenêtre d'offres close", body: "Vous pouvez désormais comparer les offres reçues sur le dossier Nord — concentration AXA.", href: "/app/annonces/lst_05/offres", createdAt: daysAgo(1) },
+      { userId: "user_seller_05", type: NotificationType.OFFER_WINDOW_CLOSED, title: "Fenêtre d'offres close", body: "Vous pouvez désormais comparer les offres reçues sur le dossier Nord , concentration AXA.", href: "/app/annonces/lst_05/offres", createdAt: daysAgo(1) },
       { userId: "user_buyer_02", type: NotificationType.RETENTION_DUE, title: "Déclaration de rétention M+12", body: "Merci de confirmer les contrats conservés et les commissions encaissées à 12 mois.", href: "/app/dossiers/deal_closed/retention", createdAt: daysAgo(8) },
     ],
   });

@@ -16,7 +16,13 @@ export {
   ForbiddenError,
   OriasPendingError,
 } from "@/lib/authz/errors";
-export { listMyPortfolios, getMyPortfolio, findMyPortfolio, listMyListings } from "@/lib/authz/portfolios";
+export {
+  listMyPortfolios,
+  getMyPortfolio,
+  findMyPortfolio,
+  listPortfolioLines,
+  listMyListings,
+} from "@/lib/authz/portfolios";
 export { listMyImports, findMyImport, getMyImport, ensureSellerFirm } from "@/lib/authz/imports";
 export { listMyOffers, listOffersForListing } from "@/lib/authz/offers";
 export { listMyDeals, getMyDeal, findMyDeal, counterpartyDisplayName } from "@/lib/authz/deals";

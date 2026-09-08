@@ -53,6 +53,33 @@ export async function getMyPortfolio(portfolioId: string, actor?: Actor) {
   return portfolio;
 }
 
+/**
+ * Lignes de contrat d'un portefeuille, pour l'analyse de composition.
+ *
+ * L'appartenance est verifiee ici, au niveau de la requete : un identifiant
+ * devine ne rend rien.
+ */
+export async function listPortfolioLines(portfolioId: string, actor: Actor) {
+  const portfolio = await prisma.portfolio.findUnique({
+    where: { id: portfolioId },
+    select: { firmId: true },
+  });
+  if (!portfolio || !ownsFirm(actor, portfolio.firmId)) return [];
+  return prisma.contractLine.findMany({
+    where: { portfolioId },
+    select: {
+      carrier: true,
+      riskType: true,
+      clientSegment: true,
+      department: true,
+      clientKey: true,
+      annualCommission: true,
+      renewalDate: true,
+      effectiveDate: true,
+    },
+  });
+}
+
 export async function findMyPortfolio(portfolioId: string, actor: Actor) {
   if (!actor.firmId) return null;
   const portfolio = await prisma.portfolio.findUnique({
