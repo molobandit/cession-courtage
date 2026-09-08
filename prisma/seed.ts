@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import bcrypt from "bcryptjs";
+import { hashPassword } from "../lib/auth/password";
 import {
   ClientSegment,
   CommissionType,
@@ -768,7 +768,7 @@ function saveValuation(
 async function main() {
   prisma = await createPrismaClient();
   console.info("Seeding cession-courtage demo data…");
-  const passwordHash = await bcrypt.hash(DEMO_PASSWORD, 10);
+  const passwordHash = await hashPassword(DEMO_PASSWORD);
 
   await prisma.$transaction([
     prisma.dataRoomView.deleteMany(),
