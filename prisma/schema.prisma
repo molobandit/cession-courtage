@@ -511,6 +511,10 @@ model Deal {
   messages         Message[]
   dataRoomViews    DataRoomView[]
 
+  /// Un seul dossier par couple annonce/acquereur. Rend l'acceptation d'une
+  /// offre rejouable : D1 ne gere pas les transactions, la reprise apres echec
+  /// partiel s'appuie donc sur cette contrainte.
+  @@unique([listingId, buyerId])
   @@index([sellerId])
   @@index([buyerId])
   @@index([listingId])

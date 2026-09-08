@@ -101,6 +101,7 @@ export async function acceptOfferAction(
     if (!actor) throw new UnauthenticatedError();
     const parsedId = offerIdSchema.safeParse({ offerId: formData.get("offerId") });
     if (!parsedId.success) return { error: firstIssue(parsedId.error) };
+
     const offer = await prisma.offer.findUnique({
       where: { id: parsedId.data.offerId },
       include: {
@@ -112,55 +113,93 @@ export async function acceptOfferAction(
     if (!ownsFirm(actor, offer.listing.portfolio.firmId)) {
       return { error: "Seul le cédant peut retenir une offre." };
     }
+
     const access = await listOffersForListing(offer.listingId, actor);
     if (access.access === "sealed") {
       return { error: "La fenêtre est encore ouverte : les offres restent scellées." };
     }
-    if (offer.status !== OfferStatus.SUBMITTED) return { error: "Offre non recevable." };
+
+    const dealKey = { listingId: offer.listingId, buyerId: offer.buyerId };
+    const existingDeal = await prisma.deal.findUnique({
+      where: { listingId_buyerId: dealKey },
+      select: { id: true },
+    });
+
+    // Le dossier existe déjà : l'action a donc abouti, on y renvoie sans rien refaire.
+    if (existingDeal) {
+      redirect(`/app/dossiers/${existingDeal.id}`);
+    }
+
+    // D1 n'offre pas de transaction. Une acceptation interrompue laisse l'offre
+    // en ACCEPTED sans dossier : cet état précis est reprenable.
+    const resumable = offer.status === OfferStatus.ACCEPTED;
+    if (offer.status !== OfferStatus.SUBMITTED && !resumable) {
+      return { error: "Offre non recevable." };
+    }
 
     const quota = await prisma.subscription.findFirst({
       where: { userId: actor.id, status: "ACTIVE" },
     });
-    if (quota?.dealQuota != null && quota.dealsUsed >= quota.dealQuota) {
+    if (!resumable && quota?.dealQuota != null && quota.dealsUsed >= quota.dealQuota) {
       return { error: "Quota de dossiers du forfait atteint." };
     }
 
     const amount = Number(offer.amount);
     const upfront = amount * (Number(offer.upfrontPercent) / 100);
-    const seller = await prisma.user.findUnique({ where: { id: actor.id } });
-    const deal = await prisma.$transaction(async (tx) => {
-      await tx.offer.update({ where: { id: offer.id }, data: { status: OfferStatus.ACCEPTED } });
-      await tx.offer.updateMany({
-        where: { listingId: offer.listingId, id: { not: offer.id }, status: OfferStatus.SUBMITTED },
-        data: { status: OfferStatus.DECLINED },
-      });
-      await tx.listing.update({
-        where: { id: offer.listingId },
-        data: { status: ListingStatus.UNDER_NEGOTIATION },
-      });
-      const created = await tx.deal.create({
-        data: {
-          listingId: offer.listingId,
-          sellerId: actor.id,
-          buyerId: offer.buyerId,
-          agreedPrice: amount.toFixed(2),
-          upfrontAmount: upfront.toFixed(2),
-          deferredAmount: (amount - upfront).toFixed(2),
-          stage: DealStage.NDA,
-          sellerAlias: `Cédant #${seller?.publicAlias ?? "C"}`,
-          buyerAlias: `Acquéreur #${offer.buyer.publicAlias}`,
-        },
-      });
-      if (quota) {
-        await tx.subscription.update({
-          where: { id: quota.id },
-          data: { dealsUsed: { increment: 1 } },
-        });
-      }
-      return created;
+    const seller = await prisma.user.findUnique({
+      where: { id: actor.id },
+      select: { publicAlias: true },
     });
+
+    // Les étapes s'exécutent en requêtes indépendantes. L'ordre est choisi pour
+    // qu'un échec en cours de route laisse un état reprenable, et la contrainte
+    // unique (listingId, buyerId) empêche tout doublon à la reprise.
+
+    // 1. Point d'engagement.
+    if (!resumable) {
+      await prisma.offer.update({
+        where: { id: offer.id },
+        data: { status: OfferStatus.ACCEPTED },
+      });
+    }
+
+    // 2. Création du dossier, sans doublon possible.
+    const deal = await prisma.deal.upsert({
+      where: { listingId_buyerId: dealKey },
+      update: {},
+      create: {
+        listingId: offer.listingId,
+        sellerId: actor.id,
+        buyerId: offer.buyerId,
+        agreedPrice: amount.toFixed(2),
+        upfrontAmount: upfront.toFixed(2),
+        deferredAmount: (amount - upfront).toFixed(2),
+        stage: DealStage.NDA,
+        sellerAlias: `Cédant #${seller?.publicAlias ?? "C"}`,
+        buyerAlias: `Acquéreur #${offer.buyer.publicAlias}`,
+      },
+    });
+
+    // 3. Conséquences dérivables : rejouables sans dommage.
+    await prisma.offer.updateMany({
+      where: { listingId: offer.listingId, id: { not: offer.id }, status: OfferStatus.SUBMITTED },
+      data: { status: OfferStatus.DECLINED },
+    });
+    await prisma.listing.update({
+      where: { id: offer.listingId },
+      data: { status: ListingStatus.UNDER_NEGOTIATION },
+    });
+    if (quota && !resumable) {
+      await prisma.subscription.update({
+        where: { id: quota.id },
+        data: { dealsUsed: { increment: 1 } },
+      });
+    }
+
     destination = `/app/dossiers/${deal.id}`;
   } catch (error) {
+    // redirect() lève une erreur de contrôle interne à Next : ne pas l'avaler.
+    if (error && typeof error === "object" && "digest" in error) throw error;
     return { error: error instanceof Error ? error.message : "Acceptation impossible." };
   }
   if (destination) redirect(destination);

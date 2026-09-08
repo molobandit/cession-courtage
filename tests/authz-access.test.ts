@@ -188,3 +188,58 @@ describe("messagerie d'annonce", () => {
     }
   });
 });
+
+describe("acceptation d'offre : reprise apres echec partiel (D1 sans transaction)", () => {
+  it("la contrainte unique interdit deux dossiers pour le meme couple annonce/acquereur", async () => {
+    const deal = await prisma.deal.findFirst({
+      select: { listingId: true, buyerId: true, sellerId: true, agreedPrice: true },
+    });
+    expect(deal).not.toBeNull();
+
+    // Rejouer la creation doit echouer sur la contrainte, jamais creer un doublon.
+    await expect(
+      prisma.deal.create({
+        data: {
+          listingId: deal!.listingId,
+          buyerId: deal!.buyerId,
+          sellerId: deal!.sellerId,
+          agreedPrice: deal!.agreedPrice,
+          upfrontAmount: "0",
+          deferredAmount: "0",
+          stage: "NDA",
+          sellerAlias: "Cedant #T",
+          buyerAlias: "Acquereur #T",
+        },
+      }),
+    ).rejects.toThrow();
+
+    const count = await prisma.deal.count({
+      where: { listingId: deal!.listingId, buyerId: deal!.buyerId },
+    });
+    expect(count).toBe(1);
+  });
+
+  it("upsert sur la meme cle renvoie le dossier existant sans en creer un second", async () => {
+    const deal = await prisma.deal.findFirst({ select: { id: true, listingId: true, buyerId: true } });
+    const before = await prisma.deal.count();
+
+    const again = await prisma.deal.upsert({
+      where: { listingId_buyerId: { listingId: deal!.listingId, buyerId: deal!.buyerId } },
+      update: {},
+      create: {
+        listingId: deal!.listingId,
+        buyerId: deal!.buyerId,
+        sellerId: deal!.buyerId,
+        agreedPrice: "1",
+        upfrontAmount: "0",
+        deferredAmount: "0",
+        stage: "NDA",
+        sellerAlias: "x",
+        buyerAlias: "y",
+      },
+    });
+
+    expect(again.id).toBe(deal!.id);
+    expect(await prisma.deal.count()).toBe(before);
+  });
+});

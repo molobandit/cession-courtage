@@ -48,20 +48,23 @@ export async function registerAction(_prev: FormState, formData: FormData): Prom
   const publicAlias = await allocatePublicAlias(data.role);
   const passwordHash = await hashPassword(data.password);
   try {
-    await prisma.$transaction(async (tx) => {
-      const user = await tx.user.create({
-        data: {
-          email: data.email,
-          phone: data.phone,
-          passwordHash,
-          role: data.role,
-          oriasNumber: data.oriasNumber,
-          fullName: data.fullName,
-          publicAlias,
-          kycStatus: "NONE",
-        },
-      });
-      await tx.subscription.create({
+    // D1 n'offre pas de transaction. Le compte est cree en premier, puis son
+    // abonnement ; si le second echoue, le compte est supprime pour ne pas
+    // laisser un utilisateur sans forfait, qui contournerait le quota.
+    const user = await prisma.user.create({
+      data: {
+        email: data.email,
+        phone: data.phone,
+        passwordHash,
+        role: data.role,
+        oriasNumber: data.oriasNumber,
+        fullName: data.fullName,
+        publicAlias,
+        kycStatus: "NONE",
+      },
+    });
+    try {
+      await prisma.subscription.create({
         data: {
           userId: user.id,
           plan: "FREE",
@@ -72,7 +75,10 @@ export async function registerAction(_prev: FormState, formData: FormData): Prom
           renewsAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
         },
       });
-    });
+    } catch (subscriptionError) {
+      await prisma.user.delete({ where: { id: user.id } }).catch(() => undefined);
+      throw subscriptionError;
+    }
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
       const target = String(error.meta?.target ?? "");
