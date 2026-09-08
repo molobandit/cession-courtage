@@ -700,7 +700,10 @@ function buildLines(spec: (typeof PORTFOLIO_SPECS)[number]): BuiltLine[] {
       commissionType: rand() < spec.advancedShare ? CommissionType.ADVANCED : CommissionType.LINEAR,
       clientKey: `cli_${spec.id}_${String(clientSeq).padStart(4, "0")}`,
       department: zone.department,
-      annualCommissionNumber: annualCommission,
+      // Valeur au centime, identique a ce qui est enregistre : la somme des lignes
+      // doit egaler exactement le total du portefeuille, sinon un acquereur
+      // constate un ecart pendant la verification prealable.
+      annualCommissionNumber: Number(money(annualCommission)),
     });
   }
   return lines;
@@ -966,7 +969,8 @@ async function main() {
   for (const spec of PORTFOLIO_SPECS) {
     const lines = buildLines(spec);
     portfolioLines.set(spec.id, lines);
-    const annualCommissions = lines.reduce((s, l) => s + l.annualCommissionNumber, 0);
+    const annualCommissions =
+      Math.round(lines.reduce((s, l) => s + l.annualCommissionNumber, 0) * 100) / 100;
     const clientCount = new Set(lines.map((l) => l.clientKey)).size;
     const fileName = `${spec.id.replace("pf_", "portefeuille-")}.csv`;
 
