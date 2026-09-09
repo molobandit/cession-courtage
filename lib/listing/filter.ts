@@ -16,6 +16,7 @@ export type FilterableListing = {
   carriers: string[];
   riskTypes: string[];
   clientSegments: string[];
+  certified: boolean;
 };
 
 export type CatalogueFilters = {
@@ -26,6 +27,7 @@ export type CatalogueFilters = {
   /** Saisie libre : « 50 000 », « 50000 € ». */
   maxPrice: string;
   openOnly: boolean;
+  certifiedOnly: boolean;
 };
 
 export type SortKey = "recent" | "price-asc" | "price-desc" | "commissions-desc";
@@ -37,6 +39,7 @@ export const EMPTY_FILTERS: CatalogueFilters = {
   segment: "",
   maxPrice: "",
   openOnly: false,
+  certifiedOnly: false,
 };
 
 /** Une fenêtre est ouverte si le statut le dit ET que la date n'est pas passée. */
@@ -65,6 +68,7 @@ export function filterListings<T extends FilterableListing>(
     if (filters.risk && !item.riskTypes.includes(filters.risk)) return false;
     if (filters.segment && !item.clientSegments.includes(filters.segment)) return false;
     if (filters.openOnly && !isWindowOpen(item)) return false;
+    if (filters.certifiedOnly && !item.certified) return false;
     return true;
   });
 }
@@ -80,5 +84,5 @@ export function sortListings<T extends FilterableListing>(listings: T[], sort: S
 
 export function countActiveFilters(filters: CatalogueFilters): number {
   const text = [filters.zone, filters.carrier, filters.risk, filters.segment, filters.maxPrice];
-  return text.filter((v) => v.trim() !== "").length + (filters.openOnly ? 1 : 0);
+  return text.filter((v) => v.trim() !== "").length + (filters.openOnly ? 1 : 0) + (filters.certifiedOnly ? 1 : 0);
 }

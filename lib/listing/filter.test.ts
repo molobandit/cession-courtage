@@ -19,6 +19,7 @@ function listing(partial: Partial<FilterableListing> & { id: string }): Filterab
     carriers: ["AXA"],
     riskTypes: ["Automobile"],
     clientSegments: ["Particuliers"],
+    certified: false,
     ...partial,
   };
 }
@@ -126,5 +127,18 @@ describe("countActiveFilters", () => {
     expect(countActiveFilters(EMPTY_FILTERS)).toBe(0);
     expect(countActiveFilters({ ...EMPTY_FILTERS, zone: "  " })).toBe(0);
     expect(countActiveFilters({ ...EMPTY_FILTERS, zone: "Nord", openOnly: true })).toBe(2);
+    expect(countActiveFilters({ ...EMPTY_FILTERS, certifiedOnly: true })).toBe(1);
+  });
+});
+
+describe("certifiedOnly", () => {
+  it("ne retient que les portefeuilles certifies", () => {
+    const lot = [
+      listing({ id: "a", certified: false }),
+      listing({ id: "b", certified: true }),
+    ];
+    expect(filterListings(lot, { ...EMPTY_FILTERS, certifiedOnly: true }).map((l) => l.id)).toEqual([
+      "b",
+    ]);
   });
 });

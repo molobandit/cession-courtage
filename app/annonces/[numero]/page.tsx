@@ -16,9 +16,11 @@ import {
   listOffersForListing,
 } from "@/lib/authz";
 import { isOfferWindowSealed, ownsFirm } from "@/lib/authz/policies";
+import { INTEREST_DEPOSIT_LABEL, interestDepositFor } from "@/lib/billing/rates";
 import { formatCount, formatEuroWhole } from "@/lib/format/number";
 import { LISTING_STATUS_LABELS, RISK_TYPE_LABELS, SEGMENT_LABELS } from "@/lib/labels";
 import { OFFER_WINDOW_DAYS } from "@/lib/listing/constants";
+import { listCertificationStatuses } from "@/lib/listing/certification";
 import { profileFromLinesWithClients } from "@/lib/listing/profile";
 
 export const metadata = { title: "Dossier" };
@@ -81,6 +83,10 @@ export default async function PublicListingPage({
     { label: "Contrats", value: formatCount(profile.contractCount) },
     { label: "Clients", value: formatCount(profile.clientCount) },
   ];
+  const deposit = interestDepositFor(Number(listing.askingPrice));
+  const certification =
+    (await listCertificationStatuses([listing.id])).get(listing.id) ?? "NONE";
+  const certified = certification === "CERTIFIED";
 
   return (
     <main>
@@ -95,6 +101,15 @@ export default async function PublicListingPage({
             Portefeuille #{listing.publicNumber}
           </h1>
           <div className="mt-4 flex flex-wrap gap-2">
+            {certified ? (
+              <span className="rounded-full bg-indigo px-3 py-1 text-sm font-medium text-white">
+                Portefeuille certifié
+              </span>
+            ) : (
+              <span className="rounded-full border border-line bg-surface px-3 py-1 text-sm text-muted">
+                Annonce simple
+              </span>
+            )}
             <span className="rounded-full border border-line bg-surface px-3 py-1 text-sm text-muted">
               {listing.isNationwide ? "Couverture nationale" : listing.displayedZone}
             </span>
@@ -114,8 +129,9 @@ export default async function PublicListingPage({
           </div>
           <p className="mt-5 max-w-2xl text-[15px] leading-relaxed text-muted">
             Fiche anonyme. Ni raison sociale, ni commune, et aucune donnée nominative de
-            client final. L’identité du cédant est révélée à la signature de la lettre
-            d’intention.
+            client final. Les coordonnées du cédant sont dévoilées après un dépôt de{" "}
+            {INTEREST_DEPOSIT_LABEL} du prix demandé ({formatEuroWhole(deposit)} ici).
+            En démo, aucun montant n’est débité.
           </p>
         </div>
       </section>
@@ -156,9 +172,35 @@ export default async function PublicListingPage({
           />
         </div>
 
+        {/* Interet */}
+        {!isSeller && !canOffer ? (
+          <section className="mt-8 rounded-3xl border border-indigo-line bg-indigo-soft p-7">
+            <h2 className="font-serif text-2xl font-semibold text-ink">Je suis intéressé</h2>
+            <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-muted">
+              La messagerie reste anonyme. Pour obtenir les coordonnées du cédant, un
+              dépôt de {INTEREST_DEPOSIT_LABEL} ({formatEuroWhole(deposit)}) est prévu.
+              Ce dépôt n’est pas encaissé sur cette démo.
+            </p>
+            <div className="mt-5 flex flex-wrap gap-3">
+              {!actor ? (
+                <Button asChild variant="primary">
+                  <Link href="/connexion">Se connecter pour manifester un intérêt</Link>
+                </Button>
+              ) : (
+                <Button asChild variant="primary">
+                  <Link href="#offre">Déposer une offre</Link>
+                </Button>
+              )}
+              <Button asChild variant="outline">
+                <Link href="/certification">Voir la certification</Link>
+              </Button>
+            </div>
+          </section>
+        ) : null}
+
         {/* Offre */}
         {canOffer ? (
-          <section className="mt-8 rounded-3xl border border-indigo-line bg-indigo-soft p-7">
+          <section id="offre" className="mt-8 rounded-3xl border border-indigo-line bg-indigo-soft p-7">
             <h2 className="font-serif text-2xl font-semibold text-ink">Déposer une offre</h2>
             <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-muted">
               Le cédant ne verra ni votre montant ni le nombre de propositions avant la

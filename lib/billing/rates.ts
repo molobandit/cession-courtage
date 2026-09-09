@@ -6,6 +6,10 @@
 /** Honoraires preleves uniquement a la vente conclue. */
 export const SUCCESS_FEE_RATE = 0.08;
 
+/** Depot exigé pour dévoiler les coordonnées. Simulé : aucun encaissement. */
+export const INTEREST_DEPOSIT_RATE = 0.025;
+export const INTEREST_DEPOSIT_LABEL = "2,5 %";
+
 /** Abonnement acquereur, hors taxes, par an. */
 export const GROWTH_PLAN_ANNUAL_EUR = 190;
 
@@ -41,6 +45,12 @@ export const PLANS: Record<PlanKey, PlanDefinition> = {
     successFeeRate: SUCCESS_FEE_RATE,
   },
 };
+
+/** Depot simule pour reveler les coordonnees. Aucun encaissement. */
+export function interestDepositFor(askingPriceEur: number): number {
+  if (!Number.isFinite(askingPriceEur) || askingPriceEur <= 0) return 0;
+  return Math.round(askingPriceEur * INTEREST_DEPOSIT_RATE * 100) / 100;
+}
 
 /** Honoraires dus sur un prix de cession, plancher applique. */
 export function successFeeFor(salePriceEur: number): number {

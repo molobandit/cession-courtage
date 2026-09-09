@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { SUCCESS_FEE_RATE } from "@/lib/billing/rates";
+import { BRAND_NAME } from "@/lib/site";
 
 const COLUMNS = [
   {
@@ -7,6 +8,7 @@ const COLUMNS = [
     links: [
       { href: "/ceder", label: "Parcours cédant" },
       { href: "/valoriser", label: "Estimer mon portefeuille" },
+      { href: "/certification", label: "Portefeuille certifié" },
       { href: "/tarifs", label: "Tarifs" },
     ],
   },
@@ -15,6 +17,7 @@ const COLUMNS = [
     links: [
       { href: "/acquerir", label: "Parcours acquéreur" },
       { href: "/annonces", label: "Annonces en ligne" },
+      { href: "/investisseurs", label: "Espace investisseurs" },
       { href: "/inscription", label: "Déposer un mandat" },
     ],
   },
@@ -42,9 +45,7 @@ export function SiteFooter() {
       <div className="mx-auto max-w-6xl px-4 py-12">
         <div className="grid gap-10 lg:grid-cols-[1.4fr_repeat(4,1fr)]">
           <div>
-            <p className="font-serif text-lg font-semibold">
-              Cession <span className="text-indigo-soft">courtage</span>
-            </p>
+            <p className="font-serif text-lg font-semibold">{BRAND_NAME}</p>
             <p className="mt-3 max-w-xs text-[15px] leading-relaxed text-cream/70">
               Place de marché réservée aux courtiers immatriculés ORIAS. Gratuit
               jusqu’à la vente, honoraires de {fee} au succès.

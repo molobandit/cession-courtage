@@ -23,6 +23,15 @@ const frenchAmount = z.preprocess((value) => {
   return parseFrenchNumber(value) ?? undefined;
 }, z.number({ message: "Montant invalide." }).finite("Montant invalide."));
 
+/** Ticket investisseur : champ facultatif, vide = non renseigne. */
+const optionalTicketEur = z.preprocess((value) => {
+  if (value == null || value === "") return undefined;
+  if (typeof value === "number") return Number.isFinite(value) ? Math.round(value) : undefined;
+  if (typeof value !== "string") return undefined;
+  const parsed = parseFrenchNumber(value);
+  return parsed == null ? parsed : Math.round(parsed);
+}, z.number({ message: "Ticket invalide." }).int().min(0, "Ticket invalide.").optional());
+
 export const offerSchema = z.object({
   listingId: idSchema,
   amount: frenchAmount
@@ -83,6 +92,64 @@ export const messageSchema = z.object({
     .min(2, "Le message ne peut pas être vide.")
     .max(4000, "Message trop long (4 000 caractères au maximum)."),
 });
+
+export const INVESTOR_TYPES = [
+  "FUND",
+  "GROWING_BROKER",
+  "HOLDING",
+  "FAMILY_OFFICE",
+  "OTHER",
+] as const;
+
+export const INVESTOR_INTERVENTIONS = ["ACQUISITION", "PARTNERSHIP", "BOTH"] as const;
+
+export const investorInquirySchema = z
+  .object({
+    organisation: z
+      .string()
+      .trim()
+      .min(2, "Indiquez le nom de votre structure.")
+      .max(120, "Nom de structure trop long."),
+    fullName: z
+      .string()
+      .trim()
+      .min(2, "Indiquez votre nom.")
+      .max(80, "Nom trop long."),
+    email: z
+      .string()
+      .trim()
+      .email("Adresse e-mail invalide.")
+      .max(120, "Adresse e-mail trop longue."),
+    phone: z
+      .string()
+      .trim()
+      .max(30, "Numéro trop long.")
+      .optional()
+      .transform((v) => (v && v.length > 0 ? v : undefined)),
+    investorType: z.enum(INVESTOR_TYPES, {
+      message: "Choisissez un profil d’investisseur.",
+    }),
+    ticketMinEur: optionalTicketEur,
+    ticketMaxEur: optionalTicketEur,
+    zones: z
+      .string()
+      .trim()
+      .min(2, "Indiquez au moins une zone.")
+      .max(200, "Zones trop longues."),
+    intervention: z.enum(INVESTOR_INTERVENTIONS, {
+      message: "Précisez le type d’intervention.",
+    }),
+  })
+  .refine(
+    (data) =>
+      data.ticketMinEur == null ||
+      data.ticketMaxEur == null ||
+      data.ticketMinEur <= data.ticketMaxEur,
+    {
+      message: "Le ticket minimum dépasse le ticket maximum.",
+      path: ["ticketMinEur"],
+    },
+  );
 
 export const mandateSchema = z
   .object({

@@ -1,0 +1,19 @@
+export type PublicListingCard = {
+  id: string;
+  publicNumber: number;
+  status: string;
+  statusLabel: string;
+  zone: string;
+  askingPrice: number;
+  annualCommissions: number;
+  contractCount: number;
+  averageAgeMonths: number;
+  isPartial: boolean;
+  isNationwide: boolean;
+  sellerSupportMonths: number;
+  daysLeft: number | null;
+  carriers: string[];
+  riskTypes: string[];
+  clientSegments: string[];
+  certified: boolean;
+};

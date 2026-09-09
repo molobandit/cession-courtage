@@ -1,9 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { useMemo, useState } from "react";
-import { ChipGroup } from "@/components/listing/chips";
-import { formatCount, formatEuroWhole } from "@/lib/format/number";
+import { ListingAdRow } from "@/components/listing/listing-ad-row";
+import { formatCount } from "@/lib/format/number";
 import {
   EMPTY_FILTERS,
   countActiveFilters,
@@ -12,26 +11,9 @@ import {
   type CatalogueFilters,
   type SortKey,
 } from "@/lib/listing/filter";
+import type { PublicListingCard } from "@/lib/listing/public-card";
 
-export type PublicListingCard = {
-  id: string;
-  publicNumber: number;
-  status: string;
-  statusLabel: string;
-  zone: string;
-  askingPrice: number;
-  annualCommissions: number;
-  contractCount: number;
-  averageAgeMonths: number;
-  isPartial: boolean;
-  isNationwide: boolean;
-  sellerSupportMonths: number;
-  /** Jours restants avant la clôture, calculé côté serveur. */
-  daysLeft: number | null;
-  carriers: string[];
-  riskTypes: string[];
-  clientSegments: string[];
-};
+export type { PublicListingCard };
 
 const SORT_LABELS: Record<SortKey, string> = {
   recent: "Les plus récentes",
@@ -40,26 +22,26 @@ const SORT_LABELS: Record<SortKey, string> = {
   "commissions-desc": "Commissions décroissantes",
 };
 
-function windowLabel(daysLeft: number | null): string | null {
-  if (daysLeft === null) return null;
-  if (daysLeft < 0) return "Fenêtre close";
-  if (daysLeft === 0) return "Clôture aujourd’hui";
-  if (daysLeft === 1) return "Clôture demain";
-  return `Clôture dans ${daysLeft} jours`;
-}
-
 const SELECT_CLASS =
   "mt-2 h-11 w-full rounded-full border border-line bg-surface-alt px-4 text-[15px] text-ink";
 
-export function PublicListingList({ listings }: { listings: PublicListingCard[] }) {
-  const [filters, setFilters] = useState<CatalogueFilters>(EMPTY_FILTERS);
+export function PublicListingList({
+  listings,
+  initialFilters,
+}: {
+  listings: PublicListingCard[];
+  initialFilters?: Partial<CatalogueFilters>;
+}) {
+  const [filters, setFilters] = useState<CatalogueFilters>({
+    ...EMPTY_FILTERS,
+    ...initialFilters,
+  });
   const [sort, setSort] = useState<SortKey>("recent");
 
-  const { zone, carrier, risk, segment, maxPrice, openOnly } = filters;
+  const { zone, carrier, risk, segment, maxPrice, openOnly, certifiedOnly } = filters;
   const patch = (change: Partial<CatalogueFilters>) =>
     setFilters((current) => ({ ...current, ...change }));
 
-  // Les listes de filtres viennent des annonces réelles : jamais d'option vide.
   const options = useMemo(() => {
     const carriers = new Set<string>();
     const risks = new Set<string>();
@@ -76,7 +58,6 @@ export function PublicListingList({ listings }: { listings: PublicListingCard[] 
     };
   }, [listings]);
 
-  // Filtrage et tri passent par des fonctions pures, couvertes par des tests.
   const visible = useMemo(
     () => sortListings(filterListings(listings, filters), sort),
     [listings, filters, sort],
@@ -191,15 +172,26 @@ export function PublicListingList({ listings }: { listings: PublicListingCard[] 
         </div>
 
         <div className="mt-5 flex flex-wrap items-center justify-between gap-4 border-t border-line pt-4">
-          <label className="flex items-center gap-2.5 text-[15px] text-ink">
-            <input
-              type="checkbox"
-              checked={openOnly}
-              onChange={(e) => patch({ openOnly: e.target.checked })}
-              className="h-5 w-5 rounded border-line"
-            />
-            Fenêtre d’offres encore ouverte
-          </label>
+          <div className="flex flex-wrap items-center gap-5">
+            <label className="flex items-center gap-2.5 text-[15px] text-ink">
+              <input
+                type="checkbox"
+                checked={openOnly}
+                onChange={(e) => patch({ openOnly: e.target.checked })}
+                className="h-5 w-5 rounded border-line"
+              />
+              Fenêtre d’offres encore ouverte
+            </label>
+            <label className="flex items-center gap-2.5 text-[15px] text-ink">
+              <input
+                type="checkbox"
+                checked={certifiedOnly}
+                onChange={(e) => patch({ certifiedOnly: e.target.checked })}
+                className="h-5 w-5 rounded border-line"
+              />
+              Portefeuilles certifiés
+            </label>
+          </div>
           <div className="flex items-center gap-4">
             <p className="text-[15px] text-muted" aria-live="polite">
               {visible.length === 0
@@ -225,94 +217,10 @@ export function PublicListingList({ listings }: { listings: PublicListingCard[] 
           un mandat d’achat pour être prévenu dès qu’un dossier correspondant est publié.
         </p>
       ) : (
-        <ul className="mt-6 grid gap-5 lg:grid-cols-2">
-          {visible.map((item) => {
-            const closing = windowLabel(item.daysLeft);
-            const urgent = item.daysLeft !== null && item.daysLeft >= 0 && item.daysLeft <= 3;
-            return (
-              <li key={item.id}>
-                <Link
-                  href={`/annonces/${item.publicNumber}`}
-                  className="block h-full rounded-3xl border border-line bg-paper p-6 transition-colors hover:border-indigo"
-                >
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                      <p className="tabular font-serif text-xl font-semibold text-ink">
-                        Portefeuille #{item.publicNumber}
-                      </p>
-                      <p className="mt-1 text-[15px] text-muted">
-                        {item.isNationwide ? "Couverture nationale" : item.zone}
-                      </p>
-                    </div>
-                    <div className="flex flex-wrap justify-end gap-2">
-                      {item.isPartial ? (
-                        <span className="rounded-full border border-line bg-surface-alt px-3 py-1 text-sm text-ink">
-                          Cession partielle
-                        </span>
-                      ) : null}
-                      <span className="rounded-full border border-line bg-surface-alt px-3 py-1 text-sm text-ink">
-                        {item.statusLabel}
-                      </span>
-                    </div>
-                  </div>
-
-                  <dl className="mt-5 grid grid-cols-2 gap-x-4 gap-y-3 border-t border-line pt-4 sm:grid-cols-4">
-                    <div>
-                      <dt className="text-sm text-muted">Prix demandé</dt>
-                      <dd className="tabular mt-0.5 text-[15px] font-medium text-ink">
-                        {formatEuroWhole(item.askingPrice)}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt className="text-sm text-muted">Commissions / an</dt>
-                      <dd className="tabular mt-0.5 text-[15px] font-medium text-ink">
-                        {formatEuroWhole(item.annualCommissions)}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt className="text-sm text-muted">Contrats</dt>
-                      <dd className="tabular mt-0.5 text-[15px] font-medium text-ink">
-                        {formatCount(item.contractCount)}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt className="text-sm text-muted">Ancienneté</dt>
-                      <dd className="tabular mt-0.5 text-[15px] font-medium text-ink">
-                        {formatCount(item.averageAgeMonths)} mois
-                      </dd>
-                    </div>
-                  </dl>
-
-                  <div className="mt-4 space-y-3 border-t border-line pt-4">
-                    <ChipGroup label="Compagnies" items={item.carriers} />
-                    <ChipGroup label="Branches" items={item.riskTypes} />
-                    <ChipGroup label="Clientèles" items={item.clientSegments} limit={3} />
-                  </div>
-
-                  {closing || item.sellerSupportMonths > 0 ? (
-                    <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-line pt-4">
-                      {closing ? (
-                        <span
-                          className={
-                            urgent
-                              ? "rounded-full bg-indigo px-3 py-1 text-sm font-medium text-white"
-                              : "text-sm text-muted"
-                          }
-                        >
-                          {closing}
-                        </span>
-                      ) : null}
-                      {item.sellerSupportMonths > 0 ? (
-                        <span className="text-sm text-muted">
-                          Accompagnement cédant de {item.sellerSupportMonths} mois
-                        </span>
-                      ) : null}
-                    </div>
-                  ) : null}
-                </Link>
-              </li>
-            );
-          })}
+        <ul className="mt-6 overflow-hidden rounded-3xl border border-line bg-paper">
+          {visible.map((item) => (
+            <ListingAdRow key={item.id} item={item} />
+          ))}
         </ul>
       )}
     </>

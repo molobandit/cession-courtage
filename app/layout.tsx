@@ -3,7 +3,7 @@ import { IBM_Plex_Sans, Source_Serif_4 } from "next/font/google";
 import "./globals.css";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
-import { siteUrl } from "@/lib/site";
+import { siteUrl, BRAND_NAME } from "@/lib/site";
 
 const sans = IBM_Plex_Sans({
   variable: "--font-ibm-plex-sans",
@@ -20,8 +20,8 @@ const serif = Source_Serif_4({
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl()),
   title: {
-    default: "Cession de portefeuilles de courtage",
-    template: "%s · Cession courtage",
+    default: `${BRAND_NAME} · cession de portefeuilles de courtage`,
+    template: `%s · ${BRAND_NAME}`,
   },
   description:
     "Place de marché B2B pour la cession de portefeuilles de courtage d'assurance entre professionnels ORIAS.",

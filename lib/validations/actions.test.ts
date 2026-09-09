@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   idSchema,
+  investorInquirySchema,
   listingCreateSchema,
   offerSchema,
   retentionReportSchema,
@@ -97,5 +98,30 @@ describe("retentionReportSchema", () => {
       actualCommissions: "9 000",
     });
     expect(parsed.success).toBe(false);
+  });
+});
+
+describe("investorInquirySchema", () => {
+  const base = {
+    organisation: "Expansion Capital",
+    fullName: "Camille Dupont",
+    email: "camille@expansion.demo",
+    investorType: "FUND",
+    zones: "Île-de-France, Rhône",
+    intervention: "ACQUISITION",
+  };
+
+  it("accepte une manifestation sans ticket", () => {
+    expect(investorInquirySchema.safeParse(base).success).toBe(true);
+  });
+
+  it("refuse un ticket min superieur au max", () => {
+    expect(
+      investorInquirySchema.safeParse({
+        ...base,
+        ticketMinEur: "80 000",
+        ticketMaxEur: "20 000",
+      }).success,
+    ).toBe(false);
   });
 });

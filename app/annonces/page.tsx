@@ -1,12 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import {
-  PublicListingList,
-  type PublicListingCard,
-} from "@/components/listing/public-listing-list";
-import { listPublicListingFacets, listPublicListings } from "@/lib/authz";
-import { LISTING_STATUS_LABELS, RISK_TYPE_LABELS, SEGMENT_LABELS } from "@/lib/labels";
+import { PublicListingList } from "@/components/listing/public-listing-list";
+import { INTEREST_DEPOSIT_LABEL } from "@/lib/billing/rates";
+import { loadPublicListingCards } from "@/lib/listing/load-public-cards";
 
 export const metadata: Metadata = {
   title: "Annonces de portefeuilles de courtage",
@@ -15,61 +12,30 @@ export const metadata: Metadata = {
   alternates: { canonical: "/annonces" },
 };
 
-const DAY_MS = 24 * 60 * 60 * 1000;
+export default async function PublicListingsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ zone?: string }>;
+}) {
+  const { zone } = await searchParams;
+  const cards = await loadPublicListingCards();
 
-/** Jours restants, arrondis au jour entier. Calculé ici pour éviter tout écart client. */
-function daysUntil(date: Date | null): number | null {
-  if (!date) return null;
-  return Math.ceil((date.getTime() - Date.now()) / DAY_MS);
-}
-
-export default async function PublicListingsPage() {
-  const listings = await listPublicListings();
-  const facets = await listPublicListingFacets(listings.map((l) => l.portfolioId));
-
-  const cards: PublicListingCard[] = listings.map((item) => {
-    const facet = facets.get(item.portfolioId) ?? {
-      carriers: [],
-      riskTypes: [],
-      clientSegments: [],
-    };
-    return {
-    id: item.id,
-    publicNumber: item.publicNumber,
-    status: item.status,
-    statusLabel: LISTING_STATUS_LABELS[item.status],
-    zone: item.displayedZone,
-    askingPrice: Number(item.askingPrice),
-    annualCommissions: Number(item.portfolio.annualCommissions),
-    contractCount: item.portfolio.contractCount,
-    averageAgeMonths: item.portfolio.averageAgeMonths,
-    isPartial: item.isPartial,
-    isNationwide: item.isNationwide,
-    sellerSupportMonths: item.sellerSupportMonths,
-    daysLeft: daysUntil(item.offerWindowClosesAt),
-    carriers: facet.carriers,
-    riskTypes: facet.riskTypes.map(
-      (r) => RISK_TYPE_LABELS[r as keyof typeof RISK_TYPE_LABELS] ?? r,
-    ),
-    clientSegments: facet.clientSegments.map(
-      (s) => SEGMENT_LABELS[s as keyof typeof SEGMENT_LABELS] ?? s,
-    ),
-    };
-  });
+  const initialZone = zone?.trim() ?? "";
 
   return (
     <main>
-      <section className="border-y border-line bg-indigo-soft text-ink">
+      <section className="border-y border-line bg-paper text-ink">
         <div className="mx-auto max-w-6xl px-4 py-12">
           <p className="text-[13px] font-medium uppercase tracking-[0.18em] text-indigo-dark">
-            Dossiers en ligne
+            Petites annonces
           </p>
           <h1 className="mt-4 font-serif text-4xl font-semibold leading-tight">
             Portefeuilles à céder
           </h1>
           <p className="mt-4 max-w-2xl text-[15px] text-muted">
             Toutes les fiches sont anonymes. Ni raison sociale, ni commune. L’identité
-            du cédant n’est révélée qu’à la signature de la lettre d’intention.
+            du cédant n’est révélée qu’après dépôt de {INTEREST_DEPOSIT_LABEL} du prix demandé, simulé
+            en démo.
           </p>
           <nav className="mt-6 flex flex-wrap gap-2" aria-label="Type d’annonce">
             <span className="rounded-full bg-indigo px-4 py-2 text-[15px] font-medium text-white">
@@ -101,7 +67,10 @@ export default async function PublicListingsPage() {
             </Button>
           </div>
         ) : (
-          <PublicListingList listings={cards} />
+          <PublicListingList
+            listings={cards}
+            initialFilters={initialZone ? { zone: initialZone } : undefined}
+          />
         )}
       </div>
     </main>
