@@ -1,0 +1,35 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "cession-courtage",
+  "main": "worker/index.ts",
+  "compatibility_date": "2026-09-07",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "observability": {
+    "enabled": true
+  },
+  "vars": {
+    "DEMO_INBOX": "true",
+    "AUTH_TRUST_HOST": "true"
+  },
+  // Fichiers deposes : bordereaux d'import et pieces de salle de donnees.
+  // Workers n'a pas de systeme de fichiers, ces fichiers vivent dans R2.
+  // En local, wrangler simule ce bucket dans .wrangler/state.
+  "r2_buckets": [
+    {
+      "binding": "UPLOADS",
+      "bucket_name": "cession-courtage-uploads"
+    }
+  ],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "cession-courtage",
+      "database_id": "98d5a611-8101-42ef-9cf5-033fff64ca65",
+      "migrations_dir": "migrations"
+    }
+  ]
+}

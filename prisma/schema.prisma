@@ -1,0 +1,738 @@
+// Cession de portefeuilles de courtage — complete data model (step 1).
+// Model names from the product brief are preserved.
+// Extra fields/models exist only when a later listed feature cannot work without them.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+enum UserRole {
+  SELLER
+  BUYER
+  BOTH
+  ADMIN
+}
+
+enum KycStatus {
+  NONE
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum DistributionMode {
+  OFFICE
+  AGENCY
+  REMOTE
+  MIXED
+}
+
+enum RiskType {
+  HEALTH_INDIVIDUAL
+  HEALTH_SENIOR
+  HEALTH_GROUP
+  PROVIDENT
+  LOAN_INSURANCE
+  AUTO
+  HOME
+  MOTORCYCLE
+  PROFESSIONAL_MULTIRISK
+  PROFESSIONAL_LIABILITY
+  DECENNIAL
+  LEGAL_PROTECTION
+  FUNERAL
+  SAVINGS
+  RETIREMENT
+  FLEET
+  LANDLORD
+  OTHER
+}
+
+enum ClientSegment {
+  INDIVIDUAL
+  PROFESSIONAL
+  COMPANY
+}
+
+enum CommissionType {
+  LINEAR
+  ADVANCED
+}
+
+enum ListingStatus {
+  DRAFT
+  PUBLISHED
+  OFFERS_OPEN
+  OFFERS_CLOSED
+  UNDER_NEGOTIATION
+  SOLD
+  WITHDRAWN
+}
+
+enum FinancingMode {
+  CASH
+  CREDIT
+  BOTH
+}
+
+enum MatchStatus {
+  SUGGESTED
+  VIEWED
+  CONTACTED
+  REJECTED
+}
+
+enum OfferStatus {
+  SUBMITTED
+  WITHDRAWN
+  ACCEPTED
+  DECLINED
+}
+
+enum DealStage {
+  NDA
+  DATA_ROOM
+  LOI
+  KYC
+  DEED
+  SIGNATURE
+  ESCROW
+  TRANSFER
+  RETENTION
+  CLOSED
+}
+
+enum DocumentType {
+  NDA
+  LOI
+  DEED
+  TRANSFER_CERTIFICATE
+  OTHER
+}
+
+enum SubscriptionPlan {
+  FREE
+  GROWTH
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  CANCELLED
+  EXPIRED
+}
+
+enum ImportStatus {
+  UPLOADED
+  REJECTED_PII
+  MAPPED
+  COMPLETED
+}
+
+enum EscrowStage {
+  NONE
+  FUNDS_HELD
+  PARTIAL_RELEASE
+  RELEASED
+  REFUNDED
+}
+
+/// Etat du transfert du code de courtage pour une compagnie donnee.
+/// Le refus d'une compagnie est le premier motif d'echec d'une cession en
+/// France : il coupe la continuite des commissions apres la signature.
+enum CarrierCodeStatus {
+  PENDING
+  NOTIFIED
+  AGREED
+  REFUSED
+}
+
+/// Familles de pieces reclamees en verification prealable.
+enum DueDiligenceCategory {
+  LEGAL
+  FINANCIAL
+  PORTFOLIO
+  OPERATIONAL
+}
+
+enum DataRequestType {
+  EXPORT
+  DELETION
+}
+
+enum DataRequestStatus {
+  PENDING
+  COMPLETED
+  REJECTED
+}
+
+enum NotificationType {
+  MATCH
+  OFFER_WINDOW_CLOSED
+  DEAL_STAGE_CHANGED
+  RETENTION_DUE
+  DATA_ROOM_DOCUMENT
+  MESSAGE
+}
+
+// ---------------------------------------------------------------------------
+// Auth.js (credentials + magic link). JWT sessions — no Session table.
+// ---------------------------------------------------------------------------
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ---------------------------------------------------------------------------
+// Core directory
+// ---------------------------------------------------------------------------
+
+model User {
+  id              String    @id @default(cuid())
+  email           String    @unique
+  phone           String?
+  passwordHash    String?
+  role            UserRole
+  oriasNumber     String    @unique
+  oriasVerifiedAt DateTime?
+  firmId          String?
+  kycStatus       KycStatus @default(NONE)
+  createdAt       DateTime  @default(now())
+
+  /// Professional identity for KYC / account admin. Never shown to the
+  /// counterparty until the Deal has reached LOI.
+  fullName      String?
+  emailVerified DateTime?
+  /// Stable public handle used before LOI, e.g. "A47".
+  publicAlias   String    @unique
+  updatedAt     DateTime  @updatedAt
+
+  firm                    Firm?               @relation(fields: [firmId], references: [id])
+  mandates                BuyerMandate[]
+  offers                  Offer[]
+  dealsAsSeller           Deal[]              @relation("DealSeller")
+  dealsAsBuyer            Deal[]              @relation("DealBuyer")
+  messages                Message[]           @relation("MessageSender")
+  messagesReceived        Message[]           @relation("MessageRecipient")
+  documentsUploaded       Document[]
+  notifications           Notification[]
+  subscriptions           Subscription[]
+  auditLogs               AuditLog[]
+  dataRequests            DataRequest[]
+  multiplesUpdated        ValuationMultiple[]
+  imports                 PortfolioImport[]
+  dataRoomViews           DataRoomView[]
+
+  @@index([firmId])
+  @@index([role])
+}
+
+model Firm {
+  id                String           @id @default(cuid())
+  legalName         String
+  siren             String           @unique
+  legalForm         String
+  address           String
+  postalCode        String
+  city              String
+  department        String
+  region            String
+  foundedAt         DateTime?
+  headcount         Int?
+  annualRevenue     Decimal?
+  distributionMode  DistributionMode
+  complianceScore   Int
+  createdAt         DateTime         @default(now())
+
+  users       User[]
+  portfolios  Portfolio[]
+
+  @@index([department])
+  @@index([region])
+}
+
+// ---------------------------------------------------------------------------
+// Portfolios (no nominative end-client data)
+// ---------------------------------------------------------------------------
+
+model Portfolio {
+  id                 String   @id @default(cuid())
+  firmId             String
+  label              String
+  contractCount      Int
+  clientCount        Int
+  annualCommissions  Decimal
+  averageAgeMonths   Int
+  churnRate12m       Decimal
+  importedAt         DateTime @default(now())
+  sourceFileName     String?
+
+  /// Object-storage key and content hash of the uploaded file (never the file itself).
+  sourceStorageKey String?
+  sourceSha256     String?
+
+  firm          Firm           @relation(fields: [firmId], references: [id], onDelete: Restrict)
+  contractLines ContractLine[]
+  valuations    Valuation[]
+  listings      Listing[]
+  imports       PortfolioImport[]
+  carrierCodes  CarrierCode[]
+
+  @@index([firmId])
+}
+
+model ContractLine {
+  id               String         @id @default(cuid())
+  portfolioId      String
+  carrier          String
+  riskType         RiskType
+  premium          Decimal
+  commissionRate   Decimal
+  annualCommission Decimal
+  effectiveDate    DateTime
+  renewalDate      DateTime
+  clientSegment    ClientSegment
+  postalCode       String
+  commissionType   CommissionType
+
+  /// Opaque grouping key (HMAC of an importer-side client id). Never a name.
+  /// Required to compute top-10 client concentration without PII.
+  clientKey  String
+  /// Department code derived from postalCode at import (matching / aggregates).
+  department String
+
+  portfolio    Portfolio     @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+  listingLines ListingLine[]
+
+  @@index([portfolioId])
+  @@index([carrier])
+  @@index([riskType])
+  @@index([department])
+  @@index([portfolioId, clientKey])
+}
+
+model PortfolioImport {
+  id               String       @id @default(cuid())
+  userId           String
+  portfolioId      String?
+  originalFileName String
+  storageKey       String
+  sha256           String
+  mimeType         String
+  status           ImportStatus
+  rejectionReason  String?
+  columnMapping    Json?
+  createdAt        DateTime     @default(now())
+  completedAt      DateTime?
+
+  /// Avancement de l'insertion. D1 ne supporte pas les transactions et un import
+  /// de 50 000 lignes ne tient pas dans une seule requete : les lignes sont
+  /// posees par lots, et ces deux compteurs permettent de reprendre exactement
+  /// la ou l'utilisateur s'est arrete.
+  totalRows     Int @default(0)
+  processedRows Int @default(0)
+
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  portfolio Portfolio? @relation(fields: [portfolioId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([sha256])
+}
+
+// ---------------------------------------------------------------------------
+// Valuation (coefficients live in DB, editable from admin)
+// ---------------------------------------------------------------------------
+
+model ValuationMultiple {
+  id          String   @id @default(cuid())
+  riskType    RiskType @unique
+  multiple    Decimal
+  updatedAt   DateTime @updatedAt
+  updatedById String?
+
+  updatedBy User? @relation(fields: [updatedById], references: [id], onDelete: SetNull)
+}
+
+model Valuation {
+  id               String   @id @default(cuid())
+  portfolioId      String
+  computedAt       DateTime @default(now())
+  grossValue       Decimal
+  lowValue         Decimal
+  midValue         Decimal
+  highValue        Decimal
+  qualityScore     Int
+  breakdown        Json
+  algorithmVersion String
+
+  /// Set when the valuation was run on a listing subset (partial sale).
+  listingId String?
+
+  portfolio Portfolio @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+  listing   Listing?  @relation(fields: [listingId], references: [id], onDelete: SetNull)
+
+  @@index([portfolioId, computedAt])
+  @@index([listingId])
+}
+
+// ---------------------------------------------------------------------------
+// Marketplace
+// ---------------------------------------------------------------------------
+
+model Listing {
+  id                   String        @id @default(cuid())
+  portfolioId          String
+  askingPrice          Decimal
+  displayedZone        String
+  status               ListingStatus @default(DRAFT)
+  isPartial            Boolean       @default(false)
+  publishedAt          DateTime?
+  offerWindowClosesAt  DateTime?
+
+  /// Public anonymous reference shown like Assurdeal "Dossier #10261".
+  /// Assigned in application code (SQLite/D1 cannot autoincrement a non-PK).
+  publicNumber Int @unique
+
+  /// Seller accompaniment in months: 0 / 3 / 6+. Valuation factor.
+  sellerSupportMonths Int @default(0)
+
+  /// Denormalised at publish time so matching does not scan every contract line.
+  /// JSON string[] — SQLite/D1 does not support native arrays.
+  departments   Json @default("[]")
+  regions       Json @default("[]")
+  isNationwide  Boolean  @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  portfolio  Portfolio     @relation(fields: [portfolioId], references: [id], onDelete: Restrict)
+  lines      ListingLine[]
+  valuations Valuation[]
+  matches    Match[]
+  offers     Offer[]
+  deals      Deal[]
+  messages   Message[]
+
+  @@index([status, publishedAt])
+  @@index([portfolioId])
+}
+
+/// Selected contract lines for a partial listing. Empty + isPartial=false => whole portfolio.
+model ListingLine {
+  listingId      String
+  contractLineId String
+
+  listing      Listing      @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  contractLine ContractLine @relation(fields: [contractLineId], references: [id], onDelete: Cascade)
+
+  @@id([listingId, contractLineId])
+  @@index([contractLineId])
+}
+
+model BuyerMandate {
+  id             String         @id @default(cuid())
+  buyerId        String
+  maxBudget      Decimal
+  minCommissions Decimal
+  maxCommissions Decimal
+  /// JSON RiskType[] / string[] / ClientSegment[] — SQLite/D1 has no native arrays.
+  riskTypes      Json
+  carriers       Json
+  /// "NATIONAL" | region code (e.g. "IDF") | department code (e.g. "75")
+  zones          Json
+  clientSegments Json
+  financingMode  FinancingMode
+  alertsEnabled  Boolean        @default(true)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  isActive       Boolean        @default(true)
+
+  /// Publie le mandat comme demande d'acquisition visible au catalogue.
+  /// L'acquereur reste anonyme : seul son alias public est montre.
+  isPublic Boolean @default(false)
+  /// Reference publique, serie 20001, distincte des annonces de cession (10001).
+  publicNumber Int? @unique
+
+  buyer   User    @relation(fields: [buyerId], references: [id], onDelete: Cascade)
+  matches Match[]
+
+  @@index([buyerId])
+}
+
+model Match {
+  id                 String      @id @default(cuid())
+  listingId          String
+  mandateId          String
+  score              Int
+  criteriaBreakdown  Json
+  status             MatchStatus @default(SUGGESTED)
+  notifiedAt         DateTime?
+
+  listing Listing      @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  mandate BuyerMandate @relation(fields: [mandateId], references: [id], onDelete: Cascade)
+  notification Notification?
+
+  @@unique([listingId, mandateId])
+  @@index([mandateId, score])
+  @@index([listingId])
+}
+
+model Offer {
+  id             String      @id @default(cuid())
+  listingId      String
+  buyerId        String
+  amount         Decimal
+  upfrontPercent Decimal
+  message        String
+  status         OfferStatus @default(SUBMITTED)
+  submittedAt    DateTime    @default(now())
+
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Restrict)
+  buyer   User    @relation(fields: [buyerId], references: [id], onDelete: Restrict)
+
+  @@unique([listingId, buyerId])
+  @@index([listingId, status])
+  @@index([buyerId])
+}
+
+// ---------------------------------------------------------------------------
+// Transaction tunnel
+// ---------------------------------------------------------------------------
+
+model Deal {
+  id            String    @id @default(cuid())
+  listingId     String
+  sellerId      String
+  buyerId       String
+  agreedPrice   Decimal
+  upfrontAmount Decimal
+  deferredAmount Decimal
+  stage         DealStage
+  createdAt     DateTime  @default(now())
+
+  /// Pseudonyms shown until stage >= LOI. Format: "Acquéreur #A47".
+  sellerAlias String
+  buyerAlias  String
+
+  ndaAcceptedAt            DateTime?
+  /// Recalculated after retention reports: deferred × (rate / 0.90), clamped 50–100%.
+  adjustedDeferredAmount   Decimal?
+  retentionTargetRate      Decimal   @default(0.90)
+  escrowStage       EscrowStage @default(NONE)
+  escrowProviderRef String?
+
+  updatedAt DateTime @updatedAt
+
+  listing          Listing           @relation(fields: [listingId], references: [id], onDelete: Restrict)
+  seller           User              @relation("DealSeller", fields: [sellerId], references: [id], onDelete: Restrict)
+  buyer            User              @relation("DealBuyer", fields: [buyerId], references: [id], onDelete: Restrict)
+  documents        Document[]
+  retentionReports RetentionReport[]
+  messages         Message[]
+  dataRoomViews    DataRoomView[]
+  dueDiligence     DueDiligenceItem[]
+
+  /// Un seul dossier par couple annonce/acquereur. Rend l'acceptation d'une
+  /// offre rejouable : D1 ne gere pas les transactions, la reprise apres echec
+  /// partiel s'appuie donc sur cette contrainte.
+  @@unique([listingId, buyerId])
+  @@index([sellerId])
+  @@index([buyerId])
+  @@index([listingId])
+  @@index([stage])
+}
+
+model Document {
+  id           String       @id @default(cuid())
+  dealId       String
+  type         DocumentType
+  fileName     String
+  storageKey   String
+  sha256       String
+  uploadedById String
+  signedAt     DateTime?
+  createdAt    DateTime     @default(now())
+
+  deal       Deal @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  uploadedBy User @relation(fields: [uploadedById], references: [id], onDelete: Restrict)
+
+  @@index([dealId])
+  @@index([sha256])
+}
+
+model RetentionReport {
+  id                   String   @id @default(cuid())
+  dealId               String
+  monthIndex           Int
+  contractsRetained    Int
+  contractsTransferred Int
+  actualCommissions    Decimal
+  retentionRate        Decimal
+  reportedAt           DateTime @default(now())
+
+  deal Deal @relation(fields: [dealId], references: [id], onDelete: Cascade)
+
+  @@unique([dealId, monthIndex])
+}
+
+model Message {
+  id          String   @id @default(cuid())
+  dealId      String?
+  listingId   String?
+  senderId    String
+  recipientId String?
+  body        String
+  createdAt   DateTime @default(now())
+
+  deal      Deal?    @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  listing   Listing? @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  sender    User     @relation("MessageSender", fields: [senderId], references: [id], onDelete: Restrict)
+  recipient User?    @relation("MessageRecipient", fields: [recipientId], references: [id], onDelete: SetNull)
+
+  @@index([dealId, createdAt])
+  @@index([listingId, createdAt])
+  @@index([senderId])
+  @@index([recipientId])
+}
+
+// ---------------------------------------------------------------------------
+// Subscriptions, notifications, audit, GDPR
+// ---------------------------------------------------------------------------
+
+model Subscription {
+  id         String             @id @default(cuid())
+  userId     String
+  plan       SubscriptionPlan
+  feeRate    Decimal
+  /// null = unlimited (GROWTH)
+  dealQuota  Int?
+  dealsUsed  Int                @default(0)
+  status     SubscriptionStatus @default(ACTIVE)
+  renewsAt   DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status])
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  type      NotificationType
+  title     String
+  body      String
+  href      String?
+  readAt    DateTime?
+  matchId   String?          @unique
+  createdAt DateTime         @default(now())
+
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  match Match? @relation(fields: [matchId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?
+  action     String
+  entityType String
+  entityId   String
+  metadata   Json?
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
+  actor User? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([actorId, createdAt])
+  @@index([entityType, entityId])
+  @@index([action, createdAt])
+}
+
+/// Dedicated data-room access journal (also mirrored in AuditLog).
+model DataRoomView {
+  id         String   @id @default(cuid())
+  dealId     String
+  viewerId   String
+  documentId String?
+  viewedAt   DateTime @default(now())
+
+  deal   Deal @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  viewer User @relation(fields: [viewerId], references: [id], onDelete: Restrict)
+
+  @@index([dealId, viewedAt])
+  @@index([viewerId])
+}
+
+/// Suivi du transfert des codes de courtage, compagnie par compagnie.
+model CarrierCode {
+  id          String            @id @default(cuid())
+  portfolioId String
+  carrier     String
+  status      CarrierCodeStatus @default(PENDING)
+  notifiedAt  DateTime?
+  decidedAt   DateTime?
+  note        String?
+  updatedAt   DateTime          @updatedAt
+
+  portfolio Portfolio @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+
+  @@unique([portfolioId, carrier])
+  @@index([portfolioId, status])
+}
+
+/// Piece attendue en verification prealable, rattachee a un dossier.
+model DueDiligenceItem {
+  id         String               @id @default(cuid())
+  dealId     String
+  category   DueDiligenceCategory
+  label      String
+  required   Boolean              @default(true)
+  providedAt DateTime?
+  note       String?
+  updatedAt  DateTime             @updatedAt
+
+  deal Deal @relation(fields: [dealId], references: [id], onDelete: Cascade)
+
+  @@unique([dealId, label])
+  @@index([dealId, category])
+}
+
+model DataRequest {
+  id          String            @id @default(cuid())
+  userId      String
+  type        DataRequestType
+  status      DataRequestStatus @default(PENDING)
+  storageKey  String?
+  createdAt   DateTime          @default(now())
+  completedAt DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, type])
+}
+
+/// Mock mailer outbox (magic links, later transactional mail). Swap for Resend later.
+model OutboundEmail {
+  id        String   @id @default(cuid())
+  to        String
+  subject   String
+  bodyText  String
+  purpose   String
+  createdAt DateTime @default(now())
+
+  @@index([to, createdAt])
+}

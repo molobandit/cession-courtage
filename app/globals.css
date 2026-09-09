@@ -1,0 +1,126 @@
+@import "tailwindcss";
+
+:root {
+  /* Palette moderne indigo sur fond clair. Tous les contrastes sont vérifiés AA :
+     ink 16,96:1 · muted 4,62:1 · indigo 6,29:1 · vert 5,24:1 · ambre 4,80:1. */
+  --indigo: #4f46e5;
+  --indigo-dark: #4338ca;
+  --indigo-soft: #eef2ff;
+  --indigo-line: #c7d2fe;
+
+  /* Surfaces */
+  --page: #f8fafc;
+  --surface: #ffffff;
+  --surface-alt: #f1f5f9;
+
+  /* Texte */
+  --ink: #111827;
+  --muted: #6b7280;
+  --line: #e5e7eb;
+
+  /* États. Nuances foncées : les tons vifs échouent au contraste sur blanc. */
+  --ok: #047857;
+  --warn: #b45309;
+  --danger: #dc2626;
+
+  /* Bandeau sombre, pour les en-têtes de page. */
+  --deep: #1e1b4b;
+  --deep-soft: #312e81;
+
+  /* Compatibilité avec les pages écrites avant ce changement de charte. */
+  --charcoal: var(--deep);
+  --charcoal-muted: var(--deep-soft);
+  --charcoal-soft: #3730a3;
+  --navy: var(--deep);
+  --navy-muted: var(--deep-soft);
+  --gold: var(--indigo);
+  --gold-soft: var(--indigo-soft);
+  --gold-deep: var(--indigo-dark);
+  --cream: var(--surface-alt);
+  --paper: var(--surface);
+  --copper: var(--indigo-dark);
+}
+
+@theme inline {
+  --color-indigo: var(--indigo);
+  --color-indigo-dark: var(--indigo-dark);
+  --color-indigo-soft: var(--indigo-soft);
+  --color-indigo-line: var(--indigo-line);
+  --color-page: var(--page);
+  --color-surface: var(--surface);
+  --color-surface-alt: var(--surface-alt);
+  --color-deep: var(--deep);
+  --color-deep-soft: var(--deep-soft);
+
+  --color-charcoal: var(--charcoal);
+  --color-charcoal-muted: var(--charcoal-muted);
+  --color-charcoal-soft: var(--charcoal-soft);
+  --color-gold: var(--gold);
+  --color-gold-soft: var(--gold-soft);
+  --color-gold-deep: var(--gold-deep);
+  --color-navy: var(--navy);
+  --color-navy-muted: var(--navy-muted);
+  --color-cream: var(--cream);
+  --color-paper: var(--paper);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-copper: var(--copper);
+  --color-ok: var(--ok);
+  --color-warn: var(--warn);
+  --color-danger: var(--danger);
+
+  --font-sans: var(--font-ibm-plex-sans);
+  --font-serif: var(--font-source-serif);
+}
+
+html,
+body {
+  background: var(--page);
+  color: var(--ink);
+  font-family: var(--font-sans), "Segoe UI", sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+a {
+  color: inherit;
+}
+
+/* Chiffres alignés en colonne dans les tableaux denses de l'espace membre. */
+.tabular {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* Cible de clic confortable : une partie des utilisateurs a plus de 55 ans. */
+button,
+a {
+  touch-action: manipulation;
+}
+
+:focus-visible {
+  outline: 2px solid var(--indigo);
+  outline-offset: 2px;
+}
+
+.rule-accent {
+  background-image: linear-gradient(90deg, var(--indigo) 0%, transparent 100%);
+  height: 2px;
+}
+
+/* En-tête de page : dégradé indigo profond, comme les cartes de mise en avant. */
+.hero-charcoal {
+  background-color: var(--deep);
+  background-image: linear-gradient(135deg, #312e81 0%, #4f46e5 55%, #4338ca 100%);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .lift {
+    transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+  }
+  .lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px -18px rgba(17, 24, 39, 0.35);
+  }
+}

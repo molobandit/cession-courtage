@@ -1,0 +1,68 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# env files
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# sqlite local (Prisma CLI / next dev)
+prisma/dev.db
+prisma/dev.db-journal
+prisma/*.db
+prisma/*.db-journal
+
+# d1 seed dumps (generated, too large for git)
+prisma/d1-seed.sql
+
+# uploaded files (hashes only in the database)
+uploads/**
+!uploads/.gitkeep
+
+# vercel
+.vercel
+
+# cloudflare / opennext
+.open-next
+.wrangler
+.dev.vars
+.deploy.env
+.deploy.auth_secret
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+worker-configuration.d.ts
+
+.deploy.auth_secret
+.deploy.database_url
