@@ -3,6 +3,7 @@ import { IBM_Plex_Sans, Source_Serif_4 } from "next/font/google";
 import "./globals.css";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
+import { legalIdentityIncomplete } from "@/lib/legal/entity";
 import { siteUrl, BRAND_NAME } from "@/lib/site";
 
 const sans = IBM_Plex_Sans({
@@ -27,6 +28,9 @@ export const metadata: Metadata = {
   },
   description:
     "Place de marché B2B pour la cession de portefeuilles de courtage d'assurance entre professionnels ORIAS.",
+  // Ceinture et bretelles : robots.txt peut etre ignore, la balise non. Elle
+  // disparait d'elle-meme quand l'identite legale est renseignee.
+  robots: legalIdentityIncomplete() ? { index: false, follow: false } : undefined,
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
