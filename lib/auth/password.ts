@@ -11,7 +11,14 @@
 
 const ALGORITHM = "PBKDF2";
 const HASH = "SHA-256";
-const ITERATIONS = 100_000;
+/**
+ * 600 000 iterations, la recommandation OWASP en vigueur pour PBKDF2-SHA256.
+ * Mesure : environ 70 ms, largement dans le budget d'un Worker pour une
+ * operation aussi rare qu'une connexion. Le nombre est inscrit dans l'empreinte,
+ * donc les comptes hachees a 100 000 continuent de fonctionner et sont
+ * remis a niveau a leur prochaine connexion reussie.
+ */
+const ITERATIONS = 600_000;
 const SALT_BYTES = 16;
 const KEY_BITS = 256;
 const PREFIX = "pbkdf2";
@@ -81,4 +88,30 @@ export async function verifyPassword(plain: string, stored: string): Promise<boo
 
   const derived = await derive(plain, salt, iterations);
   return timingSafeEqual(derived, expected);
+}
+
+/**
+ * Vrai si l'empreinte a ete produite avec moins d'iterations que la norme
+ * actuelle. Permet de remettre un compte a niveau lors d'une connexion reussie,
+ * sans jamais demander a l'utilisateur de changer son mot de passe.
+ */
+export function needsRehash(stored: string): boolean {
+  const parts = stored.split("$");
+  if (parts.length !== 4 || parts[0] !== PREFIX) return true;
+  const iterations = Number(parts[1]);
+  if (!Number.isInteger(iterations)) return true;
+  return iterations < ITERATIONS;
+}
+
+/**
+ * Empreinte leurre, verifiee lorsqu'aucun compte ne correspond a l'e-mail.
+ *
+ * Sans elle, un e-mail inconnu repond immediatement tandis qu'un e-mail connu
+ * paie les 70 ms de PBKDF2 : l'ecart suffit a enumerer les comptes existants.
+ * On depense donc le meme temps dans les deux cas.
+ */
+const DUMMY_SALT = new Uint8Array(SALT_BYTES);
+
+export async function burnPasswordTime(plain: string): Promise<void> {
+  await derive(plain, DUMMY_SALT, ITERATIONS);
 }

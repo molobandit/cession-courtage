@@ -512,6 +512,19 @@ model Offer {
 /// Depot d'interet de 2,5 % versant l'acquereur dans le parcours nominatif.
 /// Simule : aucun encaissement reel, l'enregistrement vaut engagement.
 /// C'est ce depot qui leve l'anonymat, sans attendre la LOI.
+/// Compteur d'echecs de connexion par e-mail vise.
+/// Protege un compte precis contre l'essai systematique de mots de passe.
+/// La ligne est supprimee des qu'une connexion aboutit.
+model LoginAttempt {
+  /// E-mail vise, en minuscules. Cle naturelle : une ligne par compte cible.
+  identifier   String    @id
+  failedCount  Int       @default(0)
+  lastFailedAt DateTime  @default(now())
+  lockedUntil  DateTime?
+
+  @@index([lockedUntil])
+}
+
 model InterestDeposit {
   id        String   @id @default(cuid())
   listingId String

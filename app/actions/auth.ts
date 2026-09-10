@@ -4,6 +4,7 @@ import { AuthError } from "next-auth";
 import { DistributionMode, Prisma } from "@prisma/client";
 import { redirect } from "next/navigation";
 import { signIn } from "@/auth";
+import { enregistrerEchec, verrouActif } from "@/lib/auth/throttle";
 import { allocatePublicAlias } from "@/lib/auth/alias";
 import { issueMagicLink } from "@/lib/auth/magic-link";
 import { hashPassword } from "@/lib/auth/password";
@@ -182,6 +183,12 @@ export async function loginAction(_prev: FormState, formData: FormData): Promise
   }
   const next = String(formData.get("next") || "/app");
   const safeNext = next.startsWith("/") && !next.startsWith("//") ? next : "/app";
+
+  // Verrou progressif : sans lui, rien n'empeche d'essayer des mots de passe en
+  // boucle sur un compte connu.
+  const verrou = await verrouActif(parsed.data.email);
+  if (verrou) return { error: verrou };
+
   try {
     await signIn("credentials", {
       email: parsed.data.email,
@@ -190,6 +197,9 @@ export async function loginAction(_prev: FormState, formData: FormData): Promise
     });
   } catch (error) {
     if (error instanceof AuthError) {
+      await enregistrerEchec(parsed.data.email);
+      // Message volontairement identique quel que soit le motif : il ne doit
+      // pas indiquer si l'e-mail correspond a un compte.
       return { error: "E-mail ou mot de passe incorrect." };
     }
     throw error;
