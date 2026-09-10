@@ -1,38 +1,30 @@
 @import "tailwindcss";
 
 :root {
-  /* Palette moderne indigo sur fond clair. Tous les contrastes sont vérifiés AA :
-     ink 16,96:1 · muted 4,62:1 · indigo 6,29:1 · vert 5,24:1 · ambre 4,80:1. */
-  --indigo: #4f46e5;
-  --indigo-dark: #4338ca;
-  --indigo-soft: #eef2ff;
-  --indigo-line: #c7d2fe;
-
-  /* Surfaces */
+  /* Charte visible Assurdeal : CTA from-blue-600 to-indigo-600. */
   --page: #f8fafc;
   --surface: #ffffff;
-  --surface-alt: #f1f5f9;
-
-  /* Texte */
+  --surface-alt: #f3f4f6;
+  --indigo-soft: #eff6ff;
+  --indigo-line: #bfdbfe;
+  --indigo: #2563eb;
+  --indigo-mid: #4f46e5;
+  --indigo-dark: #1d4ed8;
+  --deep: #111827;
+  --deep-soft: #1e3a8a;
   --ink: #111827;
-  --muted: #6b7280;
+  --muted: #5f6b7a;
   --line: #e5e7eb;
 
-  /* États. Nuances foncées : les tons vifs échouent au contraste sur blanc. */
   --ok: #047857;
   --warn: #b45309;
   --danger: #dc2626;
 
-  /* Bandeau sombre, pour les en-têtes de page. */
-  --deep: #1e1b4b;
-  --deep-soft: #312e81;
-
-  /* Compatibilité avec les pages écrites avant ce changement de charte. */
   --charcoal: var(--deep);
   --charcoal-muted: var(--deep-soft);
-  --charcoal-soft: #3730a3;
-  --navy: var(--deep);
-  --navy-muted: var(--deep-soft);
+  --charcoal-soft: #374151;
+  --navy: var(--indigo-dark);
+  --navy-muted: var(--indigo);
   --gold: var(--indigo);
   --gold-soft: var(--indigo-soft);
   --gold-deep: var(--indigo-dark);
@@ -44,6 +36,7 @@
 @theme inline {
   --color-indigo: var(--indigo);
   --color-indigo-dark: var(--indigo-dark);
+  --color-indigo-mid: var(--indigo-mid);
   --color-indigo-soft: var(--indigo-soft);
   --color-indigo-line: var(--indigo-line);
   --color-page: var(--page);
@@ -71,7 +64,7 @@
   --color-danger: var(--danger);
 
   --font-sans: var(--font-ibm-plex-sans);
-  --font-serif: var(--font-source-serif);
+  --font-serif: var(--font-ibm-plex-sans);
 }
 
 html,
@@ -83,17 +76,24 @@ body {
   line-height: 1.5;
 }
 
-a {
-  color: inherit;
+@layer base {
+  a {
+    color: inherit;
+  }
 }
 
-/* Chiffres alignés en colonne dans les tableaux denses de l'espace membre. */
+/* Fond bleu : texte blanc, sauf pastels (indigo-soft / indigo-line). */
+@layer components {
+  :where(.bg-indigo, .bg-indigo-dark, .bg-indigo-mid, .from-indigo, .from-indigo-dark) {
+    color: #fff;
+  }
+}
+
 .tabular {
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum";
 }
 
-/* Cible de clic confortable : une partie des utilisateurs a plus de 55 ans. */
 button,
 a {
   touch-action: manipulation;
@@ -109,10 +109,14 @@ a {
   height: 2px;
 }
 
-/* En-tête de page : dégradé indigo profond, comme les cartes de mise en avant. */
 .hero-charcoal {
   background-color: var(--deep);
-  background-image: linear-gradient(135deg, #312e81 0%, #4f46e5 55%, #4338ca 100%);
+}
+
+.hero-visual {
+  background:
+    radial-gradient(120% 80% at 80% 20%, rgba(37, 99, 235, 0.18) 0%, transparent 55%),
+    linear-gradient(165deg, #eff6ff 0%, #ffffff 48%, #f3f4f6 100%);
 }
 
 @media (prefers-reduced-motion: no-preference) {
