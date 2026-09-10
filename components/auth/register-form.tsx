@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import Link from "next/link";
 import { registerAction, type FormState } from "@/app/actions/auth";
 import { Button } from "@/components/ui/button";
+import { PasswordField } from "@/components/auth/password-field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ACTIVITY_TYPES, LEGAL_FORMS } from "@/lib/validations/auth";
@@ -143,18 +144,12 @@ export function RegisterForm({ defaultRole = "SELLER" }: { defaultRole?: "SELLER
         </div>
         <div className="grid gap-1">
           <Label htmlFor="password">Mot de passe</Label>
-          <Input id="password" name="password" type="password" autoComplete="new-password" required />
+          <PasswordField id="password" name="password" autoComplete="new-password" required />
           <p className="text-xs text-muted">10 caractères minimum, dont une lettre et un chiffre.</p>
         </div>
         <div className="grid gap-1">
           <Label htmlFor="confirmPassword">Confirmation</Label>
-          <Input
-            id="confirmPassword"
-            name="confirmPassword"
-            type="password"
-            autoComplete="new-password"
-            required
-          />
+          <PasswordField id="confirmPassword" name="confirmPassword" autoComplete="new-password" required />
         </div>
       </fieldset>
 

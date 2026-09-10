@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import Link from "next/link";
 import { loginAction, type FormState } from "@/app/actions/auth";
 import { Button } from "@/components/ui/button";
+import { PasswordField } from "@/components/auth/password-field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -21,7 +22,7 @@ export function LoginForm({ nextPath }: { nextPath: string }) {
       </div>
       <div className="grid gap-1">
         <Label htmlFor="password">Mot de passe</Label>
-        <Input id="password" name="password" type="password" autoComplete="current-password" required />
+        <PasswordField id="password" name="password" autoComplete="current-password" required />
       </div>
       {state.besoinDeCode ? (
         <div className="grid gap-1 rounded-2xl border border-indigo-line bg-indigo-soft p-4">
@@ -48,7 +49,7 @@ export function LoginForm({ nextPath }: { nextPath: string }) {
       </Button>
       <p className="text-sm text-muted">
         <Link href="/connexion/lien-magique" className="underline underline-offset-2">
-          Recevoir un lien magique
+          Recevoir un code par e-mail
         </Link>
         {" · "}
         <Link href="/inscription" className="underline underline-offset-2">

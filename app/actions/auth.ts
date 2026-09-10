@@ -12,6 +12,7 @@ import { hashPassword } from "@/lib/auth/password";
 import { FREE_PLAN_DEAL_QUOTA, SUCCESS_FEE_RATE } from "@/lib/billing/rates";
 import { departmentFromPostalCode, geoForDepartment } from "@/lib/geo";
 import {
+  emailCodeSchema,
   loginSchema,
   magicLinkRequestSchema,
   registerSchema,
@@ -232,4 +233,29 @@ export async function requestMagicLinkAction(_prev: FormState, formData: FormDat
   }
   await issueMagicLink(parsed.data.email);
   redirect(`/lien-envoye?email=${encodeURIComponent(parsed.data.email)}`);
+}
+
+export async function consumeEmailCodeAction(_prev: FormState, formData: FormData): Promise<FormState> {
+  const parsed = emailCodeSchema.safeParse({
+    email: formData.get("email"),
+    code: formData.get("code"),
+  });
+  if (!parsed.success) {
+    const fieldErrors = parsed.error.flatten().fieldErrors;
+    return { fieldErrors, error: firstIssue(fieldErrors) };
+  }
+
+  try {
+    await signIn("magic-link", {
+      email: parsed.data.email,
+      token: parsed.data.code,
+      redirectTo: "/app",
+    });
+  } catch (error) {
+    if (error instanceof AuthError) {
+      return { error: "Code invalide ou expiré. Demandez-en un nouveau." };
+    }
+    throw error;
+  }
+  return { ok: true };
 }

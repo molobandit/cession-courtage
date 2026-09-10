@@ -20,7 +20,7 @@ export function MagicLinkForm() {
       </div>
       {state.error ? <p className="text-sm text-danger">{state.error}</p> : null}
       <Button type="submit" disabled={pending}>
-        {pending ? "Envoi…" : "Envoyer le lien"}
+        {pending ? "Envoi…" : "Envoyer le code"}
       </Button>
       <p className="text-sm text-muted">
         <Link href="/connexion" className="underline underline-offset-2">

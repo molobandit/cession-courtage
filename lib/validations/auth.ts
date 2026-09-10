@@ -93,7 +93,12 @@ export const magicLinkRequestSchema = z.object({
 
 export const magicLinkConsumeSchema = z.object({
   email: z.string().trim().toLowerCase().email(),
-  token: z.string().min(16),
+  token: z.string().trim().min(6).max(128),
+});
+
+export const emailCodeSchema = z.object({
+  email: z.string().trim().toLowerCase().email("Adresse e-mail invalide."),
+  code: z.string().trim().regex(/^\d{6}$/, "Le code comporte six chiffres."),
 });
 
 export type RegisterInput = z.infer<typeof registerSchema>;

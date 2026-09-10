@@ -25,9 +25,11 @@ export function EffacementForm() {
           figurent plus en base, et aucune connexion n’est plus possible. Les
           pièces contractuelles de vos dossiers clos subsistent sans vous
           désigner, comme la loi l’impose.{" "}
-          <a href="/api/deconnexion" className="font-medium text-indigo-dark">
-            Fermer la session
-          </a>
+          <form action="/api/deconnexion" method="post" className="mt-3 inline">
+            <button type="submit" className="font-medium text-indigo-dark">
+              Fermer la session
+            </button>
+          </form>
         </p>
       </div>
     );
