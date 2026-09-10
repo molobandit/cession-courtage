@@ -77,6 +77,15 @@ export default async function MemberHomePage() {
     .filter((d): d is Date => d !== null && d.getTime() > Date.now())
     .sort((a, b) => a.getTime() - b.getTime())[0];
   const activeDeals = deals.filter((d) => d.stage !== "CLOSED");
+  // Cibles precises de l'action proposee : un bouton doit mener a l'endroit ou
+  // l'on agit, pas recharger le tableau de bord.
+  const retentionDeal = deals.find((d) => d.stage === "RETENTION") ?? null;
+  const offersListing = listings.find((l) => l.status === "OFFERS_CLOSED") ?? null;
+  const openWindowListing =
+    listings.find(
+      (l) => l.offerWindowClosesAt !== null && l.offerWindowClosesAt.getTime() > Date.now(),
+    ) ?? null;
+  const unvaluedPortfolio = portfolios.find((p) => p.valuations.length === 0) ?? null;
 
   const action = nextAction({
     canSell: seller,
@@ -91,6 +100,13 @@ export default async function MemberHomePage() {
     activeDealCount: activeDeals.length,
     mandateCount: mandates.length,
     retentionDue: deals.filter((d) => d.stage === "RETENTION").length,
+    retentionDeal: retentionDeal ? { id: retentionDeal.id } : null,
+    offersListing: offersListing ? { id: offersListing.id } : null,
+    activeDeal: activeDeals[0] ? { id: activeDeals[0].id } : null,
+    openWindowListing: openWindowListing
+      ? { publicNumber: openWindowListing.publicNumber }
+      : null,
+    unvaluedPortfolio: unvaluedPortfolio ? { id: unvaluedPortfolio.id } : null,
   });
 
   const firmId = actor.firmId;

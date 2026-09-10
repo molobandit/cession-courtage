@@ -7,6 +7,11 @@ const base: DashboardState = {
   portfolioCount: 0,
   unvaluedPortfolioCount: 0,
   draftListing: null,
+  retentionDeal: null,
+  offersListing: null,
+  activeDeal: null,
+  openWindowListing: null,
+  unvaluedPortfolio: null,
   openWindowDaysLeft: null,
   offersToReview: 0,
   activeDealCount: 0,
@@ -77,3 +82,53 @@ describe("nextAction", () => {
     expect(action.tone).toBe("calme");
   });
 });
+
+describe("l'action suivante mene quelque part", () => {
+  it("envoie le releve de retention sur le dossier concerne", () => {
+    const a = nextAction({ ...base, retentionDue: 1, retentionDeal: { id: "deal_9" } });
+    expect(a.href).toBe("/app/dossiers/deal_9/retention");
+  });
+
+  it("envoie l'examen des offres sur l'annonce concernee", () => {
+    const a = nextAction({ ...base, offersToReview: 2, offersListing: { id: "lst_3" } });
+    expect(a.href).toBe("/app/annonces/lst_3/offres");
+  });
+
+  it("ouvre le dossier en cours, et accorde le libelle au nombre", () => {
+    const un = nextAction({ ...base, activeDealCount: 1, activeDeal: { id: "deal_1" } });
+    expect(un.href).toBe("/app/dossiers/deal_1");
+    expect(un.cta).toBe("Ouvrir le dossier");
+    const plusieurs = nextAction({ ...base, activeDealCount: 3, activeDeal: { id: "deal_1" } });
+    expect(plusieurs.cta).toBe("Ouvrir les dossiers");
+  });
+
+  it("montre l'annonce dont la fenetre court, cote public", () => {
+    const a = nextAction({ ...base, openWindowDaysLeft: 5, openWindowListing: { publicNumber: 10042 } });
+    expect(a.href).toBe("/annonces/10042");
+  });
+
+  it("envoie la valorisation sur le portefeuille concerne", () => {
+    const a = nextAction({ ...base, unvaluedPortfolioCount: 1, unvaluedPortfolio: { id: "pf_7" } });
+    expect(a.href).toBe("/app/portefeuilles/pf_7");
+  });
+
+  it("ne renvoie jamais vers le tableau de bord quand une cible existe", () => {
+    // Un bouton qui recharge la page ou l'on se trouve deja n'est pas une
+    // action : c'est ce que faisaient cinq propositions sur onze.
+    const cas = [
+      { ...base, retentionDue: 1, retentionDeal: { id: "d" } },
+      { ...base, offersToReview: 1, offersListing: { id: "l" } },
+      { ...base, activeDealCount: 1, activeDeal: { id: "d" } },
+      { ...base, openWindowDaysLeft: 3, openWindowListing: { publicNumber: 1 } },
+      { ...base, unvaluedPortfolioCount: 1, unvaluedPortfolio: { id: "p" } },
+    ];
+    for (const etat of cas) {
+      expect(nextAction(etat).href).not.toBe("/app");
+    }
+  });
+
+  it("retombe sur le tableau de bord si la cible manque, sans casser", () => {
+    expect(nextAction({ ...base, retentionDue: 1 }).href).toBe("/app");
+  });
+});
+

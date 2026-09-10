@@ -12,6 +12,23 @@ export type DashboardState = {
   /** Portefeuilles importes mais jamais valorises. */
   unvaluedPortfolioCount: number;
   draftListing: { publicNumber: number; id: string } | null;
+  /*
+   * Cibles precises des actions proposees.
+   *
+   * Sans elles, le bouton ne pouvait renvoyer que vers /app, c'est-a-dire la
+   * page ou l'on se trouve deja : le clic ne menait nulle part. Une action
+   * suivante qui ne mene pas a l'action n'en est pas une.
+   */
+  /** Dossier attendant un releve de retention. */
+  retentionDeal: { id: string } | null;
+  /** Annonce dont la fenetre est close et dont les offres sont visibles. */
+  offersListing: { id: string } | null;
+  /** Dossier en cours le plus avance. */
+  activeDeal: { id: string } | null;
+  /** Annonce dont la fenetre d'offres court encore. */
+  openWindowListing: { publicNumber: number } | null;
+  /** Portefeuille importe mais pas encore valorise. */
+  unvaluedPortfolio: { id: string } | null;
   /** Fenetre d'offres en cours : jours restants avant cloture. */
   openWindowDaysLeft: number | null;
   /** Offres a examiner sur une fenetre close. */
@@ -37,8 +54,8 @@ export function nextAction(state: DashboardState): NextAction {
       title: "Un relevé de rétention vous est demandé",
       detail:
         "Le montant différé est recalculé sur le taux constaté. Sans relevé, l’ajustement ne peut pas être arrêté.",
-      href: "/app",
-      cta: "Voir les dossiers",
+      href: state.retentionDeal ? `/app/dossiers/${state.retentionDeal.id}/retention` : "/app",
+      cta: "Saisir le relevé",
     };
   }
 
@@ -51,7 +68,7 @@ export function nextAction(state: DashboardState): NextAction {
           : `${state.offersToReview} offres vous attendent`,
       detail:
         "La fenêtre est close, les propositions sont visibles. Vous restez libre de toutes les refuser.",
-      href: "/app",
+      href: state.offersListing ? `/app/annonces/${state.offersListing.id}/offres` : "/app",
       cta: "Examiner les offres",
     };
   }
@@ -64,8 +81,8 @@ export function nextAction(state: DashboardState): NextAction {
           ? "Un dossier est en cours"
           : `${state.activeDealCount} dossiers sont en cours`,
       detail: "La partie qui n’a pas agi bloque l’étape suivante.",
-      href: "/app",
-      cta: "Ouvrir les dossiers",
+      href: state.activeDeal ? `/app/dossiers/${state.activeDeal.id}` : "/app",
+      cta: state.activeDealCount === 1 ? "Ouvrir le dossier" : "Ouvrir les dossiers",
     };
   }
 
@@ -79,7 +96,9 @@ export function nextAction(state: DashboardState): NextAction {
           : `Votre fenêtre d’offres se clôture dans ${jours} jour${jours > 1 ? "s" : ""}`,
       detail:
         "Les montants restent masqués jusqu’à la clôture, y compris pour vous. Rien à faire d’ici là.",
-      href: "/app",
+      href: state.openWindowListing
+        ? `/annonces/${state.openWindowListing.publicNumber}`
+        : "/app",
       cta: "Voir mon annonce",
     };
   }
@@ -100,7 +119,9 @@ export function nextAction(state: DashboardState): NextAction {
       title: "Un portefeuille attend sa valorisation",
       detail:
         "La cascade détaille l’impact en euros de chaque poste, et indique les correctifs les plus rentables.",
-      href: "/app",
+      href: state.unvaluedPortfolio
+        ? `/app/portefeuilles/${state.unvaluedPortfolio.id}`
+        : "/app",
       cta: "Lancer la valorisation",
     };
   }
