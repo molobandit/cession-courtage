@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import {
   toggleMandatePublicationAction,
   type MandatePublicationState,
@@ -24,6 +25,17 @@ export function MandatePublishButton({
   isPublic: boolean;
 }) {
   const [state, action, pending] = useActionState(toggleMandatePublicationAction, initial);
+  const router = useRouter();
+
+  /*
+   * `revalidatePath` cote serveur ne suffit pas a rafraichir la vue ici : le
+   * basculement aboutissait en base sans que la ligne change a l'ecran, ce qui
+   * pousse a recliquer. On force donc le rafraichissement une fois l'action
+   * terminee et sans erreur.
+   */
+  useEffect(() => {
+    if (!pending && !state.error) router.refresh();
+  }, [pending, state, router]);
 
   return (
     <form action={action} className="flex flex-col items-end gap-1">
