@@ -1,4 +1,4 @@
-import NextAuth from "next-auth";
+import NextAuth, { CredentialsSignin } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { authConfig } from "@/auth.config";
 import { prisma } from "@/lib/prisma";
@@ -7,6 +7,17 @@ import { effacerEchecs } from "@/lib/auth/throttle";
 import { secondFacteurActif, verifierSecondFacteur } from "@/lib/auth/second-facteur";
 import { consumeMagicLinkToken } from "@/lib/auth/magic-link";
 import { loginSchema, magicLinkConsumeSchema } from "@/lib/validations/auth";
+
+/**
+ * Signale qu'il manque le code du second facteur, sans rien dire de plus.
+ *
+ * Auth.js transporte ce code jusqu'a l'appelant, ce qui evite de verifier le
+ * mot de passe une seconde fois dans l'action uniquement pour savoir s'il faut
+ * reclamer un code. Une connexion ne doit couter qu'un seul PBKDF2.
+ */
+export class SecondFacteurRequis extends CredentialsSignin {
+  code = "totp_required";
+}
 
 function toSessionUser(user: {
   id: string;
@@ -62,7 +73,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         // Second facteur verifie ici aussi, et pas seulement dans l'action de
         // connexion : la garde doit tenir quel que soit le chemin d'appel.
         if (await secondFacteurActif(user.id)) {
-          const saisie = typeof raw?.totp === "string" ? raw.totp : "";
+          const saisie = typeof raw?.totp === "string" ? raw.totp.trim() : "";
+          // Code absent : on le reclame, le mot de passe etant deja valide.
+          if (!saisie) throw new SecondFacteurRequis();
+          // Code fourni mais faux : refus ordinaire, sans plus d'indication.
           if (!(await verifierSecondFacteur(user.id, saisie))) return null;
         }
 

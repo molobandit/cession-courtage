@@ -12,13 +12,19 @@
 const ALGORITHM = "PBKDF2";
 const HASH = "SHA-256";
 /**
- * 600 000 iterations, la recommandation OWASP en vigueur pour PBKDF2-SHA256.
- * Mesure : environ 70 ms, largement dans le budget d'un Worker pour une
- * operation aussi rare qu'une connexion. Le nombre est inscrit dans l'empreinte,
- * donc les comptes hachees a 100 000 continuent de fonctionner et sont
- * remis a niveau a leur prochaine connexion reussie.
+ * 100 000 iterations : c'est le PLAFOND de Cloudflare Workers, pas un choix.
+ *
+ * Le moteur refuse au-dela, avec
+ * `NotSupportedError: Pbkdf2 failed: iteration counts above 100000 are not
+ * supported`. Une tentative de passer a 600 000, la recommandation OWASP, a
+ * rendu toute connexion impossible en production : le hachage etait accepte a
+ * l'ecriture mais la verification levait une exception.
+ *
+ * Ne pas augmenter cette valeur sans verifier d'abord sur un deploiement reel,
+ * et surtout pas sur la foi d'un test local : Node accepte 600 000 sans broncher,
+ * workerd non.
  */
-const ITERATIONS = 600_000;
+const ITERATIONS = 100_000;
 const SALT_BYTES = 16;
 const KEY_BITS = 256;
 const PREFIX = "pbkdf2";

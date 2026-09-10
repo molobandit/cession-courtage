@@ -5,8 +5,6 @@ import { DistributionMode, Prisma } from "@prisma/client";
 import { redirect } from "next/navigation";
 import { signIn } from "@/auth";
 import { enregistrerEchec, verrouActif } from "@/lib/auth/throttle";
-import { secondFacteurActif } from "@/lib/auth/second-facteur";
-import { burnPasswordTime, verifyPassword } from "@/lib/auth/password";
 import { prisma } from "@/lib/prisma";
 import { allocatePublicAlias } from "@/lib/auth/alias";
 import { issueMagicLink } from "@/lib/auth/magic-link";
@@ -194,30 +192,13 @@ export async function loginAction(_prev: FormState, formData: FormData): Promise
   if (verrou) return { error: verrou };
 
   /*
-   * Le mot de passe est verifie ici avant tout, pour savoir s'il faut reclamer
-   * un second facteur. Reveler qu'un compte en exige un n'est pas une fuite :
-   * seul quelqu'un qui a deja le bon mot de passe atteint ce point.
+   * Aucune verification de mot de passe ici : elle a lieu une seule fois, dans
+   * `authorize`. Verifier avant pour savoir s'il faut reclamer un code coutait
+   * un second PBKDF2 a chaque connexion, soit 1,2 million d'iterations pour un
+   * seul essai. C'est `authorize` qui signale le besoin de code, par une erreur
+   * typee, une fois le mot de passe reconnu.
    */
-  const compte = await prisma.user.findUnique({
-    where: { email: parsed.data.email },
-    select: { id: true, passwordHash: true },
-  });
-
-  if (!compte?.passwordHash) {
-    await burnPasswordTime(parsed.data.password);
-    await enregistrerEchec(parsed.data.email);
-    return { error: "E-mail ou mot de passe incorrect." };
-  }
-
-  if (!(await verifyPassword(parsed.data.password, compte.passwordHash))) {
-    await enregistrerEchec(parsed.data.email);
-    return { error: "E-mail ou mot de passe incorrect." };
-  }
-
   const code = String(formData.get("totp") ?? "").trim();
-  if (!code && (await secondFacteurActif(compte.id))) {
-    return { besoinDeCode: true };
-  }
 
   try {
     await signIn("credentials", {
@@ -228,8 +209,12 @@ export async function loginAction(_prev: FormState, formData: FormData): Promise
     });
   } catch (error) {
     if (error instanceof AuthError) {
+      // Mot de passe reconnu, il ne manque que le second facteur : on le
+      // reclame sans compter d'echec, l'utilisateur n'a rien rate.
+      if ((error as { code?: string }).code === "totp_required") {
+        return { besoinDeCode: true };
+      }
       await enregistrerEchec(parsed.data.email);
-      // A ce stade le mot de passe etait bon : seul le code peut avoir echoue.
       return code
         ? { besoinDeCode: true, error: "Code de vérification refusé." }
         : { error: "E-mail ou mot de passe incorrect." };
