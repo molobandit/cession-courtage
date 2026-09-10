@@ -33,9 +33,22 @@ export async function getActor(): Promise<Actor | null> {
         oriasVerifiedAt: true,
         kycStatus: true,
         publicAlias: true,
+        erasedAt: true,
       },
     });
-    return user;
+
+    /*
+     * Un compte efface ne vaut plus session.
+     *
+     * La session est un jeton autonome : il reste valable jusqu'a son echeance
+     * et ne se revoque pas cote serveur. Sans ce refus, la personne connectee
+     * au moment de la suppression gardait un acces complet a son compte, ce qui
+     * vide l'effacement de son sens.
+     */
+    if (!user || user.erasedAt) return null;
+
+    const { erasedAt: _efface, ...acteur } = user;
+    return acteur;
   } catch (error) {
     console.error("getActor", error);
     return null;

@@ -210,6 +210,11 @@ model User {
   firmId          String?
   kycStatus       KycStatus @default(NONE)
   createdAt       DateTime  @default(now())
+  /// Date d'effacement au titre de l'article 17. Une session est un jeton
+  /// autonome, impossible a revoquer cote serveur : c'est donc la garde qui
+  /// doit refuser un compte efface, sans quoi la session ouverte au moment de
+  /// la suppression continue de donner acces au compte.
+  erasedAt        DateTime?
 
   /// Professional identity for KYC / account admin. Never shown to the
   /// counterparty until the Deal has reached LOI.

@@ -54,7 +54,7 @@ export async function effacerMonCompteAction(
     // L'identite d'abord : c'est elle qui protege la personne.
     await prisma.user.update({
       where: { id: actor.id },
-      data: identiteNeutralisee(actor.id),
+      data: { ...identiteNeutralisee(actor.id), erasedAt: new Date() },
     });
 
     // Puis ce qui n'a plus d'objet une fois le compte ferme.

@@ -119,12 +119,12 @@ export async function exportPersonalData(actor: Actor): Promise<Record<string, u
 
   return {
     _lisezMoi: {
-      objet: "Export de vos donnees personnelles, articles 15 et 20 du RGPD.",
+      objet: "Export de vos données personnelles, articles 15 et 20 du RGPD.",
       genereLe: new Date().toISOString(),
       portee:
-        "Les donnees vous concernant. Vos interlocuteurs n'apparaissent que sous leur alias public : leur identite ne fait pas partie de vos donnees.",
+        "Les données vous concernant. Vos interlocuteurs n’apparaissent que sous leur alias public : leur identité ne fait pas partie de vos données.",
       clientsFinaux:
-        "Aucune donnee nominative de client final n'est collectee par la plateforme. Le grain le plus fin est le code postal.",
+        "Aucune donnée nominative de client final n’est collectée par la plateforme. Le grain le plus fin est le code postal.",
     },
     compte: user,
     mandatsDeRecherche: mandates,
