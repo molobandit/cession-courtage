@@ -19,7 +19,7 @@ npm test
 npm run dev            # http://localhost:3000
 ```
 
-Mot de passe unique seed : `Demo2026!`
+Mot de passe unique seed : *communique hors depot, demandez-le au proprietaire*
 
 | Rôle | E-mail | À tester |
 |---|---|---|

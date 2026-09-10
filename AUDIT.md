@@ -248,7 +248,7 @@ Conséquence directe : le repère de non-régression « widget à 45 000 en part
 
 Parcours visé : création de compte → import → valorisation → publication → réception d'une offre → dossier jusqu'à la LOI.
 
-**Ce parcours est déjà déroulable aujourd'hui en local**, avec les comptes du seed (`Demo2026!`). Les six étapes existent et fonctionnent.
+**Ce parcours est déjà déroulable aujourd'hui en local**, avec les comptes du seed (*communique hors depot, demandez-le au proprietaire*). Les six étapes existent et fonctionnent.
 
 Travaux minimaux pour le tenir devant un courtier :
 

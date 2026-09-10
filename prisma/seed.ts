@@ -59,7 +59,14 @@ async function createPrismaClient(): Promise<PrismaClient> {
   return new PrismaClient();
 }
 
-const DEMO_PASSWORD = "Demo2026!";
+/**
+ * Mot de passe des comptes de demonstration.
+ *
+ * JAMAIS la valeur de production : le depot est public, tout ce qui est ecrit
+ * ici est lisible par n'importe qui, y compris dans l'historique. Pour semer
+ * une base exposee, fournir SEED_PASSWORD dans l'environnement.
+ */
+const DEMO_PASSWORD = process.env.SEED_PASSWORD ?? "LocalUniquement2026!";
 const NOW = new Date("2026-09-07T10:00:00.000Z");
 
 function daysAgo(n: number): Date {
@@ -1620,7 +1627,7 @@ async function main() {
   const offerCount = await prisma.offer.count();
   const dealCount = await prisma.deal.count();
   console.info(`Done. users=${userCount} lines=${lineCount} listings=${listingCount} offers=${offerCount} deals=${dealCount} carrierCodes=${carrierCodeCount} dueDiligence=${dueDiligenceCount}`);
-  console.info(`Demo password for every account: ${DEMO_PASSWORD}`);
+  console.info("Demo password: SEED_PASSWORD if set, otherwise the local-only default.");
 }
 
 main()

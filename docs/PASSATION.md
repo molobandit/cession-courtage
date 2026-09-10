@@ -66,7 +66,7 @@ npm test          # 152 tests, doivent tous passer
 npm run dev       # http://localhost:3000
 ```
 
-Mot de passe unique de tous les comptes de démonstration : `Demo2026!`
+Mot de passe unique de tous les comptes de démonstration : *communique hors depot, demandez-le au proprietaire*
 Comptes utiles : `marie.lefort@parisienne-courtage.demo` (cédante),
 `acquisition@expansion-idf.demo` (acquéreur), `admin@cession-courtage.demo`.
 

@@ -24,7 +24,7 @@ npm run dev                   # http://localhost:3000
 
 `npm run db:reset` repart d'une base D1 locale vide.
 
-Mot de passe unique du seed : `Demo2026!`
+Mot de passe unique du seed : *communique hors depot, demandez-le au proprietaire*
 
 | Rôle | E-mail | Parcours |
 |---|---|---|

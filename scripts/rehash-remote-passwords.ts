@@ -6,7 +6,12 @@
 import { readFileSync } from "node:fs";
 import { hashPassword } from "../lib/auth/password";
 
-const DEMO_PASSWORD = "Demo2026!";
+const SEED_PASSWORD = process.env.SEED_PASSWORD;
+if (!SEED_PASSWORD) {
+  console.error("SEED_PASSWORD manquant. Un mot de passe ne s'ecrit pas dans un depot public.");
+  process.exit(1);
+}
+const DEMO_PASSWORD: string = SEED_PASSWORD;
 
 const listPath = process.argv[2];
 if (!listPath) {
