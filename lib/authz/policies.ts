@@ -34,6 +34,20 @@ export function identitiesRevealed(stage: DealStage): boolean {
   return isStageAtLeast(stage, "LOI");
 }
 
+/**
+ * Leve l'anonymat entre cedant et acquereur.
+ *
+ * Deux declencheurs, l'un ou l'autre : le depot d'interet de 2,5 %, qui est la
+ * porte commerciale, et la LOI, qui reste le jalon juridique. Un dossier deja
+ * engage avant l'existence du depot continue donc de fonctionner.
+ */
+export function identitiesRevealedFor(input: {
+  stage: DealStage;
+  hasDeposit: boolean;
+}): boolean {
+  return input.hasDeposit || identitiesRevealed(input.stage);
+}
+
 export function hasOfferWindowExpired(listing: {
   status: ListingStatus;
   offerWindowClosesAt: Date | null;

@@ -234,6 +234,7 @@ model User {
   multiplesUpdated        ValuationMultiple[]
   imports                 PortfolioImport[]
   dataRoomViews           DataRoomView[]
+  deposits                InterestDeposit[]
 
   @@index([firmId])
   @@index([role])
@@ -424,6 +425,7 @@ model Listing {
   offers     Offer[]
   deals      Deal[]
   messages   Message[]
+  deposits   InterestDeposit[]
 
   @@index([status, publishedAt])
   @@index([portfolioId])
@@ -504,6 +506,28 @@ model Offer {
 
   @@unique([listingId, buyerId])
   @@index([listingId, status])
+  @@index([buyerId])
+}
+
+/// Depot d'interet de 2,5 % versant l'acquereur dans le parcours nominatif.
+/// Simule : aucun encaissement reel, l'enregistrement vaut engagement.
+/// C'est ce depot qui leve l'anonymat, sans attendre la LOI.
+model InterestDeposit {
+  id        String   @id @default(cuid())
+  listingId String
+  buyerId   String
+  /// Montant calcule a la pose, en euros. Fige meme si le prix demande bouge.
+  amount    Decimal
+  /// Taux applique, conserve pour tracer un changement de tarif ulterieur.
+  rate      Decimal
+  placedAt  DateTime @default(now())
+
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Restrict)
+  buyer   User    @relation(fields: [buyerId], references: [id], onDelete: Restrict)
+
+  /// Un seul depot par couple annonce/acquereur : D1 n'a pas de transactions,
+  /// cette contrainte rend un rejeu inoffensif.
+  @@unique([listingId, buyerId])
   @@index([buyerId])
 }
 

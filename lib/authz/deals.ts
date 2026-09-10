@@ -1,8 +1,9 @@
 import "server-only";
+import type { DealStage } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireOriasVerified, type Actor } from "@/lib/authz/actor";
 import { ForbiddenError } from "@/lib/authz/errors";
-import { identitiesRevealed, isDealParticipant } from "@/lib/authz/policies";
+import { identitiesRevealedFor, isDealParticipant } from "@/lib/authz/policies";
 
 export async function listMyDeals(actor?: Actor) {
   const user = actor ?? (await requireOriasVerified());
@@ -10,7 +11,7 @@ export async function listMyDeals(actor?: Actor) {
     where: { OR: [{ sellerId: user.id }, { buyerId: user.id }] },
     orderBy: { createdAt: "desc" },
     include: {
-      listing: { select: { publicNumber: true, displayedZone: true, askingPrice: true } },
+      listing: { select: { publicNumber: true, displayedZone: true, askingPrice: true, deposits: { select: { buyerId: true } } } },
       seller: { select: { id: true, fullName: true, email: true, publicAlias: true, kycStatus: true, firm: { select: { legalName: true } } } },
       buyer: { select: { id: true, fullName: true, email: true, publicAlias: true, kycStatus: true, firm: { select: { legalName: true } } } },
     },
@@ -30,6 +31,7 @@ export async function getMyDeal(dealId: string, actor?: Actor) {
           displayedZone: true,
           askingPrice: true,
           status: true,
+          deposits: { select: { buyerId: true } },
         },
       },
       seller: { select: { id: true, fullName: true, email: true, publicAlias: true, kycStatus: true, firm: { select: { legalName: true } } } },
@@ -65,12 +67,13 @@ type DealParty = {
 
 function presentParty(
   actor: Actor,
-  deal: { stage: Parameters<typeof identitiesRevealed>[0]; sellerId: string; buyerId: string; sellerAlias: string; buyerAlias: string },
+  deal: { stage: DealStage; sellerId: string; buyerId: string; sellerAlias: string; buyerAlias: string },
   party: DealParty,
   side: "seller" | "buyer",
+  revealed: boolean,
 ) {
   const self = party.id === actor.id;
-  if (self || identitiesRevealed(deal.stage)) {
+  if (self || revealed) {
     return {
       kind: "identified" as const,
       id: party.id,
@@ -102,7 +105,7 @@ function presentDeal(
   actor: Actor,
   deal: {
     id: string;
-    stage: Parameters<typeof identitiesRevealed>[0];
+    stage: DealStage;
     sellerId: string;
     buyerId: string;
     sellerAlias: string;
@@ -116,7 +119,7 @@ function presentDeal(
     escrowStage: string;
     escrowProviderRef: string | null;
     createdAt: Date;
-    listing: { id?: string; publicNumber: number; displayedZone: string; askingPrice: unknown; status?: string };
+    listing: { id?: string; publicNumber: number; displayedZone: string; askingPrice: unknown; status?: string; deposits?: { buyerId: string }[] };
     seller: DealParty;
     buyer: DealParty;
     documents?: {
@@ -140,7 +143,10 @@ function presentDeal(
     dataRoomViews?: { id: string; viewedAt: Date; viewerId: string; documentId: string | null }[];
   },
 ) {
-  const revealed = identitiesRevealed(deal.stage);
+  // Le depot d'interet de l'acquereur du dossier leve l'anonymat, sans attendre
+  // la LOI. Les depots des autres candidats sur la meme annonce n'y changent rien.
+  const hasDeposit = (deal.listing.deposits ?? []).some((d) => d.buyerId === deal.buyerId);
+  const revealed = identitiesRevealedFor({ stage: deal.stage, hasDeposit });
   return {
     id: deal.id,
     stage: deal.stage,
@@ -157,8 +163,8 @@ function presentDeal(
     createdAt: deal.createdAt,
     listing: deal.listing,
     identitiesRevealed: revealed,
-    seller: presentParty(actor, deal, deal.seller, "seller"),
-    buyer: presentParty(actor, deal, deal.buyer, "buyer"),
+    seller: presentParty(actor, deal, deal.seller, "seller", revealed),
+    buyer: presentParty(actor, deal, deal.buyer, "buyer", revealed),
     documents: deal.documents ?? [],
     messages: (deal.messages ?? []).map((m) => ({
       id: m.id,

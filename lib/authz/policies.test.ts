@@ -3,6 +3,7 @@ import {
   canManageListing,
   canViewListing,
   hasOfferWindowExpired,
+  identitiesRevealedFor,
   isListingMessageParty,
   listingMessageWhere,
   isOfferWindowSealed,
@@ -165,5 +166,28 @@ describe("listingMessageWhere (fuite entre acquereurs)", () => {
   it("ne diffuse rien si le cedant n'a pas de compte identifie", () => {
     const where = listingMessageWhere({ ...base, isSeller: false, sellerUserId: null });
     expect(where.OR).toEqual([{ senderId: "buyer_A" }, { recipientId: "buyer_A" }]);
+  });
+});
+
+describe("identitiesRevealedFor", () => {
+  it("leve l'anonymat des le depot, sans attendre la LOI", () => {
+    expect(identitiesRevealedFor({ stage: "NDA", hasDeposit: true })).toBe(true);
+    expect(identitiesRevealedFor({ stage: "DATA_ROOM", hasDeposit: true })).toBe(true);
+  });
+
+  it("garde l'anonymat sans depot tant que la LOI n'est pas atteinte", () => {
+    expect(identitiesRevealedFor({ stage: "NDA", hasDeposit: false })).toBe(false);
+    expect(identitiesRevealedFor({ stage: "DATA_ROOM", hasDeposit: false })).toBe(false);
+  });
+
+  it("continue de lever l'anonymat a la LOI pour un dossier sans depot", () => {
+    expect(identitiesRevealedFor({ stage: "LOI", hasDeposit: false })).toBe(true);
+    expect(identitiesRevealedFor({ stage: "SIGNATURE", hasDeposit: false })).toBe(true);
+    expect(identitiesRevealedFor({ stage: "CLOSED", hasDeposit: false })).toBe(true);
+  });
+
+  it("ne rend jamais l'anonymat une fois une des deux conditions remplie", () => {
+    // Un depot pose sur un dossier deja en LOI ne change rien, et reciproquement.
+    expect(identitiesRevealedFor({ stage: "LOI", hasDeposit: true })).toBe(true);
   });
 });
