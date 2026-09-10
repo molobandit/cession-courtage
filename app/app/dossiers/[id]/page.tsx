@@ -45,23 +45,34 @@ export default async function DealPage({ params }: { params: Promise<{ id: strin
   const progress = checklistProgress(checklist);
 
   return (
-    <main className="mx-auto max-w-6xl px-4 py-8">
-      <p className="text-sm text-muted">
-        <Link href="/app" className="underline-offset-2 hover:underline">
-          Espace membre
+    <main className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 sm:py-8 lg:py-10">
+      <p className="text-[13px] font-medium text-indigo-dark">
+        <Link href="/app" className="inline-flex min-h-11 items-center hover:text-indigo">
+          Accueil
         </Link>
       </p>
-      <h1 className="mt-1 font-serif text-2xl text-navy">Dossier #{deal.listing.publicNumber}</h1>
-      <p className="text-sm text-muted">
-        {DEAL_STAGE_LABELS[deal.stage]} · {formatEuro(Number(deal.agreedPrice))} · contrepartie {counterpartyLabel}
-      </p>
 
-      <ol className="mt-4 flex flex-wrap gap-1 text-xs">
+      <section className="rounded-3xl bg-indigo-soft p-5 sm:p-8">
+        <span className="inline-flex rounded-full bg-white px-3 py-1 text-[12px] font-medium text-indigo-dark">
+          {isSeller ? "Cession" : "Acquisition"} · {DEAL_STAGE_LABELS[deal.stage]}
+        </span>
+        <h1 className="mt-3 text-2xl font-bold tracking-tight text-ink sm:text-3xl">
+          Portefeuille #{deal.listing.publicNumber}
+        </h1>
+        <p className="mt-2 text-[15px] leading-relaxed text-muted">
+          Contrepartie : {counterpartyLabel}. Le tunnel va de la confidentialité
+          jusqu’au transfert ORIAS.
+        </p>
+      </section>
+
+      <ol className="-mx-4 mt-5 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
         {DEAL_STAGE_ORDER.map((stage) => (
           <li
             key={stage}
-            className={`rounded-sm px-2 py-1 ${
-              stage === deal.stage ? "bg-navy text-ink" : "bg-surface-alt text-muted"
+            className={`shrink-0 rounded-full px-3 py-1.5 text-[12px] font-medium ${
+              stage === deal.stage
+                ? "bg-indigo text-white"
+                : "border border-line bg-paper text-muted"
             }`}
           >
             {DEAL_STAGE_LABELS[stage]}
@@ -69,20 +80,22 @@ export default async function DealPage({ params }: { params: Promise<{ id: strin
         ))}
       </ol>
 
-      <section className="mt-6 grid gap-3 sm:grid-cols-3 text-sm">
-        <div className="border border-line bg-paper p-3">
-          Prix convenu
-          <p className="font-serif text-lg text-navy">{formatEuro(Number(deal.agreedPrice))}</p>
+      <section className="mt-6 grid gap-3 sm:grid-cols-3">
+        <div className="rounded-3xl border border-line bg-paper px-5 py-6 text-center shadow-sm">
+          <p className="text-[13px] text-muted">Prix convenu</p>
+          <p className="tabular mt-2 text-2xl font-bold text-ink">{formatEuro(Number(deal.agreedPrice))}</p>
         </div>
-        <div className="border border-line bg-paper p-3">
-          Comptant
-          <p className="font-serif text-lg text-navy">{formatEuro(Number(deal.upfrontAmount))}</p>
+        <div className="rounded-3xl border border-line bg-paper px-5 py-6 text-center shadow-sm">
+          <p className="text-[13px] text-muted">Comptant</p>
+          <p className="tabular mt-2 text-2xl font-bold text-ink">{formatEuro(Number(deal.upfrontAmount))}</p>
         </div>
-        <div className="border border-line bg-paper p-3">
-          Différé
-          <p className="font-serif text-lg text-navy">{formatEuro(Number(deal.deferredAmount))}</p>
+        <div className="rounded-3xl border border-line bg-paper px-5 py-6 text-center shadow-sm">
+          <p className="text-[13px] text-muted">Différé</p>
+          <p className="tabular mt-2 text-2xl font-bold text-ink">{formatEuro(Number(deal.deferredAmount))}</p>
           {deal.adjustedDeferredAmount ? (
-            <p className="text-xs text-muted">Ajusté rétention : {formatEuro(Number(deal.adjustedDeferredAmount))}</p>
+            <p className="mt-1 text-[12px] text-muted">
+              Ajusté rétention : {formatEuro(Number(deal.adjustedDeferredAmount))}
+            </p>
           ) : null}
         </div>
       </section>
@@ -114,7 +127,7 @@ export default async function DealPage({ params }: { params: Promise<{ id: strin
 
       {roomOpen ? (
         <section className="mt-8">
-          <h2 className="font-serif text-lg text-navy">Salle de données</h2>
+          <h2 className="text-lg font-semibold text-ink">Salle de données</h2>
           <p className="text-xs text-muted">Fichiers hors base, hashés. Aucune PII client final.</p>
           {isSeller ? (
             <div className="mt-2">
@@ -137,7 +150,7 @@ export default async function DealPage({ params }: { params: Promise<{ id: strin
           </ul>
           {deal.dataRoomViews.length > 0 ? (
             <div className="mt-4">
-              <h3 className="text-sm font-medium text-navy">Journal de consultation</h3>
+              <h3 className="text-sm font-medium text-ink">Journal de consultation</h3>
               <ul className="mt-1 text-xs text-muted">
                 {deal.dataRoomViews.map((v) => (
                   <li key={v.id}>
@@ -165,10 +178,10 @@ export default async function DealPage({ params }: { params: Promise<{ id: strin
       ) : null}
 
       <section className="mt-8">
-        <h2 className="font-serif text-lg text-navy">Messagerie</h2>
+        <h2 className="text-lg font-semibold text-ink">Messagerie</h2>
         <ul className="mt-2 space-y-2 text-sm">
           {deal.messages.map((m) => (
-            <li key={m.id} className="border border-line bg-paper p-2">
+            <li key={m.id} className="rounded-2xl border border-line bg-paper p-3 sm:p-4">
               <span className="text-xs text-muted">#{m.senderLabel}</span>
               <p>{m.body}</p>
             </li>

@@ -140,6 +140,26 @@ export function maturitySchedule(lines: AnalyticsLine[], from: Date): MaturityBu
   return buckets;
 }
 
+export type YearBucket = {
+  year: number;
+  contracts: number;
+  commissions: number;
+};
+
+/** Agrège l’échéancier mensuel en totaux annuels. */
+export function groupMaturityByYear(buckets: MaturityBucket[]): YearBucket[] {
+  const map = new Map<number, YearBucket>();
+  for (const bucket of buckets) {
+    const year = Number(bucket.month.slice(0, 4));
+    if (!Number.isFinite(year)) continue;
+    const current = map.get(year) ?? { year, contracts: 0, commissions: 0 };
+    current.contracts += bucket.contracts;
+    current.commissions = round2(current.commissions + bucket.commissions);
+    map.set(year, current);
+  }
+  return [...map.values()].sort((a, b) => a.year - b.year);
+}
+
 /**
  * Fourchettes de multiples constatees sur le marche francais, par clientele
  * dominante. Sert a situer le multiple effectif du portefeuille.

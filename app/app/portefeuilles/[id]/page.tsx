@@ -120,7 +120,7 @@ export default async function PortfolioPage({ params }: { params: Promise<{ id: 
 
       <div className="mt-2 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="font-serif text-3xl font-semibold text-ink">{portfolio.label}</h1>
+          <h1 className="text-3xl font-semibold text-ink">{portfolio.label}</h1>
           <p className="mt-1.5 text-[15px] text-muted">
             {DISTRIBUTION_LABELS[portfolio.firm.distributionMode]} · résiliation{" "}
             {formatPercent(Number(portfolio.churnRate12m) * 100)} sur douze mois
@@ -141,7 +141,7 @@ export default async function PortfolioPage({ params }: { params: Promise<{ id: 
         {KPIS.map((kpi) => (
           <div key={kpi.label} className="bg-paper p-5">
             <p className="text-sm text-muted">{kpi.label}</p>
-            <p className="tabular mt-1.5 font-serif text-2xl font-semibold text-ink">{kpi.value}</p>
+            <p className="tabular mt-1.5 text-2xl font-semibold text-ink">{kpi.value}</p>
           </div>
         ))}
       </section>
@@ -149,7 +149,7 @@ export default async function PortfolioPage({ params }: { params: Promise<{ id: 
       {/* Valorisation */}
       {valuation ? (
         <section className="mt-10">
-          <h2 className="font-serif text-2xl font-semibold text-ink">Valorisation</h2>
+          <h2 className="text-2xl font-semibold text-ink">Valorisation</h2>
           <p className="mt-1.5 text-[15px] text-muted">
             Score de qualité {valuation.qualityScore} sur 100 · algorithme{" "}
             {valuation.algorithmVersion} · calculée le {formatDate(valuation.computedAt)}
@@ -163,19 +163,19 @@ export default async function PortfolioPage({ params }: { params: Promise<{ id: 
               <div className="mt-4 grid grid-cols-3 gap-4">
                 <div>
                   <p className="text-sm text-muted">Basse</p>
-                  <p className="tabular mt-1 font-serif text-xl font-semibold text-ink">
+                  <p className="tabular mt-1 text-xl font-semibold text-ink">
                     {formatEuroWhole(Number(valuation.lowValue))}
                   </p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-indigo-dark">Médiane</p>
-                  <p className="tabular mt-1 font-serif text-3xl font-semibold text-ink">
+                  <p className="tabular mt-1 text-3xl font-semibold text-ink">
                     {formatEuroWhole(Number(valuation.midValue))}
                   </p>
                 </div>
                 <div className="text-right">
                   <p className="text-sm text-muted">Haute</p>
-                  <p className="tabular mt-1 font-serif text-xl font-semibold text-ink">
+                  <p className="tabular mt-1 text-xl font-semibold text-ink">
                     {formatEuroWhole(Number(valuation.highValue))}
                   </p>
                 </div>
@@ -200,7 +200,7 @@ export default async function PortfolioPage({ params }: { params: Promise<{ id: 
       {/* Cascade */}
       {breakdown ? (
         <section className="mt-10">
-          <h2 className="font-serif text-2xl font-semibold text-ink">
+          <h2 className="text-2xl font-semibold text-ink">
             Le détail de la cascade
           </h2>
           <p className="mt-1.5 max-w-3xl text-[15px] text-muted">
@@ -251,7 +251,7 @@ export default async function PortfolioPage({ params }: { params: Promise<{ id: 
 
       {/* Composition */}
       <section className="mt-10">
-        <h2 className="font-serif text-2xl font-semibold text-ink">
+        <h2 className="text-2xl font-semibold text-ink">
           Composition du portefeuille
         </h2>
         <p className="mt-1.5 max-w-3xl text-[15px] text-muted">
@@ -328,7 +328,7 @@ export default async function PortfolioPage({ params }: { params: Promise<{ id: 
       {/* Leviers */}
       {breakdown && breakdown.actions.length > 0 ? (
         <section className="mt-10">
-          <h2 className="font-serif text-2xl font-semibold text-ink">
+          <h2 className="text-2xl font-semibold text-ink">
             Ce qui relèverait votre valorisation
           </h2>
           <p className="mt-1.5 max-w-3xl text-[15px] text-muted">
@@ -338,7 +338,7 @@ export default async function PortfolioPage({ params }: { params: Promise<{ id: 
           <ul className="mt-5 grid gap-5 lg:grid-cols-2">
             {breakdown.actions.map((action) => (
               <li key={action.title} className="rounded-3xl border border-line bg-paper p-6">
-                <h3 className="font-serif text-lg font-semibold text-ink">{action.title}</h3>
+                <h3 className="text-lg font-semibold text-ink">{action.title}</h3>
                 <p className="mt-2 text-[15px] leading-relaxed text-muted">{action.detail}</p>
               </li>
             ))}
@@ -349,7 +349,7 @@ export default async function PortfolioPage({ params }: { params: Promise<{ id: 
       {/* Annonces */}
       {portfolio.listings.length > 0 ? (
         <section className="mt-10">
-          <h2 className="font-serif text-2xl font-semibold text-ink">Annonces liées</h2>
+          <h2 className="text-2xl font-semibold text-ink">Annonces liées</h2>
           <ul className="mt-5 grid gap-3">
             {portfolio.listings.map((listing) => (
               <li key={listing.id}>

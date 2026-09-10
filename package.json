@@ -14,6 +14,8 @@
     "db:migrate:remote": "wrangler d1 migrations apply cession-courtage --remote",
     "db:seed": "SEED_D1=1 tsx prisma/seed.ts",
     "db:certify": "wrangler d1 execute cession-courtage --local --file ./scripts/d1-certify-demo.sql",
+    "db:catalog": "tsx scripts/write-catalog-sql.ts && wrangler d1 execute cession-courtage --local --file ./scripts/d1-catalog-listings.sql",
+    "db:catalog:remote": "tsx scripts/write-catalog-sql.ts && wrangler d1 execute cession-courtage --remote --file ./scripts/d1-catalog-listings.sql",
     "db:reset": "echo 'Arretez `npm run dev` avant de reinitialiser : la base locale est ouverte par le serveur.' && rm -rf .wrangler/state/v3/d1 && npm run db:migrate && npm run db:seed && npm run db:certify",
     "setup": "prisma generate && npm run db:migrate && npm run db:seed",
     "test": "vitest run",

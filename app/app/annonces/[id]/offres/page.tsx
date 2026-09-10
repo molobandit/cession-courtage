@@ -24,7 +24,7 @@ export default async function ListingOffersPage({
 
   return (
     <main className="mx-auto max-w-4xl px-4 py-6">
-      <h1 className="font-serif text-2xl text-navy">Offres</h1>
+      <h1 className="text-2xl font-bold tracking-tight text-ink">Offres</h1>
       {result.access === "sealed" ? (
         <p className="mt-4 border border-line bg-paper px-4 py-3 text-sm">
           Fenêtre d&apos;offres en cours. Les montants et le nombre d&apos;offres restent

@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { SUCCESS_FEE_RATE } from "@/lib/billing/rates";
+import { PageIntro } from "@/components/page-intro";
+import { INTEREST_DEPOSIT_LABEL, SIMPLE_FEE_LABEL, VERIFIED_FEE_RANGE_LABEL } from "@/lib/billing/rates";
 import { ASKING_MAX, ASKING_MIN, OFFER_WINDOW_DAYS } from "@/lib/listing/constants";
 import { formatEuroWhole } from "@/lib/format/number";
 
@@ -10,8 +11,6 @@ export const metadata: Metadata = {
   description:
     "Le parcours du cédant : import anonymisé, valorisation en cascade, annonce sous alias, offres scellées et transfert ORIAS accompagné.",
 };
-
-const FEE_LABEL = `${(SUCCESS_FEE_RATE * 100).toLocaleString("fr-FR")} % HT`;
 
 const PROTECTIONS = [
   {
@@ -55,49 +54,60 @@ const TIMELINE = [
   },
   {
     title: "Dossier et transfert",
-    body: "Accord de confidentialité, mémorandum, salle de données, lettre d’intention, protocole, signature, séquestre, puis transfert ORIAS. Votre identité n’est révélée qu’à la lettre d’intention.",
+    body: `Accord de confidentialité, mémorandum, salle de données, lettre d’intention, protocole, signature, séquestre, puis transfert ORIAS. Votre identité n’est révélée qu’après le dépôt de ${INTEREST_DEPOSIT_LABEL} du prix.`,
   },
 ];
 
 export default function CederPage() {
   return (
     <main>
-      <section className="border-y border-line bg-indigo-soft text-ink">
-        <div className="mx-auto max-w-6xl px-4 py-14">
-          <p className="text-[13px] font-medium uppercase tracking-[0.18em] text-indigo-dark">
-            Parcours cédant
-          </p>
-          <h1 className="mt-4 max-w-3xl font-serif text-4xl font-semibold leading-tight">
-            Vendre sans que le marché l’apprenne avant vous
-          </h1>
-          <p className="mt-5 max-w-2xl text-lg text-muted">
-            La discrétion n’est pas un supplément de confort. C’est ce qui vous
-            permet de renoncer si les conditions ne vous conviennent pas, sans
-            avoir rien abîmé.
-          </p>
-          <div className="mt-8 flex flex-wrap gap-3">
-            <Button asChild variant="primary" size="lg">
-              <Link href="/valoriser">Estimer mon portefeuille</Link>
-            </Button>
-            <Button
-              asChild
-              size="lg"
-              className="border border-line bg-transparent text-ink hover:bg-surface"
-            >
-              <Link href="/inscription">Créer un compte</Link>
-            </Button>
-          </div>
-        </div>
+      <PageIntro kicker="Vendre" title="Je vends mon portefeuille">
+        Créez votre compte, déposez une annonce simple ou faites vérifier le
+        dossier. Votre identité reste masquée jusqu’au dépôt de{" "}
+        {INTEREST_DEPOSIT_LABEL} du prix.
+      </PageIntro>
+
+      <section className="mx-auto max-w-6xl px-4 py-12">
+            <div className="grid gap-5 lg:grid-cols-2">
+              <article className="rounded-2xl border border-line bg-paper p-7">
+                <p className="text-[13px] font-semibold text-indigo">Option 1</p>
+                <h2 className="mt-2 text-2xl font-bold tracking-tight text-ink">Annonce simple</h2>
+                <p className="mt-3 text-[15px] leading-relaxed text-muted">
+                  Vous renseignez les informations principales. Nous ne
+                  contrôlons pas le Kbis, la pièce d’identité ni les bordereaux
+                  du dossier. Aucune commission sur la vente. Le paiement
+                  transite quand même par le séquestre.
+                </p>
+                <Button asChild variant="primary" className="mt-6">
+                  <Link href="/inscription?voie=annonce">Déposer une annonce</Link>
+                </Button>
+              </article>
+              <article className="rounded-2xl border border-line bg-paper p-7">
+                <p className="text-[13px] font-semibold text-indigo">Option 2</p>
+                <h2 className="mt-2 text-2xl font-bold tracking-tight text-ink">
+                  Portefeuille certifié
+                </h2>
+                <p className="mt-3 text-[15px] leading-relaxed text-muted">
+                  Nous contrôlons la société (Kbis), l’identité du représentant,
+                  le justificatif ORIAS du dossier et les documents du
+                  portefeuille. Honoraires de {VERIFIED_FEE_RANGE_LABEL} si la
+                  vente aboutit. Séquestre jusqu’à la prise de possession.
+                </p>
+                <Button asChild variant="primary" className="mt-6">
+                  <Link href="/inscription?voie=certifie">Faire certifier mon portefeuille</Link>
+                </Button>
+              </article>
+            </div>
       </section>
 
       <section className="mx-auto max-w-6xl px-4 py-16">
-        <h2 className="font-serif text-3xl font-semibold text-ink">
+        <h2 className="text-3xl font-bold tracking-tight text-ink">
           Quatre protections pendant la mise en vente
         </h2>
         <div className="mt-8 grid gap-5 lg:grid-cols-2">
           {PROTECTIONS.map((item) => (
-            <article key={item.title} className="rounded-3xl border border-line bg-paper p-6">
-              <h3 className="font-serif text-xl font-semibold text-ink">{item.title}</h3>
+            <article key={item.title} className="rounded-2xl border border-line bg-paper p-6">
+              <h3 className="text-xl font-semibold text-ink">{item.title}</h3>
               <p className="mt-3 text-[15px] leading-relaxed text-muted">{item.body}</p>
             </article>
           ))}
@@ -106,20 +116,20 @@ export default function CederPage() {
 
       <section className="bg-paper">
         <div className="mx-auto max-w-6xl px-4 py-16">
-          <h2 className="font-serif text-3xl font-semibold text-ink">
+          <h2 className="text-3xl font-bold tracking-tight text-ink">
             Le déroulé, étape par étape
           </h2>
-          <ol className="mt-8 space-y-4">
+          <ol className="mt-8 space-y-3">
             {TIMELINE.map((item, index) => (
               <li
                 key={item.title}
-                className="flex gap-5 rounded-3xl border border-line bg-surface-alt p-6"
+                className="flex gap-5 rounded-2xl border border-line bg-paper p-6"
               >
-                <span className="tabular shrink-0 font-serif text-2xl font-semibold text-indigo-dark">
+                <span className="tabular shrink-0 text-2xl font-bold text-indigo">
                   {String(index + 1).padStart(2, "0")}
                 </span>
                 <div>
-                  <h3 className="font-serif text-lg font-semibold text-ink">{item.title}</h3>
+                  <h3 className="text-lg font-semibold text-ink">{item.title}</h3>
                   <p className="mt-2 text-[15px] leading-relaxed text-muted">{item.body}</p>
                 </div>
               </li>
@@ -129,11 +139,11 @@ export default function CederPage() {
       </section>
 
       <section className="mx-auto max-w-6xl px-4 py-16">
-        <div className="rounded-3xl border border-indigo-line bg-indigo-soft p-8">
-          <p className="text-[13px] font-medium uppercase tracking-[0.14em] text-indigo-dark">
+        <div className="rounded-2xl border border-line bg-paper p-8">
+          <p className="text-[13px] font-semibold text-indigo">
             Après la cession
           </p>
-          <h2 className="mt-3 font-serif text-2xl font-semibold text-ink">
+          <h2 className="mt-3 text-2xl font-bold tracking-tight text-ink">
             La part différée s’ajuste sur la rétention constatée
           </h2>
           <p className="mt-4 max-w-3xl text-[15px] leading-relaxed text-muted">
@@ -146,8 +156,9 @@ export default function CederPage() {
             comptant plus élevée parce qu’il est couvert.
           </p>
           <p className="mt-4 text-[15px] leading-relaxed text-muted">
-            Honoraires de {FEE_LABEL}, dus uniquement si la cession se conclut. La
-            valorisation, l’annonce et la mise en relation ne coûtent rien.
+            Publier ne coûte rien. Option 1 : {SIMPLE_FEE_LABEL} de commission.
+            Option 2 : {VERIFIED_FEE_RANGE_LABEL} après vérification. Le paiement
+            passe par le séquestre dans les deux cas.
           </p>
           <div className="mt-7 flex flex-wrap gap-3">
             <Button asChild variant="primary">

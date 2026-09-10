@@ -30,6 +30,8 @@ const listingPublicInclude = {
           department: true,
           annualCommission: true,
           clientKey: true,
+          renewalDate: true,
+          effectiveDate: true,
         },
       },
     },

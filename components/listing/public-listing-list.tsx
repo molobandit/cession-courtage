@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ListingAdRow } from "@/components/listing/listing-ad-row";
+import { ListingAdCard } from "@/components/listing/listing-ad-card";
 import { formatCount } from "@/lib/format/number";
 import {
   EMPTY_FILTERS,
@@ -23,7 +23,7 @@ const SORT_LABELS: Record<SortKey, string> = {
 };
 
 const SELECT_CLASS =
-  "mt-2 h-11 w-full rounded-full border border-line bg-surface-alt px-4 text-[15px] text-ink";
+  "mt-2 h-11 w-full rounded-md border border-line bg-surface-alt px-4 text-[15px] text-ink";
 
 export function PublicListingList({
   listings,
@@ -71,7 +71,7 @@ export function PublicListingList({
 
   return (
     <>
-      <div className="mt-6 rounded-3xl border border-line bg-paper p-6">
+      <div className="mt-6 rounded-2xl border border-line bg-paper p-6">
         <div className="grid gap-4 lg:grid-cols-3">
           <div>
             <label htmlFor="carrier" className="block text-[15px] font-medium text-ink">
@@ -136,7 +136,7 @@ export function PublicListingList({
               value={zone}
               onChange={(e) => patch({ zone: e.target.value })}
               placeholder="Rhône, Nord, Île-de-France"
-              className="mt-2 h-11 w-full rounded-full border border-line bg-surface-alt px-4 text-[15px] text-ink"
+              className="mt-2 h-11 w-full rounded-md border border-line bg-surface-alt px-4 text-[15px] text-ink"
             />
           </div>
           <div>
@@ -149,7 +149,7 @@ export function PublicListingList({
               value={maxPrice}
               onChange={(e) => patch({ maxPrice: e.target.value })}
               placeholder="50 000"
-              className="tabular mt-2 h-11 w-full rounded-full border border-line bg-surface-alt px-4 text-right text-[15px] text-ink"
+              className="tabular mt-2 h-11 w-full rounded-md border border-line bg-surface-alt px-4 text-right text-[15px] text-ink"
             />
           </div>
           <div>
@@ -212,14 +212,14 @@ export function PublicListingList({
       </div>
 
       {visible.length === 0 ? (
-        <p className="mt-8 rounded-3xl border border-line bg-paper p-8 text-[15px] leading-relaxed text-muted">
+        <p className="mt-8 rounded-xl border border-line bg-paper p-8 text-[15px] leading-relaxed text-muted">
           Élargissez la compagnie, la branche ou le budget. Vous pouvez aussi déposer
           un mandat d’achat pour être prévenu dès qu’un dossier correspondant est publié.
         </p>
       ) : (
-        <ul className="mt-6 overflow-hidden rounded-3xl border border-line bg-paper">
+        <ul className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {visible.map((item) => (
-            <ListingAdRow key={item.id} item={item} />
+            <ListingAdCard key={item.id} item={item} />
           ))}
         </ul>
       )}

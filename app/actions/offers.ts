@@ -7,6 +7,7 @@ import { canBuy, getActor, isOriasVerified, listOffersForListing } from "@/lib/a
 import { ownsFirm } from "@/lib/authz/policies";
 import { isOfferWindowSealed } from "@/lib/authz/policies";
 import { ForbiddenError, UnauthenticatedError } from "@/lib/authz/errors";
+import { hasContactSubscription } from "@/lib/billing/contact-access";
 import { prisma } from "@/lib/prisma";
 import { firstIssue, offerIdSchema, offerSchema } from "@/lib/validations/actions";
 
@@ -26,6 +27,12 @@ export async function submitOfferAction(
 ): Promise<OfferFormState> {
   try {
     const actor = await requireBuyerActor();
+    if (!(await hasContactSubscription(actor))) {
+      return {
+        error:
+          "Un abonnement annuel est requis pour accéder au détail de l’offre, au contact et à la messagerie.",
+      };
+    }
     const parsed = offerSchema.safeParse({
       listingId: formData.get("listingId"),
       amount: formData.get("amount"),

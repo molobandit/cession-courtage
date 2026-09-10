@@ -16,6 +16,8 @@
 # next.js
 /.next/
 /out/
+# sorties de compilation alternatives (.next-prod, .next-d1, etc.)
+/.next-*/
 
 # production
 /build

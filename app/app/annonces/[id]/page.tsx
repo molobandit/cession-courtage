@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { OpenOffersButton, PublishListingButton, WithdrawListingButton } from "@/components/listing/listing-forms";
 import { MessageForm } from "@/components/deal/deal-forms";
+import { Button } from "@/components/ui/button";
 import {
   canSell,
   findMyListing,
@@ -43,7 +44,7 @@ export default async function SellerListingPage({ params }: { params: Promise<{ 
           Fiche publique
         </Link>
       </p>
-      <h1 className="mt-1 font-serif text-2xl text-navy">Annonce #{listing.publicNumber}</h1>
+      <h1 className="mt-1 text-2xl font-bold tracking-tight text-ink">Annonce #{listing.publicNumber}</h1>
       <p className="text-sm text-muted">
         {listing.portfolio.label} · {LISTING_STATUS_LABELS[listing.status]} · {formatEuro(listing.askingPrice)} ·{" "}
         {listing.displayedZone}
@@ -64,10 +65,13 @@ export default async function SellerListingPage({ params }: { params: Promise<{ 
         {listing.status !== "SOLD" && listing.status !== "UNDER_NEGOTIATION" ? (
           <WithdrawListingButton listingId={listing.id} />
         ) : null}
+        <Button asChild variant="outline" size="sm">
+          <Link href={`/app/annonces/${listing.id}/certification`}>Espace documentaire</Link>
+        </Button>
       </div>
 
       <section className="mt-6">
-        <h2 className="font-serif text-lg text-navy">Offres</h2>
+        <h2 className="text-lg font-semibold text-ink">Offres</h2>
         {offers.access === "sealed" ? (
           <p className="mt-2 border border-line bg-paper px-3 py-2 text-sm">
             Fenêtre en cours : montants et nombre d&apos;offres masqués, y compris pour vous.
@@ -105,7 +109,7 @@ export default async function SellerListingPage({ params }: { params: Promise<{ 
       </section>
 
       <section className="mt-6">
-        <h2 className="font-serif text-lg text-navy">Messages</h2>
+        <h2 className="text-lg font-semibold text-ink">Messages</h2>
         <ul className="mt-2 space-y-2 text-sm">
           {messages.map((m) => (
             <li key={m.id} className="border border-line bg-paper p-2">

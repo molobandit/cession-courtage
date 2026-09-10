@@ -17,24 +17,29 @@ export type Actor = {
 };
 
 export async function getActor(): Promise<Actor | null> {
-  const session = await auth();
-  const userId = session?.user?.id;
-  if (!userId) return null;
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: {
-      id: true,
-      email: true,
-      fullName: true,
-      role: true,
-      firmId: true,
-      oriasNumber: true,
-      oriasVerifiedAt: true,
-      kycStatus: true,
-      publicAlias: true,
-    },
-  });
-  return user;
+  try {
+    const session = await auth();
+    const userId = session?.user?.id;
+    if (!userId) return null;
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        fullName: true,
+        role: true,
+        firmId: true,
+        oriasNumber: true,
+        oriasVerifiedAt: true,
+        kycStatus: true,
+        publicAlias: true,
+      },
+    });
+    return user;
+  } catch (error) {
+    console.error("getActor", error);
+    return null;
+  }
 }
 
 export async function requireActor(): Promise<Actor> {

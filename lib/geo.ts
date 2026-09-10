@@ -31,6 +31,14 @@ export function geoForDepartment(department: string): DepartmentGeo | undefined 
   return BY_DEPT.get(department);
 }
 
+/** Departement a partir d'un code postal (grain max autorise pour le cabinet). */
+export function departmentFromPostalCode(postalCode: string): string {
+  const digits = postalCode.replace(/\D/g, "");
+  if (digits.startsWith("97") || digits.startsWith("98")) return digits.slice(0, 3);
+  if (digits.startsWith("20")) return "2A";
+  return digits.slice(0, 2).padStart(2, "0");
+}
+
 export function displayedZoneFor(departments: string[]): {
   displayedZone: string;
   isNationwide: boolean;

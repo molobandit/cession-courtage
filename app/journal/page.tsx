@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { SUCCESS_FEE_RATE } from "@/lib/billing/rates";
+import { VERIFIED_FEE_RANGE_LABEL } from "@/lib/billing/rates";
 import { OFFER_WINDOW_DAYS } from "@/lib/listing/constants";
 import { formatEuroWhole } from "@/lib/format/number";
 import {
@@ -15,8 +15,6 @@ export const metadata: Metadata = {
     "Repères de méthode sur la valorisation, la confidentialité et la cession d’un portefeuille de courtage d’assurance.",
   alternates: { canonical: "/journal" },
 };
-
-const FEE_LABEL = `${(SUCCESS_FEE_RATE * 100).toLocaleString("fr-FR")} % HT`;
 
 // Exemple chiffré, calculé avec le même moteur que /valoriser.
 const EXAMPLE_COMMISSIONS = 45000;
@@ -100,9 +98,9 @@ export default function JournalPage() {
             Commencez par une estimation
           </h2>
           <p className="mt-3 text-[15px] leading-relaxed text-muted">
-            L’estimation ne demande aucune inscription. Les honoraires de {FEE_LABEL}
-            {" "}
-            ne sont dus que si la cession se conclut.
+            L’estimation ne demande aucune inscription. L’option simple est sans
+            commission. L’option vérifiée facture {VERIFIED_FEE_RANGE_LABEL} si
+            la cession se conclut.
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <Button asChild variant="primary">

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { MemberPageHeader } from "@/components/app/member-page-header";
 import { CreateListingForm } from "@/components/listing/listing-forms";
 import { canSell, findMyPortfolio, getActor, isOriasVerified, listMyPortfolios } from "@/lib/authz";
 import { formatEuro } from "@/lib/format/fr";
@@ -9,13 +10,13 @@ export const metadata = { title: "Nouvelle annonce" };
 export default async function NewListingPage({
   searchParams,
 }: {
-  searchParams: Promise<{ portfolio?: string }>;
+  searchParams: Promise<{ portfolio?: string; certifier?: string }>;
 }) {
   const actor = await getActor();
   if (!actor) redirect("/connexion?next=/app/annonces/nouvelle");
   if (!isOriasVerified(actor)) redirect("/en-attente-orias");
   if (!canSell(actor)) redirect("/app");
-  const { portfolio: portfolioId } = await searchParams;
+  const { portfolio: portfolioId, certifier } = await searchParams;
   const portfolios = await listMyPortfolios(actor);
   const selected = portfolioId
     ? await findMyPortfolio(portfolioId, actor)
@@ -24,10 +25,15 @@ export default async function NewListingPage({
       : null;
   if (!selected) {
     return (
-      <main className="mx-auto max-w-3xl px-4 py-6">
-        <p className="text-sm text-muted">Importez d&apos;abord un portefeuille.</p>
-        <Link href="/app/import" className="text-sm underline-offset-2 hover:underline">
-          Import
+      <main className="mx-auto max-w-3xl px-4 py-6 sm:px-6 sm:py-8">
+        <MemberPageHeader title="Nouvelle annonce">
+          Importez d’abord un portefeuille pour publier sous alias.
+        </MemberPageHeader>
+        <Link
+          href="/app/import"
+          className="inline-flex min-h-11 items-center rounded-full bg-indigo px-5 text-[14px] font-semibold !text-white"
+        >
+          Importer un bordereau
         </Link>
       </main>
     );
@@ -36,12 +42,11 @@ export default async function NewListingPage({
   const asking = Math.min(200000, Math.max(2000, Math.round(mid)));
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-6">
-      <h1 className="font-serif text-2xl text-navy">Nouvelle annonce</h1>
-      <p className="mt-1 text-sm text-muted">
+    <main className="mx-auto max-w-3xl px-4 py-6 sm:px-6 sm:py-8">
+      <MemberPageHeader title="Nouvelle annonce">
         {selected.label} · commissions {formatEuro(selected.annualCommissions)} / an
         {selected.valuations[0] ? ` · médiane ${formatEuro(selected.valuations[0].midValue)}` : ""}
-      </p>
+      </MemberPageHeader>
       {portfolios.length > 1 ? (
         <p className="mt-2 text-sm">
           {portfolios.map((p) => (
@@ -52,7 +57,11 @@ export default async function NewListingPage({
         </p>
       ) : null}
       <div className="mt-4">
-        <CreateListingForm portfolioId={selected.id} defaultAsking={String(asking)} />
+        <CreateListingForm
+          portfolioId={selected.id}
+          defaultAsking={String(asking)}
+          defaultCertify={certifier === "1"}
+        />
       </div>
     </main>
   );

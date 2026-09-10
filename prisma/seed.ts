@@ -39,6 +39,7 @@ import {
 } from "./seed-helpers";
 import { ALGORITHM_VERSION } from "../lib/valuation/types";
 import { adjustedDeferredAmount } from "../lib/retention/adjust";
+import { buildCatalogListings, CATALOG_FIRM } from "../lib/listing/catalog-listings";
 
 let prisma: PrismaClient;
 let disposePlatform: (() => Promise<void>) | undefined;
@@ -1136,6 +1137,86 @@ async function main() {
       data: saveValuation(breakdown, def.portfolioId, def.id),
     });
   }
+
+  await prisma.firm.create({
+    data: {
+      id: CATALOG_FIRM.id,
+      legalName: CATALOG_FIRM.legalName,
+      siren: CATALOG_FIRM.siren,
+      legalForm: CATALOG_FIRM.legalForm,
+      address: CATALOG_FIRM.address,
+      postalCode: CATALOG_FIRM.postalCode,
+      city: CATALOG_FIRM.city,
+      department: CATALOG_FIRM.department,
+      region: CATALOG_FIRM.region,
+      foundedAt: new Date(CATALOG_FIRM.foundedAt),
+      headcount: CATALOG_FIRM.headcount,
+      annualRevenue: CATALOG_FIRM.annualRevenue,
+      distributionMode: DistributionMode.REMOTE,
+      complianceScore: CATALOG_FIRM.complianceScore,
+    },
+  });
+
+  for (const row of buildCatalogListings()) {
+    await prisma.portfolio.create({
+      data: {
+        id: row.portfolioId,
+        firmId: row.firmId,
+        label: row.label,
+        contractCount: row.contractCount,
+        clientCount: row.clientCount,
+        annualCommissions: row.annualCommissions,
+        averageAgeMonths: row.averageAgeMonths,
+        churnRate12m: row.churnRate12m,
+        importedAt: new Date(row.publishedAt),
+      },
+    });
+    await prisma.contractLine.createMany({
+      data: row.lines.map((line) => ({
+        id: line.id,
+        portfolioId: row.portfolioId,
+        carrier: line.carrier,
+        riskType: line.riskType as RiskType,
+        premium: line.premium,
+        commissionRate: line.commissionRate,
+        annualCommission: line.annualCommission,
+        effectiveDate: new Date(line.effectiveDate),
+        renewalDate: new Date(line.renewalDate),
+        clientSegment: line.clientSegment as ClientSegment,
+        postalCode: line.postalCode,
+        commissionType: line.commissionType as CommissionType,
+        clientKey: line.clientKey,
+        department: line.department,
+      })),
+    });
+    await prisma.listing.create({
+      data: {
+        id: row.listingId,
+        portfolioId: row.portfolioId,
+        askingPrice: row.askingPrice,
+        displayedZone: row.displayedZone,
+        status: ListingStatus.OFFERS_OPEN,
+        isPartial: row.isPartial,
+        publishedAt: new Date(row.publishedAt),
+        offerWindowClosesAt: new Date(row.offerWindowClosesAt),
+        publicNumber: row.publicNumber,
+        sellerSupportMonths: row.sellerSupportMonths,
+        departments: JSON.parse(row.departmentsJson) as string[],
+        regions: JSON.parse(row.regionsJson) as string[],
+        isNationwide: row.isNationwide,
+        createdAt: new Date(row.publishedAt),
+      },
+    });
+  }
+
+  try {
+    await prisma.$executeRawUnsafe(
+      `UPDATE Listing SET certificationStatus = 'CERTIFIED' WHERE id LIKE 'lst_catalog_%' AND CAST(substr(id, 13) AS INTEGER) % 7 = 0`,
+    );
+  } catch (error) {
+    console.warn("catalog certification skipped", error);
+  }
+  console.info("  catalog: 80 public listings (10101-10180)");
 
   // Chaque portefeuille porte sa propre valorisation, independamment de toute
   // annonce. Une valorisation rattachee a une annonce ne vaut que pour le

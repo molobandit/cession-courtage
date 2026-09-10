@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { MemberPageHeader } from "@/components/app/member-page-header";
 import { UploadPortfolioForm } from "@/components/import/upload-form";
 import { canSell, getActor, isOriasVerified, listMyImports } from "@/lib/authz";
 import { formatDate } from "@/lib/format/fr";
@@ -22,58 +23,50 @@ export default async function ImportIndexPage() {
   const imports = await listMyImports(actor);
 
   return (
-    <main className="mx-auto max-w-6xl px-4 py-6">
-      <p className="text-sm text-muted">
-        <Link href="/app" className="underline-offset-2 hover:underline">
-          Espace membre
-        </Link>
-        {" / "}
-        Import
-      </p>
-      <h1 className="mt-1 font-serif text-2xl text-navy">Importer un portefeuille</h1>
-      <p className="mt-1 max-w-2xl text-sm text-muted">
-        Déposez un bordereau anonymisé. Le grain le plus fin autorisé est le code postal : toute
-        colonne de nom, d&apos;e-mail, d&apos;adresse ou de téléphone entraîne un refus immédiat, et le
-        fichier n&apos;est pas conservé.
-      </p>
+    <main className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 sm:py-8">
+      <MemberPageHeader title="Importer un portefeuille">
+        Déposez un bordereau anonymisé. Le grain le plus fin autorisé est le
+        code postal : toute colonne de nom, d’e-mail, d’adresse ou de téléphone
+        entraîne un refus, et le fichier n’est pas conservé.
+      </MemberPageHeader>
 
-      <section className="mt-6 border border-line bg-paper p-4">
-        <h2 className="font-serif text-lg text-navy">Nouveau fichier</h2>
+      <section className="rounded-3xl border border-line bg-paper p-5 shadow-sm sm:p-6">
+        <h2 className="text-lg font-semibold text-ink">Nouveau fichier</h2>
         <div className="mt-3">
           <UploadPortfolioForm />
         </div>
       </section>
 
       <section className="mt-8">
-        <h2 className="font-serif text-lg text-navy">Imports récents</h2>
-        <div className="mt-2 overflow-x-auto border border-line bg-paper">
-          <table className="w-full text-sm">
-            <thead className="bg-surface-alt text-left text-xs uppercase tracking-wide text-muted">
+        <h2 className="text-lg font-semibold text-ink">Imports récents</h2>
+        <div className="mt-3 overflow-x-auto rounded-2xl border border-line bg-paper">
+          <table className="w-full text-[14px]">
+            <thead className="bg-surface-alt text-left text-[12px] text-muted">
               <tr>
-                <th className="px-2 py-1.5 font-medium">Fichier</th>
-                <th className="px-2 py-1.5 font-medium">Statut</th>
-                <th className="px-2 py-1.5 font-medium">Portefeuille</th>
-                <th className="px-2 py-1.5 font-medium">Date</th>
+                <th className="px-4 py-3 font-medium">Fichier</th>
+                <th className="px-4 py-3 font-medium">Statut</th>
+                <th className="px-4 py-3 font-medium">Portefeuille</th>
+                <th className="px-4 py-3 font-medium">Date</th>
               </tr>
             </thead>
             <tbody>
               {imports.length === 0 ? (
                 <tr>
-                  <td className="px-2 py-3 text-muted" colSpan={4}>
+                  <td className="px-4 py-4 text-muted" colSpan={4}>
                     Aucun import pour le moment.
                   </td>
                 </tr>
               ) : (
                 imports.map((item) => (
                   <tr key={item.id} className="border-t border-line">
-                    <td className="px-2 py-1.5">
-                      <Link href={`/app/import/${item.id}`} className="underline-offset-2 hover:underline">
+                    <td className="px-4 py-3">
+                      <Link href={`/app/import/${item.id}`} className="font-medium text-indigo-dark">
                         {item.originalFileName}
                       </Link>
                     </td>
-                    <td className="px-2 py-1.5">{STATUS_LABEL[item.status] ?? item.status}</td>
-                    <td className="px-2 py-1.5">{item.portfolio?.label ?? "Non associé"}</td>
-                    <td className="px-2 py-1.5">{formatDate(item.createdAt)}</td>
+                    <td className="px-4 py-3">{STATUS_LABEL[item.status] ?? item.status}</td>
+                    <td className="px-4 py-3">{item.portfolio?.label ?? "Non associé"}</td>
+                    <td className="px-4 py-3">{formatDate(item.createdAt)}</td>
                   </tr>
                 ))
               )}

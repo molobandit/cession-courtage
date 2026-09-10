@@ -8,9 +8,11 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-indigo text-white hover:bg-indigo-dark",
-        primary: "bg-indigo text-white hover:bg-indigo-dark",
-        copper: "bg-indigo-dark text-white hover:bg-indigo",
+        default:
+          "bg-indigo !text-white hover:bg-indigo-dark",
+        primary:
+          "bg-indigo !text-white hover:bg-indigo-dark",
+        copper: "bg-indigo !text-white hover:bg-indigo-dark",
         outline: "border border-line bg-surface text-ink hover:bg-surface-alt",
         ghost: "text-ink hover:bg-surface-alt",
         link: "text-ink underline-offset-4 hover:underline",
@@ -18,7 +20,7 @@ const buttonVariants = cva(
       size: {
         default: "h-10 px-4",
         sm: "h-9 px-3 text-sm",
-        lg: "h-12 px-6 text-base",
+        lg: "h-12 px-6 text-[15px]",
         icon: "h-10 w-10",
       },
     },
@@ -35,7 +37,7 @@ export function Button({
 }: React.ComponentProps<"button"> &
   VariantProps<typeof buttonVariants> & { asChild?: boolean }) {
   const Comp = asChild ? Slot : "button";
-  return <Comp className={cn(buttonVariants({ variant, size, className }))} {...props} />;
+  return <Comp className={cn(buttonVariants({ variant, size }), className)} {...props} />;
 }
 
 export { buttonVariants };

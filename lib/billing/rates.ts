@@ -3,20 +3,33 @@
  * jamais d'un nombre en dur dans une page.
  */
 
-/** Honoraires preleves uniquement a la vente conclue. */
-export const SUCCESS_FEE_RATE = 0.08;
+/** Option 1 : annonce simple, sans verification detaillee, sans commission. */
+export const SIMPLE_FEE_RATE = 0;
 
-/** Depot exigé pour dévoiler les coordonnées. Simulé : aucun encaissement. */
+/** Option 2 : portefeuille verifie, honoraires HT a la vente conclue. */
+export const VERIFIED_FEE_RATE_MIN = 0.125;
+export const VERIFIED_FEE_RATE_MAX = 0.15;
+
+/**
+ * Defaut des dossiers (borne basse de l'option 2).
+ * Conservee pour le seed et les enregistrements existants.
+ */
+export const SUCCESS_FEE_RATE = VERIFIED_FEE_RATE_MIN;
+
+export const SIMPLE_FEE_LABEL = "0 %";
+export const VERIFIED_FEE_RANGE_LABEL = "12,5 à 15 % HT";
+
+/** Depot pour reveler l'identite du vendeur. Simule : aucun encaissement. */
 export const INTEREST_DEPOSIT_RATE = 0.025;
 export const INTEREST_DEPOSIT_LABEL = "2,5 %";
 
-/** Abonnement acquereur, hors taxes, par an. */
-export const GROWTH_PLAN_ANNUAL_EUR = 190;
+/** Abonnement annuel obligatoire, HT, pour le detail de l'offre (contact, messages). */
+export const GROWTH_PLAN_ANNUAL_EUR = 250;
 
-/** Le forfait gratuit ne preleve pas d'honoraires differents : seul le quota change. */
+/** Le forfait gratuit ne preleve pas d'honoraires differents : seul le contact change. */
 export const FREE_PLAN_DEAL_QUOTA = 3;
 
-/** Plancher d'honoraires : sous ce montant un dossier ne couvre pas son cout. */
+/** Plancher d'honoraires, option 2 uniquement. */
 export const SUCCESS_FEE_FLOOR_EUR = 900;
 
 export type PlanKey = "FREE" | "GROWTH";
@@ -32,29 +45,38 @@ export type PlanDefinition = {
 export const PLANS: Record<PlanKey, PlanDefinition> = {
   FREE: {
     key: "FREE",
-    label: "Découverte",
+    label: "Gratuit",
     annualPriceEur: 0,
     dealQuota: FREE_PLAN_DEAL_QUOTA,
-    successFeeRate: SUCCESS_FEE_RATE,
+    successFeeRate: SIMPLE_FEE_RATE,
   },
   GROWTH: {
     key: "GROWTH",
-    label: "Croissance",
+    label: "Abonnement",
     annualPriceEur: GROWTH_PLAN_ANNUAL_EUR,
     dealQuota: null,
     successFeeRate: SUCCESS_FEE_RATE,
   },
 };
 
-/** Depot simule pour reveler les coordonnees. Aucun encaissement. */
+export function percentHtLabel(rate: number): string {
+  return `${(rate * 100).toLocaleString("fr-FR")} % HT`;
+}
+
+/** Depot simule historique. Aucun encaissement. */
 export function interestDepositFor(askingPriceEur: number): number {
   if (!Number.isFinite(askingPriceEur) || askingPriceEur <= 0) return 0;
   return Math.round(askingPriceEur * INTEREST_DEPOSIT_RATE * 100) / 100;
 }
 
-/** Honoraires dus sur un prix de cession, plancher applique. */
-export function successFeeFor(salePriceEur: number): number {
+/** Honoraires dus sur un prix de cession. Taux 0 = option 1, sans plancher. */
+export function successFeeFor(
+  salePriceEur: number,
+  rate: number = SUCCESS_FEE_RATE,
+): number {
   if (!Number.isFinite(salePriceEur) || salePriceEur <= 0) return 0;
-  const raw = salePriceEur * SUCCESS_FEE_RATE;
-  return Math.max(SUCCESS_FEE_FLOOR_EUR, Math.round(raw * 100) / 100);
+  if (rate <= 0) return 0;
+  const raw = salePriceEur * rate;
+  const rounded = Math.round(raw * 100) / 100;
+  return Math.max(SUCCESS_FEE_FLOOR_EUR, rounded);
 }

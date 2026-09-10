@@ -11,6 +11,7 @@ import { rematchListing } from "@/lib/matching/run";
 import { prisma } from "@/lib/prisma";
 import { OFFER_WINDOW_DAYS } from "@/lib/listing/constants";
 import { nextListingPublicNumber } from "@/lib/listing/next-public-number";
+import { persistListingBriefFields } from "@/lib/listing/brief-fields";
 import { firstIssue, listingCreateSchema } from "@/lib/validations/actions";
 import { valuePortfolio } from "@/lib/valuation/run";
 
@@ -35,6 +36,15 @@ export async function createListingAction(
       portfolioId: formData.get("portfolioId"),
       askingPrice: formData.get("askingPrice"),
       sellerSupportMonths: formData.get("sellerSupportMonths") ?? 0,
+      presentation: formData.get("presentation") ?? "",
+      cessionMotive: formData.get("cessionMotive") ?? "",
+      negotiable: formData.get("negotiable") ?? "yes",
+      certificationRequested: formData.get("certificationRequested"),
+      portfolioKind: formData.get("portfolioKind") ?? "",
+      branchActivity: formData.get("branchActivity") ?? "",
+      desiredCessionDate: formData.get("desiredCessionDate") ?? "",
+      precompte: formData.get("precompte") ?? "",
+      precompteAmount: formData.get("precompteAmount") ?? "",
     });
     if (!parsed.success) return { error: firstIssue(parsed.error) };
     const { portfolioId, askingPrice: asking } = parsed.data;
@@ -63,6 +73,17 @@ export async function createListingAction(
       },
     });
     await valuePortfolio(portfolio.id, listing.id);
+    await persistListingBriefFields(listing.id, {
+      presentation: parsed.data.presentation,
+      cessionMotive: parsed.data.cessionMotive,
+      negotiable: parsed.data.negotiable,
+      certificationRequested: parsed.data.certificationRequested,
+      portfolioKind: parsed.data.portfolioKind,
+      branchActivity: parsed.data.branchActivity,
+      desiredCessionDate: parsed.data.desiredCessionDate,
+      precompte: parsed.data.precompte,
+      precompteAmount: parsed.data.precompteAmount,
+    });
     destination = `/app/annonces/${listing.id}`;
   } catch (error) {
     return { error: error instanceof Error ? error.message : "Création impossible." };

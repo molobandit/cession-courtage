@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CertifiedBadge } from "@/components/listing/certified-badge";
 import { formatCount, formatEuroWhole } from "@/lib/format/number";
 import type { PublicListingCard } from "@/lib/listing/public-card";
 
@@ -23,11 +24,7 @@ export function ListingAdRow({ item }: { item: PublicListingCard }) {
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <p className="tabular font-medium text-ink">Portefeuille #{item.publicNumber}</p>
-            {item.certified ? (
-              <span className="rounded-full bg-indigo px-2.5 py-0.5 text-sm font-medium text-white">
-                Certifié
-              </span>
-            ) : null}
+            {item.certified ? <CertifiedBadge compact /> : null}
             {item.isPartial ? (
               <span className="rounded-full border border-line px-2.5 py-0.5 text-sm text-muted">
                 Cession partielle
@@ -44,7 +41,7 @@ export function ListingAdRow({ item }: { item: PublicListingCard }) {
           </p>
           {closing ? <p className="mt-2 text-sm text-muted">{closing}</p> : null}
         </div>
-        <p className="tabular shrink-0 font-serif text-xl font-semibold text-ink">
+        <p className="tabular shrink-0 text-xl font-bold text-ink">
           {formatEuroWhole(item.askingPrice)}
         </p>
       </Link>

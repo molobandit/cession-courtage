@@ -42,7 +42,7 @@ export function SummaryList({
   return (
     <section className="mt-12">
       <div className="flex flex-wrap items-baseline justify-between gap-3">
-        <h2 className="font-serif text-xl font-semibold text-ink">
+        <h2 className="text-xl font-bold tracking-tight text-ink">
           {title}
           {rows.length > 0 ? (
             <span className="tabular ml-2.5 text-[15px] font-normal text-muted">
@@ -61,7 +61,7 @@ export function SummaryList({
       </div>
 
       {rows.length === 0 ? (
-        <div className="mt-4 rounded-3xl border border-line bg-paper p-6">
+        <div className="mt-4 rounded-2xl border border-line bg-paper p-6">
           <p className="text-[15px] leading-relaxed text-muted">{empty.text}</p>
           <Link
             href={empty.href}
@@ -77,7 +77,7 @@ export function SummaryList({
               <li key={row.id}>
                 <Link
                   href={row.href}
-                  className="block rounded-3xl border border-line bg-paper p-5 transition-colors hover:border-indigo"
+                  className="block rounded-2xl border border-line bg-paper p-5 shadow-sm transition-colors hover:border-indigo"
                 >
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   breakdownBy,
   dominantSegment,
+  groupMaturityByYear,
   herfindahl,
   marketPosition,
   maturitySchedule,
@@ -116,6 +117,22 @@ describe("maturitySchedule", () => {
       new Date("2026-09-01T00:00:00Z"),
     );
     expect(buckets.every((b) => b.contracts === 0)).toBe(true);
+  });
+});
+
+describe("groupMaturityByYear", () => {
+  it("regroupe les mois en totaux annuels", () => {
+    const buckets = maturitySchedule(
+      [
+        line({ renewalDate: new Date("2026-10-15T00:00:00Z"), annualCommission: 40 }),
+        line({ renewalDate: new Date("2027-03-02T00:00:00Z"), annualCommission: 60 }),
+      ],
+      new Date("2026-09-01T00:00:00Z"),
+    );
+    const years = groupMaturityByYear(buckets);
+    expect(years.map((y) => y.year)).toEqual([2026, 2027]);
+    expect(years.find((y) => y.year === 2026)).toMatchObject({ contracts: 1, commissions: 40 });
+    expect(years.find((y) => y.year === 2027)).toMatchObject({ contracts: 1, commissions: 60 });
   });
 });
 

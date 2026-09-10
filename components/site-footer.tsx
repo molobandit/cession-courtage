@@ -1,5 +1,9 @@
+"use client";
+
 import Link from "next/link";
-import { SUCCESS_FEE_RATE } from "@/lib/billing/rates";
+import { usePathname } from "next/navigation";
+import { VERIFIED_FEE_RANGE_LABEL } from "@/lib/billing/rates";
+import { BrandMark } from "@/components/brand-mark";
 import { BRAND_NAME } from "@/lib/site";
 
 const COLUMNS = [
@@ -18,6 +22,7 @@ const COLUMNS = [
       { href: "/acquerir", label: "Parcours acquéreur" },
       { href: "/annonces", label: "Annonces en ligne" },
       { href: "/investisseurs", label: "Espace investisseurs" },
+      { href: "/investisseurs/opportunites", label: "Opportunités" },
       { href: "/inscription", label: "Déposer un mandat" },
     ],
   },
@@ -39,27 +44,34 @@ const COLUMNS = [
 ];
 
 export function SiteFooter() {
-  const fee = `${(SUCCESS_FEE_RATE * 100).toLocaleString("fr-FR")} % HT`;
+  const path = usePathname();
+  if (path.startsWith("/app")) return null;
+
   return (
-    <footer className="mt-20 border-t border-charcoal-muted bg-charcoal text-cream">
+    <footer className="bg-gradient-to-br from-deep via-deep to-deep-soft text-white">
       <div className="mx-auto max-w-6xl px-4 py-12">
         <div className="grid gap-10 lg:grid-cols-[1.4fr_repeat(4,1fr)]">
           <div>
-            <p className="font-serif text-lg font-semibold">{BRAND_NAME}</p>
-            <p className="mt-3 max-w-xs text-[15px] leading-relaxed text-cream/70">
-              Place de marché réservée aux courtiers immatriculés ORIAS. Gratuit
-              jusqu’à la vente, honoraires de {fee} au succès.
+            <p className="flex items-center gap-2 text-[15px] font-semibold">
+              <BrandMark className="h-7 w-7" />
+              {BRAND_NAME}
+            </p>
+            <p className="mt-3 max-w-xs text-[14px] leading-relaxed text-white/70">
+              Place de marché réservée aux courtiers immatriculés ORIAS. Publier
+              est gratuit. Abonnement annuel pour le détail de l’offre. Le
+              vendeur reste anonyme jusqu’au dépôt. Option vérifiée :{" "}
+              {VERIFIED_FEE_RANGE_LABEL}.
             </p>
           </div>
           {COLUMNS.map((column) => (
             <nav key={column.title} aria-label={column.title}>
-              <p className="text-[13px] font-medium uppercase tracking-[0.14em] text-indigo-soft">
+              <p className="text-[12px] font-semibold uppercase tracking-[0.08em] text-indigo-line">
                 {column.title}
               </p>
               <ul className="mt-3 space-y-2">
                 {column.links.map((link) => (
                   <li key={link.href}>
-                    <Link href={link.href} className="text-[15px] text-cream/75 hover:text-indigo-soft">
+                    <Link href={link.href} className="text-[14px] text-white/70 hover:text-white">
                       {link.label}
                     </Link>
                   </li>
@@ -69,8 +81,8 @@ export function SiteFooter() {
           ))}
         </div>
 
-        <div className="mt-10 border-t border-cream/10 pt-6">
-          <p className="text-sm leading-relaxed text-cream/65">
+        <div className="mt-10 border-t border-white/15 pt-6">
+          <p className="text-[13px] leading-relaxed text-white/65">
             La plateforme met en relation des professionnels. Elle n’est partie à
             aucune transaction, n’exerce aucune activité d’intermédiation en
             assurance et ne fournit aucun conseil en investissement. Les

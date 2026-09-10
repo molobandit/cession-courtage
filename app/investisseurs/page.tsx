@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { InvestorInquiryForm } from "@/components/investor/inquiry-form";
+import { Button } from "@/components/ui/button";
 import { BRAND_NAME } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Investisseurs",
   description:
-    "Fonds, holdings et courtiers en croissance : indiquez votre ticket et vos zones. Les dossiers vous sont présentés sous alias.",
+    "Fonds, holdings, family offices et investisseurs privés : identifiez des opportunités de reprise ou participez au financement.",
   alternates: { canonical: "/investisseurs" },
 };
 
@@ -15,31 +17,36 @@ export default function InvestisseursPage() {
       <section className="border-y border-line bg-paper">
         <div className="mx-auto max-w-3xl px-4 py-14">
           <p className="text-[13px] font-medium uppercase tracking-[0.18em] text-indigo-dark">
-            Troisième voie
+            Troisième rôle
           </p>
-          <h1 className="mt-4 font-serif text-4xl font-semibold leading-tight text-ink">
-            Investir dans un portefeuille de courtage
+          <h1 className="mt-4 text-4xl font-bold tracking-tight leading-tight text-ink">
+            Je suis investisseur
           </h1>
           <p className="mt-5 text-[15px] leading-relaxed text-muted">
-            {BRAND_NAME} s’adresse aussi aux fonds, holdings et courtiers en
-            croissance. Vous ne voyez jamais de donnée nominative de client final.
-            Les dossiers restent sous alias jusqu’au dépôt prévu pour les
-            coordonnées.
+            {BRAND_NAME} s’adresse aux investisseurs privés, family offices,
+            sociétés d’investissement, entrepreneurs et professionnels du secteur.
+            Vous identifiez des opportunités de reprise ou participez au
+            financement, sans jamais voir de donnée nominative de client final.
           </p>
+          <div className="mt-7">
+            <Button asChild variant="outline">
+              <Link href="/investisseurs/opportunites">Voir les opportunités</Link>
+            </Button>
+          </div>
         </div>
       </section>
       <div className="mx-auto grid max-w-5xl gap-10 px-4 py-12 lg:grid-cols-[1fr_1.1fr] lg:items-start">
         <div>
-          <h2 className="font-serif text-2xl font-semibold text-ink">Ce que nous présentons</h2>
+          <h2 className="text-2xl font-bold tracking-tight text-ink">Règles pour les non-métiers</h2>
           <ul className="mt-5 space-y-4 text-[15px] leading-relaxed text-muted">
-            <li>Des portefeuilles dont le ticket est dans votre fourchette.</li>
-            <li>La zone, le mix de branches, les compagnies et les commissions annuelles.</li>
-            <li>Le badge certifié lorsqu’une revue interne a déjà eu lieu.</li>
-            <li>Aucune raison sociale avant le dépôt prévu pour les coordonnées.</li>
+            <li>Un pourcentage de mise en gestion s’applique si vous n’êtes pas du métier.</li>
+            <li>Le positionnement est conservé au minimum un an.</li>
+            <li>Vous pouvez céder vos parts à tout moment ; un acquéreur peut les reprendre.</li>
+            <li>Les dossiers restent sous alias jusqu’au dépôt prévu pour les coordonnées.</li>
           </ul>
         </div>
-        <div className="rounded-3xl border border-line bg-paper p-7">
-          <h2 className="font-serif text-xl font-semibold text-ink">Se positionner</h2>
+        <div className="rounded-xl border border-line bg-paper p-7">
+          <h2 className="text-xl font-semibold text-ink">Se positionner</h2>
           <p className="mt-2 text-[15px] text-muted">
             Grain maximal : votre structure et votre contact professionnel.
           </p>

@@ -50,6 +50,14 @@ export const offerSchema = z.object({
 
 export const offerIdSchema = z.object({ offerId: idSchema });
 
+export const CESSION_MOTIVES = [
+  "retraite",
+  "recentrage",
+  "cession_partielle",
+  "transmission",
+  "autre",
+] as const;
+
 export const listingCreateSchema = z.object({
   portfolioId: idSchema,
   // Le prix demandé s'exprime en euros entiers.
@@ -63,6 +71,53 @@ export const listingCreateSchema = z.object({
     .int("Durée d’accompagnement invalide.")
     .min(0)
     .max(24, "L’accompagnement ne peut pas dépasser 24 mois."),
+  presentation: z
+    .string()
+    .trim()
+    .max(8000, "Présentation trop longue (8 000 caractères au maximum).")
+    .optional()
+    .transform((v) => (v && v.length > 0 ? v : undefined)),
+  cessionMotive: z
+    .enum(CESSION_MOTIVES)
+    .optional()
+    .or(z.literal(""))
+    .transform((v) => (v ? v : undefined)),
+  negotiable: z
+    .enum(["yes", "no"])
+    .optional()
+    .transform((v) => v !== "no"),
+  certificationRequested: z.preprocess(
+    (value) => value === "on" || value === "true" || value === "1" || value === true,
+    z.boolean(),
+  ),
+  portfolioKind: z
+    .string()
+    .trim()
+    .max(80)
+    .optional()
+    .transform((v) => (v && v.length > 0 ? v : undefined)),
+  branchActivity: z
+    .string()
+    .trim()
+    .max(80)
+    .optional()
+    .transform((v) => (v && v.length > 0 ? v : undefined)),
+  desiredCessionDate: z
+    .string()
+    .trim()
+    .max(40)
+    .optional()
+    .transform((v) => (v && v.length > 0 ? v : undefined)),
+  precompte: z
+    .enum(["yes", "no", ""])
+    .optional()
+    .transform((v) => (v === "yes" ? true : v === "no" ? false : null)),
+  precompteAmount: z
+    .string()
+    .trim()
+    .max(40)
+    .optional()
+    .transform((v) => (v && v.length > 0 ? v : undefined)),
 });
 
 export const retentionReportSchema = z
@@ -98,10 +153,21 @@ export const INVESTOR_TYPES = [
   "GROWING_BROKER",
   "HOLDING",
   "FAMILY_OFFICE",
+  "PRIVATE",
+  "ENTREPRENEUR",
   "OTHER",
 ] as const;
 
-export const INVESTOR_INTERVENTIONS = ["ACQUISITION", "PARTNERSHIP", "BOTH"] as const;
+export const INVESTOR_INTERVENTIONS = [
+  "FINANCING",
+  "EQUITY",
+  "DEBT",
+  "CO_INVEST",
+  "OTHER",
+  "ACQUISITION",
+  "PARTNERSHIP",
+  "BOTH",
+] as const;
 
 export const investorInquirySchema = z
   .object({
@@ -115,6 +181,12 @@ export const investorInquirySchema = z
       .trim()
       .min(2, "Indiquez votre nom.")
       .max(80, "Nom trop long."),
+    jobTitle: z
+      .string()
+      .trim()
+      .max(80)
+      .optional()
+      .transform((v) => (v && v.length > 0 ? v : undefined)),
     email: z
       .string()
       .trim()
@@ -136,9 +208,21 @@ export const investorInquirySchema = z
       .trim()
       .min(2, "Indiquez au moins une zone.")
       .max(200, "Zones trop longues."),
+    sectors: z
+      .string()
+      .trim()
+      .max(200)
+      .optional()
+      .transform((v) => (v && v.length > 0 ? v : undefined)),
     intervention: z.enum(INVESTOR_INTERVENTIONS, {
       message: "Précisez le type d’intervention.",
     }),
+    listingId: z
+      .string()
+      .trim()
+      .max(64)
+      .optional()
+      .transform((v) => (v && v.length > 0 ? v : undefined)),
   })
   .refine(
     (data) =>

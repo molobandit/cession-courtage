@@ -3,10 +3,12 @@ import {
   CommissionType,
   DealStage,
   EscrowStage,
+  KycStatus,
   ListingStatus,
   MatchStatus,
   OfferStatus,
   RiskType,
+  UserRole,
   type DistributionMode,
   type FinancingMode,
 } from "@prisma/client";
@@ -112,4 +114,18 @@ export const FINANCING_LABELS: Record<FinancingMode, string> = {
   CASH: "Comptant",
   CREDIT: "Crédit",
   BOTH: "Comptant ou crédit",
+};
+
+export const ROLE_LABELS: Record<UserRole, string> = {
+  SELLER: "Cédant",
+  BUYER: "Acquéreur",
+  BOTH: "Cédant et acquéreur",
+  ADMIN: "Administrateur",
+};
+
+export const KYC_STATUS_LABELS: Record<KycStatus, string> = {
+  NONE: "Non commencé",
+  PENDING: "En cours",
+  VERIFIED: "Vérifié",
+  REJECTED: "Refusé",
 };

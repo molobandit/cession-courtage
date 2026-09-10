@@ -83,7 +83,7 @@ export function MarketPositionCard({ position }: { position: MarketPosition }) {
 
       <p className="tabular mt-4 font-serif text-4xl font-semibold text-ink">
         {position.effective.toLocaleString("fr-FR", { minimumFractionDigits: 2 })}
-        <span className="ml-2 text-lg font-normal text-muted">fois les commissions</span>
+        <span className="ml-2 text-lg font-normal text-muted"> fois les commissions</span>
       </p>
 
       <div className="relative mt-6 h-2.5 w-full rounded-full bg-surface-alt">

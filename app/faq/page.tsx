@@ -2,10 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
-  FREE_PLAN_DEAL_QUOTA,
   GROWTH_PLAN_ANNUAL_EUR,
+  INTEREST_DEPOSIT_LABEL,
+  SIMPLE_FEE_LABEL,
   SUCCESS_FEE_FLOOR_EUR,
-  SUCCESS_FEE_RATE,
+  VERIFIED_FEE_RANGE_LABEL,
 } from "@/lib/billing/rates";
 import { ASKING_MAX, ASKING_MIN, OFFER_WINDOW_DAYS } from "@/lib/listing/constants";
 import { formatEuroWhole } from "@/lib/format/number";
@@ -16,8 +17,6 @@ export const metadata: Metadata = {
     "Confidentialité, valorisation, offres scellées, tarifs, transfert ORIAS et rétention : les réponses aux questions que se posent les courtiers.",
   alternates: { canonical: "/faq" },
 };
-
-const FEE_LABEL = `${(SUCCESS_FEE_RATE * 100).toLocaleString("fr-FR")} % HT`;
 
 type Question = { q: string; a: string };
 type Section = { title: string; intro: string; questions: Question[] };
@@ -33,7 +32,7 @@ const SECTIONS: Section[] = [
       },
       {
         q: "À quel moment mon identité est-elle révélée ?",
-        a: "À la signature de la lettre d’intention, jamais avant. Avant ce palier, l’acquéreur ne connaît de vous qu’un alias. Le contrôle s’applique au niveau des requêtes, pas seulement de l’affichage : un utilisateur qui devine un identifiant n’obtient rien.",
+        a: `Après le dépôt de ${INTEREST_DEPOSIT_LABEL} du prix demandé, jamais avant. Jusque-là, l’acquéreur ne connaît de vous qu’un alias. L’abonnement ouvre le contact et les messages, sans dévoiler votre nom.`,
       },
       {
         q: "Puis-je savoir qui a consulté mon dossier ?",
@@ -121,19 +120,23 @@ const SECTIONS: Section[] = [
     questions: [
       {
         q: "Combien coûte la mise en vente ?",
-        a: "Rien. La valorisation, l’annonce, la mise en relation et la salle de données sont gratuites. Vous ne payez que si la cession se conclut.",
+        a: "Déposer une annonce est gratuit. L’option simple ne prend aucune commission. L’option vérifiée facture des honoraires uniquement si la vente aboutit.",
       },
       {
         q: "Quels sont les honoraires ?",
-        a: `${FEE_LABEL} du prix de cession, dus par le cédant à la vente conclue, avec un plancher de ${formatEuroWhole(SUCCESS_FEE_FLOOR_EUR)} sur les très petits dossiers. Si vous renoncez, si aucune offre ne vous convient ou si vous retirez votre annonce, vous ne devez rien.`,
+        a: `Option 1 : ${SIMPLE_FEE_LABEL} de commission. Les données du portefeuille sont celles déclarées par le cédant : pas de contrôle Kbis, pièce d’identité ni bordereaux. Option 2 : ${VERIFIED_FEE_RANGE_LABEL}, avec contrôle de la société (Kbis), de l’identité du représentant, du justificatif ORIAS du dossier, des états de portefeuille et des bordereaux. Plancher de ${formatEuroWhole(SUCCESS_FEE_FLOOR_EUR)} sur les très petits dossiers de l’option 2. Dans les deux cas, le numéro ORIAS est contrôlé à l’inscription et le paiement passe par un séquestre, sans frais de séquestre supplémentaires.`,
+      },
+      {
+        q: "Que contrôlez-vous concrètement ?",
+        a: `Trois niveaux distincts. L’inscription contrôle le numéro ORIAS. Le dépôt de ${INTEREST_DEPOSIT_LABEL} révèle qui est le cédant, sans valider ses pièces. L’option vérifiée relit le Kbis, la pièce d’identité, le justificatif ORIAS du dossier et les documents du portefeuille. Ces pièces ne sont jamais publiées au catalogue.`,
       },
       {
         q: "Un acquéreur doit-il payer ?",
-        a: `La consultation des annonces, le dépôt d’un mandat et la mise en relation sont gratuits, dans la limite de ${FREE_PLAN_DEAL_QUOTA} dossiers suivis en parallèle. Le forfait Croissance, à ${GROWTH_PLAN_ANNUAL_EUR} € HT par an, lève cette limite et donne accès au mandat exclusif.`,
+        a: `Consulter le catalogue est gratuit. Un abonnement de ${GROWTH_PLAN_ANNUAL_EUR.toLocaleString("fr-FR")} € HT par an est obligatoire pour accéder au détail de l’offre (contact, messages). Le vendeur reste anonyme jusqu’au dépôt de ${INTEREST_DEPOSIT_LABEL} du prix. Aucun encaissement sur cette démo.`,
       },
       {
-        q: "Y a-t-il des frais annexes ?",
-        a: "Non. Aucun frais de dossier, aucun supplément pour la salle de données, l’accord de confidentialité ou le suivi des étapes.",
+        q: "Quand l’argent est-il débloqué ?",
+        a: "Les fonds restent sous séquestre jusqu’à ce que l’acquéreur ait le portefeuille en sa possession. Si la vente n’aboutit pas, le dépôt et les fonds consignés sont restitués à l’acquéreur. Aucun paiement réel n’est traité sur cette démo.",
       },
     ],
   },

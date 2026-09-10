@@ -9,43 +9,44 @@ import { Label } from "@/components/ui/label";
 const initial: InvestorFormState = {};
 
 const FIELD =
-  "mt-2 h-11 w-full rounded-full border border-line bg-surface-alt px-4 text-[15px] text-ink";
+  "mt-2 h-11 w-full rounded-md border border-line bg-surface-alt px-4 text-[15px] text-ink";
 
-export function InvestorInquiryForm() {
+export function InvestorInquiryForm({ listingId }: { listingId?: string }) {
   const [state, action, pending] = useActionState(createInvestorInquiryAction, initial);
 
   if (state.ok) {
     return (
-      <p className="rounded-3xl border border-line bg-indigo-soft p-6 text-[15px] leading-relaxed text-ink">
-        Votre manifestation d’intérêt est enregistrée. Nous vous recontactons
-        uniquement sur les dossiers correspondant à vos critères, sous alias, sans
-        jamais transmettre de donnée nominative de client final.
+      <p className="rounded-xl border border-line bg-indigo-soft p-6 text-[15px] leading-relaxed text-ink">
+        Votre positionnement est enregistré. Nous vous recontactons uniquement
+        sur les dossiers correspondant à vos critères, sous alias, sans donnée
+        nominative de client final.
       </p>
     );
   }
 
   return (
     <form action={action} className="grid gap-5">
+      {listingId ? <input type="hidden" name="listingId" value={listingId} /> : null}
       <div className="grid gap-5 sm:grid-cols-2">
         <div>
           <Label htmlFor="organisation" className="text-[15px] font-medium normal-case tracking-normal text-ink">
-            Structure
+            Nom / société
           </Label>
           <Input id="organisation" name="organisation" required className={FIELD} />
         </div>
         <div>
           <Label htmlFor="fullName" className="text-[15px] font-medium normal-case tracking-normal text-ink">
-            Nom
+            Nom et prénom
           </Label>
           <Input id="fullName" name="fullName" required className={FIELD} />
         </div>
       </div>
       <div className="grid gap-5 sm:grid-cols-2">
         <div>
-          <Label htmlFor="email" className="text-[15px] font-medium normal-case tracking-normal text-ink">
-            E-mail professionnel
+          <Label htmlFor="jobTitle" className="text-[15px] font-medium normal-case tracking-normal text-ink">
+            Fonction
           </Label>
-          <Input id="email" name="email" type="email" required className={FIELD} />
+          <Input id="jobTitle" name="jobTitle" className={FIELD} />
         </div>
         <div>
           <Label htmlFor="phone" className="text-[15px] font-medium normal-case tracking-normal text-ink">
@@ -55,15 +56,23 @@ export function InvestorInquiryForm() {
         </div>
       </div>
       <div>
+        <Label htmlFor="email" className="text-[15px] font-medium normal-case tracking-normal text-ink">
+          E-mail
+        </Label>
+        <Input id="email" name="email" type="email" required className={FIELD} />
+      </div>
+      <div>
         <Label htmlFor="investorType" className="text-[15px] font-medium normal-case tracking-normal text-ink">
-          Profil
+          Type d’investisseur
         </Label>
         <select id="investorType" name="investorType" required className={FIELD}>
           <option value="">Choisir</option>
-          <option value="GROWING_BROKER">Courtier en croissance</option>
-          <option value="HOLDING">Holding de courtage</option>
-          <option value="FUND">Fonds</option>
+          <option value="PRIVATE">Investisseur privé / particulier</option>
           <option value="FAMILY_OFFICE">Family office</option>
+          <option value="FUND">Société d’investissement / fonds</option>
+          <option value="ENTREPRENEUR">Entrepreneur</option>
+          <option value="GROWING_BROKER">Professionnel du secteur</option>
+          <option value="HOLDING">Holding</option>
           <option value="OTHER">Autre</option>
         </select>
       </div>
@@ -95,7 +104,7 @@ export function InvestorInquiryForm() {
       </div>
       <div>
         <Label htmlFor="zones" className="text-[15px] font-medium normal-case tracking-normal text-ink">
-          Zones visées
+          Zone géographique
         </Label>
         <Input
           id="zones"
@@ -106,19 +115,32 @@ export function InvestorInquiryForm() {
         />
       </div>
       <div>
+        <Label htmlFor="sectors" className="text-[15px] font-medium normal-case tracking-normal text-ink">
+          Secteurs recherchés
+        </Label>
+        <Input
+          id="sectors"
+          name="sectors"
+          placeholder="IARD, santé, prévoyance…"
+          className={FIELD}
+        />
+      </div>
+      <div>
         <Label htmlFor="intervention" className="text-[15px] font-medium normal-case tracking-normal text-ink">
-          Intervention
+          Type d’intervention
         </Label>
         <select id="intervention" name="intervention" required className={FIELD}>
           <option value="">Choisir</option>
-          <option value="ACQUISITION">Rachat de portefeuille</option>
-          <option value="PARTNERSHIP">Partenariat ou rapprochement</option>
-          <option value="BOTH">Les deux</option>
+          <option value="FINANCING">Financement</option>
+          <option value="EQUITY">Prise de participation</option>
+          <option value="DEBT">Dette</option>
+          <option value="CO_INVEST">Co-investissement</option>
+          <option value="OTHER">Autre</option>
         </select>
       </div>
       {state.error ? <p className="text-[15px] text-danger">{state.error}</p> : null}
       <Button type="submit" variant="primary" size="lg" disabled={pending}>
-        {pending ? "Envoi…" : "Se positionner"}
+        {pending ? "Envoi…" : "Je souhaite me positionner"}
       </Button>
     </form>
   );

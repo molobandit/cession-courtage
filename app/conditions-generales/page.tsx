@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { LegalLayout, LegalSection } from "@/components/legal/legal-page";
-import { SUCCESS_FEE_FLOOR_EUR, SUCCESS_FEE_RATE, GROWTH_PLAN_ANNUAL_EUR } from "@/lib/billing/rates";
+import { GROWTH_PLAN_ANNUAL_EUR, INTEREST_DEPOSIT_LABEL, SIMPLE_FEE_LABEL, SUCCESS_FEE_FLOOR_EUR, VERIFIED_FEE_RANGE_LABEL } from "@/lib/billing/rates";
 import { ASKING_MAX, ASKING_MIN, OFFER_WINDOW_DAYS } from "@/lib/listing/constants";
 import { formatEuroWhole } from "@/lib/format/number";
 
@@ -10,8 +10,6 @@ export const metadata: Metadata = {
     "Conditions d’utilisation et conditions de vente du service de mise en relation.",
   alternates: { canonical: "/conditions-generales" },
 };
-
-const FEE_LABEL = `${(SUCCESS_FEE_RATE * 100).toLocaleString("fr-FR")} % HT`;
 
 export default function ConditionsGeneralesPage() {
   return (
@@ -94,17 +92,29 @@ export default function ConditionsGeneralesPage() {
 
       <LegalSection title="6. Prix et honoraires">
         <p>
-          La valorisation, la publication de l’annonce, la mise en relation et la
-          salle de données sont fournies sans frais. Des honoraires de {FEE_LABEL}
-          {" "}
-          du prix de cession sont dus par le cédant, exclusivement en cas de cession
-          conclue, avec un plancher de {formatEuroWhole(SUCCESS_FEE_FLOOR_EUR)}.
+          La consultation du catalogue et la publication d’une annonce sont
+          fournies sans frais. Pour accéder au détail d’une offre (contact,
+          messages), l’acquéreur souscrit un abonnement de{" "}
+          {GROWTH_PLAN_ANNUAL_EUR} € hors taxes par an. Le cédant demeure
+          anonyme jusqu’au versement d’un dépôt de {INTEREST_DEPOSIT_LABEL} du
+          prix demandé. Aucun paiement n’est traité sur la plateforme en
+          l’état actuel du service.
         </p>
         <p>
-          Le forfait Croissance, à {GROWTH_PLAN_ANNUAL_EUR} € hors taxes par an,
-          s’adresse aux acquéreurs suivant plusieurs dossiers en parallèle. Il est
-          sans engagement de durée. Aucun paiement n’est traité sur la plateforme en
-          l’état actuel du service.
+          Deux options de cession coexistent. L’option annonce simple n’emporte
+          aucune commission ({SIMPLE_FEE_LABEL}) et ne comporte pas de
+          vérification détaillée de la société.           L’option portefeuille vérifié
+          emporte des honoraires de {VERIFIED_FEE_RANGE_LABEL} du prix de
+          cession, dus par le cédant exclusivement en cas de cession conclue,
+          avec un plancher de {formatEuroWhole(SUCCESS_FEE_FLOOR_EUR)}. Cette
+          option comprend le contrôle du Kbis, de l’identité du représentant,
+          du justificatif ORIAS du dossier et des documents du portefeuille.
+          Dans les deux cas, le paiement transite par un séquestre, sans frais
+          de séquestre supplémentaires. Les fonds sont libérés lorsque
+          l’acquéreur a le portefeuille en sa possession. Si la cession
+          n’aboutit pas, les fonds consignés sont restitués à l’acquéreur.
+          Aucun paiement n’est traité sur la plateforme en l’état actuel du
+          service.
         </p>
       </LegalSection>
 

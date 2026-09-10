@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { GROWTH_PLAN_ANNUAL_EUR } from "@/lib/billing/rates";
+import { PageIntro } from "@/components/page-intro";
+import { GROWTH_PLAN_ANNUAL_EUR, INTEREST_DEPOSIT_LABEL } from "@/lib/billing/rates";
 import { OFFER_WINDOW_DAYS } from "@/lib/listing/constants";
 
 export const metadata: Metadata = {
@@ -40,38 +41,29 @@ const SAFEGUARDS = [
 export default function AcquerirPage() {
   return (
     <main>
-      <section className="border-y border-line bg-indigo-soft text-ink">
-        <div className="mx-auto max-w-6xl px-4 py-14">
-          <p className="text-[13px] font-medium uppercase tracking-[0.18em] text-indigo-dark">
-            Parcours acquéreur
-          </p>
-          <h1 className="mt-4 max-w-3xl font-serif text-4xl font-semibold leading-tight">
-            Croître par acquisition, sans acheter un portefeuille qui fond
-          </h1>
-          <p className="mt-5 max-w-2xl text-lg text-muted">
-            Vous déposez un mandat une fois. Les dossiers qui vous correspondent
-            vous sont présentés avec leur score d’adéquation et le détail des
-            critères qui ont joué.
-          </p>
-          <div className="mt-8 flex flex-wrap gap-3">
+      <PageIntro
+        kicker="Acheter"
+        title="Je recherche un portefeuille"
+        actions={
+          <>
             <Button asChild variant="primary" size="lg">
               <Link href="/inscription">Déposer un mandat</Link>
             </Button>
-            <Button
-              asChild
-              size="lg"
-              className="border border-line bg-transparent text-ink hover:bg-surface"
-            >
+            <Button asChild variant="outline" size="lg">
               <Link href="/annonces">Parcourir les annonces</Link>
             </Button>
-          </div>
-        </div>
-      </section>
+          </>
+        }
+      >
+        Vous déposez un mandat une fois. Les dossiers qui vous correspondent
+        vous sont présentés avec leur score d’adéquation et le détail des
+        critères qui ont joué.
+      </PageIntro>
 
       <section className="mx-auto max-w-6xl px-4 py-16">
         <div className="grid gap-10 lg:grid-cols-2 lg:items-start">
           <div>
-            <h2 className="font-serif text-3xl font-semibold text-ink">
+            <h2 className="font-bold tracking-tight text-3xl font-semibold text-ink">
               Votre mandat d’achat
             </h2>
             <p className="mt-4 text-[15px] leading-relaxed text-muted">
@@ -109,13 +101,13 @@ export default function AcquerirPage() {
 
       <section className="bg-paper">
         <div className="mx-auto max-w-6xl px-4 py-16">
-          <h2 className="font-serif text-3xl font-semibold text-ink">
+          <h2 className="font-bold tracking-tight text-3xl font-semibold text-ink">
             Quatre garanties avant de signer
           </h2>
           <div className="mt-8 grid gap-5 lg:grid-cols-2">
             {SAFEGUARDS.map((item) => (
               <article key={item.title} className="rounded-3xl border border-line bg-surface-alt p-6">
-                <h3 className="font-serif text-xl font-semibold text-ink">{item.title}</h3>
+                <h3 className="font-bold tracking-tight text-xl font-semibold text-ink">{item.title}</h3>
                 <p className="mt-3 text-[15px] leading-relaxed text-muted">{item.body}</p>
               </article>
             ))}
@@ -125,14 +117,15 @@ export default function AcquerirPage() {
 
       <section className="mx-auto max-w-6xl px-4 py-16">
         <div className="rounded-3xl border border-line bg-paper p-8">
-          <h2 className="font-serif text-2xl font-semibold text-ink">
-            Ce que coûte le suivi de plusieurs dossiers
+          <h2 className="font-bold tracking-tight text-2xl font-semibold text-ink">
+            L’abonnement ouvre le détail. Le vendeur reste anonyme jusqu’au dépôt.
           </h2>
           <p className="mt-4 max-w-3xl text-[15px] leading-relaxed text-muted">
-            La consultation des annonces, le dépôt d’un mandat et la mise en relation
-            sont gratuits. L’abonnement Croissance, à {GROWTH_PLAN_ANNUAL_EUR} € HT
-            par an, lève la limite du nombre de dossiers suivis en parallèle et donne
-            accès aux alertes prioritaires ainsi qu’au mandat exclusif.
+            Le catalogue reste libre. Un abonnement de{" "}
+            {GROWTH_PLAN_ANNUAL_EUR.toLocaleString("fr-FR")} € HT par an est
+            obligatoire pour accéder au contact et aux messages. L’identité du
+            cédant n’apparaît qu’après un dépôt de {INTEREST_DEPOSIT_LABEL} du
+            prix. Aucun encaissement sur cette démo.
           </p>
           <div className="mt-7 flex flex-wrap gap-3">
             <Button asChild variant="primary">

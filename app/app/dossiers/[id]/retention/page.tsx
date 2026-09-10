@@ -28,7 +28,7 @@ export default async function RetentionPage({ params }: { params: Promise<{ id: 
           Dossier
         </Link>
       </p>
-      <h1 className="mt-1 font-serif text-2xl text-navy">Rétention post-cession</h1>
+      <h1 className="mt-1 text-2xl font-bold tracking-tight text-ink">Rétention post-cession</h1>
       <p className="text-sm text-muted">
         Cible 90 %. Le différé est recalculé à M+12 : différé × (taux / 0,90), borné entre 50 % et 100 %.
       </p>
@@ -74,7 +74,7 @@ export default async function RetentionPage({ params }: { params: Promise<{ id: 
 
       {deal.stage === "RETENTION" || deal.stage === "CLOSED" ? (
         <section className="mt-6">
-          <h2 className="font-serif text-lg text-navy">Nouvelle déclaration</h2>
+          <h2 className="text-lg font-semibold text-ink">Nouvelle déclaration</h2>
           <div className="mt-3">
             <RetentionForm dealId={deal.id} transferred={transferred} />
           </div>

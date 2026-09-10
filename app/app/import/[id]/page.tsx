@@ -30,7 +30,7 @@ export default async function ImportDetailPage({ params }: { params: Promise<{ i
             Import
           </Link>
         </p>
-        <h1 className="mt-1 font-serif text-2xl text-navy">Import refusé</h1>
+        <h1 className="mt-1 text-2xl font-bold tracking-tight text-ink">Import refusé</h1>
         <div className="mt-4 border border-danger/40 bg-paper p-4 text-sm text-danger">
           {record.rejectionReason ??
             "Le fichier contient des données nominatives de clients. Le grain le plus fin autorisé est le code postal."}
@@ -51,7 +51,7 @@ export default async function ImportDetailPage({ params }: { params: Promise<{ i
   if (record.status === ImportStatus.COMPLETED) {
     return (
       <main className="mx-auto max-w-3xl px-4 py-6">
-        <h1 className="font-serif text-2xl text-navy">Import terminé</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-ink">Import terminé</h1>
         <p className="mt-2 text-sm text-muted">
           {record.originalFileName} a été intégré
           {record.completedAt ? ` le ${formatDate(record.completedAt)}` : ""}.
@@ -76,7 +76,7 @@ export default async function ImportDetailPage({ params }: { params: Promise<{ i
   } catch {
     return (
       <main className="mx-auto max-w-3xl px-4 py-6">
-        <h1 className="font-serif text-2xl text-navy">Fichier introuvable</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-ink">Fichier introuvable</h1>
         <p className="mt-2 text-sm text-muted">Réimportez le bordereau.</p>
         <Link href="/app/import" className="mt-4 inline-block text-sm underline-offset-2 hover:underline">
           Nouvel import
@@ -101,7 +101,7 @@ export default async function ImportDetailPage({ params }: { params: Promise<{ i
         {" / "}
         Correspondance
       </p>
-      <h1 className="mt-1 font-serif text-2xl text-navy">Correspondance des colonnes</h1>
+      <h1 className="mt-1 text-2xl font-bold tracking-tight text-ink">Correspondance des colonnes</h1>
       <p className="mt-1 text-sm text-muted">
         {record.originalFileName} · {table.rows.length.toLocaleString("fr-FR")} lignes · encodage{" "}
         {table.encoding}
@@ -138,7 +138,7 @@ export default async function ImportDetailPage({ params }: { params: Promise<{ i
       )}
 
       <section className="mt-6">
-        <h2 className="font-serif text-lg text-navy">Aperçu (20 premières lignes)</h2>
+        <h2 className="text-lg font-semibold text-ink">Aperçu (20 premières lignes)</h2>
         <div className="mt-2 overflow-x-auto border border-line bg-paper">
           <table className="w-full text-xs">
             <thead className="bg-surface-alt text-left uppercase tracking-wide text-muted">
@@ -167,7 +167,7 @@ export default async function ImportDetailPage({ params }: { params: Promise<{ i
 
       {mappedPreview.length > 0 ? (
         <section className="mt-6">
-          <h2 className="font-serif text-lg text-navy">Aperçu après correspondance</h2>
+          <h2 className="text-lg font-semibold text-ink">Aperçu après correspondance</h2>
           <div className="mt-2 overflow-x-auto border border-line bg-paper">
             <table className="w-full text-xs">
               <thead className="bg-surface-alt text-left uppercase tracking-wide text-muted">
@@ -203,7 +203,7 @@ export default async function ImportDetailPage({ params }: { params: Promise<{ i
 
       {mapped && mapped.errors.length > 0 ? (
         <section className="mt-6">
-          <h2 className="font-serif text-lg text-navy">Lignes ignorées</h2>
+          <h2 className="text-lg font-semibold text-ink">Lignes ignorées</h2>
           <ul className="mt-2 list-disc pl-5 text-sm text-danger">
             {mapped.errors.slice(0, 20).map((issue) => (
               <li key={`${issue.row}-${issue.message}`}>
