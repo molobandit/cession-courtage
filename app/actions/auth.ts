@@ -1,13 +1,14 @@
 "use server";
 
 import { AuthError } from "next-auth";
-import { Prisma } from "@prisma/client";
+import { DistributionMode, Prisma } from "@prisma/client";
 import { redirect } from "next/navigation";
-import { signIn, signOut } from "@/auth";
+import { signIn } from "@/auth";
 import { allocatePublicAlias } from "@/lib/auth/alias";
 import { issueMagicLink } from "@/lib/auth/magic-link";
 import { hashPassword } from "@/lib/auth/password";
 import { FREE_PLAN_DEAL_QUOTA, SUCCESS_FEE_RATE } from "@/lib/billing/rates";
+import { departmentFromPostalCode, geoForDepartment } from "@/lib/geo";
 import { prisma } from "@/lib/prisma";
 import {
   loginSchema,
@@ -31,10 +32,21 @@ function firstIssue(errors: Record<string, string[] | undefined> | undefined): s
 
 export async function registerAction(_prev: FormState, formData: FormData): Promise<FormState> {
   const parsed = registerSchema.safeParse({
-    fullName: formData.get("fullName"),
+    firstName: formData.get("firstName"),
+    lastName: formData.get("lastName"),
+    jobTitle: formData.get("jobTitle") || undefined,
     email: formData.get("email"),
-    phone: formData.get("phone") || undefined,
+    phone: formData.get("phone"),
+    legalName: formData.get("legalName"),
+    legalForm: formData.get("legalForm"),
+    address: formData.get("address"),
+    postalCode: formData.get("postalCode"),
+    city: formData.get("city"),
+    siren: formData.get("siren"),
     oriasNumber: formData.get("oriasNumber"),
+    activityType: formData.get("activityType"),
+    foundedYear: formData.get("foundedYear") || undefined,
+    website: formData.get("website") || undefined,
     role: formData.get("role"),
     password: formData.get("password"),
     confirmPassword: formData.get("confirmPassword"),
@@ -45,24 +57,71 @@ export async function registerAction(_prev: FormState, formData: FormData): Prom
   }
 
   const data = parsed.data;
+  const fullName = `${data.firstName} ${data.lastName}`.trim();
   const publicAlias = await allocatePublicAlias(data.role);
   const passwordHash = await hashPassword(data.password);
+  const department = departmentFromPostalCode(data.postalCode);
+  const geo = geoForDepartment(department);
+  const foundedAt =
+    data.foundedYear != null ? new Date(Date.UTC(data.foundedYear, 0, 1)) : undefined;
+
   try {
-    // D1 n'offre pas de transaction. Le compte est cree en premier, puis son
-    // abonnement ; si le second echoue, le compte est supprime pour ne pas
-    // laisser un utilisateur sans forfait, qui contournerait le quota.
-    const user = await prisma.user.create({
+    const firm = await prisma.firm.create({
       data: {
-        email: data.email,
-        phone: data.phone,
-        passwordHash,
-        role: data.role,
-        oriasNumber: data.oriasNumber,
-        fullName: data.fullName,
-        publicAlias,
-        kycStatus: "NONE",
+        legalName: data.legalName,
+        siren: data.siren,
+        legalForm: data.legalForm,
+        address: data.address,
+        postalCode: data.postalCode,
+        city: data.city,
+        department,
+        region: geo?.region ?? "France",
+        foundedAt,
+        distributionMode: DistributionMode.MIXED,
+        complianceScore: 50,
       },
     });
+    try {
+      await prisma.$executeRawUnsafe(
+        `UPDATE Firm SET website = ?, activityType = ? WHERE id = ?`,
+        data.website ?? null,
+        data.activityType,
+        firm.id,
+      );
+    } catch (extraError) {
+      console.error("register firm extras", extraError);
+    }
+
+    let user;
+    try {
+      user = await prisma.user.create({
+        data: {
+          email: data.email,
+          phone: data.phone,
+          passwordHash,
+          role: data.role,
+          oriasNumber: data.oriasNumber,
+          fullName,
+          publicAlias,
+          kycStatus: "NONE",
+          firmId: firm.id,
+        },
+      });
+    } catch (userError) {
+      await prisma.firm.delete({ where: { id: firm.id } }).catch(() => undefined);
+      throw userError;
+    }
+
+    try {
+      await prisma.$executeRawUnsafe(
+        `UPDATE User SET jobTitle = ? WHERE id = ?`,
+        data.jobTitle ?? null,
+        user.id,
+      );
+    } catch (titleError) {
+      console.error("register jobTitle", titleError);
+    }
+
     try {
       await prisma.subscription.create({
         data: {
@@ -77,6 +136,7 @@ export async function registerAction(_prev: FormState, formData: FormData): Prom
       });
     } catch (subscriptionError) {
       await prisma.user.delete({ where: { id: user.id } }).catch(() => undefined);
+      await prisma.firm.delete({ where: { id: firm.id } }).catch(() => undefined);
       throw subscriptionError;
     }
   } catch (error) {
@@ -87,6 +147,9 @@ export async function registerAction(_prev: FormState, formData: FormData): Prom
       }
       if (target.includes("oriasNumber")) {
         return { error: "Ce numéro ORIAS est déjà associé à un compte." };
+      }
+      if (target.includes("siren")) {
+        return { error: "Ce SIREN est déjà associé à un cabinet." };
       }
       return { error: "Ces identifiants sont déjà utilisés." };
     }
@@ -142,8 +205,4 @@ export async function requestMagicLinkAction(_prev: FormState, formData: FormDat
   }
   await issueMagicLink(parsed.data.email);
   redirect(`/lien-envoye?email=${encodeURIComponent(parsed.data.email)}`);
-}
-
-export async function logoutAction(): Promise<void> {
-  await signOut({ redirectTo: "/" });
 }

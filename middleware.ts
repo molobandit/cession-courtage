@@ -1,8 +1,12 @@
-import NextAuth from "next-auth";
 import { NextResponse } from "next/server";
-import { authConfig, requiresSession } from "@/auth.config";
+import type { NextRequest } from "next/server";
+import { requiresSession } from "@/auth.config";
 
-const { auth } = NextAuth(authConfig);
+/**
+ * Noms possibles du cookie de session, selon le protocole.
+ * En HTTPS Auth.js prefixe par `__Secure-`, en HTTP local il ne prefixe pas.
+ */
+const COOKIES_SESSION = ["__Secure-authjs.session-token", "authjs.session-token"];
 
 /**
  * En-tetes de securite pour le developpement local uniquement.
@@ -40,17 +44,34 @@ function withSecurityHeaders(response: NextResponse): NextResponse {
   return response;
 }
 
-export default auth((request) => {
-  // Passer un gabarit a auth() court-circuite le rappel `authorized` : la garde
-  // de session doit donc etre refaite ici, sinon /app et /admin s'ouvrent a tous.
-  if (requiresSession(request.nextUrl.pathname) && !request.auth?.user?.id) {
+/**
+ * Garde de session, sans Auth.js.
+ *
+ * `auth()` reemet le cookie de session a chaque requete pour prolonger la
+ * fenetre glissante, et Next fusionne ce cookie PAR-DESSUS celui pose par une
+ * action serveur. La deconnexion effacait donc bien le cookie, que le
+ * middleware reposait aussitot : la session survivait au clic.
+ *
+ * Ici on se contente de constater la PRESENCE d'un cookie de session pour
+ * eviter un aller-retour inutile. La validite, elle, est verifiee la ou elle
+ * compte : `requireActor()` dans les layouts et les gardes de chaque requete.
+ * Un cookie invalide passe ce filtre et se fait refuser juste apres.
+ */
+export default function middleware(request: NextRequest) {
+  const aUnCookieDeSession = COOKIES_SESSION.some((nom) => request.cookies.has(nom));
+
+  if (requiresSession(request.nextUrl.pathname) && !aUnCookieDeSession) {
     const target = new URL("/connexion", request.nextUrl.origin);
     target.searchParams.set("callbackUrl", request.nextUrl.href);
     return withSecurityHeaders(NextResponse.redirect(target));
   }
   return withSecurityHeaders(NextResponse.next());
-});
+}
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:png|jpg|svg|ico|txt|xml)$).*)"],
+  // `api/auth` est exclu volontairement : ce sont les routes d'Auth.js, qui
+  // posent elles-memes les cookies de session et de CSRF. Les faire passer par
+  // l'intercepteur produit deux jetons concurrents pour un meme cookie, et la
+  // deconnexion comme le changement de compte cessent alors de fonctionner.
+  matcher: ["/((?!api/auth|_next/static|_next/image|favicon.ico|.*\\.(?:png|jpg|svg|ico|txt|xml)$).*)"],
 };

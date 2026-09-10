@@ -52,6 +52,20 @@ export default {
       headers.set(key, value);
     }
 
+    // `new Headers(...)` fusionne les valeurs multiples d'un meme en-tete en une
+    // seule chaine separee par des virgules. Set-Cookie n'y survit pas : deux
+    // cookies deviennent une valeur unique et illisible, que le navigateur
+    // ignore. Auth.js en emet plusieurs a la deconnexion et au changement de
+    // compte, d'ou une session qui ne s'efface ni ne se remplace. On les
+    // reinjecte donc un par un.
+    const setCookies = response.headers.getSetCookie?.() ?? [];
+    if (setCookies.length > 0) {
+      headers.delete("Set-Cookie");
+      for (const cookie of setCookies) {
+        headers.append("Set-Cookie", cookie);
+      }
+    }
+
     return new Response(BODYLESS_STATUS.has(response.status) ? null : response.body, {
       status: response.status,
       statusText: response.statusText,
