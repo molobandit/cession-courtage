@@ -23,9 +23,28 @@ export function LoginForm({ nextPath }: { nextPath: string }) {
         <Label htmlFor="password">Mot de passe</Label>
         <Input id="password" name="password" type="password" autoComplete="current-password" required />
       </div>
+      {state.besoinDeCode ? (
+        <div className="grid gap-1 rounded-2xl border border-indigo-line bg-indigo-soft p-4">
+          <Label htmlFor="totp">Code de vérification</Label>
+          <Input
+            id="totp"
+            name="totp"
+            type="text"
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            autoFocus
+            placeholder="000000"
+            required
+          />
+          <p className="mt-1 text-[13px] leading-relaxed text-muted">
+            Les six chiffres affichés par votre application d’authentification. Un
+            code de secours convient également.
+          </p>
+        </div>
+      ) : null}
       {state.error ? <p className="text-sm text-danger">{state.error}</p> : null}
       <Button type="submit" disabled={pending}>
-        {pending ? "Connexion…" : "Se connecter"}
+        {pending ? "Connexion…" : state.besoinDeCode ? "Valider le code" : "Se connecter"}
       </Button>
       <p className="text-sm text-muted">
         <Link href="/connexion/lien-magique" className="underline underline-offset-2">

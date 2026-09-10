@@ -5,7 +5,9 @@ import { getActor, isOriasVerified } from "@/lib/authz";
 import { hasContactSubscription } from "@/lib/billing/contact-access";
 import { GROWTH_PLAN_ANNUAL_EUR } from "@/lib/billing/rates";
 import { formatEuroWhole } from "@/lib/format/number";
+import { DeuxFacteurs } from "@/components/app/deux-facteurs";
 import { EffacementForm } from "@/components/app/effacement-form";
+import { codesDeSecoursRestants, secondFacteurActif } from "@/lib/auth/second-facteur";
 import { KYC_STATUS_LABELS, ROLE_LABELS } from "@/lib/labels";
 import { prisma } from "@/lib/prisma";
 
@@ -16,7 +18,7 @@ export default async function ProfilPage() {
   if (!actor) redirect("/connexion?next=/app/profil");
   if (!isOriasVerified(actor)) redirect("/en-attente-orias");
 
-  const [firm, subscribed] = await Promise.all([
+  const [firm, subscribed, deuxFacteursActif, codesRestants] = await Promise.all([
     actor.firmId
       ? prisma.firm.findUnique({
           where: { id: actor.firmId },
@@ -30,6 +32,8 @@ export default async function ProfilPage() {
         })
       : Promise.resolve(null),
     hasContactSubscription(actor),
+    secondFacteurActif(actor.id),
+    codesDeSecoursRestants(actor.id),
   ]);
 
   const firstName = actor.fullName?.split(" ")[0] ?? "Courtier";
@@ -102,6 +106,17 @@ export default async function ProfilPage() {
             d’un portefeuille.
           </p>
         )}
+      </section>
+
+      <section className="mt-6 rounded-3xl border border-line bg-paper p-5 shadow-sm sm:p-8">
+        <h2 className="text-lg font-semibold text-ink">Sécurité de la connexion</h2>
+        <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-muted">
+          Un mot de passe seul reste léger pour un compte qui donne accès à des
+          cessions de plusieurs centaines de milliers d’euros. Le second facteur
+          ajoute un code à six chiffres, renouvelé toutes les trente secondes par
+          une application d’authentification. Aucun SMS, aucun prestataire.
+        </p>
+        <DeuxFacteurs actif={deuxFacteursActif} codesRestants={codesRestants} />
       </section>
 
       <section className="mt-6 rounded-3xl border border-line bg-paper p-5 shadow-sm sm:p-8">

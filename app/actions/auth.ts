@@ -5,12 +5,14 @@ import { DistributionMode, Prisma } from "@prisma/client";
 import { redirect } from "next/navigation";
 import { signIn } from "@/auth";
 import { enregistrerEchec, verrouActif } from "@/lib/auth/throttle";
+import { secondFacteurActif } from "@/lib/auth/second-facteur";
+import { burnPasswordTime, verifyPassword } from "@/lib/auth/password";
+import { prisma } from "@/lib/prisma";
 import { allocatePublicAlias } from "@/lib/auth/alias";
 import { issueMagicLink } from "@/lib/auth/magic-link";
 import { hashPassword } from "@/lib/auth/password";
 import { FREE_PLAN_DEAL_QUOTA, SUCCESS_FEE_RATE } from "@/lib/billing/rates";
 import { departmentFromPostalCode, geoForDepartment } from "@/lib/geo";
-import { prisma } from "@/lib/prisma";
 import {
   loginSchema,
   magicLinkRequestSchema,
@@ -21,6 +23,8 @@ export type FormState = {
   error?: string;
   fieldErrors?: Record<string, string[] | undefined>;
   ok?: boolean;
+  /** Le mot de passe est bon, il manque le code du second facteur. */
+  besoinDeCode?: boolean;
 };
 
 function firstIssue(errors: Record<string, string[] | undefined> | undefined): string | undefined {
@@ -189,18 +193,46 @@ export async function loginAction(_prev: FormState, formData: FormData): Promise
   const verrou = await verrouActif(parsed.data.email);
   if (verrou) return { error: verrou };
 
+  /*
+   * Le mot de passe est verifie ici avant tout, pour savoir s'il faut reclamer
+   * un second facteur. Reveler qu'un compte en exige un n'est pas une fuite :
+   * seul quelqu'un qui a deja le bon mot de passe atteint ce point.
+   */
+  const compte = await prisma.user.findUnique({
+    where: { email: parsed.data.email },
+    select: { id: true, passwordHash: true },
+  });
+
+  if (!compte?.passwordHash) {
+    await burnPasswordTime(parsed.data.password);
+    await enregistrerEchec(parsed.data.email);
+    return { error: "E-mail ou mot de passe incorrect." };
+  }
+
+  if (!(await verifyPassword(parsed.data.password, compte.passwordHash))) {
+    await enregistrerEchec(parsed.data.email);
+    return { error: "E-mail ou mot de passe incorrect." };
+  }
+
+  const code = String(formData.get("totp") ?? "").trim();
+  if (!code && (await secondFacteurActif(compte.id))) {
+    return { besoinDeCode: true };
+  }
+
   try {
     await signIn("credentials", {
       email: parsed.data.email,
       password: parsed.data.password,
+      totp: code,
       redirectTo: safeNext,
     });
   } catch (error) {
     if (error instanceof AuthError) {
       await enregistrerEchec(parsed.data.email);
-      // Message volontairement identique quel que soit le motif : il ne doit
-      // pas indiquer si l'e-mail correspond a un compte.
-      return { error: "E-mail ou mot de passe incorrect." };
+      // A ce stade le mot de passe etait bon : seul le code peut avoir echoue.
+      return code
+        ? { besoinDeCode: true, error: "Code de vérification refusé." }
+        : { error: "E-mail ou mot de passe incorrect." };
     }
     throw error;
   }

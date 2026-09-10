@@ -235,6 +235,8 @@ model User {
   imports                 PortfolioImport[]
   dataRoomViews           DataRoomView[]
   deposits                InterestDeposit[]
+  twoFactor               TwoFactor?
+  recoveryCodes           RecoveryCode[]
 
   @@index([firmId])
   @@index([role])
@@ -515,6 +517,33 @@ model Offer {
 /// Compteur d'echecs de connexion par e-mail vise.
 /// Protege un compte precis contre l'essai systematique de mots de passe.
 /// La ligne est supprimee des qu'une connexion aboutit.
+/// Second facteur par code temporaire (TOTP).
+/// Le secret n'est pas hache : il faut pouvoir recalculer le code attendu.
+/// Il vaut donc un mot de passe et ne doit jamais sortir de la base.
+model TwoFactor {
+  userId      String    @id
+  secret      String
+  /// Tant que la premiere saisie n'a pas ete validee, le second facteur n'est
+  /// pas actif : sans cela, un secret mal recopie fermerait le compte.
+  confirmedAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+/// Code de secours a usage unique, utilisable a la place d'un code temporaire.
+/// Hache comme un mot de passe : la base ne doit pas permettre de se connecter.
+model RecoveryCode {
+  id       String    @id @default(cuid())
+  userId   String
+  codeHash String    @unique
+  usedAt   DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, usedAt])
+}
+
 model LoginAttempt {
   /// E-mail vise, en minuscules. Cle naturelle : une ligne par compte cible.
   identifier   String    @id

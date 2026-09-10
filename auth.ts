@@ -4,6 +4,7 @@ import { authConfig } from "@/auth.config";
 import { prisma } from "@/lib/prisma";
 import { burnPasswordTime, hashPassword, needsRehash, verifyPassword } from "@/lib/auth/password";
 import { effacerEchecs } from "@/lib/auth/throttle";
+import { secondFacteurActif, verifierSecondFacteur } from "@/lib/auth/second-facteur";
 import { consumeMagicLinkToken } from "@/lib/auth/magic-link";
 import { loginSchema, magicLinkConsumeSchema } from "@/lib/validations/auth";
 
@@ -29,6 +30,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       credentials: {
         email: { label: "E-mail", type: "email" },
         password: { label: "Mot de passe", type: "password" },
+        totp: { label: "Code de vérification", type: "text" },
       },
       authorize: async (raw) => {
         const parsed = loginSchema.safeParse(raw);
@@ -55,6 +57,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             where: { id: user.id },
             data: { passwordHash: rehashed },
           });
+        }
+
+        // Second facteur verifie ici aussi, et pas seulement dans l'action de
+        // connexion : la garde doit tenir quel que soit le chemin d'appel.
+        if (await secondFacteurActif(user.id)) {
+          const saisie = typeof raw?.totp === "string" ? raw.totp : "";
+          if (!(await verifierSecondFacteur(user.id, saisie))) return null;
         }
 
         await effacerEchecs(user.email);
