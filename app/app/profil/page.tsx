@@ -5,6 +5,7 @@ import { getActor, isOriasVerified } from "@/lib/authz";
 import { hasContactSubscription } from "@/lib/billing/contact-access";
 import { GROWTH_PLAN_ANNUAL_EUR } from "@/lib/billing/rates";
 import { formatEuroWhole } from "@/lib/format/number";
+import { EffacementForm } from "@/components/app/effacement-form";
 import { KYC_STATUS_LABELS, ROLE_LABELS } from "@/lib/labels";
 import { prisma } from "@/lib/prisma";
 
@@ -101,6 +102,32 @@ export default async function ProfilPage() {
             d’un portefeuille.
           </p>
         )}
+      </section>
+
+      <section className="mt-6 rounded-3xl border border-line bg-paper p-5 shadow-sm sm:p-8">
+        <h2 className="text-lg font-semibold text-ink">Vos données</h2>
+        <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-muted">
+          Vous pouvez récupérer l’intégralité de vos données à tout moment, et
+          demander la fermeture de votre compte. Vos interlocuteurs n’apparaissent
+          dans l’export que sous leur alias : leur identité ne vous appartient pas.
+        </p>
+        <a
+          href="/api/mes-donnees"
+          className="mt-4 inline-flex min-h-11 items-center rounded-full bg-indigo px-5 text-[14px] font-semibold !text-white"
+        >
+          Télécharger mes données
+        </a>
+
+        <div className="mt-8 border-t border-line pt-6">
+          <h3 className="text-[15px] font-semibold text-ink">Supprimer mon compte</h3>
+          <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-muted">
+            Votre identité est retirée et la connexion devient impossible. Les
+            pièces de vos dossiers clos sont conservées sans vous désigner : la loi
+            l’impose pour l’exécution des contrats et la défense des droits. Un
+            dossier encore ouvert suspend la demande jusqu’à sa clôture.
+          </p>
+          <EffacementForm />
+        </div>
       </section>
 
       <section className="mt-6 rounded-3xl border border-line bg-paper p-5 shadow-sm sm:p-8">

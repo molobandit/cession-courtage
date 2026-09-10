@@ -122,9 +122,24 @@ export default function ConfidentialitePage() {
       <LegalSection title="Vos droits">
         <p>
           Vous disposez d’un droit d’accès, de rectification, d’effacement, de
-          limitation, d’opposition et de portabilité. Vous pouvez les exercer
-          depuis votre espace membre ou par courrier électronique à l’adresse de
-          l’éditeur.
+          limitation, d’opposition et de portabilité. L’accès et la portabilité
+          s’exercent immédiatement depuis la page « Mon compte » de votre espace
+          membre : le bouton « Télécharger mes données » vous remet un fichier
+          contenant l’ensemble des informations vous concernant. La suppression
+          du compte s’y trouve également.
+        </p>
+        <p>
+          L’effacement retire votre identité : nom, adresse électronique,
+          téléphone et numéro ORIAS. Les pièces contractuelles de vos dossiers
+          clos sont conservées sans vous désigner, l’article 17.3 du règlement
+          réservant les données nécessaires à l’exécution d’un contrat et à la
+          défense d’un droit en justice. Un dossier encore ouvert suspend la
+          demande jusqu’à sa clôture.
+        </p>
+        <p>
+          Les autres droits, notamment la rectification d’une information que
+          vous ne pouvez pas modifier vous-même, s’exercent par courrier
+          électronique à l’adresse de l’éditeur.
         </p>
         <p>
           En cas de désaccord persistant, vous pouvez introduire une réclamation
