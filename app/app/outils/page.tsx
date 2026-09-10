@@ -90,21 +90,8 @@ export default async function OutilsPage() {
     <main className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 sm:py-8 lg:py-10">
       <h1 className="text-2xl font-bold tracking-tight text-ink sm:text-4xl">Outils</h1>
       <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-muted">
-        L’essentiel pour céder, acquérir ou conclure. Rien d’autre.
+        L’essentiel pour céder, acquérir ou conclure. {count} outils, rien d’autre.
       </p>
-
-      <div className="mt-6 flex flex-col gap-3 rounded-2xl border border-line bg-paper p-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
-        <p className="text-[15px] text-ink">
-          <span className="tabular font-semibold">{count}</span>{" "}
-          <span className="text-muted">outils disponibles</span>
-        </p>
-        <Link
-          href="/app"
-          className="inline-flex min-h-11 items-center text-[14px] font-medium text-indigo-dark"
-        >
-          Retour au tableau de bord
-        </Link>
-      </div>
 
       <div className="mt-8 space-y-10">
         {groups.map((group) => (

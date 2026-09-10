@@ -134,7 +134,6 @@ export default async function MemberHomePage() {
     firstPortfolioId: portfolios[0]?.id ?? null,
   });
 
-  const firstName = actor.fullName?.split(" ")[0] ?? "";
   const recentListings = publicListings.slice(0, 3);
   const recentMandates = publicMandates.slice(0, 3);
   const recentDeals = activeDeals.slice(0, 4);
@@ -218,7 +217,7 @@ export default async function MemberHomePage() {
         Tableau de bord
       </h1>
       <p className="mt-1 max-w-2xl text-[15px] text-muted sm:mt-2">
-        Bonjour {firstName}. Catalogue, vos dossiers et la suite à donner, sur un
+        Catalogue, vos dossiers et la suite à donner, sur un
         seul écran.
       </p>
 
