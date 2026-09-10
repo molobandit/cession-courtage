@@ -9,6 +9,7 @@
  * sans quoi wrangler refuse le deploiement.
  */
 import openNextHandler from "../.open-next/worker.js";
+import { regle, seuil } from "../lib/rgpd/conservation";
 
 export {
   DOQueueHandler,
@@ -72,4 +73,60 @@ export default {
       headers,
     });
   },
+};
+
+/**
+ * Purge quotidienne, article 5.1.e du RGPD.
+ *
+ * Declenchee par un cron Cloudflare, pas par une requete : une purge ne doit
+ * dependre ni d'un visiteur ni d'une machine allumee.
+ *
+ * SQL direct sur le binding D1 plutot que Prisma : le gestionnaire planifie
+ * s'execute hors du contexte Next, dont depend le client Prisma du projet.
+ *
+ * Ne touche qu'aux donnees transitoires ou de journalisation. Les pieces
+ * contractuelles, soumises a cinq ans, et la neutralisation des comptes
+ * inactifs, qui merite une revue humaine, restent hors de ce balayage.
+ */
+type D1 = {
+  prepare(query: string): {
+    bind(...values: unknown[]): { run(): Promise<{ meta?: { changes?: number } }> };
+  };
+};
+
+async function purger(env: unknown): Promise<void> {
+  const db = (env as { DB?: D1 }).DB;
+  if (!db) return;
+  const maintenant = new Date();
+
+  const travaux: { table: string; colonne: string; jours: number }[] = [
+    { table: "VerificationToken", colonne: "expires", jours: regle("Jeton de connexion par lien magique").jours },
+    { table: "LoginAttempt", colonne: "lastFailedAt", jours: regle("Compteur d’échecs de connexion").jours },
+    { table: "Notification", colonne: "createdAt", jours: regle("Notifications").jours },
+    { table: "DataRoomView", colonne: "viewedAt", jours: regle("Consultations de la salle de données").jours },
+    { table: "AuditLog", colonne: "createdAt", jours: regle("Journal d’audit").jours },
+    { table: "DataRequest", colonne: "createdAt", jours: regle("Demandes d’exercice des droits").jours },
+  ];
+
+  for (const { table, colonne, jours } of travaux) {
+    const limite = seuil(jours, maintenant).toISOString();
+    try {
+      await db
+        .prepare(`DELETE FROM "${table}" WHERE "${colonne}" < ?`)
+        .bind(limite)
+        .run();
+    } catch (error) {
+      // Une table absente ou renommee ne doit pas interrompre les suivantes :
+      // mieux vaut purger cinq tables sur six que zero.
+      console.error(`Purge impossible sur ${table}`, error);
+    }
+  }
+}
+
+export const scheduled = async (
+  _controller: unknown,
+  env: unknown,
+  ctx: { waitUntil(promise: Promise<unknown>): void },
+): Promise<void> => {
+  ctx.waitUntil(purger(env));
 };

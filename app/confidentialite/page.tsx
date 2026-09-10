@@ -1,6 +1,19 @@
 import type { Metadata } from "next";
 import { LegalLayout, LegalRow, LegalSection } from "@/components/legal/legal-page";
 import { DATA_AUTHORITY, PUBLISHER } from "@/lib/legal/entity";
+import { REGLES } from "@/lib/rgpd/conservation";
+
+function dureeLisible(jours: number): string {
+  if (jours <= 2) return jours === 1 ? "24 heures" : `${jours} jours`;
+  if (jours % 365 === 0) {
+    const ans = jours / 365;
+    return ans === 1 ? "12 mois" : `${ans} ans`;
+  }
+  if (jours === 3650) return "10 ans";
+  if (jours === 1095) return "3 ans";
+  if (jours % 30 === 0) return `${jours / 30} mois`;
+  return `${jours} jours`;
+}
 
 export const metadata: Metadata = {
   title: "Politique de confidentialité",
@@ -85,15 +98,26 @@ export default function ConfidentialitePage() {
       </LegalSection>
 
       <LegalSection title="Durées de conservation">
+        <p>
+          Chaque durée ci-dessous est appliquée automatiquement : une purge
+          quotidienne supprime ce qui a dépassé son terme. Le tableau est
+          engendré à partir des règles effectivement exécutées, il ne peut donc
+          pas s’en écarter.
+        </p>
         <div>
-          <LegalRow label="Compte utilisateur" value="Durée de la relation, puis trois ans" />
-          <LegalRow label="Données de portefeuille" value="Suppression sur demande, sans délai" />
-          <LegalRow
-            label="Pièces d’une cession conclue"
-            value="Dix ans, au titre des obligations comptables et probatoires"
-          />
-          <LegalRow label="Journaux d’accès" value="Douze mois" />
+          {REGLES.map((r) => (
+            <LegalRow
+              key={r.donnee}
+              label={r.donnee}
+              value={`${dureeLisible(r.jours)} — ${r.motif}`}
+            />
+          ))}
         </div>
+        <p>
+          Les données de portefeuille sont supprimées sans délai sur demande, et
+          aucune donnée nominative de client final n’est collectée : le grain le
+          plus fin est le code postal.
+        </p>
       </LegalSection>
 
       <LegalSection title="Destinataires">

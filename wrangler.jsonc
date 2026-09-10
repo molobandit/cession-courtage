@@ -2,6 +2,10 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "cession-courtage",
   "main": "worker/index.ts",
+  // Purge quotidienne des donnees arrivees au terme de leur conservation.
+  // 03h15 UTC : hors des heures d'usage, et decale d'un quart d'heure pour ne
+  // pas tomber avec le reste du monde sur l'heure ronde.
+  "triggers": { "crons": ["15 3 * * *"] },
   "compatibility_date": "2026-09-07",
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
   "assets": {
