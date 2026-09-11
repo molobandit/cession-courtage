@@ -16,7 +16,7 @@ export default function ConditionsGeneralesPage() {
     <LegalLayout
       eyebrow="Conditions générales"
       title="Conditions d’utilisation et de vente"
-      intro="Règles applicables entre l’éditeur et les courtiers utilisateurs du service."
+      intro="Règles applicables entre l’éditeur, les courtiers et les investisseurs utilisateurs du service."
     >
       <LegalSection title="1. Objet et accès au service">
         <p>

@@ -1,9 +1,28 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { SIGNUP_WHO_CAN } from "@/lib/copy/audience";
 import { RegisterForm } from "@/components/auth/register-form";
 import { InvestorRegisterForm } from "@/components/auth/investor-register-form";
 import { getActor, isAdmin, isInvestor, isOriasVerified } from "@/lib/authz";
 
-export const metadata = { title: "Inscription" };
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<{ voie?: string }>;
+}): Promise<Metadata> {
+  const { voie } = await searchParams;
+  if (voie === "investir") {
+    return {
+      title: "Inscription investisseur",
+      description:
+        "Compte investisseur : suivez des dossiers de cession sous alias, sans numéro ORIAS. Aucune donnée nominative de client final.",
+    };
+  }
+  return {
+    title: "Inscription",
+    description: SIGNUP_WHO_CAN,
+  };
+}
 
 export default async function RegisterPage({
   searchParams,

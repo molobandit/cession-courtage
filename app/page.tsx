@@ -16,6 +16,7 @@ import { FINANCING_LABELS, RISK_TYPE_LABELS, SEGMENT_LABELS } from "@/lib/labels
 import { OFFER_WINDOW_DAYS } from "@/lib/listing/constants";
 import { loadPublicListingCards } from "@/lib/listing/load-public-cards";
 import type { PublicMandateCard } from "@/lib/mandate/public";
+import { SIGNUP_WHO_CAN } from "@/lib/copy/audience";
 import { BRAND_NAME } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -25,12 +26,12 @@ export const metadata: Metadata = {
   alternates: { canonical: "/" },
 };
 
-const CHECKS = ["Courtiers ORIAS", "Alias jusqu’au dépôt", "Offres scellées 21 jours"];
+const CHECKS = ["Courtiers ORIAS et investisseurs", "Alias jusqu’au dépôt", "Offres scellées 21 jours"];
 
 const FAQ = [
   {
     q: "Qui peut publier ou acheter ?",
-    a: "Uniquement des courtiers immatriculés ORIAS. L’inscription est vérifiée avant l’espace membre.",
+    a: SIGNUP_WHO_CAN,
   },
   {
     q: "Mon nom apparaît-il sur l’annonce ?",
@@ -91,7 +92,7 @@ export default async function HomePage() {
           <div>
             <p className="inline-flex items-center gap-1.5 rounded-full border border-indigo-line bg-indigo-soft px-3 py-1 text-[12px] font-semibold text-indigo">
               <CheckIcon />
-              Plateforme réservée aux courtiers ORIAS
+              Courtiers ORIAS et investisseurs
             </p>
             <h1 className="mt-6 text-4xl font-bold leading-[1.12] tracking-tight text-ink sm:text-5xl">
               Achetez ou vendez votre portefeuille{" "}

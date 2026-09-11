@@ -47,7 +47,8 @@ export default function MentionsLegalesPage() {
         <p>
           La plateforme met en relation des intermédiaires en assurance
           immatriculés à l’ORIAS en vue de la cession ou de l’acquisition de
-          portefeuilles de courtage. Elle n’est ni partie à la transaction, ni
+          portefeuilles de courtage, et des investisseurs qui suivent ces
+          dossiers sous alias. Elle n’est ni partie à la transaction, ni
           mandataire de l’une des parties.
         </p>
         <p>

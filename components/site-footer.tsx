@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { VERIFIED_FEE_RANGE_LABEL } from "@/lib/billing/rates";
+import { AUDIENCE_FOOTER } from "@/lib/copy/audience";
 import { BRAND_NAME } from "@/lib/site";
 
 const COLUMNS = [
@@ -53,10 +54,7 @@ export function SiteFooter() {
           <div>
             <p className="text-[15px] font-semibold tracking-tight">{BRAND_NAME}</p>
             <p className="mt-3 max-w-xs text-[14px] leading-relaxed text-white/70">
-              Place de marché réservée aux courtiers immatriculés ORIAS. Publier
-              est gratuit. Abonnement annuel pour le détail de l’offre. Le
-              vendeur reste anonyme jusqu’au dépôt. Option vérifiée :{" "}
-              {VERIFIED_FEE_RANGE_LABEL}.
+              {AUDIENCE_FOOTER} Option vérifiée : {VERIFIED_FEE_RANGE_LABEL}.
             </p>
           </div>
           {COLUMNS.map((column) => (
