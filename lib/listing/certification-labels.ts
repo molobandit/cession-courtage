@@ -15,5 +15,8 @@ export function certificationDocStatusLabel(status: string): string {
   if (status === "RECEIVED") return "Document reçu";
   if (status === "TO_COMPLETE") return "Document à compléter";
   if (status === "VALIDATED") return "Document validé";
+  // Sans ce cas, un refus s'affichait « À déposer » : le cédant ne voyait pas
+  // que sa pièce avait été contrôlée puis écartée.
+  if (status === "REJECTED") return "Document refusé";
   return "À déposer";
 }

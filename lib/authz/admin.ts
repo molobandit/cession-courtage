@@ -199,3 +199,49 @@ export async function listFinancialCapacities(actor: Actor) {
   });
 }
 
+
+/**
+ * Dossier de certification complet d'une annonce, pour son contrôle.
+ *
+ * `listCertificationRequests` ne sert qu'a l'index et ne rapporte que des
+ * compteurs. Trancher piece par piece demande le detail : le fichier depose, sa
+ * date, le commentaire deja laisse.
+ */
+export async function getCertificationDossier(actor: Actor, listingId: string) {
+  assertAdmin(actor);
+  return prisma.listing.findUnique({
+    where: { id: listingId },
+    select: {
+      id: true,
+      publicNumber: true,
+      displayedZone: true,
+      status: true,
+      certificationRequested: true,
+      certificationStatus: true,
+      updatedAt: true,
+      certificationDocs: {
+        orderBy: [{ required: "desc" }, { createdAt: "asc" }],
+        select: {
+          id: true,
+          category: true,
+          label: true,
+          required: true,
+          status: true,
+          fileName: true,
+          storageKey: true,
+          teamComment: true,
+          uploadedAt: true,
+        },
+      },
+    },
+  });
+}
+
+/** Une piece de certification, pour la servir en telechargement a l'editeur. */
+export async function findCertificationDocForAdmin(actor: Actor, documentId: string) {
+  assertAdmin(actor);
+  return prisma.certificationDocument.findUnique({
+    where: { id: documentId },
+    select: { id: true, fileName: true, storageKey: true },
+  });
+}

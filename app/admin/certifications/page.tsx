@@ -11,6 +11,7 @@ const CERTIFICATION_STATUS_LABELS: Record<string, string> = {
   NONE: "Non certifié",
   PENDING: "En cours",
   CERTIFIED: "Certifié",
+  REJECTED: "Refusé",
 };
 
 function certificationStatusLabel(value: string): string {
@@ -57,10 +58,16 @@ export default async function AdminCertificationsPage() {
                   <tr key={listing.id} className="border-t border-line align-top">
                     <td className="px-2 py-2">
                       <Link
-                        href={`/annonces/${listing.publicNumber}`}
+                        href={`/admin/certifications/${listing.id}`}
                         className="font-medium underline-offset-2 hover:underline"
                       >
                         Dossier n° {listing.publicNumber}
+                      </Link>
+                      <Link
+                        href={`/annonces/${listing.publicNumber}`}
+                        className="block text-[13px] text-muted underline-offset-2 hover:underline"
+                      >
+                        Voir l’annonce
                       </Link>
                     </td>
                     <td className="px-2 py-2">{listing.displayedZone}</td>

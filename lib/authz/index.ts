@@ -40,6 +40,8 @@ export {
   countUnreadInvestorInquiries,
   setInvestorInquiryRead,
   listCertificationRequests,
+  getCertificationDossier,
+  findCertificationDocForAdmin,
 } from "@/lib/authz/admin";
 export {
   listPublicListings,
