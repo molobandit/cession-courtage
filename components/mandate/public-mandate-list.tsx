@@ -149,7 +149,7 @@ export function PublicMandateList({ mandates }: { mandates: PublicMandateCard[] 
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <p className="tabular font-serif text-xl font-semibold text-ink">
-                      Demande #{m.publicNumber}
+                      Demande n° {m.publicNumber}
                     </p>
                     <p className="mt-1 text-[15px] text-muted">
                       Acquéreur {m.buyerAlias}

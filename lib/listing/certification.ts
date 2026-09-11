@@ -6,15 +6,10 @@ export async function listCertificationStatuses(
   const result = new Map<string, string>();
   if (listingIds.length === 0) return result;
 
-  try {
-    const placeholders = listingIds.map(() => "?").join(", ");
-    const rows = await prisma.$queryRawUnsafe<Array<{ id: string; certificationStatus: string }>>(
-      `SELECT id, certificationStatus FROM Listing WHERE id IN (${placeholders})`,
-      ...listingIds,
-    );
-    for (const row of rows) result.set(row.id, row.certificationStatus);
-  } catch (error) {
-    console.error("listCertificationStatuses", error);
-  }
+  const rows = await prisma.listing.findMany({
+    where: { id: { in: listingIds } },
+    select: { id: true, certificationStatus: true },
+  });
+  for (const row of rows) result.set(row.id, row.certificationStatus);
   return result;
 }

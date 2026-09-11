@@ -182,8 +182,8 @@ export async function acceptOfferAction(
         upfrontAmount: upfront.toFixed(2),
         deferredAmount: (amount - upfront).toFixed(2),
         stage: DealStage.NDA,
-        sellerAlias: `Cédant #${seller?.publicAlias ?? "C"}`,
-        buyerAlias: `Acquéreur #${offer.buyer.publicAlias}`,
+        sellerAlias: `Cédant ${seller?.publicAlias ?? "C"}`,
+        buyerAlias: `Acquéreur ${offer.buyer.publicAlias}`,
       },
     });
 

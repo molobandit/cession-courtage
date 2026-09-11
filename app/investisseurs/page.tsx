@@ -7,7 +7,7 @@ import { BRAND_NAME } from "@/lib/site";
 export const metadata: Metadata = {
   title: "Investisseurs",
   description:
-    "Fonds, holdings, family offices et investisseurs privés : identifiez des opportunités de reprise ou participez au financement.",
+    "Investisseurs privés et family offices : suivez des dossiers sous alias, sans donnée nominative de client final.",
   alternates: { canonical: "/investisseurs" },
 };
 
@@ -23,14 +23,17 @@ export default function InvestisseursPage() {
             Je suis investisseur
           </h1>
           <p className="mt-5 text-[15px] leading-relaxed text-muted">
-            {BRAND_NAME} s’adresse aux investisseurs privés, family offices,
-            sociétés d’investissement, entrepreneurs et professionnels du secteur.
-            Vous identifiez des opportunités de reprise ou participez au
-            financement, sans jamais voir de donnée nominative de client final.
+            {BRAND_NAME} s’adresse aux investisseurs privés, family offices et
+            structures qui souhaitent suivre des dossiers de cession sous alias.
+            Un dépôt de 2,5 % du prix ouvre les coordonnées du cabinet cédant.
+            Aucune donnée nominative de client final.
           </p>
-          <div className="mt-7">
-            <Button asChild variant="outline">
+          <div className="mt-7 flex flex-wrap gap-3">
+            <Button asChild variant="primary">
               <Link href="/investisseurs/opportunites">Voir les opportunités</Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link href="/inscription?voie=investir">Créer un compte</Link>
             </Button>
           </div>
         </div>
@@ -39,10 +42,10 @@ export default function InvestisseursPage() {
         <div>
           <h2 className="text-2xl font-bold tracking-tight text-ink">Règles pour les non-métiers</h2>
           <ul className="mt-5 space-y-4 text-[15px] leading-relaxed text-muted">
-            <li>Un pourcentage de mise en gestion s’applique si vous n’êtes pas du métier.</li>
-            <li>Le positionnement est conservé au minimum un an.</li>
-            <li>Vous pouvez céder vos parts à tout moment ; un acquéreur peut les reprendre.</li>
-            <li>Les dossiers restent sous alias jusqu’au dépôt prévu pour les coordonnées.</li>
+            <li>Le dépôt de 2,5 % du prix de cession marque un intérêt qualifié sur le dossier.</li>
+            <li>Les coordonnées du cabinet cédant s’ouvrent après ce dépôt, pas avant.</li>
+            <li>Les dossiers restent sous alias jusqu’à ce dépôt.</li>
+            <li>Aucune donnée nominative de client final n’est communiquée.</li>
           </ul>
         </div>
         <div className="rounded-xl border border-line bg-paper p-7">

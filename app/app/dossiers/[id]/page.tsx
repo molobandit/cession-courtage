@@ -57,7 +57,7 @@ export default async function DealPage({ params }: { params: Promise<{ id: strin
           {isSeller ? "Cession" : "Acquisition"} · {DEAL_STAGE_LABELS[deal.stage]}
         </span>
         <h1 className="mt-3 text-2xl font-bold tracking-tight text-ink sm:text-3xl">
-          Portefeuille #{deal.listing.publicNumber}
+          Dossier n° {deal.listing.publicNumber}
         </h1>
         <p className="mt-2 text-[15px] leading-relaxed text-muted">
           Contrepartie : {counterpartyLabel}. Le tunnel va de la confidentialité
@@ -182,7 +182,7 @@ export default async function DealPage({ params }: { params: Promise<{ id: strin
         <ul className="mt-2 space-y-2 text-sm">
           {deal.messages.map((m) => (
             <li key={m.id} className="rounded-2xl border border-line bg-paper p-3 sm:p-4">
-              <span className="text-xs text-muted">#{m.senderLabel}</span>
+              <span className="text-xs text-muted">{m.senderLabel}</span>
               <p>{m.body}</p>
             </li>
           ))}

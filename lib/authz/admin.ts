@@ -5,7 +5,7 @@ import { ForbiddenError } from "@/lib/authz/errors";
 export async function listPendingOriasUsers(actor: Actor) {
   if (!isAdmin(actor)) throw new ForbiddenError("Réservé aux administrateurs.");
   return prisma.user.findMany({
-    where: { role: { not: "ADMIN" }, oriasVerifiedAt: null },
+    where: { role: { notIn: ["ADMIN", "INVESTOR"] }, oriasVerifiedAt: null },
     orderBy: { createdAt: "asc" },
     select: {
       id: true,
@@ -62,4 +62,54 @@ export async function rejectOrias(userId: string, reason: string) {
     },
   });
   return updated;
+}
+
+function assertAdmin(actor: Actor) {
+  if (!isAdmin(actor)) throw new ForbiddenError("Réservé aux administrateurs.");
+}
+
+export async function listInvestorInquiries(actor: Actor) {
+  assertAdmin(actor);
+  return prisma.investorInquiry.findMany({
+    orderBy: { createdAt: "desc" },
+    include: { listing: { select: { id: true, publicNumber: true } } },
+  });
+}
+
+export async function countUnreadInvestorInquiries(actor: Actor) {
+  assertAdmin(actor);
+  return prisma.investorInquiry.count({ where: { readAt: null } });
+}
+
+export async function setInvestorInquiryRead(inquiryId: string, read: boolean) {
+  await requireAdmin();
+  const existing = await prisma.investorInquiry.findUnique({
+    where: { id: inquiryId },
+    select: { id: true },
+  });
+  if (!existing) throw new ForbiddenError("Demande introuvable.");
+  return prisma.investorInquiry.update({
+    where: { id: inquiryId },
+    data: { readAt: read ? new Date() : null },
+  });
+}
+
+export async function listCertificationRequests(actor: Actor) {
+  assertAdmin(actor);
+  return prisma.listing.findMany({
+    where: { certificationRequested: true },
+    orderBy: { updatedAt: "desc" },
+    select: {
+      id: true,
+      publicNumber: true,
+      displayedZone: true,
+      status: true,
+      certificationStatus: true,
+      updatedAt: true,
+      createdAt: true,
+      certificationDocs: {
+        select: { category: true, label: true, status: true },
+      },
+    },
+  });
 }

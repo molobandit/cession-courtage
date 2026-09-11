@@ -55,6 +55,7 @@ export default async function MemberHomePage() {
   const actor = await getActor();
   if (!actor) redirect("/connexion?next=/app");
   if (!isOriasVerified(actor)) redirect("/en-attente-orias");
+  if (actor.role === "INVESTOR") redirect("/app/mes-dossiers");
 
   const seller = canSell(actor);
   const buyer = canBuy(actor);
@@ -365,7 +366,7 @@ export default async function MemberHomePage() {
                     href={`/app/annonces/${l.id}`}
                     kicker={LISTING_STATUS_LABELS[l.status]}
                     kickerTone={listingTone(l.status)}
-                    title={`Portefeuille #${l.publicNumber}`}
+                    title={`Dossier n° ${l.publicNumber}`}
                     facts={[
                       { label: "Prix demandé", value: formatEuroWhole(Number(l.askingPrice)) },
                       { label: "Zone", value: l.displayedZone },
@@ -443,7 +444,7 @@ export default async function MemberHomePage() {
                     key={d.id}
                     href={`/app/dossiers/${d.id}`}
                     kicker={`${isSeller ? "Cession" : "Acquisition"} · ${DEAL_STAGE_LABELS[d.stage]}`}
-                    title={`Portefeuille #${d.listing.publicNumber}`}
+                    title={`Dossier n° ${d.listing.publicNumber}`}
                     facts={[
                       { label: "Prix convenu", value: formatEuroWhole(Number(d.agreedPrice)) },
                       { label: "Contrepartie", value: counterpartyDisplayName(counterparty) },

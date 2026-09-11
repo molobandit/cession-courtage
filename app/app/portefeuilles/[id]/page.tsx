@@ -358,7 +358,7 @@ export default async function PortfolioPage({ params }: { params: Promise<{ id: 
                   className="flex flex-wrap items-baseline justify-between gap-3 rounded-3xl border border-line bg-paper px-6 py-4 hover:border-indigo"
                 >
                   <span className="tabular text-[15px] font-medium text-ink">
-                    Portefeuille #{listing.publicNumber}
+                    Dossier n° {listing.publicNumber}
                   </span>
                   <span className="text-[15px] text-muted">
                     {LISTING_STATUS_LABELS[listing.status]}

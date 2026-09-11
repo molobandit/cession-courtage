@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { SubscribeButton } from "@/components/billing/subscribe-button";
+import { getActor, isOriasVerified } from "@/lib/authz";
+import { hasContactSubscription } from "@/lib/billing/contact-access";
 import {
   GROWTH_PLAN_ANNUAL_EUR,
   INTEREST_DEPOSIT_LABEL,
@@ -9,6 +12,7 @@ import {
   VERIFIED_FEE_RANGE_LABEL,
   VERIFIED_FEE_RATE_MAX,
   VERIFIED_FEE_RATE_MIN,
+  growthPlanAnnualTtcEur,
   interestDepositFor,
   successFeeFor,
 } from "@/lib/billing/rates";
@@ -98,11 +102,11 @@ const VERIFY_BLOCKS = [
 const FAQ = [
   {
     q: "Que donne l’abonnement ?",
-    a: `Pour ${formatEuroWhole(GROWTH_PLAN_ANNUAL_EUR)} HT par an, vous accédez au détail de l’offre : contact, messages et dépôt d’offre. Ce n’est pas une vérification du portefeuille. Le vendeur reste anonyme à cette étape.`,
+    a: `Pour ${formatEuroWhole(GROWTH_PLAN_ANNUAL_EUR)} HT par an (${formatEuroWhole(growthPlanAnnualTtcEur())} TTC, TVA 20 %), réglé par carte via Stripe. Vous accédez au détail de l’offre : contact, messages et dépôt d’offre. Ce n’est pas une vérification du portefeuille. Le vendeur reste anonyme à cette étape.`,
   },
   {
     q: "Quelle est la différence entre l’abonnement, le dépôt et la vérification ?",
-    a: `L’abonnement ouvre le contact. Le dépôt de ${INTEREST_DEPOSIT_LABEL} révèle qui est le cédant. La vérification (option 2) contrôle la société, les pièces d’identité et les documents du portefeuille. Ce sont trois étapes distinctes.`,
+    a: `L’abonnement ouvre le contact. Le dépôt de ${INTEREST_DEPOSIT_LABEL} révèle qui est le cédant et ouvre les PDF du cabinet. La vérification (option 2) contrôle la société, les pièces d’identité et les documents du portefeuille. Ce sont trois étapes distinctes.`,
   },
   {
     q: "Que contrôlez-vous concrètement ?",
@@ -118,12 +122,15 @@ const FAQ = [
   },
   {
     q: "Quand l’argent est-il débloqué ?",
-    a: "Les fonds restent sous séquestre jusqu’à ce que l’acquéreur ait le portefeuille en sa possession. Si la vente n’aboutit pas, le dépôt et les fonds consignés sont restitués à l’acquéreur. Aucun paiement réel n’est traité sur cette démo.",
+    a: "Les fonds de cession restent sous séquestre jusqu’à ce que l’acquéreur ait le portefeuille en sa possession. Si la vente n’aboutit pas, le dépôt d’intérêt et les fonds consignés sont restitués. L’abonnement annuel de 250 € HT se règle par Stripe.",
   },
 ];
 
-export default function TarifsPage() {
+export default async function TarifsPage() {
   const annual = formatEuroWhole(GROWTH_PLAN_ANNUAL_EUR);
+  const actor = await getActor();
+  const subscribed = Boolean(actor && (await hasContactSubscription(actor)));
+  const canPay = Boolean(actor && isOriasVerified(actor) && !subscribed);
 
   return (
     <main>
@@ -194,7 +201,7 @@ export default function TarifsPage() {
               <Link href="/annonces">Voir les annonces</Link>
             </Button>
             <p className="mt-3 text-center text-[12px] text-muted">
-              Aucun encaissement sur cette démo
+              Catalogue libre, sans carte.
             </p>
           </article>
 
@@ -208,17 +215,35 @@ export default function TarifsPage() {
               <span className="ml-1 text-[1.35rem]">€</span>
               <span className="ml-1 align-top text-base font-semibold text-indigo/70">HT</span>
             </p>
-            <p className="mt-1 text-center text-[13px] text-muted">{annual} HT par an</p>
+            <p className="mt-1 text-center text-[13px] text-muted">{annual} HT par an · {formatEuroWhole(growthPlanAnnualTtcEur())} TTC (TVA 20 %)</p>
             <ul className="mt-8 flex-1 space-y-3">
               {PLAN_ROWS.map((row) => (
                 <PlanRow key={row.label} label={row.label} on={row.paid} accent />
               ))}
             </ul>
-            <Button asChild variant="primary" className="mt-8 w-full" size="lg">
-              <Link href="/inscription">S’abonner</Link>
-            </Button>
+            {subscribed ? (
+              <Button asChild variant="primary" className="mt-8 w-full" size="lg">
+                <Link href="/app/profil">Abonnement actif</Link>
+              </Button>
+            ) : canPay ? (
+              <SubscribeButton className="mt-8" label="Payer 250 € HT (300 € TTC)" />
+            ) : (
+              <Button asChild variant="primary" className="mt-8 w-full" size="lg">
+                <Link
+                  href={
+                    actor
+                      ? isOriasVerified(actor)
+                        ? "/app/profil#factures"
+                        : "/en-attente-orias"
+                      : "/connexion?next=/tarifs#abonnements"
+                  }
+                >
+                  {actor ? "Continuer vers le paiement" : "Se connecter pour s’abonner"}
+                </Link>
+              </Button>
+            )}
             <p className="mt-3 text-center text-[12px] text-muted">
-              Aucun encaissement sur cette démo
+              Paiement sécurisé Stripe. 250 € HT, soit 300 € TTC. Renouvellement annuel.
             </p>
           </article>
         </div>

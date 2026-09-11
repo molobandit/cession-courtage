@@ -95,18 +95,8 @@ async function ensurePublicCatalogUnsafe(): Promise<void> {
         regions: JSON.parse(row.regionsJson) as string[],
         isNationwide: row.isNationwide,
         createdAt: new Date(row.publishedAt),
+        certificationStatus: row.certificationStatus,
       })),
     });
-  }
-
-  const certifiedIds = rows
-    .filter((row) => row.certificationStatus === "CERTIFIED")
-    .map((row) => row.listingId);
-  if (certifiedIds.length > 0) {
-    const placeholders = certifiedIds.map(() => "?").join(", ");
-    await prisma.$executeRawUnsafe(
-      `UPDATE Listing SET certificationStatus = 'CERTIFIED' WHERE id IN (${placeholders})`,
-      ...certifiedIds,
-    );
   }
 }

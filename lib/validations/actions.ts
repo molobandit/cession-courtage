@@ -58,6 +58,16 @@ export const CESSION_MOTIVES = [
   "autre",
 ] as const;
 
+function optionalText(max: number) {
+  return z
+    .string()
+    .trim()
+    .max(max)
+    .optional()
+    .or(z.literal(""))
+    .transform((v) => (v && v.length > 0 ? v : undefined));
+}
+
 export const listingCreateSchema = z.object({
   portfolioId: idSchema,
   // Le prix demandé s'exprime en euros entiers.
@@ -118,6 +128,23 @@ export const listingCreateSchema = z.object({
     .max(40)
     .optional()
     .transform((v) => (v && v.length > 0 ? v : undefined)),
+  transferVehicle: optionalText(40),
+  oriasCategories: optionalText(120),
+  distribution: optionalText(40),
+  distanceShare: optionalText(20),
+  employeeCount: optionalText(20),
+  softwareStack: optionalText(160),
+  introducersCount: optionalText(20),
+  rcProInsurer: optionalText(80),
+  pendingLitigation: optionalText(400),
+  socialCommitments: optionalText(400),
+  complianceDema: optionalText(40),
+  ddaTraining: optionalText(40),
+  amlProcedure: optionalText(40),
+  sellerDependency: optionalText(40),
+  premisesStatus: optionalText(120),
+  exclusiveMandates: optionalText(160),
+  stornoShare: optionalText(80),
 });
 
 export const retentionReportSchema = z

@@ -45,7 +45,7 @@ export function CompactListingCard({ item }: { item: PublicListingCard }) {
           {item.certified ? <Pill tone="ok">Vérifié</Pill> : null}
           {closing ? <Pill tone="warn">{closing}</Pill> : null}
         </div>
-        <p className="mt-3 text-[16px] font-semibold text-ink">Portefeuille #{item.publicNumber}</p>
+        <p className="mt-3 text-[16px] font-semibold text-ink">Dossier n° {item.publicNumber}</p>
         {branches ? <p className="mt-1 line-clamp-2 text-[13px] leading-relaxed text-muted">{branches}</p> : null}
         <p className="mt-1 text-[13px] text-muted">{zone}</p>
         {item.carriers[0] ? (
@@ -94,7 +94,7 @@ export function CompactMandateCard({
     <li>
       <Link href={href} className="lift block rounded-2xl border border-line bg-surface p-4 hover:border-indigo sm:p-5">
         <Pill tone="mute">Demande d’acquisition</Pill>
-        <p className="mt-3 text-[16px] font-semibold text-ink">Demande #{number}</p>
+        <p className="mt-3 text-[16px] font-semibold text-ink">Demande n° {number}</p>
         <p className="mt-1 text-[13px] text-muted">{alias}</p>
         {branches ? <p className="mt-1 line-clamp-2 text-[13px] leading-relaxed text-muted">{branches}</p> : null}
         <p className="mt-1 text-[13px] text-muted">{zone}</p>

@@ -10,7 +10,7 @@ export type Actor = {
   fullName: string | null;
   role: UserRole;
   firmId: string | null;
-  oriasNumber: string;
+  oriasNumber: string | null;
   oriasVerifiedAt: Date | null;
   kycStatus: KycStatus;
   publicAlias: string;
@@ -66,7 +66,11 @@ export function isAdmin(actor: Actor): boolean {
 }
 
 export function isOriasVerified(actor: Actor): boolean {
-  return isAdmin(actor) || actor.oriasVerifiedAt !== null;
+  return isAdmin(actor) || isInvestor(actor) || actor.oriasVerifiedAt !== null;
+}
+
+export function isInvestor(actor: Actor): boolean {
+  return actor.role === UserRole.INVESTOR;
 }
 
 export function canSell(actor: Actor): boolean {
@@ -98,5 +102,13 @@ export async function requireSeller(): Promise<Actor> {
 export async function requireBuyer(): Promise<Actor> {
   const actor = await requireOriasVerified();
   if (!canBuy(actor)) throw new ForbiddenError("Réservé aux acquéreurs.");
+  return actor;
+}
+
+export async function requireInvestor(): Promise<Actor> {
+  const actor = await requireActor();
+  if (!isInvestor(actor) && !isAdmin(actor)) {
+    throw new ForbiddenError("Réservé aux investisseurs.");
+  }
   return actor;
 }

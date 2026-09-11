@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { hashPassword } from "../lib/auth/password";
+import { investorOriasPlaceholder } from "../lib/auth/investor-orias";
 import { buildChecklist } from "../lib/deal/due-diligence";
 import { FIRST_MANDATE_PUBLIC_NUMBER } from "../lib/mandate/public";
 import { FREE_PLAN_DEAL_QUOTA, SUCCESS_FEE_RATE } from "../lib/billing/rates";
@@ -792,7 +793,8 @@ async function main() {
   const passwordHash = await hashPassword(DEMO_PASSWORD);
 
   await prisma.$transaction([
-    prisma.dataRoomView.deleteMany(),
+    prisma.interestDeposit.deleteMany(),
+    prisma.listingCompanyDocument.deleteMany(),
     prisma.dataRequest.deleteMany(),
     prisma.auditLog.deleteMany(),
     prisma.notification.deleteMany(),
@@ -809,6 +811,7 @@ async function main() {
     prisma.contractLine.deleteMany(),
     prisma.portfolioImport.deleteMany(),
     prisma.portfolio.deleteMany(),
+    prisma.investorPosition.deleteMany(),
     prisma.subscription.deleteMany(),
     prisma.valuationMultiple.deleteMany(),
     prisma.verificationToken.deleteMany(),
@@ -949,6 +952,34 @@ async function main() {
       plan: SubscriptionPlan.GROWTH,
       feeRate: "0.0000",
       dealQuota: null,
+      dealsUsed: 0,
+      status: SubscriptionStatus.ACTIVE,
+      renewsAt: daysFromNow(365),
+    },
+  });
+
+  await prisma.user.create({
+    data: {
+      id: "user_investor_01",
+      email: "investisseur@cession-courtage.demo",
+      phone: "+33600001111",
+      passwordHash,
+      role: UserRole.INVESTOR,
+      oriasNumber: investorOriasPlaceholder("I101"),
+      oriasVerifiedAt: null,
+      kycStatus: KycStatus.NONE,
+      createdAt: daysAgo(5),
+      fullName: "Investisseur démo",
+      emailVerified: daysAgo(5),
+      publicAlias: "I101",
+    },
+  });
+  await prisma.subscription.create({
+    data: {
+      userId: "user_investor_01",
+      plan: SubscriptionPlan.FREE,
+      feeRate: SUCCESS_FEE_RATE.toFixed(4),
+      dealQuota: FREE_PLAN_DEAL_QUOTA,
       dealsUsed: 0,
       status: SubscriptionStatus.ACTIVE,
       renewsAt: daysFromNow(365),
@@ -1212,16 +1243,9 @@ async function main() {
         regions: JSON.parse(row.regionsJson) as string[],
         isNationwide: row.isNationwide,
         createdAt: new Date(row.publishedAt),
+        certificationStatus: row.certificationStatus,
       },
     });
-  }
-
-  try {
-    await prisma.$executeRawUnsafe(
-      `UPDATE Listing SET certificationStatus = 'CERTIFIED' WHERE id LIKE 'lst_catalog_%' AND CAST(substr(id, 13) AS INTEGER) % 7 = 0`,
-    );
-  } catch (error) {
-    console.warn("catalog certification skipped", error);
   }
   console.info("  catalog: 80 public listings (10101-10180)");
 

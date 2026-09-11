@@ -1,9 +1,22 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import {
+  IconBoard,
+  IconClipboard,
+  IconFolder,
+  IconLinks,
+  IconLogout,
+  IconPerson,
+  IconPlusDoc,
+  IconRows,
+  IconSliders,
+  IconUpload,
+} from "@/components/app/member-icons";
+import { BrandMark } from "@/components/brand-mark";
+import { BRAND_NAME } from "@/lib/site";
 
 type NavLink = { href: string; label: string; exact?: boolean };
 
@@ -12,212 +25,145 @@ function linkActive(path: string, item: NavLink) {
   return path === item.href || path.startsWith(`${item.href}/`);
 }
 
-function buildNav(canSell: boolean, canBuy: boolean): {
-  primary: NavLink[];
-  sell: NavLink[];
-  buy: NavLink[];
-} {
-  return {
-    primary: [
-      { href: "/app", label: "Accueil", exact: true },
-      { href: "/annonces", label: "Annonces" },
-    ],
-    sell: canSell
-      ? [
-          { href: "/app/annonces/nouvelle", label: "Publier une annonce" },
-          { href: "/app/import", label: "Importer un bordereau" },
-          { href: "/valoriser", label: "Estimer un portefeuille" },
-        ]
-      : [],
-    buy: canBuy
-      ? [
-          { href: "/app/mandats", label: "Mandats" },
-          { href: "/app/opportunites", label: "Correspondances" },
-          { href: "/annonces/demandes", label: "Demandes d’acquisition" },
-        ]
-      : [],
-  };
+export function memberWorkspaceLinks(
+  canSell: boolean,
+  canBuy: boolean,
+  isInvestor = false,
+): NavLink[] {
+  if (isInvestor) {
+    return [
+      { href: "/app/mes-dossiers", label: "Mes dossiers", exact: true },
+      { href: "/investisseurs/opportunites", label: "Opportunités" },
+      { href: "/app/profil", label: "Compte" },
+    ];
+  }
+  const links: NavLink[] = [
+    { href: "/app", label: "Accueil", exact: true },
+    { href: "/annonces", label: "Catalogue" },
+  ];
+  if (canSell) {
+    links.push(
+      { href: "/app/annonces/nouvelle", label: "Publier" },
+      { href: "/app/import", label: "Import" },
+    );
+  }
+  if (canBuy) {
+    links.push(
+      { href: "/app/mandats", label: "Mandats" },
+      { href: "/app/opportunites", label: "Pistes" },
+      { href: "/annonces/demandes", label: "Demandes" },
+    );
+  }
+  links.push({ href: "/app/outils", label: "Outils" }, { href: "/app/profil", label: "Compte" });
+  return links;
 }
 
-function MenuChevron() {
-  return (
-    <svg className="ml-1 h-3.5 w-3.5 opacity-60" viewBox="0 0 12 12" aria-hidden="true">
-      <path
-        d="M2.5 4.5 6 8l3.5-3.5"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
+const ICONS: Record<string, typeof IconBoard> = {
+  "/app": IconBoard,
+  "/annonces": IconFolder,
+  "/app/annonces/nouvelle": IconPlusDoc,
+  "/app/import": IconUpload,
+  "/app/mandats": IconClipboard,
+  "/app/opportunites": IconLinks,
+  "/annonces/demandes": IconRows,
+  "/app/outils": IconSliders,
+  "/app/profil": IconPerson,
+  "/app/mes-dossiers": IconBoard,
+  "/investisseurs/opportunites": IconLinks,
+};
 
-function Dropdown({
-  label,
-  items,
-  path,
-  onNavigate,
+export function MemberRail({
+  canSell,
+  canBuy,
+  isInvestor = false,
 }: {
-  label: string;
-  items: NavLink[];
-  path: string;
-  onNavigate?: () => void;
+  canSell: boolean;
+  canBuy: boolean;
+  isInvestor?: boolean;
 }) {
-  const [open, setOpen] = useState(false);
-  const root = useRef<HTMLDivElement>(null);
-  const menuId = useId();
-  const active = items.some((item) => linkActive(path, item));
-
-  useEffect(() => {
-    setOpen(false);
-  }, [path]);
-
-  useEffect(() => {
-    if (!open) return;
-    function onDoc(event: MouseEvent) {
-      if (!root.current?.contains(event.target as Node)) setOpen(false);
-    }
-    function onKey(event: KeyboardEvent) {
-      if (event.key === "Escape") setOpen(false);
-    }
-    document.addEventListener("mousedown", onDoc);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("mousedown", onDoc);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [open]);
-
-  if (items.length === 0) return null;
+  const path = usePathname();
+  const links = memberWorkspaceLinks(canSell, canBuy, isInvestor);
+  const homeHref = isInvestor ? "/app/mes-dossiers" : "/app";
 
   return (
-    <div className="relative" ref={root}>
-      <button
-        type="button"
-        aria-expanded={open}
-        aria-controls={menuId}
-        onClick={() => setOpen((v) => !v)}
-        className={cn(
-          "inline-flex items-center rounded-full px-3 py-2 text-[14px]",
-          active || open ? "bg-surface-alt text-ink" : "text-ink/80 hover:bg-surface-alt hover:text-ink",
-        )}
-      >
-        {label}
-        <MenuChevron />
-      </button>
-      {open ? (
-        <ul
-          id={menuId}
-          role="menu"
-          className="absolute left-0 top-[calc(100%+0.35rem)] z-30 min-w-[16rem] rounded-2xl border border-line bg-surface p-1.5 shadow-sm"
-        >
-          {items.map((item) => (
-            <li key={item.href} role="none">
-              <Link
-                role="menuitem"
-                href={item.href}
-                onClick={() => {
-                  setOpen(false);
-                  onNavigate?.();
-                }}
-                className={cn(
-                  "block rounded-xl px-3 py-2.5 text-[14px]",
-                  linkActive(path, item)
-                    ? "bg-indigo-soft font-medium text-indigo-dark"
-                    : "text-ink/80 hover:bg-surface-alt hover:text-ink",
-                )}
-              >
+    <nav
+      className="flex h-full w-[4.75rem] shrink-0 flex-col items-center border-r border-indigo/25 bg-[#93c5fd] py-3"
+      aria-label="Espace membre"
+    >
+      <Link href={homeHref} className="mb-3 inline-flex" title={BRAND_NAME}>
+        <BrandMark className="h-9 w-9" />
+        <span className="sr-only">{BRAND_NAME}</span>
+      </Link>
+      <div className="flex min-h-0 flex-1 flex-col items-center gap-1 overflow-y-auto px-1">
+        {links.map((item) => {
+          const Icon = ICONS[item.href] ?? IconFolder;
+          const active = linkActive(path, item);
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              title={item.label}
+              aria-current={active ? "page" : undefined}
+              className={cn(
+                "flex w-full flex-col items-center gap-0.5 rounded-xl px-1 py-2 text-ink transition-colors hover:bg-white/80",
+                active && "bg-white text-ink shadow-sm",
+              )}
+            >
+              <Icon className="h-5 w-5" />
+              <span className="max-w-full truncate text-center text-[10px] font-medium leading-tight">
                 {item.label}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      ) : null}
-    </div>
+              </span>
+            </Link>
+          );
+        })}
+      </div>
+      <form action="/api/deconnexion" method="post" className="mt-2 px-1">
+        <button
+          type="submit"
+          title="Déconnexion"
+          className="flex w-full flex-col items-center gap-0.5 rounded-xl px-1 py-2 text-ink hover:bg-white/80"
+        >
+          <IconLogout className="h-5 w-5" />
+          <span className="text-[10px] font-medium leading-tight">Sortir</span>
+        </button>
+      </form>
+    </nav>
   );
 }
 
 export function MemberNav({
   canSell,
   canBuy,
-  variant,
+  isInvestor = false,
   onNavigate,
 }: {
   canSell: boolean;
   canBuy: boolean;
-  variant: "desktop" | "mobile";
+  isInvestor?: boolean;
   onNavigate?: () => void;
 }) {
   const path = usePathname();
-  const { primary, sell, buy } = buildNav(canSell, canBuy);
-  const extra: NavLink[] = [{ href: "/app/outils", label: "Outils" }];
-
-  if (variant === "mobile") {
-    const all = [...primary, ...sell, ...buy, ...extra, { href: "/app/profil", label: "Mon compte" }];
-    return (
-      <nav aria-label="Espace membre">
-        <ul className="space-y-1">
-          {all.map((item) => (
-            <li key={item.href}>
-              <Link
-                href={item.href}
-                onClick={onNavigate}
-                className={cn(
-                  "block rounded-xl px-3 py-2.5 text-[15px]",
-                  linkActive(path, item)
-                    ? "bg-indigo-soft font-medium text-indigo-dark"
-                    : "hover:bg-surface-alt",
-                )}
-              >
-                {item.label}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </nav>
-    );
-  }
-
+  const links = memberWorkspaceLinks(canSell, canBuy, isInvestor);
   return (
-    <nav className="hidden flex-1 items-center justify-center gap-1 lg:flex" aria-label="Espace membre">
-      {primary.map((item) => (
-        <Link
-          key={item.href}
-          href={item.href}
-          className={cn(
-            "rounded-full px-3 py-2 text-[14px]",
-            linkActive(path, item)
-              ? "bg-surface-alt text-ink"
-              : "text-ink/80 hover:bg-surface-alt hover:text-ink",
-          )}
-        >
-          {item.label}
-        </Link>
-      ))}
-      <Dropdown label="Céder" items={sell} path={path} onNavigate={onNavigate} />
-      <Dropdown label="Acquérir" items={buy} path={path} onNavigate={onNavigate} />
-      {extra.map((item) => (
-        <Link
-          key={item.href}
-          href={item.href}
-          className={cn(
-            "rounded-full px-3 py-2 text-[14px]",
-            linkActive(path, item)
-              ? "bg-surface-alt text-ink"
-              : "text-ink/80 hover:bg-surface-alt hover:text-ink",
-          )}
-        >
-          {item.label}
-        </Link>
-      ))}
+    <nav aria-label="Espace membre">
+      <ul className="space-y-0.5">
+        {links.map((item) => (
+          <li key={item.href}>
+            <Link
+              href={item.href}
+              onClick={onNavigate}
+              className={cn(
+                "block rounded-lg px-3 py-2.5 text-[15px]",
+                linkActive(path, item)
+                  ? "bg-indigo-soft font-medium text-indigo-dark"
+                  : "text-ink/80 hover:bg-surface-alt hover:text-ink",
+              )}
+            >
+              {item.label === "Accueil" ? "Tableau de bord" : item.label}
+            </Link>
+          </li>
+        ))}
+      </ul>
     </nav>
   );
-}
-
-export function memberPrimaryAction(canSell: boolean, canBuy: boolean): NavLink {
-  if (canSell) return { href: "/app/annonces/nouvelle", label: "Déposer une annonce" };
-  if (canBuy) return { href: "/app/mandats", label: "Déposer un mandat" };
-  return { href: "/annonces", label: "Voir les annonces" };
 }

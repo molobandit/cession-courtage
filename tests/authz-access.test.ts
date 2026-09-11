@@ -17,6 +17,12 @@ import { listOffersForListing } from "@/lib/authz/offers";
 import { findMyDeal } from "@/lib/authz/deals";
 import { getMyPortfolio } from "@/lib/authz/portfolios";
 import { listListingMessages } from "@/lib/authz/messages";
+import { listAllInvestorPositions, listMyInvestorPositions } from "@/lib/investor/positions";
+import {
+  listCertificationRequests,
+  listInvestorInquiries,
+} from "@/lib/authz/admin";
+import { ForbiddenError } from "@/lib/authz/errors";
 
 async function actorByEmail(email: string): Promise<Actor> {
   const user = await prisma.user.findUnique({
@@ -241,5 +247,31 @@ describe("acceptation d'offre : reprise apres echec partiel (D1 sans transaction
 
     expect(again.id).toBe(deal!.id);
     expect(await prisma.deal.count()).toBe(before);
+  });
+});
+
+describe("administration : gardes au niveau requête", () => {
+  it("Marie ne lit ni les demandes investisseurs ni les certifications", async () => {
+    await expect(listInvestorInquiries(marie)).rejects.toBeInstanceOf(ForbiddenError);
+    await expect(listCertificationRequests(marie)).rejects.toBeInstanceOf(ForbiddenError);
+  });
+
+  it("Marie ne lit pas les dossiers suivis par les investisseurs", async () => {
+    await expect(listMyInvestorPositions(marie)).rejects.toBeInstanceOf(ForbiddenError);
+    await expect(listAllInvestorPositions(marie)).rejects.toBeInstanceOf(ForbiddenError);
+  });
+
+  it("l'investisseur démo lit sa liste, vide ou non", async () => {
+    const investor = await actorByEmail("investisseur@cession-courtage.demo");
+    const rows = await listMyInvestorPositions(investor);
+    expect(Array.isArray(rows)).toBe(true);
+  });
+
+  it("l'administrateur lit les listes", async () => {
+    const admin = await actorByEmail("admin@cession-courtage.demo");
+    const inquiries = await listInvestorInquiries(admin);
+    const certifications = await listCertificationRequests(admin);
+    expect(Array.isArray(inquiries)).toBe(true);
+    expect(Array.isArray(certifications)).toBe(true);
   });
 });

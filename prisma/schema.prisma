@@ -20,6 +20,7 @@ enum UserRole {
   BUYER
   BOTH
   ADMIN
+  INVESTOR
 }
 
 enum KycStatus {
@@ -205,7 +206,7 @@ model User {
   phone           String?
   passwordHash    String?
   role            UserRole
-  oriasNumber     String    @unique
+  oriasNumber     String?   @unique
   oriasVerifiedAt DateTime?
   firmId          String?
   kycStatus       KycStatus @default(NONE)
@@ -223,6 +224,9 @@ model User {
   /// Stable public handle used before LOI, e.g. "A47".
   publicAlias   String    @unique
   updatedAt     DateTime  @updatedAt
+  jobTitle      String?
+  notifyPrefs   String?
+  stripeCustomerId String?
 
   firm                    Firm?               @relation(fields: [firmId], references: [id])
   mandates                BuyerMandate[]
@@ -242,6 +246,8 @@ model User {
   deposits                InterestDeposit[]
   twoFactor               TwoFactor?
   recoveryCodes           RecoveryCode[]
+  companyDocuments        ListingCompanyDocument[]
+  investorPositions       InvestorPosition[]
 
   @@index([firmId])
   @@index([role])
@@ -263,6 +269,8 @@ model Firm {
   distributionMode  DistributionMode
   complianceScore   Int
   createdAt         DateTime         @default(now())
+  website           String?
+  activityType      String?
 
   users       User[]
   portfolios  Portfolio[]
@@ -422,17 +430,33 @@ model Listing {
   regions       Json @default("[]")
   isNationwide  Boolean  @default(false)
 
+  certificationStatus     String  @default("NONE")
+  presentation            String?
+  cessionMotive           String?
+  negotiable              Boolean @default(true)
+  certificationRequested  Boolean @default(false)
+  portfolioKind           String?
+  branchActivity          String?
+  desiredCessionDate      String?
+  precompte               Boolean?
+  precompteAmount         String?
+  regulatoryJson          String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  portfolio  Portfolio     @relation(fields: [portfolioId], references: [id], onDelete: Restrict)
-  lines      ListingLine[]
-  valuations Valuation[]
-  matches    Match[]
-  offers     Offer[]
-  deals      Deal[]
-  messages   Message[]
-  deposits   InterestDeposit[]
+  portfolio            Portfolio                 @relation(fields: [portfolioId], references: [id], onDelete: Restrict)
+  lines                ListingLine[]
+  valuations           Valuation[]
+  matches              Match[]
+  offers               Offer[]
+  deals                Deal[]
+  messages             Message[]
+  deposits             InterestDeposit[]
+  certificationDocs    CertificationDocument[]
+  companyDocuments     ListingCompanyDocument[]
+  investorInquiries    InvestorInquiry[]
+  investorPositions    InvestorPosition[]
 
   @@index([status, publishedAt])
   @@index([portfolioId])
@@ -448,6 +472,76 @@ model ListingLine {
 
   @@id([listingId, contractLineId])
   @@index([contractLineId])
+}
+
+model CertificationDocument {
+  id          String    @id @default(cuid())
+  listingId   String
+  category    String
+  label       String
+  required    Boolean   @default(false)
+  status      String    @default("MISSING")
+  fileName    String?
+  storageKey  String?
+  teamComment String?
+  uploadedAt  DateTime?
+  createdAt   DateTime  @default(now())
+
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Restrict)
+
+  @@index([listingId])
+}
+
+model ListingCompanyDocument {
+  id           String   @id @default(cuid())
+  listingId    String
+  kind         String
+  fileName     String
+  storageKey   String
+  sha256       String
+  uploadedById String
+  createdAt    DateTime @default(now())
+
+  listing    Listing @relation(fields: [listingId], references: [id], onDelete: Restrict)
+  uploadedBy User    @relation(fields: [uploadedById], references: [id], onDelete: Restrict)
+
+  @@index([listingId])
+}
+
+model InvestorInquiry {
+  id            String   @id @default(cuid())
+  organisation  String
+  fullName      String
+  email         String
+  phone         String?
+  investorType  String
+  ticketMinEur  Int?
+  ticketMaxEur  Int?
+  zones         String
+  intervention  String
+  createdAt     DateTime @default(now())
+  jobTitle      String?
+  sectors       String?
+  listingId     String?
+  readAt        DateTime?
+
+  listing Listing? @relation(fields: [listingId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+}
+
+model InvestorPosition {
+  id            String   @id @default(cuid())
+  listingId     String
+  investorId    String
+  depositAmount Decimal
+  createdAt     DateTime @default(now())
+
+  listing  Listing @relation(fields: [listingId], references: [id], onDelete: Restrict)
+  investor User    @relation(fields: [investorId], references: [id], onDelete: Restrict)
+
+  @@unique([listingId, investorId])
+  @@index([investorId])
 }
 
 model BuyerMandate {
@@ -692,6 +786,7 @@ model Subscription {
   dealsUsed  Int                @default(0)
   status     SubscriptionStatus @default(ACTIVE)
   renewsAt   DateTime?
+  stripeSubscriptionId String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 

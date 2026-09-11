@@ -23,7 +23,7 @@ export function ListingAdRow({ item }: { item: PublicListingCard }) {
       >
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <p className="tabular font-medium text-ink">Portefeuille #{item.publicNumber}</p>
+            <p className="tabular font-medium text-ink">Dossier n° {item.publicNumber}</p>
             {item.certified ? <CertifiedBadge compact /> : null}
             {item.isPartial ? (
               <span className="rounded-full border border-line px-2.5 py-0.5 text-sm text-muted">

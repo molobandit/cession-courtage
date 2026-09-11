@@ -181,7 +181,7 @@ export function MessageForm({
           <option value="">Tous les acquéreurs ayant offert</option>
           {recipients.map((r) => (
             <option key={r.id} value={r.id}>
-              #{r.publicAlias}
+              {r.publicAlias.replace(/^#/, "")}
             </option>
           ))}
         </select>

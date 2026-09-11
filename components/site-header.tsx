@@ -1,4 +1,4 @@
-import { getActor, isAdmin, isOriasVerified } from "@/lib/authz";
+import { getActor, isAdmin, isInvestor, isOriasVerified } from "@/lib/authz";
 import { SiteHeaderBar } from "@/components/site-header-bar";
 
 export async function SiteHeader() {
@@ -9,7 +9,9 @@ export async function SiteHeader() {
         memberHref: isOriasVerified(actor)
           ? isAdmin(actor)
             ? "/admin/orias"
-            : "/app"
+            : isInvestor(actor)
+              ? "/app/mes-dossiers"
+              : "/app"
           : "/en-attente-orias",
         memberLabel: isAdmin(actor) ? "Administration" : "Espace membre",
       }

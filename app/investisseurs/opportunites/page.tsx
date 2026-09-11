@@ -33,7 +33,7 @@ export default async function InvestorOpportunitiesPage({
       <ul className="mt-8 grid gap-5 md:grid-cols-2">
         {listings.map((item) => (
           <li key={item.id} className="rounded-xl border border-line bg-paper p-5">
-            <p className="tabular text-[13px] font-semibold text-indigo">DEAL #{item.publicNumber}</p>
+            <p className="tabular text-[13px] font-semibold text-indigo">Dossier n° {item.publicNumber}</p>
             <p className="mt-2 text-[15px] font-semibold text-ink">
               {item.isNationwide ? "France entière" : item.zone}
               {item.riskTypes[0] ? ` · ${item.riskTypes[0]}` : ""}
@@ -50,10 +50,10 @@ export default async function InvestorOpportunitiesPage({
               </div>
             ) : null}
             <Link
-              href={`/investisseurs/opportunites?deal=${item.publicNumber}`}
+              href={`/annonces/${item.publicNumber}?voie=investir`}
               className="mt-4 inline-block text-[14px] font-medium text-indigo underline-offset-2 hover:underline"
             >
-              Je souhaite me positionner
+              Suivre ce dossier
             </Link>
           </li>
         ))}
@@ -64,7 +64,7 @@ export default async function InvestorOpportunitiesPage({
       {selected ? (
         <section className="mt-12 rounded-xl border border-line bg-paper p-7">
           <h2 className="text-xl font-semibold text-ink">
-            Positionnement sur DEAL #{selected.publicNumber}
+            Positionnement sur le dossier n° {selected.publicNumber}
           </h2>
           <div className="mt-6">
             <InvestorInquiryForm listingId={selected.id} />

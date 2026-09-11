@@ -5,6 +5,7 @@ import { PageIntro } from "@/components/page-intro";
 import { PublicListingList } from "@/components/listing/public-listing-list";
 import { GROWTH_PLAN_ANNUAL_EUR, INTEREST_DEPOSIT_LABEL } from "@/lib/billing/rates";
 import { loadPublicListingCards } from "@/lib/listing/load-public-cards";
+import { canBuy, getActor, isOriasVerified } from "@/lib/authz";
 
 export const metadata: Metadata = {
   title: "Annonces de portefeuilles de courtage",
@@ -16,12 +17,16 @@ export const metadata: Metadata = {
 export default async function PublicListingsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ zone?: string }>;
+  searchParams: Promise<{ zone?: string; q?: string }>;
 }) {
-  const { zone } = await searchParams;
+  const { zone, q } = await searchParams;
   const cards = await loadPublicListingCards();
+  const actor = await getActor();
+  const mandateHref =
+    actor && isOriasVerified(actor) && canBuy(actor) ? "/app/mandats" : "/acquerir";
 
   const initialZone = zone?.trim() ?? "";
+  const initialQuery = q?.trim() ?? "";
 
   return (
     <main>
@@ -54,13 +59,16 @@ export default async function PublicListingsPage({
               fois par jour.
             </p>
             <Button asChild variant="primary" className="mt-6">
-              <Link href="/acquerir">Déposer un mandat</Link>
+              <Link href={mandateHref}>Déposer un mandat</Link>
             </Button>
           </div>
         ) : (
           <PublicListingList
             listings={cards}
-            initialFilters={initialZone ? { zone: initialZone } : undefined}
+            initialFilters={{
+              ...(initialZone ? { zone: initialZone } : {}),
+              ...(initialQuery ? { q: initialQuery } : {}),
+            }}
           />
         )}
       </div>

@@ -15,7 +15,11 @@ import { VERIFIED_FEE_RANGE_LABEL } from "@/lib/billing/rates";
 
 const initial: ListingFormState = {};
 const selectClass =
-  "flex h-9 w-full rounded-sm border border-line bg-paper px-2.5 text-sm text-ink outline-none focus:border-navy focus:ring-1 focus:ring-navy";
+  "mt-1.5 flex h-11 w-full rounded-xl border border-line bg-surface-alt px-4 text-[15px] text-ink outline-none focus:border-indigo focus:ring-1 focus:ring-indigo";
+const areaClass =
+  "mt-1.5 w-full rounded-xl border border-line bg-surface-alt px-4 py-3 text-[15px] text-ink outline-none focus:border-indigo focus:ring-1 focus:ring-indigo";
+const fieldsetClass = "grid gap-4 rounded-[1.75rem] border border-line bg-paper p-5 shadow-sm sm:p-7";
+const legendClass = "text-[13px] font-medium uppercase tracking-[0.14em] text-indigo-dark";
 
 export function CreateListingForm({
   portfolioId,
@@ -28,12 +32,10 @@ export function CreateListingForm({
 }) {
   const [state, action, pending] = useActionState(createListingAction, initial);
   return (
-    <form action={action} className="grid max-w-2xl gap-4">
+    <form action={action} className="grid max-w-2xl gap-6">
       <input type="hidden" name="portfolioId" value={portfolioId} />
-      <fieldset className="grid gap-3">
-        <legend className="text-[13px] font-semibold uppercase tracking-[0.08em] text-indigo">
-          Informations générales
-        </legend>
+      <fieldset className={fieldsetClass}>
+        <legend className={legendClass}>Informations générales</legend>
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="grid gap-1">
             <Label htmlFor="portfolioKind">Type de portefeuille</Label>
@@ -68,8 +70,8 @@ export function CreateListingForm({
         </div>
         <div className="grid gap-1">
           <Label htmlFor="askingPrice">Prix demandé (€)</Label>
-          <Input id="askingPrice" name="askingPrice" defaultValue={defaultAsking} required />
-          <p className="text-xs text-muted">Entre 2 000 et 200 000 €. Fourchette possible via la négociation.</p>
+          <Input id="askingPrice" name="askingPrice" defaultValue={defaultAsking} required className="mt-1.5 h-11 rounded-xl" />
+          <p className="text-[13px] text-muted">Entre 2 000 et 200 000 €. Fourchette possible via la négociation.</p>
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="grid gap-1">
@@ -89,10 +91,8 @@ export function CreateListingForm({
           </div>
         </div>
       </fieldset>
-      <fieldset className="grid gap-3">
-        <legend className="text-[13px] font-semibold uppercase tracking-[0.08em] text-indigo">
-          Données financières
-        </legend>
+      <fieldset className={fieldsetClass}>
+        <legend className={legendClass}>Données financières</legend>
         <p className="text-[13px] leading-relaxed text-muted">
           Les commissions, le nombre de clients et les compagnies viennent du
           bordereau importé. Le précompte n’apparaît pas sur la fiche publique.
@@ -112,16 +112,148 @@ export function CreateListingForm({
           </div>
         </div>
       </fieldset>
-      <div className="grid gap-1">
-        <Label htmlFor="presentation">Présentez votre portefeuille</Label>
-        <textarea
-          id="presentation"
-          name="presentation"
-          rows={7}
-          className="w-full rounded-md border border-line bg-paper px-2.5 py-2 text-sm text-ink outline-none focus:border-indigo focus:ring-1 focus:ring-indigo"
-          placeholder="Histoire, potentiel, profil des clients, points forts, compagnies, modalités de transmission…"
-        />
-      </div>
+      <fieldset className={fieldsetClass}>
+        <legend className={legendClass}>Cadre juridique de la cession</legend>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-1">
+            <Label htmlFor="transferVehicle">Objet de la cession</Label>
+            <select id="transferVehicle" name="transferVehicle" className={selectClass} defaultValue="">
+              <option value="">Non précisé</option>
+              <option value="parts">Cession de parts sociales</option>
+              <option value="fonds">Cession de fonds de commerce / portefeuille</option>
+              <option value="mixte">Mixte</option>
+            </select>
+          </div>
+          <div className="grid gap-1">
+            <Label htmlFor="oriasCategories">Catégories ORIAS</Label>
+            <Input id="oriasCategories" name="oriasCategories" placeholder="COA, MIA…" />
+          </div>
+          <div className="grid gap-1">
+            <Label htmlFor="distribution">Mode de distribution</Label>
+            <select id="distribution" name="distribution" className={selectClass} defaultValue="">
+              <option value="">Non précisé</option>
+              <option value="agence">Agence / bureau</option>
+              <option value="distance">Vente à distance</option>
+              <option value="mixte">Mixte</option>
+            </select>
+          </div>
+          <div className="grid gap-1">
+            <Label htmlFor="distanceShare">Part vente à distance</Label>
+            <Input id="distanceShare" name="distanceShare" placeholder="ex. 30 %" />
+          </div>
+          <div className="grid gap-1">
+            <Label htmlFor="complianceDema">Démarchage téléphonique</Label>
+            <select id="complianceDema" name="complianceDema" className={selectClass} defaultValue="">
+              <option value="">Non précisé</option>
+              <option value="aucun">Aucun démarchage</option>
+              <option value="conforme">Activité conforme Bloctel</option>
+              <option value="a_regulariser">À régulariser</option>
+            </select>
+          </div>
+          <div className="grid gap-1">
+            <Label htmlFor="rcProInsurer">Assureur RC professionnelle</Label>
+            <Input id="rcProInsurer" name="rcProInsurer" placeholder="Compagnie, n° de contrat" />
+          </div>
+        </div>
+      </fieldset>
+      <fieldset className={fieldsetClass}>
+        <legend className={legendClass}>Organisation du cabinet</legend>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-1">
+            <Label htmlFor="employeeCount">Effectif</Label>
+            <Input id="employeeCount" name="employeeCount" placeholder="Salariés, mandataires" />
+          </div>
+          <div className="grid gap-1">
+            <Label htmlFor="introducersCount">Apporteurs d’affaires</Label>
+            <Input id="introducersCount" name="introducersCount" placeholder="Nombre, nature des accords" />
+          </div>
+          <div className="grid gap-1 sm:col-span-2">
+            <Label htmlFor="softwareStack">Logiciels métier</Label>
+            <Input id="softwareStack" name="softwareStack" placeholder="CRM, comparateur, GED…" />
+          </div>
+          <div className="grid gap-1 sm:col-span-2">
+            <Label htmlFor="socialCommitments">Engagements sociaux</Label>
+            <textarea
+              id="socialCommitments"
+              name="socialCommitments"
+              rows={3}
+              className={areaClass}
+              placeholder="Clauses de non-concurrence, reprise du personnel, location-gérance…"
+            />
+          </div>
+          <div className="grid gap-1 sm:col-span-2">
+            <Label htmlFor="pendingLitigation">Litiges et contentieux</Label>
+            <textarea
+              id="pendingLitigation"
+              name="pendingLitigation"
+              rows={3}
+              className={areaClass}
+              placeholder="Aucun, ou description sans nom de client final"
+            />
+          </div>
+        </div>
+      </fieldset>
+      <fieldset className={fieldsetClass}>
+        <legend className={legendClass}>Conformité intermédiaire</legend>
+        <p className="text-[14px] leading-relaxed text-muted">
+          Ces éléments aident l’acquéreur à vérifier l’éligibilité de la reprise
+          (DDA, LCB-FT, ORIAS). Aucun nom de client final.
+        </p>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-1">
+            <Label htmlFor="ddaTraining">Formation DDA</Label>
+            <select id="ddaTraining" name="ddaTraining" className={selectClass} defaultValue="">
+              <option value="">Non précisé</option>
+              <option value="a_jour">Formations à jour</option>
+              <option value="en_cours">Plan de rattrapage en cours</option>
+              <option value="a_regulariser">À régulariser</option>
+            </select>
+          </div>
+          <div className="grid gap-1">
+            <Label htmlFor="amlProcedure">Dispositif LCB-FT</Label>
+            <select id="amlProcedure" name="amlProcedure" className={selectClass} defaultValue="">
+              <option value="">Non précisé</option>
+              <option value="formalise">Formalisé</option>
+              <option value="en_cours">Mise à jour en cours</option>
+              <option value="a_regulariser">À formaliser</option>
+            </select>
+          </div>
+          <div className="grid gap-1">
+            <Label htmlFor="sellerDependency">Dépendance au cédant</Label>
+            <select id="sellerDependency" name="sellerDependency" className={selectClass} defaultValue="">
+              <option value="">Non précisé</option>
+              <option value="faible">Faible</option>
+              <option value="moyenne">Moyenne</option>
+              <option value="forte">Forte</option>
+            </select>
+          </div>
+          <div className="grid gap-1">
+            <Label htmlFor="premisesStatus">Locaux</Label>
+            <Input id="premisesStatus" name="premisesStatus" placeholder="Bail, propriété, coworking…" className="mt-1.5 h-11 rounded-xl" />
+          </div>
+          <div className="grid gap-1 sm:col-span-2">
+            <Label htmlFor="exclusiveMandates">Mandats exclusifs / compagnies clés</Label>
+            <Input id="exclusiveMandates" name="exclusiveMandates" placeholder="Sans nom de client final" className="mt-1.5 h-11 rounded-xl" />
+          </div>
+          <div className="grid gap-1 sm:col-span-2">
+            <Label htmlFor="stornoShare">Storno / clawback commissions</Label>
+            <Input id="stornoShare" name="stornoShare" placeholder="ex. 4 % sur 12 mois" className="mt-1.5 h-11 rounded-xl" />
+          </div>
+        </div>
+      </fieldset>
+      <fieldset className={fieldsetClass}>
+        <legend className={legendClass}>Présentation</legend>
+        <div className="grid gap-1">
+          <Label htmlFor="presentation">Présentez votre portefeuille</Label>
+          <textarea
+            id="presentation"
+            name="presentation"
+            rows={7}
+            className={areaClass}
+            placeholder="Histoire, potentiel, profil des clients, points forts, compagnies, modalités de transmission…"
+          />
+        </div>
+      </fieldset>
       <label className="flex items-start gap-2 text-sm text-ink">
         <input
           type="checkbox"
@@ -139,6 +271,10 @@ export function CreateListingForm({
       <Button type="submit" disabled={pending}>
         {pending ? "Création…" : "Enregistrer le brouillon"}
       </Button>
+      <p className="text-[13px] leading-relaxed text-muted">
+        Après enregistrement, déposez les PDF du cabinet (Kbis, ORIAS, RC pro, présentation)
+        sur la fiche de l’annonce. L’acquéreur les voit après le dépôt de 2,5 % du prix.
+      </p>
     </form>
   );
 }

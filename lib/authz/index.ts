@@ -5,8 +5,10 @@ export {
   requireAdmin,
   requireSeller,
   requireBuyer,
+  requireInvestor,
   isAdmin,
   isOriasVerified,
+  isInvestor,
   canSell,
   canBuy,
   type Actor,
@@ -27,7 +29,15 @@ export { listMyImports, findMyImport, getMyImport, ensureSellerFirm } from "@/li
 export { listMyOffers, listOffersForListing } from "@/lib/authz/offers";
 export { listMyDeals, getMyDeal, findMyDeal, counterpartyDisplayName } from "@/lib/authz/deals";
 export { listMyMandates, getMyMandate, listPublicMandates } from "@/lib/authz/mandates";
-export { listPendingOriasUsers, verifyOrias, rejectOrias } from "@/lib/authz/admin";
+export {
+  listPendingOriasUsers,
+  verifyOrias,
+  rejectOrias,
+  listInvestorInquiries,
+  countUnreadInvestorInquiries,
+  setInvestorInquiryRead,
+  listCertificationRequests,
+} from "@/lib/authz/admin";
 export {
   listPublicListings,
   listPublicListingFacets,

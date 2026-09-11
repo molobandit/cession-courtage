@@ -26,6 +26,9 @@ export const INTEREST_DEPOSIT_LABEL = "2,5 %";
 /** Abonnement annuel obligatoire, HT, pour le detail de l'offre (contact, messages). */
 export const GROWTH_PLAN_ANNUAL_EUR = 250;
 
+/** TVA applicable a l'abonnement (prestation de services, France). */
+export const VAT_RATE = 0.2;
+
 /** Le forfait gratuit ne preleve pas d'honoraires differents : seul le contact change. */
 export const FREE_PLAN_DEAL_QUOTA = 3;
 
@@ -61,6 +64,16 @@ export const PLANS: Record<PlanKey, PlanDefinition> = {
 
 export function percentHtLabel(rate: number): string {
   return `${(rate * 100).toLocaleString("fr-FR")} % HT`;
+}
+
+/** Montant TTC de l'abonnement annuel, arrondi au centime. */
+export function growthPlanAnnualTtcEur(): number {
+  return Math.round(GROWTH_PLAN_ANNUAL_EUR * (1 + VAT_RATE) * 100) / 100;
+}
+
+/** Montant TTC en centimes, pour Stripe. */
+export function growthPlanAnnualTtcCents(): number {
+  return Math.round(growthPlanAnnualTtcEur() * 100);
 }
 
 /** Depot simule historique. Aucun encaissement. */

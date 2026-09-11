@@ -103,6 +103,12 @@ describe("filterListings", () => {
     });
     expect(result.map((l) => l.id)).toEqual(["a"]);
   });
+
+  it("la recherche libre porte sur la zone, les compagnies et le numero public", () => {
+    expect(filterListings(LOT, { ...EMPTY_FILTERS, q: "generali" }).map((l) => l.id)).toEqual(["b"]);
+    const numbered = [listing({ id: "n", publicNumber: 42, zone: "Alsace" })];
+    expect(filterListings(numbered, { ...EMPTY_FILTERS, q: "42" }).map((l) => l.id)).toEqual(["n"]);
+  });
 });
 
 describe("sortListings", () => {
@@ -128,6 +134,7 @@ describe("countActiveFilters", () => {
     expect(countActiveFilters({ ...EMPTY_FILTERS, zone: "  " })).toBe(0);
     expect(countActiveFilters({ ...EMPTY_FILTERS, zone: "Nord", openOnly: true })).toBe(2);
     expect(countActiveFilters({ ...EMPTY_FILTERS, certifiedOnly: true })).toBe(1);
+    expect(countActiveFilters({ ...EMPTY_FILTERS, q: "nord" })).toBe(1);
   });
 });
 

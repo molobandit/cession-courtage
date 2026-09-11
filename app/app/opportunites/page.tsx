@@ -49,7 +49,7 @@ export default async function OpportunitiesPage() {
                       href={`/annonces/${m.listing.publicNumber}`}
                       className="font-medium text-indigo-dark"
                     >
-                      #{m.listing.publicNumber}
+                      Dossier n° {m.listing.publicNumber}
                     </Link>
                   </td>
                   <td className="px-4 py-3">{m.listing.displayedZone}</td>

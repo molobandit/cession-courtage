@@ -10,12 +10,12 @@ import {
   isOriasVerified,
   listListingMailboxRecipients,
   listListingMessages,
-  listOffersForListing,
 } from "@/lib/authz";
 import { isOfferWindowSealed } from "@/lib/authz/policies";
 import { formatDate, formatEuro } from "@/lib/format/fr";
-import { LISTING_STATUS_LABELS, OFFER_STATUS_LABELS } from "@/lib/labels";
-import { AcceptOfferButton } from "@/components/offer/offer-forms";
+import { LISTING_STATUS_LABELS } from "@/lib/labels";
+import { listCompanyDocs } from "@/lib/listing/company-docs";
+import { CompanyDocumentsPanel } from "@/components/listing/company-documents-panel";
 
 export const metadata = { title: "Annonce" };
 
@@ -29,9 +29,9 @@ export default async function SellerListingPage({ params }: { params: Promise<{ 
   if (!listing) notFound();
 
   const sealed = isOfferWindowSealed(listing);
-  const offers = await listOffersForListing(id, actor);
   const messages = await listListingMessages(id, actor);
   const recipients = await listListingMailboxRecipients(id, actor);
+  const companyDocs = await listCompanyDocs(id);
 
   return (
     <main className="mx-auto max-w-4xl px-4 py-6">
@@ -44,7 +44,7 @@ export default async function SellerListingPage({ params }: { params: Promise<{ 
           Fiche publique
         </Link>
       </p>
-      <h1 className="mt-1 text-2xl font-bold tracking-tight text-ink">Annonce #{listing.publicNumber}</h1>
+      <h1 className="mt-1 text-2xl font-bold tracking-tight text-ink">Dossier n° {listing.publicNumber}</h1>
       <p className="text-sm text-muted">
         {listing.portfolio.label} · {LISTING_STATUS_LABELS[listing.status]} · {formatEuro(listing.askingPrice)} ·{" "}
         {listing.displayedZone}
@@ -70,42 +70,17 @@ export default async function SellerListingPage({ params }: { params: Promise<{ 
         </Button>
       </div>
 
+      <div className="mt-6">
+        <CompanyDocumentsPanel listingId={listing.id} docs={companyDocs} canUpload canDownload />
+      </div>
+
       <section className="mt-6">
         <h2 className="text-lg font-semibold text-ink">Offres</h2>
-        {offers.access === "sealed" ? (
-          <p className="mt-2 border border-line bg-paper px-3 py-2 text-sm">
-            Fenêtre en cours : montants et nombre d&apos;offres masqués, y compris pour vous.
-          </p>
-        ) : offers.offers.length === 0 ? (
-          <p className="mt-2 text-sm text-muted">Aucune offre visible.</p>
-        ) : (
-          <table className="mt-2 w-full text-sm">
-            <thead className="bg-surface-alt text-left text-xs uppercase text-muted">
-              <tr>
-                <th className="px-2 py-1.5">Alias</th>
-                <th className="px-2 py-1.5 text-right">Montant</th>
-                <th className="px-2 py-1.5 text-right">Comptant</th>
-                <th className="px-2 py-1.5">Statut</th>
-                <th className="px-2 py-1.5" />
-              </tr>
-            </thead>
-            <tbody>
-              {offers.offers.map((o) => (
-                <tr key={o.id} className="border-t border-line">
-                  <td className="px-2 py-1.5">#{o.buyer.publicAlias}</td>
-                  <td className="px-2 py-1.5 text-right">{formatEuro(o.amount)}</td>
-                  <td className="px-2 py-1.5 text-right">{Number(o.upfrontPercent).toLocaleString("fr-FR")} %</td>
-                  <td className="px-2 py-1.5">{OFFER_STATUS_LABELS[o.status]}</td>
-                  <td className="px-2 py-1.5">
-                    {o.status === "SUBMITTED" && offers.access === "full" ? (
-                      <AcceptOfferButton offerId={o.id} />
-                    ) : null}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+        <p className="mt-2 text-sm text-muted">
+          <Link href={`/app/annonces/${listing.id}/offres`} className="font-medium text-indigo-dark hover:underline">
+            Comparer les offres
+          </Link>
+        </p>
       </section>
 
       <section className="mt-6">
@@ -113,7 +88,7 @@ export default async function SellerListingPage({ params }: { params: Promise<{ 
         <ul className="mt-2 space-y-2 text-sm">
           {messages.map((m) => (
             <li key={m.id} className="border border-line bg-paper p-2">
-              <span className="text-xs text-muted">#{m.sender.publicAlias}</span>
+              <span className="text-xs text-muted">{m.sender.publicAlias}</span>
               <p>{m.body}</p>
             </li>
           ))}

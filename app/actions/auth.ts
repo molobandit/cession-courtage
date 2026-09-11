@@ -7,6 +7,7 @@ import { signIn } from "@/auth";
 import { enregistrerEchec, verrouActif } from "@/lib/auth/throttle";
 import { prisma } from "@/lib/prisma";
 import { allocatePublicAlias } from "@/lib/auth/alias";
+import { investorOriasPlaceholder } from "@/lib/auth/investor-orias";
 import { issueMagicLink } from "@/lib/auth/magic-link";
 import { hashPassword } from "@/lib/auth/password";
 import { FREE_PLAN_DEAL_QUOTA, SUCCESS_FEE_RATE } from "@/lib/billing/rates";
@@ -15,6 +16,7 @@ import {
   emailCodeSchema,
   loginSchema,
   magicLinkRequestSchema,
+  registerInvestorSchema,
   registerSchema,
 } from "@/lib/validations/auth";
 
@@ -83,18 +85,10 @@ export async function registerAction(_prev: FormState, formData: FormData): Prom
         foundedAt,
         distributionMode: DistributionMode.MIXED,
         complianceScore: 50,
+        website: data.website ?? null,
+        activityType: data.activityType,
       },
     });
-    try {
-      await prisma.$executeRawUnsafe(
-        `UPDATE Firm SET website = ?, activityType = ? WHERE id = ?`,
-        data.website ?? null,
-        data.activityType,
-        firm.id,
-      );
-    } catch (extraError) {
-      console.error("register firm extras", extraError);
-    }
 
     let user;
     try {
@@ -109,21 +103,12 @@ export async function registerAction(_prev: FormState, formData: FormData): Prom
           publicAlias,
           kycStatus: "NONE",
           firmId: firm.id,
+          jobTitle: data.jobTitle ?? null,
         },
       });
     } catch (userError) {
       await prisma.firm.delete({ where: { id: firm.id } }).catch(() => undefined);
       throw userError;
-    }
-
-    try {
-      await prisma.$executeRawUnsafe(
-        `UPDATE User SET jobTitle = ? WHERE id = ?`,
-        data.jobTitle ?? null,
-        user.id,
-      );
-    } catch (titleError) {
-      console.error("register jobTitle", titleError);
     }
 
     try {
@@ -165,6 +150,76 @@ export async function registerAction(_prev: FormState, formData: FormData): Prom
       email: data.email,
       password: data.password,
       redirectTo: "/en-attente-orias",
+    });
+  } catch (error) {
+    if (error instanceof AuthError) {
+      return { error: "Compte créé, mais la connexion automatique a échoué. Connectez-vous." };
+    }
+    throw error;
+  }
+  return { ok: true };
+}
+
+export async function registerInvestorAction(_prev: FormState, formData: FormData): Promise<FormState> {
+  const parsed = registerInvestorSchema.safeParse({
+    firstName: formData.get("firstName"),
+    lastName: formData.get("lastName"),
+    email: formData.get("email"),
+    phone: formData.get("phone"),
+    password: formData.get("password"),
+    confirmPassword: formData.get("confirmPassword"),
+  });
+  if (!parsed.success) {
+    const fieldErrors = parsed.error.flatten().fieldErrors;
+    return { fieldErrors, error: firstIssue(fieldErrors) };
+  }
+
+  const data = parsed.data;
+  const fullName = `${data.firstName} ${data.lastName}`.trim();
+  const publicAlias = await allocatePublicAlias("INVESTOR");
+  const passwordHash = await hashPassword(data.password);
+
+  try {
+    const user = await prisma.user.create({
+      data: {
+        email: data.email,
+        phone: data.phone,
+        passwordHash,
+        role: "INVESTOR",
+        oriasNumber: investorOriasPlaceholder(publicAlias),
+        fullName,
+        publicAlias,
+        kycStatus: "NONE",
+      },
+    });
+    try {
+      await prisma.subscription.create({
+        data: {
+          userId: user.id,
+          plan: "FREE",
+          feeRate: SUCCESS_FEE_RATE.toFixed(4),
+          dealQuota: FREE_PLAN_DEAL_QUOTA,
+          dealsUsed: 0,
+          status: "ACTIVE",
+          renewsAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+        },
+      });
+    } catch (subscriptionError) {
+      await prisma.user.delete({ where: { id: user.id } }).catch(() => undefined);
+      throw subscriptionError;
+    }
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      return { error: "Un compte existe déjà avec cet e-mail." };
+    }
+    throw error;
+  }
+
+  try {
+    await signIn("credentials", {
+      email: data.email,
+      password: data.password,
+      redirectTo: "/app/mes-dossiers",
     });
   } catch (error) {
     if (error instanceof AuthError) {

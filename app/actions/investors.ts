@@ -25,45 +25,22 @@ export async function createInvestorInquiryAction(
   });
   if (!parsed.success) return { error: firstIssue(parsed.error) };
 
-  const id = crypto.randomUUID();
-  try {
-    await prisma.$executeRawUnsafe(
-      `INSERT INTO InvestorInquiry (
-        id, organisation, fullName, email, phone, investorType,
-        ticketMinEur, ticketMaxEur, zones, intervention, jobTitle, sectors, listingId
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      id,
-      parsed.data.organisation,
-      parsed.data.fullName,
-      parsed.data.email,
-      parsed.data.phone ?? null,
-      parsed.data.investorType,
-      parsed.data.ticketMinEur ?? null,
-      parsed.data.ticketMaxEur ?? null,
-      parsed.data.zones,
-      parsed.data.intervention,
-      parsed.data.jobTitle ?? null,
-      parsed.data.sectors ?? null,
-      parsed.data.listingId ?? null,
-    );
-  } catch {
-    await prisma.$executeRawUnsafe(
-      `INSERT INTO InvestorInquiry (
-        id, organisation, fullName, email, phone, investorType,
-        ticketMinEur, ticketMaxEur, zones, intervention
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      id,
-      parsed.data.organisation,
-      parsed.data.fullName,
-      parsed.data.email,
-      parsed.data.phone ?? null,
-      parsed.data.investorType,
-      parsed.data.ticketMinEur ?? null,
-      parsed.data.ticketMaxEur ?? null,
-      parsed.data.zones,
-      parsed.data.intervention,
-    );
-  }
+  await prisma.investorInquiry.create({
+    data: {
+      organisation: parsed.data.organisation,
+      fullName: parsed.data.fullName,
+      email: parsed.data.email,
+      phone: parsed.data.phone ?? null,
+      investorType: parsed.data.investorType,
+      ticketMinEur: parsed.data.ticketMinEur ?? null,
+      ticketMaxEur: parsed.data.ticketMaxEur ?? null,
+      zones: parsed.data.zones,
+      intervention: parsed.data.intervention,
+      jobTitle: parsed.data.jobTitle ?? null,
+      sectors: parsed.data.sectors ?? null,
+      listingId: parsed.data.listingId ?? null,
+    },
+  });
 
   return { ok: true };
 }

@@ -39,6 +39,18 @@ export function formatDate(value: Date | string): string {
   return dateFr.format(typeof value === "string" ? new Date(value) : value);
 }
 
+const dateTimeFr = new Intl.DateTimeFormat("fr-FR", {
+  day: "2-digit",
+  month: "2-digit",
+  year: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+});
+
+export function formatDateTime(value: Date | string): string {
+  return dateTimeFr.format(typeof value === "string" ? new Date(value) : value);
+}
+
 export function formatPercent(value: number, digits = 1): string {
   return `${value.toLocaleString("fr-FR", {
     minimumFractionDigits: digits,

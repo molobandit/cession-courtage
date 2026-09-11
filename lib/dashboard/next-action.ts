@@ -106,7 +106,7 @@ export function nextAction(state: DashboardState): NextAction {
   if (state.canSell && state.draftListing) {
     return {
       tone: "action",
-      title: `Votre annonce #${state.draftListing.publicNumber} est encore en brouillon`,
+      title: `Votre dossier n° ${state.draftListing.publicNumber} est encore en brouillon`,
       detail: "Tant qu’elle n’est pas publiée, aucun acquéreur ne peut la voir.",
       href: `/app/annonces/${state.draftListing.id}`,
       cta: "Compléter et publier",

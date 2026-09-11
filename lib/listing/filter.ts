@@ -8,6 +8,7 @@
 
 export type FilterableListing = {
   id: string;
+  publicNumber?: number;
   status: string;
   zone: string;
   askingPrice: number;
@@ -26,6 +27,7 @@ export type CatalogueFilters = {
   segment: string;
   /** Saisie libre : « 50 000 », « 50000 € ». */
   maxPrice: string;
+  q: string;
   openOnly: boolean;
   certifiedOnly: boolean;
 };
@@ -38,6 +40,7 @@ export const EMPTY_FILTERS: CatalogueFilters = {
   risk: "",
   segment: "",
   maxPrice: "",
+  q: "",
   openOnly: false,
   certifiedOnly: false,
 };
@@ -59,10 +62,23 @@ export function filterListings<T extends FilterableListing>(
   filters: CatalogueFilters,
 ): T[] {
   const zoneQuery = filters.zone.trim().toLowerCase();
+  const freeQuery = filters.q.trim().toLowerCase();
   const ceiling = parsePriceCeiling(filters.maxPrice);
 
   return listings.filter((item) => {
     if (zoneQuery && !item.zone.toLowerCase().includes(zoneQuery)) return false;
+    if (freeQuery) {
+      const haystack = [
+        item.zone,
+        item.publicNumber != null ? String(item.publicNumber) : "",
+        ...item.carriers,
+        ...item.riskTypes,
+        ...item.clientSegments,
+      ]
+        .join(" ")
+        .toLowerCase();
+      if (!haystack.includes(freeQuery)) return false;
+    }
     if (ceiling !== null && item.askingPrice > ceiling) return false;
     if (filters.carrier && !item.carriers.includes(filters.carrier)) return false;
     if (filters.risk && !item.riskTypes.includes(filters.risk)) return false;
@@ -83,6 +99,13 @@ export function sortListings<T extends FilterableListing>(listings: T[], sort: S
 }
 
 export function countActiveFilters(filters: CatalogueFilters): number {
-  const text = [filters.zone, filters.carrier, filters.risk, filters.segment, filters.maxPrice];
+  const text = [
+    filters.zone,
+    filters.carrier,
+    filters.risk,
+    filters.segment,
+    filters.maxPrice,
+    filters.q,
+  ];
   return text.filter((v) => v.trim() !== "").length + (filters.openOnly ? 1 : 0) + (filters.certifiedOnly ? 1 : 0);
 }

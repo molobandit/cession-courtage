@@ -11,6 +11,7 @@ import {
   getListingByPublicNumber,
   isListingMailboxParty,
   isOriasVerified,
+  isInvestor,
   listListingMailboxRecipients,
   listListingMessages,
   listOffersForListing,
@@ -23,7 +24,14 @@ import { formatEuroWhole } from "@/lib/format/number";
 import { LISTING_STATUS_LABELS, RISK_TYPE_LABELS, SEGMENT_LABELS } from "@/lib/labels";
 import { OFFER_WINDOW_DAYS } from "@/lib/listing/constants";
 import { loadListingBriefFields } from "@/lib/listing/brief-fields";
+import { cessionMotiveLabel, regulatoryFacts } from "@/lib/listing/brief-labels";
+import { actorCanReadCompanyDocs, listCompanyDocs } from "@/lib/listing/company-docs";
+import { loadCedantIdentity } from "@/lib/listing/cedant-identity";
+import { CompanyDocumentsPanel } from "@/components/listing/company-documents-panel";
+import { CedantIdentityCard } from "@/components/listing/cedant-identity-card";
 import { findMyDeposit } from "@/lib/listing/deposit";
+import { findMyInvestorPosition } from "@/lib/investor/positions";
+import { InvestorDepositForm } from "@/components/investor/placement-forms";
 import { listCertificationStatuses } from "@/lib/listing/certification";
 import { DepositForm } from "@/components/listing/deposit-form";
 import {
@@ -40,17 +48,20 @@ export async function generateMetadata({
   params: Promise<{ numero: string }>;
 }): Promise<Metadata> {
   const { numero } = await params;
-  return { title: `Portefeuille #${numero}` };
+  return { title: `Dossier n° ${numero}` };
 }
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 export default async function PublicListingPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ numero: string }>;
+  searchParams: Promise<{ voie?: string }>;
 }) {
   const { numero } = await params;
+  const { voie } = await searchParams;
   const publicNumber = Number(numero);
   if (!Number.isFinite(publicNumber)) notFound();
   const actor = await getActor();
@@ -100,6 +111,7 @@ export default async function PublicListingPage({
   const schedule = maturitySchedule(lines, new Date());
 
   const verified = actor ? isOriasVerified(actor) : false;
+  const investorMode = Boolean(voie === "investir" || (actor && isInvestor(actor)));
   const isSeller = Boolean(actor && ownsFirm(actor, listing.portfolio.firmId));
   const sealed = isOfferWindowSealed(listing);
   const subscribed = Boolean(actor && (await hasContactSubscription(actor)));
@@ -129,12 +141,17 @@ export default async function PublicListingPage({
     : null;
 
   const deposit = interestDepositFor(askingPrice);
-  // Depot du demandeur uniquement : les depots concurrents ne le regardent pas.
-  const myDeposit = actor && !isSeller ? await findMyDeposit(listing.id, actor.id) : null;
+  const myDeposit = actor && !isSeller && !isInvestor(actor) ? await findMyDeposit(listing.id, actor.id) : null;
+  const investorPos =
+    actor && isInvestor(actor) && !isSeller ? await findMyInvestorPosition(listing.id, actor.id) : null;
   const certification =
     (await listCertificationStatuses([listing.id])).get(listing.id) ?? "NONE";
   const certified = certification === "CERTIFIED";
   const brief = await loadListingBriefFields(listing.id);
+  const canReadCompanyDocs = await actorCanReadCompanyDocs(listing.id);
+  const companyDocs = canReadCompanyDocs ? await listCompanyDocs(listing.id) : [];
+  const cedantIdentity =
+    canReadCompanyDocs && !isSeller ? await loadCedantIdentity(listing.id) : null;
 
   const zone = listing.isNationwide ? "France entière" : listing.displayedZone;
   const mainBranch = byRisk[0]?.label ?? "Portefeuille de courtage";
@@ -144,14 +161,14 @@ export default async function PublicListingPage({
   const segments = bySegment.map((s) => s.label).join(", ") || EMPTY_CELL;
   const presentation =
     brief.presentation?.trim() ||
-    `Portefeuille de courtage en ${mainBranch.toLowerCase()}, zone ${zone}. ${contractCount.toLocaleString("fr-FR")} contrats pour ${clientCount.toLocaleString("fr-FR")} clients, commissions annuelles de ${formatEuroWhole(annualCommissions)}. ${listing.isPartial ? "Cession partielle." : "Cession totale."}${listing.sellerSupportMonths > 0 ? ` Accompagnement prévu : ${listing.sellerSupportMonths} mois.` : ""} Alias Portefeuille #${listing.publicNumber}.`;
+    `Portefeuille de courtage en ${mainBranch.toLowerCase()}, zone ${zone}. ${contractCount.toLocaleString("fr-FR")} contrats pour ${clientCount.toLocaleString("fr-FR")} clients, commissions annuelles de ${formatEuroWhole(annualCommissions)}. ${listing.isPartial ? "Cession partielle." : "Cession totale."}${listing.sellerSupportMonths > 0 ? ` Accompagnement prévu : ${listing.sellerSupportMonths} mois.` : ""} Référence : dossier n° ${listing.publicNumber}.`;
 
   const facts = [
     { label: "Localisation", value: zone },
     { label: "Type", value: brief.portfolioKind?.trim() || "Courtage" },
     { label: "Type de clientèle", value: segments },
     { label: "Branche principale", value: mainBranch },
-    { label: "Raison de la vente", value: brief.cessionMotive?.trim() || EMPTY_CELL },
+    { label: "Raison de la vente", value: cessionMotiveLabel(brief.cessionMotive) || brief.cessionMotive?.trim() || EMPTY_CELL },
     { label: "Prix", value: brief.negotiable ? "Négociable" : "Fermé" },
     ...(listing.sellerSupportMonths > 0
       ? [{ label: "Accompagnement", value: `${listing.sellerSupportMonths} mois` }]
@@ -159,13 +176,19 @@ export default async function PublicListingPage({
     ...(brief.desiredCessionDate
       ? [{ label: "Cession souhaitée", value: brief.desiredCessionDate }]
       : []),
+    ...regulatoryFacts(brief.regulatory),
   ];
 
   const interestHref = !actor
     ? `/connexion?next=/annonces/${listing.publicNumber}`
     : subscribed
-      ? "#interesse"
+      ? "#depot"
       : "/tarifs#abonnement";
+  const followHref = !actor
+    ? `/connexion?next=${encodeURIComponent(`/annonces/${listing.publicNumber}?voie=investir`)}`
+    : isInvestor(actor)
+      ? "#suivi"
+      : `/inscription?voie=investir`;
 
   return (
     <PublicListingDetail
@@ -197,9 +220,97 @@ export default async function PublicListingPage({
         top10,
         carrierHhi,
         interestHref,
+        followHref,
         manageHref: isSeller ? `/app/annonces/${listing.id}` : null,
       }}
     >
+      {cedantIdentity ? <CedantIdentityCard identity={cedantIdentity} /> : null}
+
+      {investorMode && !isSeller ? (
+        <section id="suivi" className="rounded-3xl border border-indigo-line bg-surface p-7">
+          <h2 className="text-2xl font-semibold text-ink">Suivi de ce dossier</h2>
+          {!actor ? (
+            <>
+              <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-muted">
+                Un compte investisseur, sans ORIAS, permet de déposer {INTEREST_DEPOSIT_LABEL} du
+                prix demandé ({formatEuroWhole(deposit)}) pour ouvrir les coordonnées du cabinet
+                cédant. Les assurés restent anonymes. Aucun encaissement en démo.
+              </p>
+              <div className="mt-5 flex flex-wrap gap-3">
+                <Button asChild variant="primary">
+                  <Link href={`/inscription?voie=investir`}>Créer un compte investisseur</Link>
+                </Button>
+                <Button asChild variant="outline">
+                  <Link href={`/connexion?next=${encodeURIComponent(`/annonces/${listing.publicNumber}?voie=investir`)}`}>
+                    Connexion
+                  </Link>
+                </Button>
+              </div>
+            </>
+          ) : !isInvestor(actor) ? (
+            <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-muted">
+              Ce suivi est réservé au compte investisseur. Les courtiers utilisent l’offre
+              d’acquisition ci-dessous.
+            </p>
+          ) : investorPos ? (
+            <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-muted">
+              Votre engagement de {formatEuroWhole(Number(investorPos.depositAmount))} est
+              enregistré. Les coordonnées du cabinet sont ouvertes. Consultez{" "}
+              <Link href="/app/mes-dossiers" className="font-medium text-indigo underline-offset-2 hover:underline">
+                Mes dossiers
+              </Link>{" "}
+              pour l’avancement de l’opération.
+            </p>
+          ) : (
+            <>
+              <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-muted">
+                Le cabinet reste sous alias tant que rien ne vous engage. Un dépôt de{" "}
+                {INTEREST_DEPOSIT_LABEL} du prix demandé, soit {formatEuroWhole(deposit)}, ouvre
+                ses coordonnées. Les assurés du portefeuille ne sont jamais nominatifs. Aucun
+                encaissement sur cette démonstration.
+              </p>
+              <InvestorDepositForm listingId={listing.id} amountLabel={formatEuroWhole(deposit)} />
+            </>
+          )}
+        </section>
+      ) : null}
+
+      {canReadCompanyDocs && !isSeller ? (
+        <CompanyDocumentsPanel
+          listingId={listing.id}
+          docs={companyDocs}
+          canUpload={false}
+          canDownload
+        />
+      ) : !isSeller ? (
+        <section className="rounded-[1.75rem] border border-line bg-paper p-5 sm:p-7">
+          <h2 className="text-lg font-bold tracking-tight text-ink">Pièces et identité du cédant</h2>
+          <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-muted">
+            Nom du cabinet, ORIAS, Kbis et autres PDF s’ouvrent au dépôt de{" "}
+            {INTEREST_DEPOSIT_LABEL} du prix demandé (
+            {formatEuroWhole(deposit)}). Avant cela, le cédant reste sous alias.
+            Les assurés du portefeuille ne sont jamais nominatifs sur cette fiche.
+          </p>
+          <Button asChild variant="outline" className="mt-4">
+            <Link
+              href={
+                !actor
+                  ? `/connexion?next=/annonces/${listing.publicNumber}`
+                  : subscribed
+                    ? "#depot"
+                    : "/tarifs#abonnement"
+              }
+            >
+              {!actor
+                ? "Se connecter"
+                : subscribed
+                  ? "Déposer 2,5 % pour ouvrir l’identité"
+                  : "S’abonner, puis déposer 2,5 %"}
+            </Link>
+          </Button>
+        </section>
+      ) : null}
+
       {!isSeller && !canOffer ? (
         <section className="rounded-3xl border border-indigo-line bg-indigo-soft p-7">
           <h2 className="text-2xl font-semibold text-ink">Je suis intéressé</h2>
@@ -234,7 +345,7 @@ export default async function PublicListingPage({
       ) : null}
 
       {actor && !isSeller && canBuy(actor) && subscribed ? (
-        <section className="rounded-3xl border border-indigo-line bg-surface p-7">
+        <section id="depot" className="rounded-3xl border border-indigo-line bg-surface p-7">
           <h2 className="text-2xl font-semibold text-ink">Lever l’anonymat</h2>
           {myDeposit ? (
             <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-muted">
@@ -242,8 +353,8 @@ export default async function PublicListingPage({
               <span className="tabular font-medium text-ink">
                 {formatEuroWhole(Number(myDeposit.amount))}
               </span>{" "}
-              est enregistré. Les coordonnées du cédant vous sont ouvertes dans le
-              dossier, sans attendre la lettre d’intention.
+              est enregistré. Les coordonnées du cédant et les PDF du cabinet sont
+              ouverts ci-dessus. Les assurés du portefeuille restent anonymes.
             </p>
           ) : (
             <>

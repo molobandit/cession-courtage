@@ -82,6 +82,20 @@ export const registerSchema = z
     path: ["confirmPassword"],
   });
 
+export const registerInvestorSchema = z
+  .object({
+    firstName: z.string().trim().min(1, "Indiquez votre prénom.").max(80),
+    lastName: z.string().trim().min(1, "Indiquez votre nom.").max(80),
+    email: z.string().trim().toLowerCase().email("Adresse e-mail invalide."),
+    phone: z.string().trim().min(8, "Indiquez un téléphone.").max(30),
+    password,
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Les mots de passe ne correspondent pas.",
+    path: ["confirmPassword"],
+  });
+
 export const loginSchema = z.object({
   email: z.string().trim().toLowerCase().email("Adresse e-mail invalide."),
   password: z.string().min(1, "Saisissez votre mot de passe."),

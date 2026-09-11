@@ -6,6 +6,7 @@ function prefixFor(role: UserRole): string {
   if (role === "BUYER") return "A";
   if (role === "ADMIN") return "Z";
   if (role === "BOTH") return "B";
+  if (role === "INVESTOR") return "I";
   return "C";
 }
 

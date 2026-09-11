@@ -12,6 +12,7 @@ import {
 import { OFFER_WINDOW_DAYS } from "@/lib/listing/constants";
 import { loadPublicListingCards } from "@/lib/listing/load-public-cards";
 import { BRAND_NAME } from "@/lib/site";
+import { BrandLockup } from "@/components/brand-mark";
 
 export const metadata: Metadata = {
   title: "Achetez ou vendez votre portefeuille simplement",
@@ -54,7 +55,7 @@ const FAQ = [
   },
   {
     q: "Mon nom apparaît-il sur l’annonce ?",
-    a: `Non. L’annonce reste sous alias Portefeuille #NNNNN. Ni raison sociale, ni commune. Le vendeur reste anonyme jusqu’au dépôt de ${INTEREST_DEPOSIT_LABEL} du prix.`,
+    a: `Non. L’annonce reste sous la référence Dossier n° NNNNN. Ni raison sociale, ni commune. Le vendeur reste anonyme jusqu’au dépôt de ${INTEREST_DEPOSIT_LABEL} du prix.`,
   },
   {
     q: "Quand payez-vous des honoraires ?",
@@ -72,6 +73,7 @@ export default async function HomePage() {
       <section className="overflow-hidden bg-page">
         <div className="mx-auto grid max-w-6xl items-center gap-12 px-4 py-14 lg:grid-cols-2 lg:py-20 lg:pb-28">
           <div>
+            <BrandLockup className="mb-6 h-36 w-auto sm:h-44" />
             <p className="inline-flex rounded-full border border-indigo-line bg-indigo-soft px-3 py-1 text-[12px] font-semibold text-indigo">
               Réservé aux courtiers ORIAS
             </p>
@@ -85,13 +87,13 @@ export default async function HomePage() {
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Button asChild variant="primary" size="lg">
-                <Link href="/ceder">Déposer une annonce</Link>
+                <Link href="/ceder">Je vends mon portefeuille</Link>
               </Button>
               <Button asChild variant="outline" size="lg">
-                <Link href="/annonces">Voir les annonces</Link>
+                <Link href="/annonces">Je recherche un portefeuille</Link>
               </Button>
               <Button asChild variant="ghost" size="lg">
-                <Link href="/investisseurs">Je suis investisseur</Link>
+                <Link href="/investisseurs/opportunites">Je suis investisseur</Link>
               </Button>
             </div>
             <form
@@ -138,7 +140,7 @@ export default async function HomePage() {
           )}
           <div className="mt-8 text-center">
             <Button asChild variant="outline">
-              <Link href="/annonces">Voir les annonces</Link>
+              <Link href="/annonces">Je recherche un portefeuille</Link>
             </Button>
           </div>
         </div>
@@ -161,7 +163,7 @@ export default async function HomePage() {
                 justifiée, offres visibles à la clôture.
               </p>
               <Button asChild variant="primary" className="mt-6">
-                <Link href="/ceder">Déposer une annonce</Link>
+                <Link href="/ceder">Je vends mon portefeuille</Link>
               </Button>
             </article>
             <article className="rounded-3xl border border-line bg-surface p-8 shadow-sm">
@@ -173,7 +175,7 @@ export default async function HomePage() {
                 {INTEREST_DEPOSIT_LABEL}.
               </p>
               <Button asChild variant="outline" className="mt-6">
-                <Link href="/annonces">Consulter les annonces</Link>
+                <Link href="/annonces">Je recherche un portefeuille</Link>
               </Button>
             </article>
             <article className="rounded-3xl border border-line bg-surface p-8 shadow-sm">
@@ -183,7 +185,7 @@ export default async function HomePage() {
                 correspondants, toujours sous alias.
               </p>
               <Button asChild variant="outline" className="mt-6">
-                <Link href="/investisseurs">Je suis investisseur</Link>
+                <Link href="/investisseurs/opportunites">Je suis investisseur</Link>
               </Button>
             </article>
           </div>
@@ -220,7 +222,7 @@ export default async function HomePage() {
               {
                 n: "1",
                 t: "Vous publiez",
-                b: "Bordereau anonymisé, alias Portefeuille #NNNNN, fourchette de prix.",
+                b: "Bordereau anonymisé, référence Dossier n° NNNNN, fourchette de prix.",
               },
               {
                 n: "2",
@@ -316,13 +318,13 @@ export default async function HomePage() {
               href="/ceder"
               className="rounded-full bg-white px-6 py-3 text-[15px] font-semibold text-indigo hover:bg-surface-alt"
             >
-              Déposer une annonce
+              Je vends mon portefeuille
             </Link>
             <Link
               href="/annonces"
               className="rounded-full border border-white/40 px-6 py-3 text-[15px] font-semibold text-white hover:bg-white/10"
             >
-              Voir les annonces
+              Je recherche un portefeuille
             </Link>
           </div>
         </div>

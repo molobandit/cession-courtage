@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { formatCount, formatEuroWhole } from "@/lib/format/number";
 import type { PublicListingCard } from "@/lib/listing/public-card";
 
@@ -14,22 +15,24 @@ export function HomeHeroVisual({ listings }: { listings: PublicListingCard[] }) 
         <ul className="mt-4 space-y-3">
           {rows.length > 0 ? (
             rows.map((item) => (
-              <li
-                key={item.id}
-                className="flex items-center justify-between gap-3 rounded-2xl border border-line bg-page px-4 py-3"
-              >
-                <div className="min-w-0">
-                  <p className="truncate text-[14px] font-medium text-ink">
-                    {item.isNationwide ? "France entière" : item.zone}
+              <li key={item.id}>
+                <Link
+                  href={`/annonces/${item.publicNumber}?voie=investir`}
+                  className="flex items-center justify-between gap-3 rounded-2xl border border-line bg-page px-4 py-3 hover:border-indigo-line"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate text-[14px] font-medium text-ink">
+                      {item.isNationwide ? "France entière" : item.zone}
+                    </p>
+                    <p className="mt-0.5 text-[12px] text-muted">
+                      {item.riskTypes[0] ?? "Portefeuille"}
+                      {item.certified ? " · Certifié" : ""}
+                    </p>
+                  </div>
+                  <p className="tabular shrink-0 text-[15px] font-semibold text-indigo">
+                    {formatEuroWhole(item.askingPrice)}
                   </p>
-                  <p className="mt-0.5 text-[12px] text-muted">
-                    {item.riskTypes[0] ?? "Portefeuille"}
-                    {item.certified ? " · Certifié" : ""}
-                  </p>
-                </div>
-                <p className="tabular shrink-0 text-[15px] font-semibold text-indigo">
-                  {formatEuroWhole(item.askingPrice)}
-                </p>
+                </Link>
               </li>
             ))
           ) : (
@@ -58,7 +61,7 @@ export function HomeHeroVisual({ listings }: { listings: PublicListingCard[] }) 
             </div>
           </dl>
           <p className="mt-3 text-[12px] leading-relaxed text-muted">
-            Alias Portefeuille #{featured.publicNumber}. Ni raison sociale, ni commune.
+            Alias Dossier n° {featured.publicNumber}. Ni raison sociale, ni commune.
           </p>
         </div>
       ) : null}

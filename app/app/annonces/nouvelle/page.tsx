@@ -46,6 +46,8 @@ export default async function NewListingPage({
       <MemberPageHeader title="Nouvelle annonce">
         {selected.label} · commissions {formatEuro(selected.annualCommissions)} / an
         {selected.valuations[0] ? ` · médiane ${formatEuro(selected.valuations[0].midValue)}` : ""}
+        . Renseignez le cadre juridique, l’organisation et la conformité. Les PDF
+        du cabinet se déposent ensuite sur la fiche.
       </MemberPageHeader>
       {portfolios.length > 1 ? (
         <p className="mt-2 text-sm">

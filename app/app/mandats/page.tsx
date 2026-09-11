@@ -54,7 +54,7 @@ export default async function MandatesPage() {
                     {m.isPublic ? (
                       <span className="text-ok">
                         Publié
-                        {m.publicNumber ? ` · Demande #${m.publicNumber}` : ""}
+                        {m.publicNumber ? ` · Demande n° ${m.publicNumber}` : ""}
                       </span>
                     ) : (
                       <span className="text-muted">Non publié</span>

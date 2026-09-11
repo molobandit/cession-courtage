@@ -25,7 +25,7 @@ export default async function ListingCertificationPage({
     <main className="mx-auto max-w-3xl px-4 py-6">
       <p className="text-sm text-muted">
         <Link href={`/app/annonces/${listing.id}`} className="underline-offset-2 hover:underline">
-          Annonce #{listing.publicNumber}
+          Dossier n° {listing.publicNumber}
         </Link>
       </p>
       <h1 className="mt-2 text-2xl font-bold tracking-tight text-ink">

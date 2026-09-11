@@ -97,6 +97,14 @@ export const DISTRIBUTION_LABELS: Record<DistributionMode, string> = {
   MIXED: "Mixte",
 };
 
+export const DOCUMENT_TYPE_LABELS: Record<string, string> = {
+  NDA: "Accord de confidentialité",
+  LOI: "Lettre d’intention",
+  DEED: "Acte de cession",
+  TRANSFER_CERTIFICATE: "Attestation de transfert",
+  OTHER: "Autre pièce",
+};
+
 export const DEAL_STAGE_ORDER: DealStage[] = [
   "NDA",
   "DATA_ROOM",
@@ -121,6 +129,7 @@ export const ROLE_LABELS: Record<UserRole, string> = {
   BUYER: "Acquéreur",
   BOTH: "Cédant et acquéreur",
   ADMIN: "Administrateur",
+  INVESTOR: "Investisseur",
 };
 
 export const KYC_STATUS_LABELS: Record<KycStatus, string> = {

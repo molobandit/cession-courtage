@@ -38,7 +38,7 @@ export function PublicListingList({
   });
   const [sort, setSort] = useState<SortKey>("recent");
 
-  const { zone, carrier, risk, segment, maxPrice, openOnly, certifiedOnly } = filters;
+  const { zone, carrier, risk, segment, maxPrice, q, openOnly, certifiedOnly } = filters;
   const patch = (change: Partial<CatalogueFilters>) =>
     setFilters((current) => ({ ...current, ...change }));
 
@@ -73,6 +73,18 @@ export function PublicListingList({
     <>
       <div className="mt-6 rounded-2xl border border-line bg-paper p-6">
         <div className="grid gap-4 lg:grid-cols-3">
+          <div className="lg:col-span-3">
+            <label htmlFor="q" className="block text-[15px] font-medium text-ink">
+              Recherche
+            </label>
+            <input
+              id="q"
+              value={q}
+              onChange={(e) => patch({ q: e.target.value })}
+              placeholder="Zone, compagnie, branche ou numéro"
+              className="mt-2 h-11 w-full rounded-md border border-line bg-surface-alt px-4 text-[15px] text-ink"
+            />
+          </div>
           <div>
             <label htmlFor="carrier" className="block text-[15px] font-medium text-ink">
               Compagnie

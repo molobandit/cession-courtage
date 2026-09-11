@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { requiresSession } from "@/auth.config";
+import { sendLoggedInVisitorToApp } from "@/lib/nav/logged-in-public";
 
 /**
  * Noms possibles du cookie de session, selon le protocole.
@@ -65,6 +66,11 @@ export default function middleware(request: NextRequest) {
     target.searchParams.set("callbackUrl", request.nextUrl.href);
     return withSecurityHeaders(NextResponse.redirect(target));
   }
+
+  if (aUnCookieDeSession && sendLoggedInVisitorToApp(request.nextUrl.pathname)) {
+    return withSecurityHeaders(NextResponse.redirect(new URL("/app", request.nextUrl.origin)));
+  }
+
   return withSecurityHeaders(NextResponse.next());
 }
 

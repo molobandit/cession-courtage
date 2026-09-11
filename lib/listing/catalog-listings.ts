@@ -1,6 +1,6 @@
 /**
  * Catalogue de demonstration : ~80 fiches publiques, sans PII nominative.
- * Zone = departement ou region. Alias Portefeuille #10101+.
+ * Zone = departement ou region. Reference Dossier n° 10101+.
  */
 
 export const CATALOG_FIRM_ID = "firm_catalog";

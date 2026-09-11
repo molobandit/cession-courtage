@@ -56,12 +56,23 @@ export function WithdrawOfferButton({ offerId }: { offerId: string }) {
 export function AcceptOfferButton({ offerId }: { offerId: string }) {
   const [state, action, pending] = useActionState(acceptOfferAction, initial);
   return (
-    <form action={action}>
+    <form
+      action={action}
+      onSubmit={(event) => {
+        if (
+          !window.confirm(
+            "Retenir cette offre ouvre un dossier de confidentialité et écarte les autres propositions. Continuer ?",
+          )
+        ) {
+          event.preventDefault();
+        }
+      }}
+    >
       <input type="hidden" name="offerId" value={offerId} />
-      <Button type="submit" size="sm" disabled={pending}>
+      <Button type="submit" className="w-full" disabled={pending}>
         {pending ? "Ouverture du dossier…" : "Retenir cette offre"}
       </Button>
-      {state.error ? <p className="text-xs text-danger">{state.error}</p> : null}
+      {state.error ? <p className="mt-2 text-xs text-danger">{state.error}</p> : null}
     </form>
   );
 }

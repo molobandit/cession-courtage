@@ -70,7 +70,7 @@ export function ListingAdCard({ item }: { item: PublicListingCard }) {
           {" · "}
           {item.isPartial ? "Cession partielle" : "Cession totale"}
           {closing ? ` · ${closing}` : ""}
-          . Alias Portefeuille #{item.publicNumber}.
+          . Référence : dossier n° {item.publicNumber}.
         </p>
         <span className="mt-auto pt-5">
           <span className="inline-flex h-10 w-full items-center justify-center rounded-full bg-indigo text-[14px] font-semibold !text-white">

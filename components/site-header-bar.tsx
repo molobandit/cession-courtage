@@ -70,13 +70,13 @@ export function SiteHeaderBar({
             href="/annonces"
             className="rounded-full border border-line px-4 py-2.5 text-[14px] font-medium text-ink hover:bg-surface-alt"
           >
-            Voir les annonces
+            Je recherche un portefeuille
           </Link>
           <Link
             href="/ceder"
             className="rounded-full bg-indigo px-5 py-2.5 text-[14px] font-semibold !text-white hover:bg-indigo-dark"
           >
-            Déposer une annonce
+            Je vends mon portefeuille
           </Link>
         </div>
 
@@ -85,7 +85,7 @@ export function SiteHeaderBar({
             href="/ceder"
             className="rounded-full bg-indigo px-3.5 py-2 text-[13px] font-semibold !text-white"
           >
-            Déposer
+            Je vends
           </Link>
           <button
             type="button"

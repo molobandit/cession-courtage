@@ -38,6 +38,7 @@ export type PublicListingDetailModel = {
   top10: number;
   carrierHhi: number;
   interestHref: string;
+  followHref?: string | null;
   manageHref: string | null;
 };
 
@@ -104,6 +105,7 @@ export function PublicListingDetail({
     top10,
     carrierHhi,
     interestHref,
+    followHref,
     manageHref,
   } = model;
 
@@ -157,7 +159,7 @@ export function PublicListingDetail({
                   <PinIcon />
                   {zone}
                 </span>
-                <span>Alias Portefeuille #{publicNumber}</span>
+                <span>Dossier n° {publicNumber}</span>
                 {publishedAt ? <span>Publiée le {formatDateLong(publishedAt)}</span> : null}
               </p>
 
@@ -207,6 +209,14 @@ export function PublicListingDetail({
                 >
                   Je suis intéressé
                 </Link>
+                {followHref ? (
+                  <Link
+                    href={followHref}
+                    className="mt-2 flex h-12 w-full items-center justify-center rounded-full border border-white/40 text-[15px] font-semibold text-white hover:bg-white/10"
+                  >
+                    Suivre ce dossier
+                  </Link>
+                ) : null}
                 <p className="mt-3 text-[12px] leading-relaxed text-white/75">
                   Abonnement {GROWTH_PLAN_ANNUAL_EUR.toLocaleString("fr-FR")} € HT
                   / an pour le contact. Le vendeur reste anonyme jusqu’au dépôt de{" "}
@@ -328,7 +338,7 @@ export function PublicListingDetail({
           final. Les chiffres de mix viennent des commissions, pas d’un historique inventé.
         </p>
 
-        <div id="interesse" className="mt-8">
+        <div id="interesse" className="mt-8 grid gap-6">
           {children}
         </div>
       </div>
