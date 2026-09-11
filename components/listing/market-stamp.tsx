@@ -1,5 +1,14 @@
-import { STAMP_CERTIFIED, STAMP_SOLD } from "@/lib/copy/market";
+import { CertificationSeal } from "@/components/listing/certification-seal";
+import { STAMP_SOLD } from "@/lib/copy/market";
 
+/**
+ * Marque apposée sur un portefeuille.
+ *
+ * Deux registres volontairement distincts. « VENDU » reste un cachet : c'est un
+ * état de fait, et le cachet le dit bien. La certification, elle, est un label
+ * décerné par l'éditeur qui l'engage devant l'acquéreur : elle passe par un
+ * sceau, pas par un tampon.
+ */
 export function MarketStamp({
   kind,
   size = "md",
@@ -7,7 +16,10 @@ export function MarketStamp({
   kind: "certified" | "sold";
   size?: "sm" | "md" | "lg";
 }) {
-  const label = kind === "sold" ? STAMP_SOLD : STAMP_CERTIFIED;
+  if (kind === "certified") {
+    return <CertificationSeal size={size} withLabel={size !== "sm"} />;
+  }
+
   const sizeClass =
     size === "lg"
       ? "px-3 py-1.5 text-[15px] tracking-[0.18em]"
@@ -18,9 +30,9 @@ export function MarketStamp({
   return (
     <span
       className={`inline-flex -rotate-12 items-center justify-center rounded-sm border-[3px] border-red-700 bg-red-50/90 font-extrabold text-red-700 shadow-[inset_0_0_0_1px_rgba(185,28,28,0.35)] ${sizeClass}`}
-      aria-label={label}
+      aria-label={STAMP_SOLD}
     >
-      {label}
+      {STAMP_SOLD}
     </span>
   );
 }

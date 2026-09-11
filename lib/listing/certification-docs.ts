@@ -93,8 +93,14 @@ export async function markCertificationDocReceived(
   fileName: string,
   storageKey: string,
 ): Promise<void> {
-  await prisma.certificationDocument.update({
+  const piece = await prisma.certificationDocument.update({
     where: { id: documentId },
     data: { status: "RECEIVED", fileName, storageKey, uploadedAt: new Date() },
+    select: { listingId: true },
   });
+
+  // Le depot d'une piece peut faire basculer l'annonce : le statut se recalcule
+  // ici plutot que d'attendre un geste manuel qui n'existe pas.
+  const { synchroniserCertification } = await import("@/lib/listing/certification-sync");
+  await synchroniserCertification(piece.listingId);
 }

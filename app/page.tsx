@@ -52,8 +52,18 @@ function CheckIcon() {
 
 export default async function HomePage() {
   const listings = await loadPublicListingCards();
-  const latest = listings.slice(0, 3);
-  const preview = listings.slice(0, 8);
+
+  /*
+   * La vitrine montre d'abord ce qui distingue le site : un portefeuille
+   * certifie, puis un dossier vendu. Sans ce tri, les trois premieres lignes
+   * tombaient sur des annonces non certifiees et le cachet, argument principal,
+   * n'apparaissait nulle part sur l'accueil.
+   * L'ordre d'origine est conserve a l'interieur de chaque groupe.
+   */
+  const rang = (item: (typeof listings)[number]) => (item.certified ? 0 : item.sold ? 1 : 2);
+  const vitrine = [...listings].sort((a, b) => rang(a) - rang(b));
+  const latest = vitrine.slice(0, 3);
+  const preview = vitrine.slice(0, 8);
 
   return (
     <main>
