@@ -72,6 +72,6 @@ export async function listListingMessages(listingId: string, actor: Actor) {
     where,
     orderBy: { createdAt: "asc" },
     include: { sender: { select: { publicAlias: true } } },
-    take: 50,
+    take: 200,
   });
 }

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { OpenOffersButton, PublishListingButton, WithdrawListingButton } from "@/components/listing/listing-forms";
-import { MessageForm } from "@/components/deal/deal-forms";
+import { OfferChat } from "@/components/chat/offer-chat";
 import { Button } from "@/components/ui/button";
 import {
   canSell,
@@ -12,7 +12,7 @@ import {
   listListingMessages,
 } from "@/lib/authz";
 import { isOfferWindowSealed } from "@/lib/authz/policies";
-import { formatDate, formatEuro } from "@/lib/format/fr";
+import { formatDate, formatDateTime, formatEuro } from "@/lib/format/fr";
 import { LISTING_STATUS_LABELS } from "@/lib/labels";
 import { listCompanyDocs } from "@/lib/listing/company-docs";
 import { CompanyDocumentsPanel } from "@/components/listing/company-documents-panel";
@@ -83,18 +83,24 @@ export default async function SellerListingPage({ params }: { params: Promise<{ 
         </p>
       </section>
 
-      <section className="mt-6">
-        <h2 className="text-lg font-semibold text-ink">Messages</h2>
-        <ul className="mt-2 space-y-2 text-sm">
-          {messages.map((m) => (
-            <li key={m.id} className="border border-line bg-paper p-2">
-              <span className="text-xs text-muted">{m.sender.publicAlias}</span>
-              <p>{m.body}</p>
-            </li>
-          ))}
-        </ul>
+      <section id="echanges" className="mt-6">
+        <h2 className="text-lg font-semibold text-ink">Échanges avec les acquéreurs</h2>
+        <p className="mt-1 text-[14px] text-muted">
+          Un fil par offreur. Les numéros de portable sont bloqués.
+        </p>
         <div className="mt-3">
-          <MessageForm listingId={listing.id} recipients={recipients} />
+          <OfferChat
+            listingId={listing.id}
+            actorId={actor.id}
+            recipients={recipients}
+            messages={messages.map((m) => ({
+              id: m.id,
+              body: m.body,
+              createdLabel: formatDateTime(m.createdAt),
+              senderId: m.senderId,
+              senderAlias: m.sender.publicAlias,
+            }))}
+          />
         </div>
       </section>
     </main>

@@ -268,6 +268,14 @@ export function OfferReviewBoard({
                           {offer.message}
                         </blockquote>
                       ) : null}
+                      <p className="mt-4">
+                        <Link
+                          href={`/app/annonces/${listing.id}#echanges`}
+                          className="text-[14px] font-medium text-indigo underline-offset-2 hover:underline"
+                        >
+                          Échanger dans le chat
+                        </Link>
+                      </p>
                     </div>
                     {retainable ? (
                       <div className="shrink-0 lg:w-52">

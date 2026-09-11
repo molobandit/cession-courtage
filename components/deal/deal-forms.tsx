@@ -161,24 +161,28 @@ export function MessageForm({
   dealId,
   listingId,
   recipients,
+  requireRecipient = false,
 }: {
   dealId?: string;
   listingId?: string;
   recipients?: { id: string; publicAlias: string }[];
+  requireRecipient?: boolean;
 }) {
   const action = dealId ? sendDealMessageAction : sendListingMessageAction;
   const [state, formAction, pending] = useActionState(action, initial);
+  const onlyRecipient = recipients?.length === 1 ? recipients[0] : null;
   return (
     <form action={formAction} className="grid gap-2">
       {dealId ? <input type="hidden" name="dealId" value={dealId} /> : null}
       {listingId ? <input type="hidden" name="listingId" value={listingId} /> : null}
-      {recipients && recipients.length > 0 ? (
+      {onlyRecipient ? <input type="hidden" name="recipientId" value={onlyRecipient.id} /> : null}
+      {recipients && recipients.length > 1 ? (
         <select
           name="recipientId"
-          className="flex h-9 rounded-sm border border-line bg-paper px-2.5 text-sm"
-          defaultValue=""
+          required={requireRecipient}
+          className="flex h-11 rounded-xl border border-line bg-surface-alt px-3 text-[15px]"
+          defaultValue={recipients[0]?.id ?? ""}
         >
-          <option value="">Tous les acquéreurs ayant offert</option>
           {recipients.map((r) => (
             <option key={r.id} value={r.id}>
               {r.publicAlias.replace(/^#/, "")}
@@ -190,8 +194,8 @@ export function MessageForm({
         name="body"
         required
         rows={3}
-        className="w-full rounded-sm border border-line bg-paper px-2.5 py-2 text-sm"
-        placeholder="Message (aucune donnée nominative de client final)"
+        className="w-full rounded-xl border border-line bg-surface-alt px-3 py-2 text-[15px]"
+        placeholder="Votre question (pas de numéro de portable)"
       />
       {state.error ? <p className="text-sm text-danger">{state.error}</p> : null}
       <Button type="submit" size="sm" disabled={pending}>

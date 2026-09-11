@@ -13,6 +13,7 @@ import {
 } from "@/lib/authz/messages";
 import { mockEscrowHold, mockEscrowRelease, mockSignDocument, mockVerifyKyc } from "@/lib/integrations/mocks";
 import { prisma } from "@/lib/prisma";
+import { offPlatformPhoneError } from "@/lib/chat/phone-block";
 import { putObject } from "@/lib/storage/objects";
 
 export type DealFormState = { error?: string };
@@ -253,6 +254,8 @@ export async function sendDealMessageAction(
     if (!parsedBody.success) return { error: firstIssue(parsedBody.error) };
     const body = parsedBody.data.body;
     if (body.length < 2) return { error: "Message vide." };
+    const blockedDeal = offPlatformPhoneError(body);
+    if (blockedDeal) return { error: blockedDeal };
     await prisma.message.create({ data: { dealId: deal.id, senderId: actor.id, body: body.slice(0, 4000) } });
     revalidatePath(`/app/dossiers/${deal.id}`);
     return {};
@@ -272,6 +275,8 @@ export async function sendListingMessageAction(
     if (!parsedListingBody.success) return { error: firstIssue(parsedListingBody.error) };
     const body = parsedListingBody.data.body;
     if (body.length < 2) return { error: "Message vide." };
+    const blockedListing = offPlatformPhoneError(body);
+    if (blockedListing) return { error: blockedListing };
     const listing = await prisma.listing.findUnique({
       where: { id: listingId },
       include: { portfolio: { select: { firmId: true } } },
@@ -284,13 +289,12 @@ export async function sendListingMessageAction(
     const seller = ownsFirm(actor, listing.portfolio.firmId);
     let recipientId: string | null = String(formData.get("recipientId") ?? "").trim() || null;
     if (seller) {
-      if (recipientId) {
-        const entitled = await prisma.offer.findUnique({
-          where: { listingId_buyerId: { listingId, buyerId: recipientId } },
-          select: { id: true },
-        });
-        if (!entitled) return { error: "Destinataire hors ayants droit." };
-      }
+      if (!recipientId) return { error: "Choisissez l’acquéreur à qui répondre." };
+      const entitled = await prisma.offer.findUnique({
+        where: { listingId_buyerId: { listingId, buyerId: recipientId } },
+        select: { id: true },
+      });
+      if (!entitled) return { error: "Destinataire hors ayants droit." };
     } else {
       const sellerId = await listingSellerUserId(listing.portfolio.firmId);
       if (!sellerId) return { error: "Cédant introuvable." };

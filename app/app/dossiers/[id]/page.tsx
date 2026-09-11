@@ -7,14 +7,14 @@ import {
   EscrowButtons,
   KycButton,
   MarkDocumentViewedButton,
-  MessageForm,
   NdaButton,
   SignDocButton,
   SignLoiButton,
   ValidateDeedButton,
 } from "@/components/deal/deal-forms";
+import { OfferChat } from "@/components/chat/offer-chat";
 import { counterpartyDisplayName, findMyDeal, getActor, isOriasVerified } from "@/lib/authz";
-import { formatDate, formatEuro } from "@/lib/format/fr";
+import { formatDate, formatDateTime, formatEuro } from "@/lib/format/fr";
 import { DEAL_STAGE_LABELS, DEAL_STAGE_ORDER, ESCROW_STAGE_LABELS } from "@/lib/labels";
 import { isStageAtLeast } from "@/lib/authz/policies";
 import { DueDiligencePanel } from "@/components/deal/due-diligence-panel";
@@ -177,18 +177,23 @@ export default async function DealPage({ params }: { params: Promise<{ id: strin
         />
       ) : null}
 
-      <section className="mt-8">
-        <h2 className="text-lg font-semibold text-ink">Messagerie</h2>
-        <ul className="mt-2 space-y-2 text-sm">
-          {deal.messages.map((m) => (
-            <li key={m.id} className="rounded-2xl border border-line bg-paper p-3 sm:p-4">
-              <span className="text-xs text-muted">{m.senderLabel}</span>
-              <p>{m.body}</p>
-            </li>
-          ))}
-        </ul>
+      <section id="echanges" className="mt-8">
+        <h2 className="text-lg font-semibold text-ink">Échanges</h2>
+        <p className="mt-1 text-[14px] text-muted">
+          Les numéros de portable sont bloqués. La négociation reste sur la plateforme.
+        </p>
         <div className="mt-3">
-          <MessageForm dealId={deal.id} />
+          <OfferChat
+            dealId={deal.id}
+            actorId={actor.id}
+            messages={deal.messages.map((m) => ({
+              id: m.id,
+              body: m.body,
+              createdLabel: formatDateTime(m.createdAt),
+              senderId: m.senderId,
+              senderAlias: m.senderLabel,
+            }))}
+          />
         </div>
       </section>
     </main>

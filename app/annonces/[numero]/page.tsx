@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { OfferChat } from "@/components/chat/offer-chat";
 import { PublicListingDetail } from "@/components/listing/public-listing-detail";
-import { MessageForm } from "@/components/deal/deal-forms";
 import { SubmitOfferForm } from "@/components/offer/offer-forms";
 import {
   canBuy,
@@ -19,7 +19,7 @@ import {
 import { isOfferWindowSealed, ownsFirm } from "@/lib/authz/policies";
 import { hasContactSubscription } from "@/lib/billing/contact-access";
 import { GROWTH_PLAN_ANNUAL_EUR, INTEREST_DEPOSIT_LABEL, interestDepositFor } from "@/lib/billing/rates";
-import { EMPTY_CELL } from "@/lib/format/fr";
+import { EMPTY_CELL, formatDateTime } from "@/lib/format/fr";
 import { formatEuroWhole } from "@/lib/format/number";
 import { LISTING_STATUS_LABELS, RISK_TYPE_LABELS, SEGMENT_LABELS } from "@/lib/labels";
 import { OFFER_WINDOW_DAYS } from "@/lib/listing/constants";
@@ -391,7 +391,8 @@ export default async function PublicListingPage({
                 <span className="tabular font-medium">
                   {formatEuroWhole(Number(ownOffer.amount))}
                 </span>{" "}
-                est enregistrée. Vous pouvez la retirer tant qu’elle n’a pas été retenue.
+                est enregistrée. Posez vos questions au cédant dans l’échange ci-dessous.
+                Vous pouvez la retirer tant qu’elle n’a pas été retenue.
               </p>
             ) : (
               <SubmitOfferForm listingId={listing.id} asking={String(askingPrice)} />
@@ -418,27 +419,25 @@ export default async function PublicListingPage({
       ) : null}
 
       {mailboxOk && actor ? (
-        <section className="mt-8">
-          <h2 className="text-xl font-semibold text-ink">Messages</h2>
+        <section id="echanges" className="mt-8">
+          <h2 className="text-xl font-semibold text-ink">Échanges avec le cédant</h2>
           <p className="mt-1.5 text-[15px] text-muted">
-            Fil réservé au cédant et aux acquéreurs ayant déposé une offre. Un acquéreur
-            ne voit jamais les messages d’un autre.
+            Chat ouvert dès le dépôt d’offre. Un acquéreur ne voit jamais les messages
+            d’un autre. Les numéros de portable sont bloqués.
           </p>
-          <ul className="mt-4 space-y-3">
-            {messages.map((m) => (
-              <li key={m.id} className="rounded-3xl border border-line bg-paper p-5">
-                <p className="text-sm text-muted">{m.sender.publicAlias}</p>
-                <p className="mt-1.5 text-[15px] leading-relaxed text-ink">{m.body}</p>
-              </li>
-            ))}
-            {messages.length === 0 ? (
-              <li className="rounded-3xl border border-line bg-paper p-5 text-[15px] text-muted">
-                Aucun message pour le moment.
-              </li>
-            ) : null}
-          </ul>
-          <div className="mt-5">
-            <MessageForm listingId={listing.id} recipients={isSeller ? recipients : undefined} />
+          <div className="mt-4">
+            <OfferChat
+              listingId={listing.id}
+              actorId={actor.id}
+              recipients={isSeller ? recipients : undefined}
+              messages={messages.map((m) => ({
+                id: m.id,
+                body: m.body,
+                createdLabel: formatDateTime(m.createdAt),
+                senderId: m.senderId,
+                senderAlias: m.sender.publicAlias,
+              }))}
+            />
           </div>
         </section>
       ) : null}

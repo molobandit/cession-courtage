@@ -30,6 +30,7 @@ export function SubmitOfferForm({ listingId, asking }: { listingId: string; aski
           minLength={10}
           rows={3}
           className="w-full rounded-sm border border-line bg-paper px-2.5 py-2 text-sm"
+          placeholder="Questions sur le dossier (pas de numéro de portable)"
         />
       </div>
       {state.error ? <p className="text-sm text-danger">{state.error}</p> : null}

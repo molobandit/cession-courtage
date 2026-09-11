@@ -8,6 +8,7 @@ import { ownsFirm } from "@/lib/authz/policies";
 import { isOfferWindowSealed } from "@/lib/authz/policies";
 import { ForbiddenError, UnauthenticatedError } from "@/lib/authz/errors";
 import { hasContactSubscription } from "@/lib/billing/contact-access";
+import { offPlatformPhoneError } from "@/lib/chat/phone-block";
 import { prisma } from "@/lib/prisma";
 import { firstIssue, offerIdSchema, offerSchema } from "@/lib/validations/actions";
 
@@ -41,6 +42,8 @@ export async function submitOfferAction(
     });
     if (!parsed.success) return { error: firstIssue(parsed.error) };
     const { listingId, amount, upfrontPercent: upfront, message } = parsed.data;
+    const blockedOffer = offPlatformPhoneError(message);
+    if (blockedOffer) return { error: blockedOffer };
 
     const listing = await prisma.listing.findUnique({
       where: { id: listingId },
@@ -72,8 +75,16 @@ export async function submitOfferAction(
     });
     revalidatePath(`/annonces/${listing.publicNumber}`);
     revalidatePath("/app");
-    return {};
+    redirect(`/annonces/${listing.publicNumber}#echanges`);
   } catch (error) {
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      "digest" in error &&
+      String((error as { digest?: string }).digest).startsWith("NEXT_REDIRECT")
+    ) {
+      throw error;
+    }
     return { error: error instanceof Error ? error.message : "Dépôt impossible." };
   }
 }
