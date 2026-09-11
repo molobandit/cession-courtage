@@ -40,6 +40,7 @@ import {
   maturitySchedule,
   topClientShare,
   type AnalyticsLine,
+} from "@/lib/portfolio/analytics";
 import { qualityFromPortfolio } from "@/lib/portfolio/quality";
 
 export async function generateMetadata({
