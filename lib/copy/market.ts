@@ -3,8 +3,15 @@ import { GROWTH_PLAN_ANNUAL_EUR } from "@/lib/billing/rates";
 /** Marque affichée. */
 export { BRAND_NAME } from "@/lib/site";
 
-/** Dénomination sociale indiquée dans le brief. */
-export const COMPANY_LEGAL_NAME = "Le marché du portefeuille";
+/**
+ * Dénomination sociale, republiée depuis `lib/site.ts`.
+ *
+ * Elle y était définie une seconde fois avec la même valeur : deux sources de
+ * vérité pour une même donnée, qui finissent toujours par diverger le jour où
+ * l'une est corrigée et pas l'autre. La dénomination appartient à l'identité du
+ * site, pas aux textes du marché.
+ */
+export { COMPANY_LEGAL_NAME } from "@/lib/site";
 
 export const HERO_HEADLINE = "Prenez position.";
 export const HERO_HEADLINE_REST = "Achetez ou vendez votre portefeuille d’assurance.";

@@ -43,7 +43,14 @@ export function SiteHeaderBar({
           <span className="text-[15px] font-semibold tracking-tight text-ink">{BRAND_NAME}</span>
         </Link>
 
-        <nav className="hidden min-w-0 flex-1 items-center justify-center gap-0.5 overflow-x-auto lg:flex" aria-label="Principal">
+        {/*
+        justify-start et non justify-center : un contenu centre qui deborde est
+        pousse AU-DELA du bord gauche du conteneur, ou il passe sous la marque.
+        Le premier onglet s'affichait « arché » au lieu de « Salle de marche ».
+        Avec justify-start, le debordement part vers la droite, ou il reste
+        atteignable au defilement.
+      */}
+      <nav className="hidden min-w-0 flex-1 items-center justify-start gap-0.5 overflow-x-auto lg:flex" aria-label="Principal">
           {NAV.map((link) => (
             <Link
               key={link.href}
@@ -72,12 +79,13 @@ export function SiteHeaderBar({
               Connexion
             </Link>
           )}
-          <Link
-            href="/annonces"
-            className="rounded-full border border-line px-4 py-2.5 text-[14px] font-medium text-ink hover:bg-surface-alt"
-          >
-            {CTA_BROWSE}
-          </Link>
+          {/*
+            Une seule action dans la barre, et non deux. Les deux boutons
+            pesaient 484 px a eux seuls : la navigation ne tenait plus et
+            rognait un onglet, « Inves » au lieu d'« Investir ». Les deux
+            appels a l'action restent offerts dans le heros, juste en dessous,
+            ou ils sont lus les premiers.
+          */}
           <Link
             href="/ceder"
             className="rounded-full bg-indigo px-5 py-2.5 text-[14px] font-semibold !text-white hover:bg-indigo-dark"
