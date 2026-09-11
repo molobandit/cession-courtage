@@ -247,12 +247,12 @@ export default async function MemberHomePage() {
           )}
         </Panel>
 
-        <Panel title="Demandes d’acquisition" href="/annonces/demandes" action="Voir tout">
+        <Panel title="Demandes d’acquisition" href="/app/mandats" action="Déposer">
           {recentMandates.length === 0 ? (
             <EmptyHint
               text="Aucune demande d’acquisition publiée pour le moment."
-              href="/annonces/demandes"
-              label="Voir les demandes"
+              href="/app/mandats"
+              label="Déposer ma demande"
             />
           ) : (
             <ul className="grid gap-3">

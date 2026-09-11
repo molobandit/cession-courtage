@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { PageIntro } from "@/components/page-intro";
+import { canBuy, getActor, isOriasVerified } from "@/lib/authz";
 import { GROWTH_PLAN_ANNUAL_EUR, INTEREST_DEPOSIT_LABEL } from "@/lib/billing/rates";
 import { OFFER_WINDOW_DAYS } from "@/lib/listing/constants";
+import { ACQUISITION_APP_PATH, acquisitionLoginHref } from "@/lib/nav/acquisition";
 
 export const metadata: Metadata = {
   title: "Acquérir un portefeuille de courtage",
@@ -38,7 +41,15 @@ const SAFEGUARDS = [
   },
 ];
 
-export default function AcquerirPage() {
+export default async function AcquerirPage() {
+  const actor = await getActor();
+  if (actor) {
+    if (!isOriasVerified(actor)) redirect("/en-attente-orias");
+    redirect(canBuy(actor) ? ACQUISITION_APP_PATH : "/app");
+  }
+
+  const loginHref = acquisitionLoginHref();
+
   return (
     <main>
       <PageIntro
@@ -47,7 +58,7 @@ export default function AcquerirPage() {
         actions={
           <>
             <Button asChild variant="primary" size="lg">
-              <Link href="/inscription">Déposer un mandat</Link>
+              <Link href={loginHref}>Se connecter pour acquérir</Link>
             </Button>
             <Button asChild variant="outline" size="lg">
               <Link href="/annonces">Parcourir les annonces</Link>
@@ -129,7 +140,10 @@ export default function AcquerirPage() {
           </p>
           <div className="mt-7 flex flex-wrap gap-3">
             <Button asChild variant="primary">
-              <Link href="/inscription">Créer un compte acquéreur</Link>
+              <Link href={loginHref}>Se connecter pour déposer un mandat</Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link href="/inscription?voie=acheter">Créer un compte acquéreur</Link>
             </Button>
             <Button asChild variant="outline">
               <Link href="/tarifs">Détail des tarifs</Link>

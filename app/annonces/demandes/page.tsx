@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
 import { PublicMandateList } from "@/components/mandate/public-mandate-list";
-import { listPublicMandates } from "@/lib/authz";
+import { canBuy, getActor, isOriasVerified, listPublicMandates } from "@/lib/authz";
 import { asStringArray } from "@/lib/json-array";
 import { FINANCING_LABELS, RISK_TYPE_LABELS, SEGMENT_LABELS } from "@/lib/labels";
 import type { PublicMandateCard } from "@/lib/mandate/public";
+import { acquisitionContinueHref } from "@/lib/nav/acquisition";
 
 export const metadata: Metadata = {
   title: "Demandes d’acquisition",
@@ -14,7 +16,11 @@ export const metadata: Metadata = {
 };
 
 export default async function PublicMandatesPage() {
-  const rows = await listPublicMandates();
+  const [rows, actor] = await Promise.all([listPublicMandates(), getActor()]);
+  const acquireHref = acquisitionContinueHref({
+    loggedIn: Boolean(actor),
+    canBuy: Boolean(actor && isOriasVerified(actor) && canBuy(actor)),
+  });
 
   const mandates: PublicMandateCard[] = rows.map((m) => {
     const zones = asStringArray(m.zones);
@@ -53,6 +59,11 @@ export default async function PublicMandatesPage() {
             portefeuille correspond, la demande existe avant même que vous publiiez.
             Les acquéreurs restent anonymes, comme les cédants.
           </p>
+          <div className="mt-6">
+            <Button asChild variant="primary">
+              <Link href={acquireHref}>Déposer ma demande d’acquisition</Link>
+            </Button>
+          </div>
           <nav className="mt-6 flex flex-wrap gap-2" aria-label="Type d’annonce">
             <Link
               href="/annonces"
@@ -68,7 +79,7 @@ export default async function PublicMandatesPage() {
       </section>
 
       <div className="mx-auto max-w-6xl px-4 py-10">
-        <PublicMandateList mandates={mandates} />
+        <PublicMandateList mandates={mandates} acquireHref={acquireHref} />
       </div>
     </main>
   );

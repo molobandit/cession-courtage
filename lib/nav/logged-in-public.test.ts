@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { sendLoggedInVisitorToApp } from "@/lib/nav/logged-in-public";
+import {
+  loggedInPublicDestination,
+  sendLoggedInVisitorToApp,
+} from "@/lib/nav/logged-in-public";
 
 describe("sendLoggedInVisitorToApp", () => {
   it("bloque l'accueil et les pages vitrine", () => {
@@ -19,5 +22,11 @@ describe("sendLoggedInVisitorToApp", () => {
     expect(sendLoggedInVisitorToApp("/app")).toBe(false);
     expect(sendLoggedInVisitorToApp("/mentions-legales")).toBe(false);
     expect(sendLoggedInVisitorToApp("/en-attente-orias")).toBe(false);
+  });
+
+  it("envoie l'acheteur connecté vers les mandats, pas le tableau de bord", () => {
+    expect(loggedInPublicDestination("/acquerir")).toBe("/app/mandats");
+    expect(loggedInPublicDestination("/")).toBe("/app");
+    expect(loggedInPublicDestination("/annonces")).toBeNull();
   });
 });

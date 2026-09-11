@@ -20,7 +20,13 @@ const SELECT_CLASS =
  * Pour un cédant qui hésite, la preuve qu'il existe des acheteurs pour son
  * profil vaut davantage qu'un argumentaire.
  */
-export function PublicMandateList({ mandates }: { mandates: PublicMandateCard[] }) {
+export function PublicMandateList({
+  mandates,
+  acquireHref,
+}: {
+  mandates: PublicMandateCard[];
+  acquireHref: string;
+}) {
   const [filters, setFilters] = useState<MandateFilters>(EMPTY_MANDATE_FILTERS);
   const patch = (change: Partial<MandateFilters>) =>
     setFilters((current) => ({ ...current, ...change }));
@@ -43,11 +49,20 @@ export function PublicMandateList({ mandates }: { mandates: PublicMandateCard[] 
 
   if (mandates.length === 0) {
     return (
-      <p className="mt-6 rounded-3xl border border-line bg-paper p-8 text-[15px] leading-relaxed text-muted">
-        Aucune demande d’acquisition publiée pour le moment. Un acquéreur peut
-        rendre son mandat visible depuis son espace membre, ce qui permet aux
-        cédants de le contacter sans attendre.
-      </p>
+      <div className="mt-6">
+        <p className="rounded-3xl border border-line bg-paper p-8 text-[15px] leading-relaxed text-muted">
+          Aucune demande d’acquisition publiée pour le moment. Déposez la vôtre
+          pour qu’un cédant vous trouve, ou parcourez les portefeuilles à céder.
+        </p>
+        <div className="mt-4">
+          <a
+            href={acquireHref}
+            className="inline-flex h-11 items-center justify-center rounded-full bg-indigo px-5 text-[15px] font-semibold text-white hover:bg-indigo-dark"
+          >
+            Déposer ma demande d’acquisition
+          </a>
+        </div>
+      </div>
     );
   }
 
@@ -185,6 +200,14 @@ export function PublicMandateList({ mandates }: { mandates: PublicMandateCard[] 
                 <p className="mt-4 border-t border-line pt-4 text-sm text-muted">
                   Financement : {m.financingLabel}
                 </p>
+                <div className="mt-5">
+                  <a
+                    href={acquireHref}
+                    className="flex h-11 w-full items-center justify-center rounded-full bg-indigo text-center text-[14px] font-semibold leading-none text-white hover:bg-indigo-dark"
+                  >
+                    Déposer ma demande d’acquisition
+                  </a>
+                </div>
               </article>
             </li>
           ))}

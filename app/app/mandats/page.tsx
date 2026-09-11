@@ -11,7 +11,7 @@ export const metadata = { title: "Mandat de recherche" };
 
 export default async function MandatesPage() {
   const actor = await getActor();
-  if (!actor) redirect("/connexion");
+  if (!actor) redirect("/connexion?next=/app/mandats");
   if (!isOriasVerified(actor)) redirect("/en-attente-orias");
   if (!canBuy(actor)) redirect("/app");
   const mandates = await listMyMandates(actor);

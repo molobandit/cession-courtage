@@ -21,3 +21,10 @@ export function sendLoggedInVisitorToApp(pathname: string): boolean {
   if (EXACT.has(pathname)) return true;
   return PREFIXES.some((p) => pathname.startsWith(p));
 }
+
+/** Où envoyer un visiteur déjà connecté qui ouvre une page vitrine. */
+export function loggedInPublicDestination(pathname: string): string | null {
+  if (pathname === "/acquerir") return "/app/mandats";
+  if (sendLoggedInVisitorToApp(pathname)) return "/app";
+  return null;
+}

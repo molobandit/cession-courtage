@@ -52,7 +52,7 @@ export function LoginForm({ nextPath }: { nextPath: string }) {
           Recevoir un code par e-mail
         </Link>
         {" · "}
-        <Link href="/inscription" className="underline underline-offset-2">
+        <Link href={nextPath.startsWith("/app/mandats") ? "/inscription?voie=acheter" : "/inscription"} className="underline underline-offset-2">
           Créer un compte
         </Link>
       </p>
