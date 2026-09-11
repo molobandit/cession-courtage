@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { VERIFIED_FEE_RANGE_LABEL } from "@/lib/billing/rates";
-import { BrandMark } from "@/components/brand-mark";
 import { BRAND_NAME } from "@/lib/site";
 
 const COLUMNS = [
@@ -52,10 +51,7 @@ export function SiteFooter() {
       <div className="mx-auto max-w-6xl px-4 py-12">
         <div className="grid gap-10 lg:grid-cols-[1.4fr_repeat(4,1fr)]">
           <div>
-            <p className="flex items-center gap-2 text-[15px] font-semibold">
-              <BrandMark className="h-7 w-7" />
-              {BRAND_NAME}
-            </p>
+            <p className="text-[15px] font-semibold tracking-tight">{BRAND_NAME}</p>
             <p className="mt-3 max-w-xs text-[14px] leading-relaxed text-white/70">
               Place de marché réservée aux courtiers immatriculés ORIAS. Publier
               est gratuit. Abonnement annuel pour le détail de l’offre. Le

@@ -15,8 +15,6 @@ import {
   IconSliders,
   IconUpload,
 } from "@/components/app/member-icons";
-import { BrandMark } from "@/components/brand-mark";
-import { BRAND_NAME } from "@/lib/site";
 
 type NavLink = { href: string; label: string; exact?: boolean };
 
@@ -83,17 +81,12 @@ export function MemberRail({
 }) {
   const path = usePathname();
   const links = memberWorkspaceLinks(canSell, canBuy, isInvestor);
-  const homeHref = isInvestor ? "/app/mes-dossiers" : "/app";
 
   return (
     <nav
       className="flex h-full w-[4.75rem] shrink-0 flex-col items-center border-r border-indigo/25 bg-[#93c5fd] py-3"
       aria-label="Espace membre"
     >
-      <Link href={homeHref} className="mb-3 inline-flex" title={BRAND_NAME}>
-        <BrandMark className="h-9 w-9" />
-        <span className="sr-only">{BRAND_NAME}</span>
-      </Link>
       <div className="flex min-h-0 flex-1 flex-col items-center gap-1 overflow-y-auto px-1">
         {links.map((item) => {
           const Icon = ICONS[item.href] ?? IconFolder;

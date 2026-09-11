@@ -31,8 +31,8 @@ export const metadata: Metadata = {
   // disparait d'elle-meme quand l'identite legale est renseignee.
   robots: legalIdentityIncomplete() ? { index: false, follow: false } : undefined,
   icons: {
-    icon: "/brand/icon-3d.png",
-    apple: "/brand/mark-lbp.png",
+    icon: "/brand/mark.png",
+    apple: "/brand/mark.png",
   },
 };
 
