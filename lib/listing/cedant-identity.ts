@@ -8,7 +8,8 @@ export type CedantIdentity = {
   address: string;
   postalCode: string;
   city: string;
-  oriasNumber: string;
+  /** Nul en base pour un compte non courtier : le type suit le schema. */
+  oriasNumber: string | null;
   fullName: string | null;
   email: string;
   phone: string | null;

@@ -10,6 +10,7 @@ const PUBLIC_STATUSES: ListingStatus[] = [
   ListingStatus.OFFERS_OPEN,
   ListingStatus.OFFERS_CLOSED,
   ListingStatus.UNDER_NEGOTIATION,
+  ListingStatus.SOLD,
 ];
 
 const listingPublicInclude = {
@@ -74,6 +75,8 @@ export async function listPublicListings() {
       sellerSupportMonths: true,
       publishedAt: true,
       offerWindowClosesAt: true,
+      precompte: true,
+      precompteAmount: true,
       portfolio: {
         select: {
           annualCommissions: true,

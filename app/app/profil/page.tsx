@@ -11,12 +11,15 @@ import { SubscribeButton } from "@/components/billing/subscribe-button";
 import { confirmGrowthCheckout } from "@/app/actions/billing";
 import { codesDeSecoursRestants, secondFacteurActif } from "@/lib/auth/second-facteur";
 import { getActor, isInvestor, isOriasVerified } from "@/lib/authz";
+import { SearchPrefsForm } from "@/components/app/search-prefs-form";
 import { parseNotifyPrefs } from "@/lib/account/notify-prefs";
+import { parseSearchPrefs } from "@/lib/account/search-prefs";
 import { hasContactSubscription } from "@/lib/billing/contact-access";
 import { GROWTH_PLAN_ANNUAL_EUR, INTEREST_DEPOSIT_LABEL, growthPlanAnnualTtcEur } from "@/lib/billing/rates";
 import { formatDate, formatEuroPrecise } from "@/lib/format/fr";
 import { formatEuroWhole } from "@/lib/format/number";
 import { DOCUMENT_TYPE_LABELS, KYC_STATUS_LABELS, ROLE_LABELS } from "@/lib/labels";
+import { ProfileForm } from "@/components/app/profile-form";
 import { prisma } from "@/lib/prisma";
 
 export const metadata: Metadata = { title: "Mon compte" };
@@ -71,7 +74,7 @@ export default async function ProfilPage({
       codesDeSecoursRestants(actor.id),
       prisma.user.findUnique({
         where: { id: actor.id },
-        select: { phone: true, createdAt: true, jobTitle: true, notifyPrefs: true },
+        select: { phone: true, createdAt: true, jobTitle: true, notifyPrefs: true, searchPrefs: true },
       }),
       prisma.subscription.findMany({
         where: { userId: actor.id },
@@ -133,11 +136,12 @@ export default async function ProfilPage({
   const jobTitle = phoneRow?.jobTitle ?? "";
   const website = firmRow?.website ?? "";
   const prefs = parseNotifyPrefs(phoneRow?.notifyPrefs);
+  const searchPrefs = parseSearchPrefs(phoneRow?.searchPrefs);
 
   const invoices: Array<{ id: string; label: string; date: Date | null; amount: string; status: string }> = [
     ...subscriptions.map((item) => ({
       id: item.id,
-      label: item.plan === "GROWTH" ? "Abonnement annuel" : "Forfait gratuit",
+      label: item.plan === "GROWTH" ? "Abonnement annuel" : "Sans frais",
       date: item.renewsAt,
       amount: item.plan === "GROWTH" ? formatEuroWhole(GROWTH_PLAN_ANNUAL_EUR) : formatEuroWhole(0),
       status: item.status === "ACTIVE" ? "Active" : item.status === "CANCELLED" ? "Résiliée" : "Expirée",
@@ -210,6 +214,17 @@ export default async function ProfilPage({
               : null
           }
         />
+      </section>
+
+      <section id="recherche" className={card}>
+        <h2 className="text-lg font-semibold text-ink">Critères de recherche</h2>
+        <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-muted">
+          Zone, branches et budget. Appliqués dans la salle de marché, jamais affichés
+          aux visiteurs.
+        </p>
+        <div className="mt-5">
+          <SearchPrefsForm prefs={searchPrefs} />
+        </div>
       </section>
 
       <section id="identite" className={card}>

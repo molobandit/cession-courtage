@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { getActor, isInvestor } from "@/lib/authz/actor";
 import { ForbiddenError, UnauthenticatedError } from "@/lib/authz/errors";
-import { isPublicListingStatus, ownsFirm } from "@/lib/authz/policies";
+import { isTradableListingStatus, ownsFirm } from "@/lib/authz/policies";
 import { INTEREST_DEPOSIT_LABEL, INTEREST_DEPOSIT_RATE, interestDepositFor } from "@/lib/billing/rates";
 import { prisma } from "@/lib/prisma";
 import { idSchema } from "@/lib/validations/actions";
@@ -32,7 +32,7 @@ export async function placeInvestorDepositAction(
         portfolio: { select: { firmId: true } },
       },
     });
-    if (!listing || !isPublicListingStatus(listing.status)) {
+    if (!listing || !isTradableListingStatus(listing.status)) {
       return { error: "Annonce introuvable." };
     }
     if (ownsFirm(actor, listing.portfolio.firmId)) {

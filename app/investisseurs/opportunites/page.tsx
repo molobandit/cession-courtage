@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CertifiedBadge } from "@/components/listing/certified-badge";
+import { MarketStamp } from "@/components/listing/market-stamp";
 import { InvestorInquiryForm } from "@/components/investor/inquiry-form";
 import { formatCount, formatEuroWhole } from "@/lib/format/number";
 import { loadPublicListingCards } from "@/lib/listing/load-public-cards";
@@ -27,8 +27,8 @@ export default async function InvestorOpportunitiesPage({
       </p>
       <h1 className="mt-3 text-3xl font-bold tracking-tight text-ink">Opportunités</h1>
       <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-muted">
-        Chaque opération est présentée sous alias. Aucune raison sociale, aucune
-        donnée nominative de client final.
+        Portefeuilles ouverts à une prise de position. Certification et
+        commissions indiquées sur chaque dossier.
       </p>
       <ul className="mt-8 grid gap-5 md:grid-cols-2">
         {listings.map((item) => (
@@ -44,11 +44,8 @@ export default async function InvestorOpportunitiesPage({
               <li>Prix de cession : {formatEuroWhole(item.askingPrice)}</li>
               <li>Statut : {item.certified ? "Portefeuille certifié" : "Annonce simple"}</li>
             </ul>
-            {item.certified ? (
-              <div className="mt-3">
-                <CertifiedBadge compact />
-              </div>
-            ) : null}
+            {item.certified ? <MarketStamp kind="certified" /> : null}
+            {item.sold ? <MarketStamp kind="sold" /> : null}
             <Link
               href={`/annonces/${item.publicNumber}?voie=investir`}
               className="mt-4 inline-block text-[14px] font-medium text-indigo underline-offset-2 hover:underline"

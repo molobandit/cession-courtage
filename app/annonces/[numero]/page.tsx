@@ -23,6 +23,7 @@ import { EMPTY_CELL, formatDateTime } from "@/lib/format/fr";
 import { formatEuroWhole } from "@/lib/format/number";
 import { LISTING_STATUS_LABELS, RISK_TYPE_LABELS, SEGMENT_LABELS } from "@/lib/labels";
 import { OFFER_WINDOW_DAYS } from "@/lib/listing/constants";
+import { commissionPerceptionCopy } from "@/lib/listing/perception";
 import { loadListingBriefFields } from "@/lib/listing/brief-fields";
 import { cessionMotiveLabel, regulatoryFacts } from "@/lib/listing/brief-labels";
 import { actorCanReadCompanyDocs, listCompanyDocs } from "@/lib/listing/company-docs";
@@ -148,6 +149,12 @@ export default async function PublicListingPage({
   const certification =
     (await listCertificationStatuses([listing.id])).get(listing.id) ?? "NONE";
   const certified = certification === "CERTIFIED";
+  const sold = listing.status === "SOLD";
+  const perception = commissionPerceptionCopy({
+    annualCommissions,
+    precompte: listing.precompte,
+    precompteAmount: listing.precompteAmount,
+  });
   const brief = await loadListingBriefFields(listing.id);
   const canReadCompanyDocs = await actorCanReadCompanyDocs(listing.id);
   const companyDocs = canReadCompanyDocs ? await listCompanyDocs(listing.id) : [];
@@ -199,10 +206,13 @@ export default async function PublicListingPage({
         zone,
         statusLabel: LISTING_STATUS_LABELS[listing.status],
         certified,
+        sold,
         isPartial: listing.isPartial,
         isNationwide: listing.isNationwide,
         askingPrice,
         annualCommissions,
+        perceptionModeLine: perception.modeLine,
+        perceptionAmountLine: perception.amountLine,
         contractCount,
         clientCount,
         averageAgeMonths: listing.portfolio.averageAgeMonths,

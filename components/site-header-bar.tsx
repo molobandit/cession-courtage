@@ -4,14 +4,20 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BrandMark } from "@/components/brand-mark";
+import {
+  CTA_BROWSE,
+  CTA_SELL,
+  MARKET_ACCESS,
+  MARKET_HALL,
+} from "@/lib/copy/market";
 import { BRAND_NAME } from "@/lib/site";
 
 const NAV = [
-  { href: "/annonces", label: "Annonces" },
+  { href: "/annonces", label: MARKET_HALL },
   { href: "/ceder", label: "Vendre" },
-  { href: "/acquerir", label: "Acheter" },
-  { href: "/investisseurs", label: "Investisseurs" },
-  { href: "/tarifs", label: "Tarifs" },
+  { href: "/acquerir", label: "Rechercher" },
+  { href: "/investisseurs", label: "Investir" },
+  { href: "/tarifs", label: MARKET_ACCESS },
 ];
 
 export type HeaderSession = {
@@ -37,12 +43,12 @@ export function SiteHeaderBar({
           <span className="text-[15px] font-semibold tracking-tight text-ink">{BRAND_NAME}</span>
         </Link>
 
-        <nav className="hidden flex-1 items-center justify-center gap-1 lg:flex" aria-label="Principal">
+        <nav className="hidden min-w-0 flex-1 items-center justify-center gap-0.5 overflow-x-auto lg:flex" aria-label="Principal">
           {NAV.map((link) => (
             <Link
               key={link.href}
               href={link.href}
-              className="rounded-full px-3 py-2 text-[14px] text-ink/80 hover:bg-surface-alt hover:text-ink"
+              className="whitespace-nowrap rounded-full px-2.5 py-2 text-[13px] text-ink/80 hover:bg-surface-alt hover:text-ink"
             >
               {link.label}
             </Link>
@@ -70,13 +76,13 @@ export function SiteHeaderBar({
             href="/annonces"
             className="rounded-full border border-line px-4 py-2.5 text-[14px] font-medium text-ink hover:bg-surface-alt"
           >
-            Je recherche un portefeuille
+            {CTA_BROWSE}
           </Link>
           <Link
             href="/ceder"
             className="rounded-full bg-indigo px-5 py-2.5 text-[14px] font-semibold !text-white hover:bg-indigo-dark"
           >
-            Je vends mon portefeuille
+            {CTA_SELL}
           </Link>
         </div>
 
@@ -85,7 +91,7 @@ export function SiteHeaderBar({
             href="/ceder"
             className="rounded-full bg-indigo px-3.5 py-2 text-[13px] font-semibold !text-white"
           >
-            Je vends
+            Vendre
           </Link>
           <button
             type="button"

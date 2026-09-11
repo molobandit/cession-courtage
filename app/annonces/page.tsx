@@ -3,41 +3,42 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { PageIntro } from "@/components/page-intro";
 import { PublicListingList } from "@/components/listing/public-listing-list";
-import { GROWTH_PLAN_ANNUAL_EUR, INTEREST_DEPOSIT_LABEL } from "@/lib/billing/rates";
-import { loadPublicListingCards } from "@/lib/listing/load-public-cards";
+import { parseSearchPrefs, searchPrefsToFilters } from "@/lib/account/search-prefs";
 import { canBuy, getActor, isOriasVerified } from "@/lib/authz";
+import { MARKET_HALL_TITLE } from "@/lib/copy/market";
+import { loadPublicListingCards } from "@/lib/listing/load-public-cards";
+import { prisma } from "@/lib/prisma";
 
 export const metadata: Metadata = {
-  title: "Annonces de portefeuilles de courtage",
+  title: MARKET_HALL_TITLE,
   description:
-    "Dossiers anonymes de portefeuilles de courtage à céder. Zone, commissions annuelles, nombre de contrats et fenêtre d’offres.",
+    "Salle de marché : portefeuilles d’assurance disponibles à l’achat ou à la cession.",
   alternates: { canonical: "/annonces" },
 };
 
-export default async function PublicListingsPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ zone?: string; q?: string }>;
-}) {
-  const { zone, q } = await searchParams;
+export default async function PublicListingsPage() {
   const cards = await loadPublicListingCards();
   const actor = await getActor();
   const mandateHref =
     actor && isOriasVerified(actor) && canBuy(actor) ? "/app/mandats" : "/acquerir";
-
-  const initialZone = zone?.trim() ?? "";
-  const initialQuery = q?.trim() ?? "";
+  const showDetailedFilters = Boolean(actor);
+  let initialFilters = {};
+  if (actor) {
+    const row = await prisma.user.findUnique({
+      where: { id: actor.id },
+      select: { searchPrefs: true },
+    });
+    initialFilters = searchPrefsToFilters(parseSearchPrefs(row?.searchPrefs));
+  }
 
   return (
     <main>
-      <PageIntro title="Portefeuilles à céder">
-        Toutes les fiches sont anonymes. Ni raison sociale, ni commune. Un
-        abonnement de {GROWTH_PLAN_ANNUAL_EUR.toLocaleString("fr-FR")} € HT par
-        an ouvre le détail de l’offre. Le vendeur reste anonyme jusqu’au dépôt
-        de {INTEREST_DEPOSIT_LABEL} du prix.
+      <PageIntro title={MARKET_HALL_TITLE}>
+        Portefeuilles disponibles. Les filtres détaillés (zone, branches, budget)
+        se règlent dans le compte, puis s’appliquent ici une fois connecté.
       </PageIntro>
       <div className="mx-auto max-w-6xl px-4 py-8">
-          <nav className="flex flex-wrap gap-2" aria-label="Type d’annonce">
+          <nav className="flex flex-wrap gap-2" aria-label="Type de dossier">
             <span className="rounded-full bg-indigo px-4 py-2 text-[14px] font-medium text-white">
               Portefeuilles à céder
             </span>
@@ -51,12 +52,11 @@ export default async function PublicListingsPage({
         {cards.length === 0 ? (
           <div className="rounded-xl border border-line bg-paper p-8">
             <h2 className="text-xl font-semibold text-ink">
-              Aucun dossier publié pour le moment
+              Aucun portefeuille publié pour le moment
             </h2>
             <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-muted">
-              Déposez un mandat d’achat : vous serez prévenu le matin de la mise en
-              ligne d’un dossier correspondant à vos critères, et jamais plus d’une
-              fois par jour.
+              Déposez un mandat d’achat pour être prévenu dès qu’un dossier
+              correspondant est mis en ligne.
             </p>
             <Button asChild variant="primary" className="mt-6">
               <Link href={mandateHref}>Déposer un mandat</Link>
@@ -65,10 +65,9 @@ export default async function PublicListingsPage({
         ) : (
           <PublicListingList
             listings={cards}
-            initialFilters={{
-              ...(initialZone ? { zone: initialZone } : {}),
-              ...(initialQuery ? { q: initialQuery } : {}),
-            }}
+            initialFilters={initialFilters}
+            showDetailedFilters={showDetailedFilters}
+            accountHref={actor ? "/app/profil#recherche" : "/connexion?next=/annonces"}
           />
         )}
       </div>

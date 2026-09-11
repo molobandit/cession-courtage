@@ -174,3 +174,39 @@ export async function updateNotifyPrefsAction(
   revalidatePath("/app/profil");
   return { ok: true };
 }
+
+const searchPrefsSchema = z.object({
+  zone: z.string().trim().max(80),
+  risk: z.string().trim().max(80),
+  carrier: z.string().trim().max(80),
+  segment: z.string().trim().max(80),
+  maxPrice: z.string().trim().max(20),
+  certifiedOnly: z.boolean(),
+});
+
+export async function updateSearchPrefsAction(
+  _prev: ProfileFormState,
+  formData: FormData,
+): Promise<ProfileFormState> {
+  const actor = await getActor();
+  if (!actor) return { error: "Connectez-vous." };
+  if (!isOriasVerified(actor)) return { error: "ORIAS non validé." };
+
+  const parsed = searchPrefsSchema.safeParse({
+    zone: formData.get("zone") ?? "",
+    risk: formData.get("risk") ?? "",
+    carrier: formData.get("carrier") ?? "",
+    segment: formData.get("segment") ?? "",
+    maxPrice: formData.get("maxPrice") ?? "",
+    certifiedOnly: formData.get("certifiedOnly") === "on",
+  });
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Saisie invalide." };
+
+  await prisma.user.update({
+    where: { id: actor.id },
+    data: { searchPrefs: JSON.stringify(parsed.data) },
+  });
+  revalidatePath("/app/profil");
+  revalidatePath("/annonces");
+  return { ok: true };
+}

@@ -36,6 +36,7 @@ import {
 import { buildCarrierCodes, carrierRisk } from "@/lib/portfolio/carrier-codes";
 import { qualityFactRows, qualityFromPortfolio } from "@/lib/portfolio/quality";
 import { valuePortfolio } from "@/lib/valuation/run";
+import { parseValuationBreakdown } from "@/lib/valuation/parse";
 import { prisma } from "@/lib/prisma";
 
 export const metadata = { title: "Portefeuille" };

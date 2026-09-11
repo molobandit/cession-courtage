@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { PageIntro } from "@/components/page-intro";
+import { BUY_POINTS, CTA_BROWSE, MARKET_ACCESS, NAV_BUY } from "@/lib/copy/market";
 import { canBuy, getActor, isOriasVerified } from "@/lib/authz";
 import { GROWTH_PLAN_ANNUAL_EUR, INTEREST_DEPOSIT_LABEL } from "@/lib/billing/rates";
 import { OFFER_WINDOW_DAYS } from "@/lib/listing/constants";
@@ -54,22 +55,38 @@ export default async function AcquerirPage() {
     <main>
       <PageIntro
         kicker="Acheter"
-        title="Je recherche un portefeuille"
+        title={NAV_BUY}
         actions={
           <>
             <Button asChild variant="primary" size="lg">
               <Link href={loginHref}>Se connecter pour acquérir</Link>
             </Button>
             <Button asChild variant="outline" size="lg">
-              <Link href="/annonces">Parcourir les annonces</Link>
+              <Link href="/annonces">{CTA_BROWSE}</Link>
             </Button>
           </>
         }
       >
-        Vous déposez un mandat une fois. Les dossiers qui vous correspondent
-        vous sont présentés avec leur score d’adéquation et le détail des
-        critères qui ont joué.
+        Accès à des portefeuilles certifiés avec plus de 50 points de contrôle.
+        Valorisation indépendante, paiement via un Trust, accompagnement jusqu’au
+        transfert des contrats.
       </PageIntro>
+
+      <section className="mx-auto max-w-6xl px-4 py-12">
+        <h2 className="text-2xl font-bold tracking-tight text-ink">Acheter un portefeuille</h2>
+        <ul className="mt-6 grid gap-3 lg:grid-cols-2">
+          {BUY_POINTS.map((item) => (
+            <li key={item} className="rounded-2xl border border-line bg-paper px-5 py-4 text-[15px] text-ink">
+              {item}
+            </li>
+          ))}
+        </ul>
+        <p className="mt-4 text-[14px] text-muted">
+          <Link href="/tarifs" className="font-medium text-indigo underline-offset-2 hover:underline">
+            {MARKET_ACCESS}
+          </Link>
+        </p>
+      </section>
 
       <section className="mx-auto max-w-6xl px-4 py-16">
         <div className="grid gap-10 lg:grid-cols-2 lg:items-start">
@@ -78,7 +95,7 @@ export default async function AcquerirPage() {
               Votre mandat d’achat
             </h2>
             <p className="mt-4 text-[15px] leading-relaxed text-muted">
-              Plutôt que de surveiller un catalogue, vous décrivez une fois ce que
+              Plutôt que de surveiller la salle de marché, vous décrivez une fois ce que
               vous cherchez. Chaque nouvelle annonce est confrontée à votre mandat,
               et vous êtes prévenu quand l’adéquation dépasse le seuil de mise en
               relation. Vous recevez au plus un message par jour, et aucun message

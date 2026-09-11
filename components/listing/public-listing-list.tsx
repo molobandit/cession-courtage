@@ -28,9 +28,13 @@ const SELECT_CLASS =
 export function PublicListingList({
   listings,
   initialFilters,
+  showDetailedFilters = false,
+  accountHref,
 }: {
   listings: PublicListingCard[];
   initialFilters?: Partial<CatalogueFilters>;
+  showDetailedFilters?: boolean;
+  accountHref?: string;
 }) {
   const [filters, setFilters] = useState<CatalogueFilters>({
     ...EMPTY_FILTERS,
@@ -71,6 +75,7 @@ export function PublicListingList({
 
   return (
     <>
+      {showDetailedFilters ? (
       <div className="mt-6 rounded-2xl border border-line bg-paper p-6">
         <div className="grid gap-4 lg:grid-cols-3">
           <div className="lg:col-span-3">
@@ -222,11 +227,50 @@ export function PublicListingList({
           </div>
         </div>
       </div>
+      ) : (
+        <div className="mt-6 rounded-2xl border border-line bg-paper p-6">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <p className="text-[15px] font-medium text-ink">Salle de marché</p>
+              <p className="mt-1 max-w-xl text-[14px] leading-relaxed text-muted">
+                La recherche par zone, branche ou budget se configure dans votre
+                compte, puis s’applique ici une fois connecté.
+              </p>
+              {accountHref ? (
+                <a href={accountHref} className="mt-2 inline-block text-[14px] font-medium text-indigo underline-offset-2 hover:underline">
+                  Ouvrir un compte ou me connecter
+                </a>
+              ) : null}
+            </div>
+            <div className="min-w-[12rem]">
+              <label htmlFor="sort-public" className="block text-[15px] font-medium text-ink">
+                Trier par
+              </label>
+              <select
+                id="sort-public"
+                value={sort}
+                onChange={(e) => setSort(e.target.value as SortKey)}
+                className={SELECT_CLASS}
+              >
+                {(Object.keys(SORT_LABELS) as SortKey[]).map((key) => (
+                  <option key={key} value={key}>
+                    {SORT_LABELS[key]}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <p className="mt-4 text-[15px] text-muted" aria-live="polite">
+            {visible.length === 0
+              ? "Aucun dossier pour le moment."
+              : `${formatCount(visible.length)} portefeuille${visible.length > 1 ? "s" : ""}`}
+          </p>
+        </div>
+      )}
 
       {visible.length === 0 ? (
         <p className="mt-8 rounded-xl border border-line bg-paper p-8 text-[15px] leading-relaxed text-muted">
-          Élargissez la compagnie, la branche ou le budget. Vous pouvez aussi déposer
-          un mandat d’achat pour être prévenu dès qu’un dossier correspondant est publié.
+          Aucun portefeuille ne correspond pour le moment.
         </p>
       ) : (
         <ul className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">

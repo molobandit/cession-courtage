@@ -4,7 +4,14 @@ import type { CertificationDocRow } from "@/lib/listing/certification-labels";
 
 export type { CertificationDocRow } from "@/lib/listing/certification-labels";
 export { certificationDocStatusLabel } from "@/lib/listing/certification-labels";
-export { CERTIFICATION_SLOTS } from "@/lib/listing/certification-slots";
+import { CERTIFICATION_SLOTS } from "@/lib/listing/certification-slots";
+/*
+ * Reexport ET import : `export { X } from "..."` ne met PAS X dans la portee du
+ * module, il se contente de le republier. `ensureCertificationSlots` l'utilisait
+ * localement et levait donc une ReferenceError, avalee par son try/catch : les
+ * emplacements de documents n'etaient jamais crees, sans la moindre alerte.
+ */
+export { CERTIFICATION_SLOTS };
 
 function toRow(doc: {
   id: string;

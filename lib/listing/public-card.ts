@@ -16,4 +16,7 @@ export type PublicListingCard = {
   riskTypes: string[];
   clientSegments: string[];
   certified: boolean;
+  sold: boolean;
+  precompte: boolean | null;
+  precompteAmount: string | null;
 };

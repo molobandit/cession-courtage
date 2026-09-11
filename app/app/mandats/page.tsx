@@ -33,7 +33,7 @@ export default async function MandatesPage() {
               <th className="px-4 py-3 font-medium">Budget</th>
               <th className="px-4 py-3 font-medium">Zones</th>
               <th className="px-4 py-3 text-right font-medium">Matchs</th>
-              <th className="px-4 py-3 font-medium">Catalogue</th>
+              <th className="px-4 py-3 font-medium">Salle de marché</th>
               <th className="px-4 py-3 text-right font-medium">Action</th>
             </tr>
           </thead>

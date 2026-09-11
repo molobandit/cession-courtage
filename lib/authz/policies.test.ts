@@ -104,6 +104,12 @@ describe("canViewListing / canManageListing (Marie vs Julien)", () => {
     expect(canViewListing(marie, publishedJulien)).toBe(true);
     expect(canViewListing(null, publishedJulien)).toBe(true);
   });
+
+  it("un portefeuille vendu reste visible, sans droit de gestion", () => {
+    const soldJulien = { status: "SOLD" as const, portfolio: { firmId: "cabinet_02" } };
+    expect(canViewListing(null, soldJulien)).toBe(true);
+    expect(canManageListing(marie, soldJulien)).toBe(false);
+  });
 });
 
 describe("isListingMessageParty", () => {

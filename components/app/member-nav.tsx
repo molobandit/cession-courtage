@@ -37,7 +37,7 @@ export function memberWorkspaceLinks(
   }
   const links: NavLink[] = [
     { href: "/app", label: "Accueil", exact: true },
-    { href: "/annonces", label: "Catalogue" },
+    { href: "/annonces", label: "Salle de marché" },
   ];
   if (canSell) {
     links.push(

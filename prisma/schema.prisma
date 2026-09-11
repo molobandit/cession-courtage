@@ -237,6 +237,8 @@ model User {
   updatedAt     DateTime  @updatedAt
   jobTitle      String?
   notifyPrefs   String?
+  /// Critères de salle de marché (zone, branche, budget). Jamais exposés en public.
+  searchPrefs   String?
   stripeCustomerId String?
 
   firm                    Firm?               @relation(fields: [firmId], references: [id])

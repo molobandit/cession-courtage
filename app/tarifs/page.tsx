@@ -18,20 +18,29 @@ import {
 } from "@/lib/billing/rates";
 import { formatEuroWhole } from "@/lib/format/number";
 import { CERTIFIED_BADGE, CERTIFIED_LABEL } from "@/lib/site";
+import {
+  ACCESS_MARKET_POINTS,
+  ACCESS_PRICE_LINE,
+  CTA_BROWSE,
+  CTA_SELL,
+  MARKET_ACCESS,
+  NO_FEE_LABEL,
+  TAKE_POSITION,
+} from "@/lib/copy/market";
 
 export const metadata: Metadata = {
-  title: "Tarifs",
-  description: `Publier et consulter sont gratuits. Un abonnement de ${GROWTH_PLAN_ANNUAL_EUR} € HT par an ouvre le détail de l’offre. La vérification porte sur la société, l’identité et les documents du portefeuille.`,
+  title: MARKET_ACCESS,
+  description: `Mettre en vente : ${NO_FEE_LABEL.toLowerCase()}. Accès au marché ${GROWTH_PLAN_ANNUAL_EUR} € HT par an, illimité pendant la durée de l’abonnement.`,
 };
 
 const EXAMPLES = [12_000, 34_000, 80_000, 150_000];
 
 const PLAN_ROWS: { label: string; free: boolean; paid: boolean }[] = [
-  { label: "Consulter le catalogue sous alias", free: true, paid: true },
-  { label: "Déposer une annonce", free: true, paid: true },
-  { label: "Détail de l’offre", free: false, paid: true },
-  { label: "Contact et messages à envoyer", free: false, paid: true },
-  { label: "Dépôt d’offre pendant la fenêtre", free: false, paid: true },
+  { label: "Consulter la salle de marché", free: true, paid: true },
+  { label: "Mettre un portefeuille en vente", free: true, paid: true },
+  { label: "Détail pour se positionner", free: false, paid: true },
+  { label: "Contact et messages", free: false, paid: true },
+  { label: "Dépôt d’offre", free: false, paid: true },
   { label: `Identité du vendeur (dépôt ${INTEREST_DEPOSIT_LABEL})`, free: false, paid: false },
 ];
 
@@ -47,7 +56,7 @@ const COMPARE_ROWS: {
   { label: "Pièce d’identité du représentant", simple: "non", verified: "oui" },
   { label: "Justificatif ORIAS du dossier", simple: "non", verified: "oui" },
   { label: "États de portefeuille et bordereaux", simple: "non", verified: "oui" },
-  { label: "Badge au catalogue", simple: "Annonce", verified: CERTIFIED_LABEL },
+  { label: "Badge en salle de marché", simple: "Non certifié", verified: CERTIFIED_LABEL },
   {
     label: "Honoraires si la vente aboutit",
     simple: SIMPLE_FEE_LABEL,
@@ -84,7 +93,7 @@ const VERIFY_BLOCKS = [
       "Pièce d’identité du représentant légal",
       "Concordance avec le Kbis",
       "Les deux parties du dossier passent par cette étape avant l’acte",
-      "Les pièces ne sont jamais publiées au catalogue",
+      "Les pièces ne sont jamais publiées en salle de marché",
     ],
   },
   {
@@ -137,22 +146,21 @@ export default async function TarifsPage() {
       <section className="relative overflow-hidden bg-gradient-to-b from-indigo-soft via-page to-page">
         <div className="mx-auto max-w-4xl px-4 py-16 text-center sm:py-20">
           <p className="inline-flex rounded-full border border-indigo-line bg-surface px-3.5 py-1 text-[12px] font-semibold text-indigo">
-            Tarifs
+            {MARKET_ACCESS}
           </p>
           <h1 className="mt-5 text-4xl font-bold tracking-tight text-ink sm:text-5xl">
-            Des tarifs lisibles, pour conclure en confiance
+            {TAKE_POSITION}
           </h1>
           <p className="mx-auto mt-4 max-w-2xl text-[16px] leading-relaxed text-muted">
-            Consulter et publier sont gratuits. L’abonnement ouvre le contact.
-            La vérification contrôle la société, l’identité et les documents.
-            Le vendeur reste anonyme jusqu’au dépôt de {INTEREST_DEPOSIT_LABEL}.
+            Accès illimité aux portefeuilles disponibles à l’achat pendant la
+            durée de l’abonnement. {ACCESS_PRICE_LINE}.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             <a
               href="#abonnements"
               className="rounded-full border border-line bg-surface px-5 py-2.5 text-[14px] font-medium text-ink shadow-sm hover:border-indigo"
             >
-              Abonnements
+              {MARKET_ACCESS}
             </a>
             <a
               href="#verification"
@@ -166,6 +174,12 @@ export default async function TarifsPage() {
             >
               Cession et séquestre
             </a>
+            <Link
+              href="/annonces"
+              className="rounded-full border border-line bg-surface px-5 py-2.5 text-[14px] font-medium text-ink shadow-sm hover:border-indigo"
+            >
+              {CTA_BROWSE}
+            </Link>
           </div>
         </div>
       </section>
@@ -176,32 +190,30 @@ export default async function TarifsPage() {
             Plans
           </p>
           <h2 className="mt-4 text-3xl font-bold tracking-tight text-ink sm:text-4xl">
-            Choisissez votre accès
+            {MARKET_ACCESS}
           </h2>
           <p className="mx-auto mt-3 max-w-xl text-[15px] text-muted">
-            Le catalogue reste libre. L’abonnement est obligatoire pour le
-            contact, les messages et le détail de l’offre.
+            {ACCESS_MARKET_POINTS[0]} {ACCESS_MARKET_POINTS[1]}
           </p>
         </div>
 
         <div className="mx-auto grid max-w-5xl items-stretch gap-6 px-4 pb-16 lg:grid-cols-2">
           <article className="flex flex-col rounded-3xl border border-line bg-surface p-8 shadow-sm">
-            <h3 className="text-center text-xl font-bold text-ink">Gratuit</h3>
-            <p className="tabular mt-4 text-center text-5xl font-bold tracking-tight text-ink">
-              0 €
-              <span className="ml-1 align-top text-base font-semibold text-muted">HT</span>
+            <h3 className="text-center text-xl font-bold text-ink">{NO_FEE_LABEL}</h3>
+            <p className="mt-4 text-center text-[15px] font-semibold text-ink">
+              Mise en vente sans frais
             </p>
-            <p className="mt-1 text-center text-[13px] text-muted">0 € HT par an</p>
+            <p className="mt-1 text-center text-[13px] text-muted">Aucun abonnement requis pour céder</p>
             <ul className="mt-8 flex-1 space-y-3">
               {PLAN_ROWS.map((row) => (
                 <PlanRow key={row.label} label={row.label} on={row.free} />
               ))}
             </ul>
             <Button asChild variant="outline" className="mt-8 w-full" size="lg">
-              <Link href="/annonces">Voir les annonces</Link>
+              <Link href="/ceder">{CTA_SELL}</Link>
             </Button>
             <p className="mt-3 text-center text-[12px] text-muted">
-              Catalogue libre, sans carte.
+              Sans carte. Sans frais de mise en vente.
             </p>
           </article>
 
@@ -209,7 +221,7 @@ export default async function TarifsPage() {
             <p className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-indigo px-3 py-1 text-[12px] font-semibold text-white">
               Recommandé
             </p>
-            <h3 className="text-center text-xl font-bold text-ink">Abonnement</h3>
+            <h3 className="text-center text-xl font-bold text-ink">{MARKET_ACCESS}</h3>
             <p className="tabular mt-4 text-center text-5xl font-bold tracking-tight text-indigo">
               {GROWTH_PLAN_ANNUAL_EUR.toLocaleString("fr-FR")}
               <span className="ml-1 text-[1.35rem]">€</span>
@@ -321,7 +333,7 @@ export default async function TarifsPage() {
                 <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-white/80">
                   Contrôle de la société (souvent appelé KYB), de l’identité du
                   représentant (KYC) et des documents du portefeuille. Honoraires
-                  dus uniquement si la vente aboutit. Le catalogue affiche{" "}
+                  dus uniquement si la vente aboutit. La salle de marché affiche{" "}
                   {CERTIFIED_BADGE}.
                 </p>
               </div>
@@ -391,7 +403,7 @@ export default async function TarifsPage() {
               items={[
                 "Aucune commission sur la vente",
                 "Pas de Kbis, pièce d’identité ni bordereaux contrôlés",
-                "Statut Annonce au catalogue",
+                "Statut non certifié en salle de marché",
                 "Paiement via séquestre, comme l’option 2",
               ]}
               href="/ceder"

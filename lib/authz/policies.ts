@@ -79,8 +79,14 @@ export function isPublicListingStatus(status: ListingStatus): boolean {
     status === "PUBLISHED" ||
     status === "OFFERS_OPEN" ||
     status === "OFFERS_CLOSED" ||
-    status === "UNDER_NEGOTIATION"
+    status === "UNDER_NEGOTIATION" ||
+    status === "SOLD"
   );
+}
+
+/** Visible, mais plus ouvert à une prise de position. */
+export function isTradableListingStatus(status: ListingStatus): boolean {
+  return isPublicListingStatus(status) && status !== "SOLD";
 }
 
 /** Published (or owner). Never use this to leak existence via 403 — return 404 instead. */

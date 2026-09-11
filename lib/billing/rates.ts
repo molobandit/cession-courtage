@@ -48,7 +48,7 @@ export type PlanDefinition = {
 export const PLANS: Record<PlanKey, PlanDefinition> = {
   FREE: {
     key: "FREE",
-    label: "Gratuit",
+    label: "Sans frais",
     annualPriceEur: 0,
     dealQuota: FREE_PLAN_DEAL_QUOTA,
     successFeeRate: SIMPLE_FEE_RATE,

@@ -218,7 +218,7 @@ export default async function MemberHomePage() {
         Tableau de bord
       </h1>
       <p className="mt-1 max-w-2xl text-[15px] text-muted sm:mt-2">
-        Catalogue, vos dossiers et la suite à donner, sur un
+        Salle de marché, vos dossiers et la suite à donner, sur un
         seul écran.
       </p>
 
@@ -425,7 +425,7 @@ export default async function MemberHomePage() {
         <Panel
           title="Projets en cours"
           href={recentDeals[0] ? `/app/dossiers/${recentDeals[0].id}` : "/annonces"}
-          action={recentDeals.length > 0 ? "Ouvrir" : "Catalogue"}
+          action={recentDeals.length > 0 ? "Ouvrir" : "Salle de marché"}
           count={activeDeals.length}
         >
           {recentDeals.length === 0 ? (

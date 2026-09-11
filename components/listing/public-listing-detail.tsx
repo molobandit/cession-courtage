@@ -1,9 +1,10 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { CertifiedBadge } from "@/components/listing/certified-badge";
+import { MarketStamp } from "@/components/listing/market-stamp";
 import { MixDonut } from "@/components/charts/mix-donut";
 import { RankedBars } from "@/components/charts/ranked-bars";
 import { ConcentrationMeter } from "@/components/charts/concentration-meter";
+import { UNCERTIFIED_LABEL } from "@/lib/copy/market";
 import { GROWTH_PLAN_ANNUAL_EUR, INTEREST_DEPOSIT_LABEL } from "@/lib/billing/rates";
 import { formatCount, formatEuroWhole } from "@/lib/format/number";
 import { groupMaturityByYear, type MaturityBucket, type Share } from "@/lib/portfolio/analytics";
@@ -17,10 +18,13 @@ export type PublicListingDetailModel = {
   zone: string;
   statusLabel: string;
   certified: boolean;
+  sold: boolean;
   isPartial: boolean;
   isNationwide: boolean;
   askingPrice: number;
   annualCommissions: number;
+  perceptionModeLine: string;
+  perceptionAmountLine: string | null;
   contractCount: number;
   clientCount: number;
   averageAgeMonths: number;
@@ -86,9 +90,12 @@ export function PublicListingDetail({
     zone,
     statusLabel,
     certified,
+    sold,
     isPartial,
     askingPrice,
     annualCommissions,
+    perceptionModeLine,
+    perceptionAmountLine,
     contractCount,
     clientCount,
     averageAgeMonths,
@@ -138,14 +145,12 @@ export function PublicListingDetail({
         <div className="mt-5 overflow-hidden rounded-3xl border border-line bg-paper shadow-sm">
           <div className="grid md:grid-cols-12">
             <section className="p-7 sm:p-9 md:col-span-8">
-              <div className="flex flex-wrap gap-2">
-                {certified ? (
-                  <CertifiedBadge />
-                ) : (
-                  <span className="rounded-full border border-line bg-surface-alt px-3 py-1 text-[12px] font-medium text-muted">
-                    Annonce simple
-                  </span>
-                )}
+              <div className="flex flex-wrap items-center gap-3">
+                {sold ? <MarketStamp kind="sold" size="lg" /> : null}
+                {certified ? <MarketStamp kind="certified" size="lg" /> : null}
+                {!certified ? (
+                  <span className="text-[12px] text-muted">{UNCERTIFIED_LABEL}</span>
+                ) : null}
                 <span className="rounded-full border border-line bg-surface-alt px-3 py-1 text-[12px] text-ink">
                   {statusLabel}
                 </span>
@@ -206,12 +211,18 @@ export function PublicListingDetail({
                 </dl>
               </div>
               <div className="mt-8">
-                <Link
-                  href={interestHref}
-                  className="flex h-12 w-full items-center justify-center rounded-full bg-white text-[15px] font-semibold !text-indigo hover:bg-white/90"
-                >
-                  Je suis intéressé
-                </Link>
+                {sold ? (
+                  <p className="rounded-2xl bg-white/10 px-4 py-3 text-center text-[15px] font-semibold">
+                    Ce portefeuille est vendu.
+                  </p>
+                ) : (
+                  <Link
+                    href={interestHref}
+                    className="flex h-12 w-full items-center justify-center rounded-full bg-white text-[15px] font-semibold !text-indigo hover:bg-white/90"
+                  >
+                    Prendre position
+                  </Link>
+                )}
                 {followHref ? (
                   <Link
                     href={followHref}
@@ -272,6 +283,10 @@ export function PublicListingDetail({
             <dl className="mt-5 divide-y divide-line">
               {[
                 { label: "Commissions annuelles", value: formatEuroWhole(annualCommissions) },
+                { label: "Mode de perception", value: perceptionModeLine.replace("Mode de perception : ", "") },
+                ...(perceptionAmountLine
+                  ? [{ label: "Montant précompté", value: perceptionAmountLine.replace("Montant précompté : ", "") }]
+                  : []),
                 { label: "Prix demandé", value: formatEuroWhole(askingPrice) },
                 {
                   label: "Multiple",

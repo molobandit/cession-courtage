@@ -2,6 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { PageIntro } from "@/components/page-intro";
+import {
+  CTA_SELL,
+  MARKET_ACCESS,
+  NAV_SELL,
+  NO_FEE_LABEL,
+  SELL_PILLARS,
+} from "@/lib/copy/market";
 import { INTEREST_DEPOSIT_LABEL, SIMPLE_FEE_LABEL, VERIFIED_FEE_RANGE_LABEL } from "@/lib/billing/rates";
 import { ASKING_MAX, ASKING_MIN, OFFER_WINDOW_DAYS } from "@/lib/listing/constants";
 import { formatEuroWhole } from "@/lib/format/number";
@@ -61,11 +68,24 @@ const TIMELINE = [
 export default function CederPage() {
   return (
     <main>
-      <PageIntro kicker="Vendre" title="Je vends mon portefeuille">
-        Créez votre compte, déposez une annonce simple ou faites vérifier le
-        dossier. Votre identité reste masquée jusqu’au dépôt de{" "}
-        {INTEREST_DEPOSIT_LABEL} du prix.
+      <PageIntro kicker="Vendre" title={NAV_SELL}>
+        Valorisez et cédez votre portefeuille dans un cadre sécurisé.
       </PageIntro>
+
+      <section className="mx-auto max-w-6xl px-4 py-12">
+        <div className="grid gap-5 sm:grid-cols-2">
+          {SELL_PILLARS.map((item) => (
+            <article key={item.title} className="rounded-2xl border border-line bg-paper p-6">
+              <h2 className="text-lg font-semibold text-ink">{item.title}</h2>
+              <p className="mt-2 text-[15px] leading-relaxed text-muted">{item.body}</p>
+            </article>
+          ))}
+        </div>
+        <p className="mt-4 text-[12px] text-muted">
+          * Délai constaté sur les cessions accompagnées. Il ne constitue pas une
+          garantie de délai.
+        </p>
+      </section>
 
       <section className="mx-auto max-w-6xl px-4 py-12">
             <div className="grid gap-5 lg:grid-cols-2">
@@ -156,16 +176,16 @@ export default function CederPage() {
             comptant plus élevée parce qu’il est couvert.
           </p>
           <p className="mt-4 text-[15px] leading-relaxed text-muted">
-            Publier ne coûte rien. Option 1 : {SIMPLE_FEE_LABEL} de commission.
+            Publier : {NO_FEE_LABEL.toLowerCase()}. Option 1 : {SIMPLE_FEE_LABEL} de commission.
             Option 2 : {VERIFIED_FEE_RANGE_LABEL} après vérification. Le paiement
-            passe par le séquestre dans les deux cas.
+            passe par le Trust dans les deux cas.
           </p>
           <div className="mt-7 flex flex-wrap gap-3">
             <Button asChild variant="primary">
-              <Link href="/inscription">Ouvrir un compte cédant</Link>
+              <Link href="/inscription">{CTA_SELL}</Link>
             </Button>
             <Button asChild variant="outline">
-              <Link href="/tarifs">Détail des tarifs</Link>
+              <Link href="/tarifs">{MARKET_ACCESS}</Link>
             </Button>
           </div>
         </div>

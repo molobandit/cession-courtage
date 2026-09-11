@@ -2,28 +2,33 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { VERIFIED_FEE_RANGE_LABEL } from "@/lib/billing/rates";
 import { AUDIENCE_FOOTER } from "@/lib/copy/audience";
-import { BRAND_NAME } from "@/lib/site";
+import {
+  MARKET_ACCESS,
+  MARKET_HALL,
+  NAV_BUY,
+  NAV_INVESTOR,
+  NAV_SELL,
+} from "@/lib/copy/market";
+import { BRAND_NAME, COMPANY_LEGAL_NAME } from "@/lib/site";
 
 const COLUMNS = [
   {
     title: "Céder",
     links: [
-      { href: "/ceder", label: "Parcours cédant" },
-      { href: "/valoriser", label: "Estimer mon portefeuille" },
+      { href: "/ceder", label: NAV_SELL },
+      { href: "/valoriser", label: "Valoriser un portefeuille" },
       { href: "/certification", label: "Portefeuille certifié" },
-      { href: "/tarifs", label: "Tarifs" },
+      { href: "/tarifs", label: MARKET_ACCESS },
     ],
   },
   {
     title: "Acquérir",
     links: [
-      { href: "/acquerir", label: "Parcours acquéreur" },
-      { href: "/annonces", label: "Annonces en ligne" },
-      { href: "/investisseurs", label: "Espace investisseurs" },
+      { href: "/acquerir", label: NAV_BUY },
+      { href: "/annonces", label: MARKET_HALL },
+      { href: "/investisseurs", label: NAV_INVESTOR },
       { href: "/investisseurs/opportunites", label: "Opportunités" },
-      { href: "/inscription", label: "Déposer un mandat" },
     ],
   },
   {
@@ -53,8 +58,9 @@ export function SiteFooter() {
         <div className="grid gap-10 lg:grid-cols-[1.4fr_repeat(4,1fr)]">
           <div>
             <p className="text-[15px] font-semibold tracking-tight">{BRAND_NAME}</p>
+            <p className="mt-1 text-[12px] text-white/55">{COMPANY_LEGAL_NAME}</p>
             <p className="mt-3 max-w-xs text-[14px] leading-relaxed text-white/70">
-              {AUDIENCE_FOOTER} Option vérifiée : {VERIFIED_FEE_RANGE_LABEL}.
+              {AUDIENCE_FOOTER}
             </p>
           </div>
           {COLUMNS.map((column) => (
@@ -81,7 +87,7 @@ export function SiteFooter() {
             aucune transaction, n’exerce aucune activité d’intermédiation en
             assurance et ne fournit aucun conseil en investissement. Les
             valorisations sont indicatives et ne constituent pas une garantie de
-            prix. Aucune donnée nominative de client final n’est collectée.
+            prix.
           </p>
         </div>
       </div>

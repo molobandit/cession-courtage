@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { PageIntro } from "@/components/page-intro";
 import { SIMPLE_FEE_LABEL, VERIFIED_FEE_RANGE_LABEL } from "@/lib/billing/rates";
-import { CERTIFIED_BADGE, CERTIFIED_LABEL } from "@/lib/site";
+import { CERTIFIED_LABEL } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Portefeuille certifié",
@@ -65,7 +65,8 @@ export default function CertificationPage() {
       <PageIntro kicker="Due diligence" title="Faire certifier mon portefeuille">
         Nous vérifions la société, les pièces d’identité et les documents du
         portefeuille. Honoraires de {VERIFIED_FEE_RANGE_LABEL} si la vente
-        aboutit. Le catalogue affiche {CERTIFIED_BADGE}.
+        aboutit. La salle de marché affiche un cachet CERTIFIÉ. Plus de 50 points
+        de contrôle.
       </PageIntro>
       <div className="mx-auto grid max-w-5xl gap-6 px-4 py-12 lg:grid-cols-2">
         <article className="rounded-2xl border border-line bg-paper p-7">

@@ -14,7 +14,10 @@ export async function GET(
   if (!doc) return NextResponse.json({ error: "Pièce introuvable." }, { status: 404 });
   try {
     const bytes = await getObject(doc.storageKey);
-    return new NextResponse(bytes, {
+    // Le moteur accepte un Uint8Array comme corps de reponse, les types du DOM
+    // ne le declarent pas. On expose le tampon sous-jacent : meme contenu,
+    // aucune copie, et le type attendu est respecte.
+    return new NextResponse(bytes.buffer as ArrayBuffer, {
       headers: {
         "Content-Type": "application/pdf",
         "Content-Disposition": `inline; filename="${doc.fileName.replace(/"/g, "")}"`,

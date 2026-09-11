@@ -17,7 +17,7 @@ export function legalIdentityIncomplete(): boolean {
 }
 
 export const PUBLISHER = {
-  legalName: LEGAL_PLACEHOLDER,
+  legalName: "Le marché du portefeuille",
   legalForm: LEGAL_PLACEHOLDER,
   shareCapital: LEGAL_PLACEHOLDER,
   siren: LEGAL_PLACEHOLDER,

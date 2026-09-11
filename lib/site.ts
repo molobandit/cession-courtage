@@ -3,6 +3,9 @@ const FALLBACK = "https://cession-courtage.molobandit.workers.dev";
 /** Nom affiché. Le dépôt git reste cession-courtage. */
 export const BRAND_NAME = "Le Bon Portefeuille";
 
+/** Dénomination sociale (brief). */
+export const COMPANY_LEGAL_NAME = "Le marché du portefeuille";
+
 /** Badge public, libellé du brief (catalogue et fiche). */
 export const CERTIFIED_BADGE = "✓ CERTIFIÉ PAR LE BON PORTEFEUILLE";
 

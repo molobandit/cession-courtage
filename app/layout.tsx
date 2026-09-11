@@ -26,7 +26,7 @@ export const metadata: Metadata = {
     template: `%s · ${BRAND_NAME}`,
   },
   description:
-    "Place de marché B2B pour la cession de portefeuilles de courtage d'assurance entre professionnels ORIAS.",
+    "Salle de marché pour la cession de portefeuilles d'assurance. Valorisation, certification, transaction sécurisée.",
   // Ceinture et bretelles : robots.txt peut etre ignore, la balise non. Elle
   // disparait d'elle-meme quand l'identite legale est renseignee.
   robots: legalIdentityIncomplete() ? { index: false, follow: false } : undefined,

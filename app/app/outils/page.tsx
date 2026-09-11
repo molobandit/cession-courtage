@@ -20,7 +20,7 @@ export default async function OutilsPage() {
       ? [
           {
             title: "Céder",
-            detail: "Importer, valoriser, publier. L’annonce paraît sous alias.",
+            detail: "Importer, valoriser, publier.",
             tools: [
               {
                 href: "/app/import",
@@ -59,8 +59,8 @@ export default async function OutilsPage() {
               },
               {
                 href: "/annonces",
-                title: "Catalogue",
-                detail: "Portefeuilles sous alias, commissions annuelles, sans raison sociale.",
+                title: "Salle de marché",
+                detail: "Portefeuilles, commissions annuelles, mode de perception.",
               },
             ],
           },
@@ -77,8 +77,8 @@ export default async function OutilsPage() {
         },
         {
           href: "/tarifs",
-          title: "Tarifs",
-          detail: "Abonnement, dépôt d’identité, option simple ou vérifiée, séquestre.",
+          title: "Accès au marché",
+          detail: "Sans frais pour vendre. Abonnement pour se positionner à l’achat.",
         },
       ],
     },

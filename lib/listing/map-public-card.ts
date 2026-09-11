@@ -14,6 +14,8 @@ type ListingForCard = {
   sellerSupportMonths: number;
   offerWindowClosesAt: Date | null;
   certificationStatus: string;
+  precompte: boolean | null;
+  precompteAmount: string | null;
   portfolio: {
     annualCommissions: { toString(): string } | number;
     contractCount: number;
@@ -53,5 +55,8 @@ export function mapPublicListingCard(item: ListingForCard, facet: Facets): Publi
       (s) => SEGMENT_LABELS[s as keyof typeof SEGMENT_LABELS] ?? s,
     ),
     certified: item.certificationStatus === "CERTIFIED",
+    sold: item.status === "SOLD",
+    precompte: item.precompte,
+    precompteAmount: item.precompteAmount,
   };
 }

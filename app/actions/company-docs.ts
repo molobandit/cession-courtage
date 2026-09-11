@@ -7,6 +7,7 @@ import { sha256Buffer, safeFileName } from "@/lib/import/persist";
 import {
   COMPANY_DOC_KINDS,
   insertCompanyDoc,
+  type CompanyDocKind,
 } from "@/lib/listing/company-docs";
 import { putObject, StorageUnavailableError } from "@/lib/storage/objects";
 
@@ -14,7 +15,16 @@ export type CompanyDocFormState = { error?: string; ok?: boolean };
 
 const MAX_BYTES = 10 * 1024 * 1024;
 const ALLOWED = new Set(["application/pdf"]);
-const KINDS = new Set(COMPANY_DOC_KINDS.map((k) => k.kind));
+const KINDS: ReadonlySet<string> = new Set(COMPANY_DOC_KINDS.map((k) => k.kind));
+
+/**
+ * Garde de type : `KINDS.has()` verifie la valeur mais ne l'affine pas, le Set
+ * etant declare sur `string`. Sans ce predicat, la chaine issue du formulaire
+ * reste un `string` et le type de la piece n'est plus verifie a la compilation.
+ */
+function estUnGenreConnu(valeur: string): valeur is CompanyDocKind {
+  return KINDS.has(valeur);
+}
 
 export async function uploadCompanyDocumentAction(
   _prev: CompanyDocFormState,
