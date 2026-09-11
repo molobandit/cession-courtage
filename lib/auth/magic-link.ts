@@ -1,5 +1,6 @@
 import { createHash, randomBytes } from "node:crypto";
 import { prisma } from "@/lib/prisma";
+import { BRAND_NAME } from "@/lib/site";
 import { sendMail } from "@/lib/integrations/mailer";
 import { enregistrerEchec, effacerEchecs, verrouActif } from "@/lib/auth/throttle";
 
@@ -55,7 +56,7 @@ export async function issueMagicLink(email: string): Promise<void> {
   const url = `${base}/connexion/magique?email=${encodeURIComponent(email)}&token=${raw}`;
   await sendMail({
     to: email,
-    subject: "Votre code de connexion — Le Bon Portefeuille",
+    subject: `Votre code de connexion — ${BRAND_NAME}`,
     purpose: "MAGIC_LINK",
     bodyText: [
       "Bonjour,",

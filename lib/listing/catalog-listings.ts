@@ -223,7 +223,7 @@ export function buildCatalogListings(): CatalogListingRow[] {
 
 export const CATALOG_FIRM = {
   id: CATALOG_FIRM_ID,
-  legalName: "Catalogue demonstration Le Bon Portefeuille",
+  legalName: "Catalogue de demonstration",
   siren: "890190080",
   legalForm: "SAS",
   address: "1 rue de la Bourse",

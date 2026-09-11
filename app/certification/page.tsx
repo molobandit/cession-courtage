@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { PageIntro } from "@/components/page-intro";
 import { SIMPLE_FEE_LABEL, VERIFIED_FEE_RANGE_LABEL } from "@/lib/billing/rates";
-import { CERTIFIED_LABEL } from "@/lib/site";
+import { BRAND_NAME, CERTIFIED_LABEL } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Portefeuille certifié",
@@ -54,7 +54,7 @@ const STEPS = [
     title: "Étape 5 — Rapport de certification",
     items: [
       `Attribution du label ${CERTIFIED_LABEL}`,
-      "ou non-certification par Le Bon Portefeuille",
+      `ou non-certification par ${BRAND_NAME}`,
     ],
   },
 ];
