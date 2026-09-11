@@ -6,7 +6,7 @@ import { hasContactSubscription } from "@/lib/billing/contact-access";
 import { findMyDeposit } from "@/lib/listing/deposit";
 import { findMyInvestorPosition } from "@/lib/investor/positions";
 import { canReadCedantIdentity } from "@/lib/listing/identity-access";
-import { COMPANY_DOC_KINDS, type CompanyDocRow } from "@/lib/listing/company-doc-kinds";
+import type { CompanyDocKind, CompanyDocRow } from "@/lib/listing/company-doc-kinds";
 
 export { COMPANY_DOC_KINDS, companyDocLabel, type CompanyDocRow, type CompanyDocKind } from "@/lib/listing/company-doc-kinds";
 
@@ -47,7 +47,7 @@ export async function findCompanyDoc(
 export async function insertCompanyDoc(row: {
   id: string;
   listingId: string;
-  kind: string;
+  kind: CompanyDocKind;
   fileName: string;
   storageKey: string;
   sha256: string;

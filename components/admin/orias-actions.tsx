@@ -2,7 +2,6 @@
 
 import { useActionState } from "react";
 import {
-  decideKycAction,
   lookupOriasAction,
   rejectOriasAction,
   verifyOriasAction,

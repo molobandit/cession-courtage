@@ -39,7 +39,7 @@ export async function uploadCompanyDocumentAction(
   const kind = String(formData.get("kind") ?? "");
   const listing = await findMyListing(listingId, actor);
   if (!listing) return { error: "Annonce introuvable." };
-  if (!KINDS.has(kind)) return { error: "Type de pièce invalide." };
+  if (!estUnGenreConnu(kind)) return { error: "Type de pièce invalide." };
 
   const file = formData.get("file");
   if (!(file instanceof File) || file.size === 0) {

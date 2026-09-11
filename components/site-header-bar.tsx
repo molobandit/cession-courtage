@@ -5,7 +5,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BrandMark } from "@/components/brand-mark";
 import {
-  CTA_BROWSE,
   CTA_SELL,
   MARKET_ACCESS,
   MARKET_HALL,
