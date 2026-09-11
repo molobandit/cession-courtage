@@ -33,6 +33,8 @@ export {
   listPendingOriasUsers,
   verifyOrias,
   rejectOrias,
+  listPendingKyc,
+  decideKyc,
   listInvestorInquiries,
   countUnreadInvestorInquiries,
   setInvestorInquiryRead,

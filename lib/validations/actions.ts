@@ -23,6 +23,20 @@ const frenchAmount = z.preprocess((value) => {
   return parseFrenchNumber(value) ?? undefined;
 }, z.number({ message: "Montant invalide." }).finite("Montant invalide."));
 
+const optionalEuro = z.preprocess((value) => {
+  if (value == null || value === "") return null;
+  if (typeof value === "number") return Number.isFinite(value) ? value : null;
+  if (typeof value !== "string") return null;
+  return parseFrenchNumber(value);
+}, z.number({ message: "Montant invalide." }).finite().nonnegative().nullable());
+
+const optionalPercent = z.preprocess((value) => {
+  if (value == null || value === "") return null;
+  if (typeof value === "number") return Number.isFinite(value) ? value : null;
+  if (typeof value !== "string") return null;
+  return parseFrenchNumber(value);
+}, z.number({ message: "Part invalide." }).finite().min(0).max(100).nullable());
+
 /** Ticket investisseur : champ facultatif, vide = non renseigne. */
 const optionalTicketEur = z.preprocess((value) => {
   if (value == null || value === "") return undefined;
@@ -145,6 +159,11 @@ export const listingCreateSchema = z.object({
   premisesStatus: optionalText(120),
   exclusiveMandates: optionalText(160),
   stornoShare: optionalText(80),
+  commissionsYear1: optionalEuro,
+  commissionsYear2: optionalEuro,
+  commissionsYear3: optionalEuro,
+  managedAnnualPremium: optionalEuro,
+  recurrentSharePercent: optionalPercent,
 });
 
 export const retentionReportSchema = z

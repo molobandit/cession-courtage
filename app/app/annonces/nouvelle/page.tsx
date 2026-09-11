@@ -63,6 +63,22 @@ export default async function NewListingPage({
           portfolioId={selected.id}
           defaultAsking={String(asking)}
           defaultCertify={certifier === "1"}
+          qualityDefaults={{
+            commissionsYear1:
+              selected.commissionsYear1 != null ? String(Number(selected.commissionsYear1)) : "",
+            commissionsYear2:
+              selected.commissionsYear2 != null ? String(Number(selected.commissionsYear2)) : "",
+            commissionsYear3:
+              selected.commissionsYear3 != null ? String(Number(selected.commissionsYear3)) : "",
+            recurrentSharePercent:
+              selected.recurrentCommissionShare != null
+                ? String(Math.round(Number(selected.recurrentCommissionShare) * 100))
+                : "",
+            managedAnnualPremium:
+              selected.managedAnnualPremium != null
+                ? String(Number(selected.managedAnnualPremium))
+                : "",
+          }}
         />
       </div>
     </main>

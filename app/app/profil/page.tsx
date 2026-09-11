@@ -6,7 +6,7 @@ import { DeuxFacteurs } from "@/components/app/deux-facteurs";
 import { EffacementForm } from "@/components/app/effacement-form";
 import { NotifyForm } from "@/components/app/notify-form";
 import { PasswordForm } from "@/components/app/password-form";
-import { ProfileForm } from "@/components/app/profile-form";
+import { KycSubmitForm } from "@/components/app/kyc-form";
 import { SubscribeButton } from "@/components/billing/subscribe-button";
 import { confirmGrowthCheckout } from "@/app/actions/billing";
 import { codesDeSecoursRestants, secondFacteurActif } from "@/lib/auth/second-facteur";
@@ -210,6 +210,17 @@ export default async function ProfilPage({
               : null
           }
         />
+      </section>
+
+      <section id="identite" className={card}>
+        <h2 className="text-lg font-semibold text-ink">Identité professionnelle</h2>
+        <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-muted">
+          Prépare l’entrée chez un prestataire de paiement agréé. Rien n’est
+          envoyé à un tiers aujourd’hui.
+        </p>
+        <div className="mt-5">
+          <KycSubmitForm status={actor.kycStatus} />
+        </div>
       </section>
 
       <section id="mot-de-passe" className={card}>

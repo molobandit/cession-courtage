@@ -21,6 +21,11 @@ const listingPublicInclude = {
       clientCount: true,
       averageAgeMonths: true,
       churnRate12m: true,
+      commissionsYear1: true,
+      commissionsYear2: true,
+      commissionsYear3: true,
+      recurrentCommissionShare: true,
+      managedAnnualPremium: true,
       contractLines: {
         select: {
           id: true,

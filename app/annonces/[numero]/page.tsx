@@ -40,7 +40,7 @@ import {
   maturitySchedule,
   topClientShare,
   type AnalyticsLine,
-} from "@/lib/portfolio/analytics";
+import { qualityFromPortfolio } from "@/lib/portfolio/quality";
 
 export async function generateMetadata({
   params,
@@ -219,6 +219,7 @@ export default async function PublicListingPage({
         schedule,
         top10,
         carrierHhi,
+        quality: qualityFromPortfolio(listing.portfolio),
         interestHref,
         followHref,
         manageHref: isSeller ? `/app/annonces/${listing.id}` : null,

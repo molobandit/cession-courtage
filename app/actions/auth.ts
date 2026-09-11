@@ -9,6 +9,8 @@ import { prisma } from "@/lib/prisma";
 import { allocatePublicAlias } from "@/lib/auth/alias";
 import { investorOriasPlaceholder } from "@/lib/auth/investor-orias";
 import { issueMagicLink } from "@/lib/auth/magic-link";
+import { persistOriasLookup } from "@/lib/orias/persist";
+import { notifySignupReceived } from "@/lib/notify/transactional";
 import { hashPassword } from "@/lib/auth/password";
 import { FREE_PLAN_DEAL_QUOTA, SUCCESS_FEE_RATE } from "@/lib/billing/rates";
 import { departmentFromPostalCode, geoForDepartment } from "@/lib/geo";
@@ -128,6 +130,14 @@ export async function registerAction(_prev: FormState, formData: FormData): Prom
       await prisma.firm.delete({ where: { id: firm.id } }).catch(() => undefined);
       throw subscriptionError;
     }
+
+    await persistOriasLookup(user.id).catch(() => null);
+    await notifySignupReceived({
+      userId: user.id,
+      email: user.email,
+      fullName: user.fullName,
+      role: user.role,
+    }).catch(() => null);
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
       const target = String(error.meta?.target ?? "");
@@ -208,6 +218,13 @@ export async function registerInvestorAction(_prev: FormState, formData: FormDat
       await prisma.user.delete({ where: { id: user.id } }).catch(() => undefined);
       throw subscriptionError;
     }
+
+    await notifySignupReceived({
+      userId: user.id,
+      email: user.email,
+      fullName: user.fullName,
+      role: user.role,
+    }).catch(() => null);
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
       return { error: "Un compte existe déjà avec cet e-mail." };

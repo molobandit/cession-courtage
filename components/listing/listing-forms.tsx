@@ -25,10 +25,18 @@ export function CreateListingForm({
   portfolioId,
   defaultAsking,
   defaultCertify = false,
+  qualityDefaults,
 }: {
   portfolioId: string;
   defaultAsking: string;
   defaultCertify?: boolean;
+  qualityDefaults?: {
+    commissionsYear1: string;
+    commissionsYear2: string;
+    commissionsYear3: string;
+    recurrentSharePercent: string;
+    managedAnnualPremium: string;
+  };
 }) {
   const [state, action, pending] = useActionState(createListingAction, initial);
   return (
@@ -94,9 +102,58 @@ export function CreateListingForm({
       <fieldset className={fieldsetClass}>
         <legend className={legendClass}>Données financières</legend>
         <p className="text-[13px] leading-relaxed text-muted">
-          Les commissions, le nombre de clients et les compagnies viennent du
-          bordereau importé. Le précompte n’apparaît pas sur la fiche publique.
+          Trois exercices de commissions (montants, pas un pourcentage), la part
+          du récurrent, et la prime annuelle gérée — distincte des commissions.
         </p>
+        <div className="grid gap-3 sm:grid-cols-3">
+          <div className="grid gap-1">
+            <Label htmlFor="commissionsYear1">Commissions N-2 (€)</Label>
+            <Input
+              id="commissionsYear1"
+              name="commissionsYear1"
+              defaultValue={qualityDefaults?.commissionsYear1}
+              className="mt-1.5 h-11 rounded-xl"
+            />
+          </div>
+          <div className="grid gap-1">
+            <Label htmlFor="commissionsYear2">Commissions N-1 (€)</Label>
+            <Input
+              id="commissionsYear2"
+              name="commissionsYear2"
+              defaultValue={qualityDefaults?.commissionsYear2}
+              className="mt-1.5 h-11 rounded-xl"
+            />
+          </div>
+          <div className="grid gap-1">
+            <Label htmlFor="commissionsYear3">Dernier exercice (€)</Label>
+            <Input
+              id="commissionsYear3"
+              name="commissionsYear3"
+              defaultValue={qualityDefaults?.commissionsYear3}
+              className="mt-1.5 h-11 rounded-xl"
+            />
+          </div>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-1">
+            <Label htmlFor="recurrentSharePercent">Part du récurrent (%)</Label>
+            <Input
+              id="recurrentSharePercent"
+              name="recurrentSharePercent"
+              defaultValue={qualityDefaults?.recurrentSharePercent}
+              className="mt-1.5 h-11 rounded-xl"
+            />
+          </div>
+          <div className="grid gap-1">
+            <Label htmlFor="managedAnnualPremium">Prime annuelle gérée (€)</Label>
+            <Input
+              id="managedAnnualPremium"
+              name="managedAnnualPremium"
+              defaultValue={qualityDefaults?.managedAnnualPremium}
+              className="mt-1.5 h-11 rounded-xl"
+            />
+          </div>
+        </div>
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="grid gap-1">
             <Label htmlFor="precompte">Précompte</Label>

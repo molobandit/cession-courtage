@@ -62,6 +62,11 @@ export async function createListingAction(
       premisesStatus: formData.get("premisesStatus") ?? "",
       exclusiveMandates: formData.get("exclusiveMandates") ?? "",
       stornoShare: formData.get("stornoShare") ?? "",
+      commissionsYear1: formData.get("commissionsYear1"),
+      commissionsYear2: formData.get("commissionsYear2"),
+      commissionsYear3: formData.get("commissionsYear3"),
+      managedAnnualPremium: formData.get("managedAnnualPremium"),
+      recurrentSharePercent: formData.get("recurrentSharePercent"),
     });
     if (!parsed.success) return { error: firstIssue(parsed.error) };
     const { portfolioId, askingPrice: asking } = parsed.data;
@@ -75,6 +80,26 @@ export async function createListingAction(
     });
     const departments = [...new Set(lines.map((l) => l.department))];
     const zone = displayedZoneFor(departments);
+
+    await prisma.portfolio.update({
+      where: { id: portfolio.id },
+      data: {
+        commissionsYear1:
+          parsed.data.commissionsYear1 != null ? parsed.data.commissionsYear1.toFixed(2) : undefined,
+        commissionsYear2:
+          parsed.data.commissionsYear2 != null ? parsed.data.commissionsYear2.toFixed(2) : undefined,
+        commissionsYear3:
+          parsed.data.commissionsYear3 != null ? parsed.data.commissionsYear3.toFixed(2) : undefined,
+        managedAnnualPremium:
+          parsed.data.managedAnnualPremium != null
+            ? parsed.data.managedAnnualPremium.toFixed(2)
+            : undefined,
+        recurrentCommissionShare:
+          parsed.data.recurrentSharePercent != null
+            ? (parsed.data.recurrentSharePercent / 100).toFixed(4)
+            : undefined,
+      },
+    });
 
     const listing = await prisma.listing.create({
       data: {

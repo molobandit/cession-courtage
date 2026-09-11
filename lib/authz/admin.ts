@@ -15,6 +15,12 @@ export async function listPendingOriasUsers(actor: Actor) {
       oriasNumber: true,
       role: true,
       kycStatus: true,
+      kycSubmittedAt: true,
+      oriasLookupStatus: true,
+      oriasLookupAt: true,
+      oriasLookupName: true,
+      oriasLookupSiren: true,
+      oriasLookupDetail: true,
       createdAt: true,
       firm: { select: { legalName: true, siren: true } },
     },
@@ -40,6 +46,13 @@ export async function verifyOrias(userId: string) {
       metadata: { oriasNumber: target.oriasNumber },
     },
   });
+  const { notifyOriasDecision } = await import("@/lib/notify/transactional");
+  await notifyOriasDecision({
+    userId: target.id,
+    email: target.email,
+    fullName: target.fullName,
+    approved: true,
+  });
   return updated;
 }
 
@@ -61,11 +74,57 @@ export async function rejectOrias(userId: string, reason: string) {
       metadata: { oriasNumber: target.oriasNumber, reason },
     },
   });
+  const { notifyOriasDecision } = await import("@/lib/notify/transactional");
+  await notifyOriasDecision({
+    userId: target.id,
+    email: target.email,
+    fullName: target.fullName,
+    approved: false,
+    reason,
+  });
   return updated;
 }
 
 function assertAdmin(actor: Actor) {
   if (!isAdmin(actor)) throw new ForbiddenError("Réservé aux administrateurs.");
+}
+
+export async function listPendingKyc(actor: Actor) {
+  assertAdmin(actor);
+  return prisma.user.findMany({
+    where: { kycStatus: "PENDING", erasedAt: null },
+    orderBy: { kycSubmittedAt: "asc" },
+    select: {
+      id: true,
+      email: true,
+      fullName: true,
+      role: true,
+      kycSubmittedAt: true,
+      firm: { select: { legalName: true, siren: true } },
+    },
+  });
+}
+
+export async function decideKyc(userId: string, approved: boolean, reason?: string) {
+  const admin = await requireAdmin();
+  const target = await prisma.user.findUnique({ where: { id: userId } });
+  if (!target) throw new ForbiddenError("Utilisateur introuvable.");
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      kycStatus: approved ? "VERIFIED" : "REJECTED",
+      kycSubmittedAt: target.kycSubmittedAt,
+    },
+  });
+  await prisma.auditLog.create({
+    data: {
+      actorId: admin.id,
+      action: approved ? "kyc.verified" : "kyc.rejected",
+      entityType: "User",
+      entityId: userId,
+      metadata: { reason: reason ?? null },
+    },
+  });
 }
 
 export async function listInvestorInquiries(actor: Actor) {

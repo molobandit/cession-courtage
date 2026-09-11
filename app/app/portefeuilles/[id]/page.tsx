@@ -34,7 +34,7 @@ import {
   type AnalyticsLine,
 } from "@/lib/portfolio/analytics";
 import { buildCarrierCodes, carrierRisk } from "@/lib/portfolio/carrier-codes";
-import { parseValuationBreakdown } from "@/lib/valuation/parse";
+import { qualityFactRows, qualityFromPortfolio } from "@/lib/portfolio/quality";
 import { valuePortfolio } from "@/lib/valuation/run";
 import { prisma } from "@/lib/prisma";
 
@@ -107,6 +107,7 @@ export default async function PortfolioPage({ params }: { params: Promise<{ id: 
     { label: "Contrats", value: formatCount(portfolio.contractCount) },
     { label: "Clients", value: formatCount(portfolio.clientCount) },
     { label: "Ancienneté moyenne", value: `${formatCount(portfolio.averageAgeMonths)} mois` },
+    ...qualityFactRows(qualityFromPortfolio(portfolio)),
   ];
 
   return (

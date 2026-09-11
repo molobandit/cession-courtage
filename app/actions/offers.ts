@@ -73,6 +73,21 @@ export async function submitOfferAction(
         message,
       },
     });
+    const offer = await prisma.offer.findUnique({
+      where: { listingId_buyerId: { listingId, buyerId: actor.id } },
+      select: { id: true },
+    });
+    const { findFirmSeller, notifyOfferReceived } = await import("@/lib/notify/transactional");
+    const seller = await findFirmSeller(listing.portfolio.firmId);
+    if (offer && seller && listing.publicNumber) {
+      await notifyOfferReceived({
+        offerId: offer.id,
+        sellerUserId: seller.id,
+        sellerEmail: seller.email,
+        publicNumber: listing.publicNumber,
+        sealed: isOfferWindowSealed(listing),
+      }).catch(() => null);
+    }
     revalidatePath(`/annonces/${listing.publicNumber}`);
     revalidatePath("/app");
     redirect(`/annonces/${listing.publicNumber}#echanges`);

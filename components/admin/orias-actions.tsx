@@ -1,7 +1,13 @@
 "use client";
 
 import { useActionState } from "react";
-import { rejectOriasAction, verifyOriasAction, type AdminState } from "@/app/actions/admin-orias";
+import {
+  decideKycAction,
+  lookupOriasAction,
+  rejectOriasAction,
+  verifyOriasAction,
+  type AdminState,
+} from "@/app/actions/admin-orias";
 import { Button } from "@/components/ui/button";
 
 const initial: AdminState = {};
@@ -9,11 +15,18 @@ const initial: AdminState = {};
 export function OriasActions({ userId }: { userId: string }) {
   const [verifyState, verify, verifying] = useActionState(verifyOriasAction, initial);
   const [rejectState, reject, rejecting] = useActionState(rejectOriasAction, initial);
-  const message = verifyState.ok || rejectState.ok;
-  const error = verifyState.error || rejectState.error;
+  const [lookupState, lookup, looking] = useActionState(lookupOriasAction, initial);
+  const message = verifyState.ok || rejectState.ok || lookupState.ok;
+  const error = verifyState.error || rejectState.error || lookupState.error;
 
   return (
     <div className="grid gap-2">
+      <form action={lookup}>
+        <input type="hidden" name="userId" value={userId} />
+        <Button type="submit" size="sm" variant="outline" disabled={looking}>
+          {looking ? "Consultation…" : "Consulter le registre"}
+        </Button>
+      </form>
       <form action={verify}>
         <input type="hidden" name="userId" value={userId} />
         <Button type="submit" size="sm" disabled={verifying}>

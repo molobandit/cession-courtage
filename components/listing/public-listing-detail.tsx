@@ -7,6 +7,7 @@ import { ConcentrationMeter } from "@/components/charts/concentration-meter";
 import { GROWTH_PLAN_ANNUAL_EUR, INTEREST_DEPOSIT_LABEL } from "@/lib/billing/rates";
 import { formatCount, formatEuroWhole } from "@/lib/format/number";
 import { groupMaturityByYear, type MaturityBucket, type Share } from "@/lib/portfolio/analytics";
+import { hasQualityFigures, qualityFactRows, type PortfolioQuality } from "@/lib/portfolio/quality";
 
 export type ListingFact = { label: string; value: string };
 
@@ -37,6 +38,7 @@ export type PublicListingDetailModel = {
   schedule: MaturityBucket[];
   top10: number;
   carrierHhi: number;
+  quality: PortfolioQuality;
   interestHref: string;
   followHref?: string | null;
   manageHref: string | null;
@@ -104,6 +106,7 @@ export function PublicListingDetail({
     schedule,
     top10,
     carrierHhi,
+    quality,
     interestHref,
     followHref,
     manageHref,
@@ -262,7 +265,9 @@ export function PublicListingDetail({
           <article className="rounded-3xl border border-line bg-paper p-7 shadow-sm">
             <h2 className="text-xl font-semibold text-ink">Données financières</h2>
             <p className="mt-1 text-[14px] text-muted">
-              Commissions annuelles, par profil de clientèle et par branche.
+              {hasQualityFigures(quality)
+                ? "Commissions sur trois exercices, part du récurrent et prime gérée, distincte des commissions."
+                : "Commissions annuelles, par profil de clientèle et par branche."}
             </p>
             <dl className="mt-5 divide-y divide-line">
               {[
@@ -277,6 +282,7 @@ export function PublicListingDetail({
                 },
                 { label: "Contrats", value: formatCount(contractCount) },
                 { label: "Clients", value: formatCount(clientCount) },
+                ...qualityFactRows(quality),
               ].map((row) => (
                 <div key={row.label} className="flex items-baseline justify-between gap-4 py-3">
                   <dt className="text-[15px] text-muted">{row.label}</dt>

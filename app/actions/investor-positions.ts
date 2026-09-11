@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { getActor, isInvestor } from "@/lib/authz/actor";
 import { ForbiddenError, UnauthenticatedError } from "@/lib/authz/errors";
 import { isPublicListingStatus, ownsFirm } from "@/lib/authz/policies";
-import { INTEREST_DEPOSIT_RATE, interestDepositFor } from "@/lib/billing/rates";
+import { INTEREST_DEPOSIT_LABEL, INTEREST_DEPOSIT_RATE, interestDepositFor } from "@/lib/billing/rates";
 import { prisma } from "@/lib/prisma";
 import { idSchema } from "@/lib/validations/actions";
 
@@ -42,7 +42,7 @@ export async function placeInvestorDepositAction(
     const amount = interestDepositFor(Number(listing.askingPrice));
     if (amount <= 0) return { error: "Montant de dépôt invalide." };
 
-    await prisma.investorPosition.upsert({
+    const position = await prisma.investorPosition.upsert({
       where: { listingId_investorId: { listingId: listing.id, investorId: actor.id } },
       update: {},
       create: {
@@ -51,6 +51,18 @@ export async function placeInvestorDepositAction(
         depositAmount: amount.toFixed(2),
       },
     });
+
+    const { findFirmSeller, notifyDepositPlaced } = await import("@/lib/notify/transactional");
+    const seller = await findFirmSeller(listing.portfolio.firmId);
+    if (seller) {
+      await notifyDepositPlaced({
+        depositKey: `inv:${position.id}`,
+        publicNumber: listing.publicNumber ?? 0,
+        amountLabel: INTEREST_DEPOSIT_LABEL,
+        seller: { userId: seller.id, email: seller.email },
+        counterparty: { userId: actor.id, email: actor.email },
+      }).catch(() => null);
+    }
 
     await prisma.auditLog.create({
       data: {

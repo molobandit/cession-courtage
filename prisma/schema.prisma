@@ -182,6 +182,10 @@ enum NotificationType {
   RETENTION_DUE
   DATA_ROOM_DOCUMENT
   MESSAGE
+  SIGNUP
+  ORIAS_DECISION
+  OFFER_RECEIVED
+  DEPOSIT_PLACED
 }
 
 // ---------------------------------------------------------------------------
@@ -210,6 +214,13 @@ model User {
   oriasVerifiedAt DateTime?
   firmId          String?
   kycStatus       KycStatus @default(NONE)
+  kycSubmittedAt  DateTime?
+  /// Consultation du registre ORIAS. Ne vaut pas validation : l'humain tranche.
+  oriasLookupStatus String?
+  oriasLookupAt     DateTime?
+  oriasLookupName   String?
+  oriasLookupSiren  String?
+  oriasLookupDetail String?
   createdAt       DateTime  @default(now())
   /// Date d'effacement au titre de l'article 17. Une session est un jeton
   /// autonome, impossible a revoquer cote serveur : c'est donc la garde qui
@@ -292,6 +303,14 @@ model Portfolio {
   annualCommissions  Decimal
   averageAgeMonths   Int
   churnRate12m       Decimal
+  /// Trois exercices, montants en euros (N-2, N-1, dernier clos). Facultatifs.
+  commissionsYear1 Decimal?
+  commissionsYear2 Decimal?
+  commissionsYear3 Decimal?
+  /// Part du récurrent sur les commissions, 0–1. Pas un rendement.
+  recurrentCommissionShare Decimal?
+  /// Prime annuelle gérée, distincte des commissions.
+  managedAnnualPremium     Decimal?
   importedAt         DateTime @default(now())
   sourceFileName     String?
 
@@ -898,6 +917,8 @@ model OutboundEmail {
   subject   String
   bodyText  String
   purpose   String
+  /// Clef d'idempotence. D1 n'a pas de transactions : un rejeu ne double pas.
+  dedupeKey String?  @unique
   createdAt DateTime @default(now())
 
   @@index([to, createdAt])
