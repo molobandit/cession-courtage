@@ -35,6 +35,7 @@ export {
   rejectOrias,
   listPendingKyc,
   decideKyc,
+  listFinancialCapacities,
   listInvestorInquiries,
   countUnreadInvestorInquiries,
   setInvestorInquiryRead,

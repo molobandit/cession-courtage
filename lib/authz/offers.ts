@@ -67,7 +67,21 @@ export async function listOffersForListing(listingId: string, actor?: Actor) {
       message: true,
       status: true,
       submittedAt: true,
-      buyer: { select: { id: true, publicAlias: true, role: true } },
+      /*
+       * La capacite financiere accompagne l'offre : c'est ce que le site
+       * affirme publiquement au cedant. Le montant n'est expose qu'une fois le
+       * controle fait, la mise en forme s'en charge.
+       */
+      buyer: {
+        select: {
+          id: true,
+          publicAlias: true,
+          role: true,
+          financialCapacityEur: true,
+          financialCapacityStatus: true,
+          financialCapacityAt: true,
+        },
+      },
     },
   });
 

@@ -7,6 +7,7 @@ import { LISTING_STATUS_LABELS, OFFER_STATUS_LABELS } from "@/lib/labels";
 import { barScale, cashSplit, rankOffers, vsAsking } from "@/lib/offer/compare";
 import { cn } from "@/lib/utils";
 import type { ListingStatus, OfferStatus } from "@prisma/client";
+import { capaciteVerifiee, libelleCapacite } from "@/lib/buyer/financial-capacity";
 
 export type ReviewableOffer = {
   id: string;
@@ -15,7 +16,12 @@ export type ReviewableOffer = {
   message: string | null;
   status: OfferStatus;
   submittedAt: Date;
-  buyer: { publicAlias: string };
+  buyer: {
+    publicAlias: string;
+    financialCapacityEur?: unknown;
+    financialCapacityStatus?: string;
+    financialCapacityAt?: Date | null;
+  };
 };
 
 export type OfferReviewListing = {
@@ -229,6 +235,33 @@ export function OfferReviewBoard({
                           {index + 1}
                         </span>
                         <h3 className="text-[16px] font-semibold text-ink">Acquéreur {offer.buyer.publicAlias}</h3>
+                        {(() => {
+                          /*
+                           * La capacite financiere accompagne l'offre : c'est
+                           * ce que le site affirme au cedant. Le libelle dit ce
+                           * qui a ete constate, jamais ce qui est garanti.
+                           */
+                          const capacite = {
+                            montantEur: offer.buyer.financialCapacityEur
+                              ? Number(offer.buyer.financialCapacityEur)
+                              : null,
+                            statut: (offer.buyer.financialCapacityStatus ?? "NONE") as
+                              | "NONE"
+                              | "DECLARED"
+                              | "VERIFIED"
+                              | "REJECTED",
+                            verifieeLe: offer.buyer.financialCapacityAt ?? null,
+                          };
+                          const verifiee = capaciteVerifiee(capacite);
+                          return (
+                            <p className={`mt-1 text-[13px] ${verifiee ? "text-ok" : "text-muted"}`}>
+                              {libelleCapacite(capacite)}
+                              {verifiee && capacite.montantEur !== null
+                                ? ` · ${capacite.montantEur.toLocaleString("fr-FR")} €`
+                                : ""}
+                            </p>
+                          );
+                        })()}
                         <Pill tone={statusTone(offer.status)}>{OFFER_STATUS_LABELS[offer.status]}</Pill>
                       </div>
                       <p className="tabular mt-4 text-[28px] font-bold tracking-tight text-ink">

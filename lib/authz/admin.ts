@@ -172,3 +172,30 @@ export async function listCertificationRequests(actor: Actor) {
     },
   });
 }
+
+/**
+ * Comptes dont la capacite financiere attend un controle, ou a ete tranchee.
+ *
+ * Garde au niveau de la requete : c'est ce controle qui fonde l'affirmation
+ * publique du site, il ne peut pas dependre d'un masquage a l'affichage.
+ */
+export async function listFinancialCapacities(actor: Actor) {
+  assertAdmin(actor);
+  return prisma.user.findMany({
+    where: { financialCapacityStatus: { not: "NONE" } },
+    orderBy: [{ financialCapacityStatus: "asc" }, { updatedAt: "desc" }],
+    select: {
+      id: true,
+      fullName: true,
+      email: true,
+      publicAlias: true,
+      role: true,
+      financialCapacityEur: true,
+      financialCapacityStatus: true,
+      financialCapacityAt: true,
+      financialCapacityNote: true,
+      firm: { select: { legalName: true, siren: true } },
+    },
+  });
+}
+

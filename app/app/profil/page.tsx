@@ -10,7 +10,9 @@ import { KycSubmitForm } from "@/components/app/kyc-form";
 import { SubscribeButton } from "@/components/billing/subscribe-button";
 import { confirmGrowthCheckout } from "@/app/actions/billing";
 import { codesDeSecoursRestants, secondFacteurActif } from "@/lib/auth/second-facteur";
-import { getActor, isInvestor, isOriasVerified } from "@/lib/authz";
+import { canBuy, getActor, isInvestor, isOriasVerified } from "@/lib/authz";
+import { CapacityForm } from "@/components/app/capacity-form";
+import { libelleCapacite } from "@/lib/buyer/financial-capacity";
 import { SearchPrefsForm } from "@/components/app/search-prefs-form";
 import { parseNotifyPrefs } from "@/lib/account/notify-prefs";
 import { parseSearchPrefs } from "@/lib/account/search-prefs";
@@ -74,7 +76,17 @@ export default async function ProfilPage({
       codesDeSecoursRestants(actor.id),
       prisma.user.findUnique({
         where: { id: actor.id },
-        select: { phone: true, createdAt: true, jobTitle: true, notifyPrefs: true, searchPrefs: true },
+        select: {
+          phone: true,
+          createdAt: true,
+          jobTitle: true,
+          notifyPrefs: true,
+          searchPrefs: true,
+          financialCapacityEur: true,
+          financialCapacityStatus: true,
+          financialCapacityAt: true,
+          financialCapacityNote: true,
+        },
       }),
       prisma.subscription.findMany({
         where: { userId: actor.id },
@@ -326,6 +338,27 @@ export default async function ProfilPage({
           ))}
         </ul>
       </section>
+
+      {canBuy(actor) ? (
+        <section id="capacite" className={card}>
+          <h2 className="text-lg font-semibold text-ink">Capacité d’acquisition</h2>
+          <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-muted">
+            Le site indique aux cédants que la capacité financière des acquéreurs
+            est vérifiée. Déclarez le montant que vous pouvez engager : notre
+            équipe le contrôle avant qu’il ne soit porté à la connaissance d’un
+            cédant. Une vérification vaut douze mois.
+          </p>
+          <CapacityForm
+            montantActuel={phoneRow?.financialCapacityEur ? Number(phoneRow.financialCapacityEur) : null}
+            libelle={libelleCapacite({
+              montantEur: phoneRow?.financialCapacityEur ? Number(phoneRow.financialCapacityEur) : null,
+              statut: phoneRow?.financialCapacityStatus ?? "NONE",
+              verifieeLe: phoneRow?.financialCapacityAt ?? null,
+            })}
+            note={phoneRow?.financialCapacityNote ?? null}
+          />
+        </section>
+      ) : null}
 
       <section id="securite" className={card}>
         <h2 className="text-lg font-semibold text-ink">Sécurité de la connexion</h2>

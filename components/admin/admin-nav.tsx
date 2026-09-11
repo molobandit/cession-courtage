@@ -8,6 +8,7 @@ const LINKS = [
   { href: "/admin/orias", label: "Validation ORIAS" },
   { href: "/admin/investisseurs", label: "Investisseurs" },
   { href: "/admin/certifications", label: "Certifications" },
+  { href: "/admin/capacites", label: "Capacités" },
 ] as const;
 
 export function AdminNav({ unreadInquiries }: { unreadInquiries: number }) {

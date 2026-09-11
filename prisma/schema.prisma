@@ -23,6 +23,20 @@ enum UserRole {
   INVESTOR
 }
 
+/// Etat de la verification de capacite financiere d'un acquereur.
+/// Le site affirme publiquement que la capacite des acquereurs est verifiee :
+/// cette verification doit donc exister, etre datee et opposable.
+enum FinancialCapacityStatus {
+  /// Rien de declare.
+  NONE
+  /// Montant declare par l'acquereur, pas encore controle.
+  DECLARED
+  /// Controle par l'editeur, piece a l'appui.
+  VERIFIED
+  /// Controle et refuse, motif conserve.
+  REJECTED
+}
+
 enum KycStatus {
   NONE
   PENDING
@@ -214,6 +228,13 @@ model User {
   oriasVerifiedAt DateTime?
   firmId          String?
   kycStatus       KycStatus @default(NONE)
+  /// Capacite d'acquisition declaree, en euros.
+  financialCapacityEur    Decimal?
+  financialCapacityStatus FinancialCapacityStatus @default(NONE)
+  /// Date du controle, verifie ou refuse. Nulle tant que rien n'est tranche.
+  financialCapacityAt     DateTime?
+  /// Motif du refus, ou reference de la piece admise.
+  financialCapacityNote   String?
   kycSubmittedAt  DateTime?
   /// Consultation du registre ORIAS. Ne vaut pas validation : l'humain tranche.
   oriasLookupStatus String?
