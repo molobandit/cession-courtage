@@ -28,6 +28,7 @@ import {
 import { NextActionBanner } from "@/components/dashboard/next-action-banner";
 import { ReadinessPanel } from "@/components/dashboard/readiness-panel";
 import { nextAction } from "@/lib/dashboard/next-action";
+import { pipelineProgressPercent } from "@/lib/deal/pipeline";
 import { readinessAxes, readinessScore } from "@/lib/dashboard/readiness";
 import { formatCount, formatEuroWhole } from "@/lib/format/number";
 import { asStringArray } from "@/lib/json-array";
@@ -448,6 +449,16 @@ export default async function MemberHomePage() {
                     facts={[
                       { label: "Prix convenu", value: formatEuroWhole(Number(d.agreedPrice)) },
                       { label: "Contrepartie", value: counterpartyDisplayName(counterparty) },
+                      /*
+                       * L'avancement dans la liste, pas seulement dans la fiche :
+                       * la question que l'on se pose devant plusieurs dossiers est
+                       * « où en est celui-ci », et y répondre exige sinon d'ouvrir
+                       * chacun.
+                       */
+                      {
+                        label: "Avancement",
+                        value: `${pipelineProgressPercent(d.stage)} %`,
+                      },
                     ]}
                     cta="Ouvrir le projet"
                   />
