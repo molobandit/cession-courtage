@@ -27,6 +27,7 @@ import {
   HERO_LEDE,
   HERO_PROOFS,
   HERO_TITLE,
+  MARKET_ACCESS,
   MARKET_HALL_TITLE,
   NAV_BUY,
   NAV_INVESTOR,
@@ -265,15 +266,25 @@ export default async function HomePage() {
 
       <section className="bg-page">
         <div className="mx-auto max-w-6xl px-4 py-16">
+          {/*
+            Meme traitement que « Portefeuilles disponibles » : pastille,
+            titre en deux tons, chapo court. Ce titre montait a text-5xl, soit
+            la taille du titre de la page : un titre de section qui egale le
+            titre du document efface la hierarchie au lieu de l'affirmer. Son
+            chapo reprenait en plus « Prenez position. », deja dans le H1 et
+            dans la section finale — trois fois sur une meme page, la phrase
+            n'etait plus une signature mais un tic. Elle ne reste qu'a la fin,
+            ou elle ferme ce que le H1 ouvre.
+          */}
           <div className="text-center">
-            <p className="text-[13px] font-semibold uppercase tracking-[0.18em] text-indigo">
-              {TAKE_POSITION}
+            <p className="inline-flex rounded-full bg-indigo-soft px-3 py-1 text-[12px] font-semibold text-indigo">
+              {MARKET_ACCESS}
             </p>
-            <h2 className="mt-3 text-4xl font-bold tracking-tight text-ink sm:text-5xl">
-              Entrez sur la salle de marché
+            <h2 className="mt-4 text-3xl font-bold tracking-tight text-ink sm:text-4xl">
+              Entrez sur <span className="text-indigo">la salle de marché</span>
             </h2>
-            <p className="mx-auto mt-4 max-w-2xl text-[16px] leading-relaxed text-muted">
-              Consultez les portefeuilles disponibles et déposez le vôtre.
+            <p className="mx-auto mt-3 max-w-2xl text-[15px] text-muted">
+              Déposez votre portefeuille, ou consultez ceux qui sont ouverts.
             </p>
           </div>
           <div className="mx-auto mt-10 grid max-w-4xl gap-6 md:grid-cols-2">
