@@ -295,9 +295,10 @@ export default async function HomePage() {
                 ouverts avant de vous décider.
               </p>
               {/*
-                Les deux actions demandées, dans cet ordre. L'entretien reste
-                offert en dessous : c'est le chemin le plus utile à qui dépose,
-                mais il ne doit pas prendre la place des deux premières.
+                Deux actions, pas trois. Le lien vers l'entretien conseiller
+                occupait ici une troisieme ligne ; il reste offert en gros
+                bouton sur la carte « Vendre » juste au-dessus et dans le pied
+                de page, la ou il est cherche.
               */}
               <div className="mt-8 flex flex-col gap-3">
                 <Button asChild variant="primary">
@@ -306,12 +307,6 @@ export default async function HomePage() {
                 <Button asChild variant="outline">
                   <Link href="/annonces">{CTA_CONSULT}</Link>
                 </Button>
-                <Link
-                  href={ADVISOR_BOOKING_HREF}
-                  className="mt-1 text-center text-[14px] font-medium text-indigo underline underline-offset-2"
-                >
-                  {CTA_ADVISOR}
-                </Link>
               </div>
             </article>
             <article className="rounded-[1.75rem] border border-indigo bg-indigo-soft/50 p-8">
