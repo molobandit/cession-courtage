@@ -10,6 +10,7 @@ import { ForbiddenError, UnauthenticatedError } from "@/lib/authz/errors";
 import { hasContactSubscription } from "@/lib/billing/contact-access";
 import { offPlatformPhoneError } from "@/lib/chat/phone-block";
 import { prisma } from "@/lib/prisma";
+import { ensureDealChecklist } from "@/lib/deal/seed-checklist";
 import { firstIssue, offerIdSchema, offerSchema } from "@/lib/validations/actions";
 
 export type OfferFormState = { error?: string };
@@ -212,6 +213,7 @@ export async function acceptOfferAction(
         buyerAlias: `Acquéreur ${offer.buyer.publicAlias}`,
       },
     });
+    await ensureDealChecklist(deal.id);
 
     // 3. Conséquences dérivables : rejouables sans dommage.
     await prisma.offer.updateMany({

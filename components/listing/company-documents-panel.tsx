@@ -18,20 +18,49 @@ export function CompanyDocumentsPanel({
   canUpload: boolean;
   canDownload: boolean;
 }) {
+  const byKind = new Map(docs.map((doc) => [doc.kind, doc]));
+
   return (
     <section className="rounded-[1.75rem] border border-line bg-paper p-5 sm:p-6">
-      <h2 className="text-lg font-bold tracking-tight text-ink">Pièces du cabinet</h2>
+      <h2 className="text-lg font-bold tracking-tight text-ink">Documents du cabinet</h2>
       <p className="mt-2 text-[14px] leading-relaxed text-muted">
-        PDF uniquement. Accessibles à l’acquéreur après le dépôt de 2,5 % du
-        prix. Aucun nom d’assuré.
+        {canDownload
+          ? "PDF du cabinet. Aucun nom d’assuré."
+          : "Les pièces s’ouvrent après le dépôt de 2,5 % du prix. Le cédant reste sous alias jusque-là. Aucun nom d’assuré."}
       </p>
-      {docs.length > 0 ? (
-        <ul className="mt-4 divide-y divide-line">
-          {docs.map((doc) => (
+      <ul className="mt-4 divide-y divide-line">
+        {COMPANY_DOC_KINDS.map((item) => {
+          const doc = byKind.get(item.kind);
+          return (
+            <li key={item.kind} className="flex flex-wrap items-center justify-between gap-2 py-3">
+              <div>
+                <p className="text-[14px] font-medium text-ink">{item.label}</p>
+                <p className="text-[13px] text-muted">
+                  {canDownload && doc ? doc.fileName : canDownload ? "Non déposé" : "Verrouillé"}
+                </p>
+              </div>
+              {canDownload && doc ? (
+                <a
+                  href={`/api/cabinet/${listingId}/${doc.id}`}
+                  className="text-[14px] font-medium text-indigo-dark hover:underline"
+                >
+                  Ouvrir le PDF
+                </a>
+              ) : (
+                <span className="text-[12px] font-medium text-muted">
+                  {canDownload ? "—" : "Verrouillé"}
+                </span>
+              )}
+            </li>
+          );
+        })}
+        {docs
+          .filter((doc) => !COMPANY_DOC_KINDS.some((item) => item.kind === doc.kind))
+          .map((doc) => (
             <li key={doc.id} className="flex flex-wrap items-center justify-between gap-2 py-3">
               <div>
                 <p className="text-[14px] font-medium text-ink">{companyDocLabel(doc.kind)}</p>
-                <p className="text-[13px] text-muted">{doc.fileName}</p>
+                <p className="text-[13px] text-muted">{canDownload ? doc.fileName : "Verrouillé"}</p>
               </div>
               {canDownload ? (
                 <a
@@ -43,10 +72,7 @@ export function CompanyDocumentsPanel({
               ) : null}
             </li>
           ))}
-        </ul>
-      ) : (
-        <p className="mt-4 text-[14px] text-muted">Aucune pièce déposée pour le moment.</p>
-      )}
+      </ul>
       {canUpload ? <CompanyDocUpload listingId={listingId} /> : null}
     </section>
   );

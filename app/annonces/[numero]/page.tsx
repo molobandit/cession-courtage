@@ -30,6 +30,8 @@ import { actorCanReadCompanyDocs, listCompanyDocs } from "@/lib/listing/company-
 import { loadCedantIdentity } from "@/lib/listing/cedant-identity";
 import { CompanyDocumentsPanel } from "@/components/listing/company-documents-panel";
 import { CedantIdentityCard } from "@/components/listing/cedant-identity-card";
+import { SalePipeline } from "@/components/deal/sale-pipeline";
+import { prisma } from "@/lib/prisma";
 import { findMyDeposit } from "@/lib/listing/deposit";
 import { findMyInvestorPosition } from "@/lib/investor/positions";
 import { InvestorDepositForm } from "@/components/investor/placement-forms";
@@ -157,9 +159,19 @@ export default async function PublicListingPage({
   });
   const brief = await loadListingBriefFields(listing.id);
   const canReadCompanyDocs = await actorCanReadCompanyDocs(listing.id);
-  const companyDocs = canReadCompanyDocs ? await listCompanyDocs(listing.id) : [];
+  const companyDocs = await listCompanyDocs(listing.id);
   const cedantIdentity =
     canReadCompanyDocs && !isSeller ? await loadCedantIdentity(listing.id) : null;
+
+  const myDeal = actor
+    ? await prisma.deal.findFirst({
+        where: isSeller
+          ? { listingId: listing.id }
+          : { listingId: listing.id, buyerId: actor.id },
+        select: { id: true, stage: true },
+        orderBy: { createdAt: "desc" },
+      })
+    : null;
 
   const zone = listing.isNationwide ? "France entière" : listing.displayedZone;
   const mainBranch = byRisk[0]?.label ?? "Portefeuille de courtage";
@@ -191,7 +203,7 @@ export default async function PublicListingPage({
   const interestHref = !actor
     ? `/connexion?next=${encodeURIComponent(listingPath)}`
     : subscribed
-      ? "#depot"
+      ? "#position"
       : `/tarifs?next=${encodeURIComponent(listingPath)}#abonnements`;
   const followHref = !actor
     ? `/connexion?next=${encodeURIComponent(`/annonces/${listing.publicNumber}?voie=investir`)}`
@@ -235,9 +247,43 @@ export default async function PublicListingPage({
         interestHref,
         followHref,
         manageHref: isSeller ? `/app/annonces/${listing.id}` : null,
+        supplierCount: byCarrier.length,
+        riskChips: byRisk.map((share) => share.label),
+        segmentChips: bySegment.map((share) => share.label),
+        coverageTitle: listing.isNationwide ? "Couverture nationale" : zone,
+        coverageDetail: listing.isNationwide
+          ? "Ce portefeuille couvre tout le pays."
+          : "Zones au grain départemental, sans commune ni raison sociale.",
+        exclusive: listing.status === "UNDER_NEGOTIATION" && !isSeller && !myDeal,
+        dealHref: myDeal ? `/app/dossiers/${myDeal.id}` : null,
+        defaultTab: ownOffer || myDeal || myDeposit ? "position" : "informations",
       }}
-    >
-      {cedantIdentity ? <CedantIdentityCard identity={cedantIdentity} /> : null}
+      documents={
+        <div className="grid gap-6">
+          {cedantIdentity ? <CedantIdentityCard identity={cedantIdentity} /> : null}
+          <CompanyDocumentsPanel
+            listingId={listing.id}
+            docs={canReadCompanyDocs || isSeller ? companyDocs : []}
+            canUpload={isSeller}
+            canDownload={canReadCompanyDocs || isSeller}
+          />
+        </div>
+      }
+      position={
+        <div className="grid gap-6">
+          <SalePipeline currentKey={myDeal?.stage ?? (ownOffer ? "POSITION" : "POSITION")} />
+          {myDeal ? (
+            <section className="rounded-3xl border border-indigo-line bg-indigo-soft p-6">
+              <h2 className="text-xl font-semibold text-ink">Dossier de cession ouvert</h2>
+              <p className="mt-2 text-[15px] leading-relaxed text-muted">
+                Le parcours continue jusqu’à la clôture : confidentialité, pièces, accord de
+                prix, conformité, acte, séquestre 80 %, transfert, solde 20 %.
+              </p>
+              <Button asChild variant="primary" className="mt-4">
+                <Link href={`/app/dossiers/${myDeal.id}`}>Ouvrir le dossier</Link>
+              </Button>
+            </section>
+          ) : null}
 
       {investorMode && !isSeller ? (
         <section id="suivi" className="rounded-3xl border border-indigo-line bg-surface p-7">
@@ -288,43 +334,7 @@ export default async function PublicListingPage({
         </section>
       ) : null}
 
-      {canReadCompanyDocs && !isSeller ? (
-        <CompanyDocumentsPanel
-          listingId={listing.id}
-          docs={companyDocs}
-          canUpload={false}
-          canDownload
-        />
-      ) : !isSeller ? (
-        <section className="rounded-[1.75rem] border border-line bg-paper p-5 sm:p-7">
-          <h2 className="text-lg font-bold tracking-tight text-ink">Pièces et identité du cédant</h2>
-          <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-muted">
-            Nom du cabinet, ORIAS, Kbis et autres PDF s’ouvrent au dépôt de{" "}
-            {INTEREST_DEPOSIT_LABEL} du prix demandé (
-            {formatEuroWhole(deposit)}). Avant cela, le cédant reste sous alias.
-            Les assurés du portefeuille ne sont jamais nominatifs sur cette fiche.
-          </p>
-          <Button asChild variant="outline" className="mt-4">
-            <Link
-                href={
-                !actor
-                  ? `/connexion?next=${encodeURIComponent(`/annonces/${listing.publicNumber}`)}`
-                  : subscribed
-                    ? "#depot"
-                    : `/tarifs?next=${encodeURIComponent(`/annonces/${listing.publicNumber}`)}#abonnements`
-              }
-            >
-              {!actor
-                ? "Se connecter"
-                : subscribed
-                  ? "Déposer 2,5 % pour ouvrir l’identité"
-                  : "S’abonner, puis déposer 2,5 %"}
-            </Link>
-          </Button>
-        </section>
-      ) : null}
-
-      {!isSeller && !canOffer ? (
+      {investorMode && !isSeller ? (
         <section className="rounded-3xl border border-indigo-line bg-indigo-soft p-7">
           <h2 className="text-2xl font-semibold text-ink">Je suis intéressé</h2>
           <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-muted">
@@ -454,6 +464,8 @@ export default async function PublicListingPage({
           </div>
         </section>
       ) : null}
-    </PublicListingDetail>
+        </div>
+      }
+    />
   );
 }

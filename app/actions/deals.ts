@@ -1,6 +1,6 @@
 "use server";
 
-import { DealStage, DocumentType } from "@prisma/client";
+import { DealStage, DocumentType, ListingStatus } from "@prisma/client";
 import { createHash } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { getActor, isOriasVerified } from "@/lib/authz/actor";
@@ -241,6 +241,30 @@ export async function confirmTransferAction(
     return {};
   } catch (error) {
     return { error: error instanceof Error ? error.message : "Transfert impossible." };
+  }
+}
+
+export async function closeDealAction(
+  _prev: DealFormState,
+  formData: FormData,
+): Promise<DealFormState> {
+  try {
+    const { deal } = await loadDeal(String(formData.get("dealId") ?? ""));
+    if (deal.stage !== DealStage.RETENTION) {
+      return { error: "La clôture n’est possible qu’après le transfert et la période de vérification." };
+    }
+    await mockEscrowRelease(deal.id);
+    await prisma.deal.update({ where: { id: deal.id }, data: { stage: DealStage.CLOSED } });
+    await prisma.listing.update({
+      where: { id: deal.listingId },
+      data: { status: ListingStatus.SOLD },
+    });
+    revalidatePath(`/app/dossiers/${deal.id}`);
+    revalidatePath("/app");
+    revalidatePath("/annonces");
+    return {};
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "Clôture impossible." };
   }
 }
 

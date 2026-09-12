@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
+import { SectionTab, SectionTabs } from "@/components/ui/section-tabs";
 import { MarketStamp } from "@/components/listing/market-stamp";
 import { MixDonut } from "@/components/charts/mix-donut";
 import { RankedBars } from "@/components/charts/ranked-bars";
@@ -46,6 +47,14 @@ export type PublicListingDetailModel = {
   interestHref: string;
   followHref?: string | null;
   manageHref: string | null;
+  supplierCount: number;
+  riskChips: string[];
+  segmentChips: string[];
+  coverageTitle: string;
+  coverageDetail: string;
+  exclusive: boolean;
+  dealHref: string | null;
+  defaultTab?: "informations" | "documents" | "position";
 };
 
 function formatDateLong(value: Date) {
@@ -79,10 +88,12 @@ function PinIcon() {
 
 export function PublicListingDetail({
   model,
-  children,
+  documents,
+  position,
 }: {
   model: PublicListingDetailModel;
-  children?: ReactNode;
+  documents: ReactNode;
+  position: ReactNode;
 }) {
   const {
     publicNumber,
@@ -98,8 +109,6 @@ export function PublicListingDetail({
     perceptionAmountLine,
     contractCount,
     clientCount,
-    averageAgeMonths,
-    sellerSupportMonths,
     multiple,
     deposit,
     daysLeft,
@@ -117,140 +126,22 @@ export function PublicListingDetail({
     interestHref,
     followHref,
     manageHref,
+    supplierCount,
+    riskChips,
+    segmentChips,
+    coverageTitle,
+    coverageDetail,
+    exclusive,
+    dealHref,
+    defaultTab,
   } = model;
 
   const carrierStatus = carrierHhi > 0.6 ? "penalisant" : carrierHhi >= 0.3 ? "surveiller" : "bon";
   const clientStatus = top10 > 0.4 ? "penalisant" : top10 > 0.25 ? "surveiller" : "bon";
 
-  const kpis = [
-    { label: "Commissions / an", value: formatEuroWhole(annualCommissions) },
-    { label: "Contrats", value: formatCount(contractCount) },
-    { label: "Clients", value: formatCount(clientCount) },
-    { label: "Ancienneté", value: `${formatCount(averageAgeMonths)} mois` },
-  ];
-
-  return (
-    <main className="bg-page pb-16">
-      <div className="mx-auto max-w-6xl px-4 pt-6">
-        <Link
-          href="/annonces"
-          className="inline-flex items-center gap-2 text-[14px] font-medium text-muted hover:text-ink"
-        >
-          <svg className="h-4 w-4" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-            <path d="M10 3 5 8l5 5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-          </svg>
-          Retour à la liste
-        </Link>
-
-        <div className="mt-5 overflow-hidden rounded-3xl border border-line bg-paper shadow-sm">
-          <div className="grid md:grid-cols-12">
-            <section className="p-7 sm:p-9 md:col-span-8">
-              <div className="flex flex-wrap items-center gap-3">
-                {sold ? <MarketStamp kind="sold" size="lg" /> : null}
-                {certified ? <MarketStamp kind="certified" size="lg" /> : null}
-                {!certified ? (
-                  <span className="text-[12px] text-muted">{UNCERTIFIED_LABEL}</span>
-                ) : null}
-                <span className="rounded-full border border-line bg-surface-alt px-3 py-1 text-[12px] text-ink">
-                  {statusLabel}
-                </span>
-                <span className="rounded-full border border-line bg-surface-alt px-3 py-1 text-[12px] text-ink">
-                  {isPartial ? "Cession partielle" : "Cession totale"}
-                </span>
-              </div>
-
-              <h1 className="mt-5 text-3xl font-bold leading-tight tracking-tight text-ink sm:text-[2.35rem]">
-                {title}
-              </h1>
-              <p className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[14px] text-muted">
-                <span className="inline-flex items-center gap-1.5">
-                  <PinIcon />
-                  {zone}
-                </span>
-                <span>Dossier n° {publicNumber}</span>
-                {publishedAt ? <span>Publiée le {formatDateLong(publishedAt)}</span> : null}
-              </p>
-
-              <dl className="mt-8 grid grid-cols-2 gap-4 border-t border-line pt-6 sm:grid-cols-4">
-                {kpis.map((kpi) => (
-                  <div key={kpi.label}>
-                    <dt className="text-[12px] text-muted">{kpi.label}</dt>
-                    <dd className="tabular mt-1 text-[18px] font-semibold text-ink">{kpi.value}</dd>
-                  </div>
-                ))}
-              </dl>
-            </section>
-
-            <aside className="flex flex-col justify-between bg-indigo p-7 text-white sm:p-8 md:col-span-4">
-              <div>
-                <p className="text-[13px] font-medium text-white/80">Prix demandé</p>
-                <p className="tabular mt-1 text-4xl font-bold tracking-tight lg:text-5xl">
-                  {formatEuroWhole(askingPrice)}
-                </p>
-                {multiple !== null ? (
-                  <p className="mt-4 inline-flex rounded-full bg-white/15 px-3 py-1 text-[13px] font-medium">
-                    Ratio prix / commissions :{" "}
-                    {multiple.toLocaleString("fr-FR", { maximumFractionDigits: 1 })}
-                  </p>
-                ) : null}
-                <dl className="mt-6 space-y-2 border-t border-white/20 pt-5 text-[14px]">
-                  <div className="flex justify-between gap-3">
-                    <dt className="text-white/75">Commissions / an</dt>
-                    <dd className="tabular font-semibold">{formatEuroWhole(annualCommissions)}</dd>
-                  </div>
-                  <div className="flex justify-between gap-3">
-                    <dt className="text-white/75">Fenêtre</dt>
-                    <dd className="font-medium">{windowCopy(daysLeft)}</dd>
-                  </div>
-                  {sellerSupportMonths > 0 ? (
-                    <div className="flex justify-between gap-3">
-                      <dt className="text-white/75">Accompagnement</dt>
-                      <dd className="font-medium">{sellerSupportMonths} mois</dd>
-                    </div>
-                  ) : null}
-                </dl>
-              </div>
-              <div className="mt-8">
-                {sold ? (
-                  <p className="rounded-2xl bg-white/10 px-4 py-3 text-center text-[15px] font-semibold">
-                    Ce portefeuille est vendu.
-                  </p>
-                ) : (
-                  <Link
-                    href={interestHref}
-                    className="flex h-12 w-full items-center justify-center rounded-full bg-white text-[15px] font-semibold !text-indigo hover:bg-white/90"
-                  >
-                    Prendre position
-                  </Link>
-                )}
-                {followHref ? (
-                  <Link
-                    href={followHref}
-                    className="mt-2 flex h-12 w-full items-center justify-center rounded-full border border-white/40 text-[15px] font-semibold text-white hover:bg-white/10"
-                  >
-                    Suivre ce dossier
-                  </Link>
-                ) : null}
-                <p className="mt-3 text-[12px] leading-relaxed text-white/75">
-                  Abonnement {GROWTH_PLAN_ANNUAL_EUR.toLocaleString("fr-FR")} € HT
-                  / an pour le contact. Le vendeur reste anonyme jusqu’au dépôt de{" "}
-                  {INTEREST_DEPOSIT_LABEL} ({formatEuroWhole(deposit)}). Aucun
-                  débit en démo.
-                </p>
-              </div>
-            </aside>
-          </div>
-        </div>
-        {manageHref ? (
-          <Link
-            href={manageHref}
-            className="mt-3 block rounded-2xl border border-line bg-paper px-4 py-3 text-center text-[14px] font-medium text-ink hover:bg-surface-alt"
-          >
-            Gérer cette annonce
-          </Link>
-        ) : null}
-
-        <div className="mt-6 grid gap-6 lg:grid-cols-2">
+  const information = (
+        <div className="grid gap-6">
+        <div className="grid gap-6 lg:grid-cols-2">
           <article className="rounded-3xl border border-line bg-paper p-7 shadow-sm">
             <h2 className="text-xl font-semibold text-ink">Détails de l’activité</h2>
             <p className="mt-4 whitespace-pre-wrap text-[15px] leading-relaxed text-ink">
@@ -354,13 +245,185 @@ export function PublicListingDetail({
           />
         </div>
 
-        <p className="mt-6 rounded-2xl border border-line bg-paper px-5 py-4 text-[13px] leading-relaxed text-muted">
+        <p className="rounded-2xl border border-line bg-paper px-5 py-4 text-[13px] leading-relaxed text-muted">
           Fiche anonyme. Ni raison sociale, ni commune, ni donnée nominative de client
           final. Les chiffres de mix viennent des commissions, pas d’un historique inventé.
         </p>
+        </div>
+  );
 
-        <div id="interesse" className="mt-8 grid gap-6">
-          {children}
+  return (
+    <main className="bg-page pb-16">
+      <div className="mx-auto max-w-6xl px-4 pt-6">
+        <p className="text-[13px] text-muted">
+          <Link href="/annonces" className="font-medium hover:text-ink">
+            Annonces
+          </Link>
+          {" · "}
+          Dossier n° {publicNumber}
+        </p>
+
+        <div className="mt-5 grid gap-6 lg:grid-cols-[minmax(0,1fr)_280px]">
+          <div className="overflow-hidden rounded-3xl border border-line bg-paper p-6 shadow-sm sm:p-8">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  {sold ? <MarketStamp kind="sold" size="lg" /> : null}
+                  {certified ? <MarketStamp kind="certified" size="lg" /> : null}
+                  {!certified ? (
+                    <span className="text-[12px] text-muted">{UNCERTIFIED_LABEL}</span>
+                  ) : null}
+                  <span className="rounded-full border border-line bg-surface-alt px-3 py-1 text-[12px] text-ink">
+                    {statusLabel}
+                  </span>
+                  <span className="rounded-full border border-line bg-surface-alt px-3 py-1 text-[12px] text-ink">
+                    {isPartial ? "Cession partielle" : "Cession totale"}
+                  </span>
+                </div>
+                <h1 className="mt-4 text-3xl font-bold tracking-tight text-ink">
+                  Dossier n° {publicNumber}
+                </h1>
+                <p className="mt-2 text-[16px] font-medium text-ink">{title}</p>
+                <p className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[14px] text-muted">
+                  <span className="inline-flex items-center gap-1.5">
+                    <PinIcon />
+                    {zone}
+                  </span>
+                  {publishedAt ? <span>Publié le {formatDateLong(publishedAt)}</span> : null}
+                  <span>{windowCopy(daysLeft)}</span>
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="text-[12px] text-muted">Prix demandé</p>
+                <p className="tabular text-3xl font-bold text-ok">{formatEuroWhole(askingPrice)}</p>
+                <p className="mt-2 text-[12px] text-muted">Commissions / an</p>
+                <p className="tabular text-lg font-semibold text-ink">
+                  {formatEuroWhole(annualCommissions)}
+                </p>
+              </div>
+            </div>
+
+            <dl className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+              {[
+                { value: String(supplierCount), label: "Fournisseurs" },
+                { value: String(riskChips.length), label: "Types de risques" },
+                { value: String(segmentChips.length), label: "Clientèle" },
+                { value: "✓", label: "Couverture" },
+              ].map((tile) => (
+                <div
+                  key={tile.label}
+                  className="rounded-2xl bg-surface-alt px-4 py-4 text-center"
+                >
+                  <dd className="text-xl font-bold text-ink">{tile.value}</dd>
+                  <dt className="mt-1 text-[12px] text-muted">{tile.label}</dt>
+                </div>
+              ))}
+            </dl>
+          </div>
+
+          <aside className="h-fit rounded-3xl border border-line bg-paper p-5 shadow-sm">
+            {sold ? (
+              <p className="text-center text-[15px] font-semibold text-ink">
+                Ce portefeuille est cédé.
+              </p>
+            ) : exclusive && !dealHref ? (
+              <>
+                <p className="text-[13px] font-semibold text-ink">Négociation exclusive</p>
+                <p className="mt-2 text-[13px] leading-relaxed text-muted">
+                  Un confrère est déjà en dossier. Vous pouvez consulter la fiche, pas
+                  déposer une nouvelle offre.
+                </p>
+              </>
+            ) : dealHref ? (
+              <Link
+                href={dealHref}
+                className="flex h-12 items-center justify-center rounded-full bg-indigo text-[15px] font-semibold !text-white"
+              >
+                Continuer le dossier
+              </Link>
+            ) : (
+              <Link
+                href={interestHref}
+                className="flex h-12 items-center justify-center rounded-full bg-indigo text-[15px] font-semibold !text-white"
+              >
+                Prendre position
+              </Link>
+            )}
+            {followHref ? (
+              <Link
+                href={followHref}
+                className="mt-2 flex h-11 items-center justify-center rounded-full border border-line text-[14px] font-medium text-ink hover:bg-surface-alt"
+              >
+                Suivre ce dossier
+              </Link>
+            ) : null}
+            <p className="mt-3 text-[12px] leading-relaxed text-muted">
+              Abonnement {GROWTH_PLAN_ANNUAL_EUR.toLocaleString("fr-FR")} € HT / an
+              pour le contact. Anonymat jusqu’au dépôt de {INTEREST_DEPOSIT_LABEL} (
+              {formatEuroWhole(deposit)}). Aucun débit en démo.
+            </p>
+          </aside>
+        </div>
+
+        {manageHref ? (
+          <Link
+            href={manageHref}
+            className="mt-3 block rounded-2xl border border-line bg-paper px-4 py-3 text-center text-[14px] font-medium text-ink hover:bg-surface-alt"
+          >
+            Gérer cette annonce
+          </Link>
+        ) : null}
+
+        <section className="mt-6 rounded-3xl border border-line bg-paper p-6 shadow-sm">
+          <h2 className="flex items-center gap-2 text-lg font-semibold text-ink">
+            <PinIcon /> Couverture géographique
+          </h2>
+          <div className="mt-3 rounded-2xl bg-indigo-soft px-5 py-4">
+            <p className="font-semibold text-ink">{coverageTitle}</p>
+            <p className="mt-1 text-[14px] text-muted">{coverageDetail}</p>
+          </div>
+        </section>
+
+        <section className="mt-6 rounded-3xl border border-line bg-paper p-6 shadow-sm">
+          <h2 className="text-lg font-semibold text-ink">Types de risques</h2>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {riskChips.map((chip) => (
+              <span
+                key={chip}
+                className="rounded-full border border-ok/30 bg-ok/10 px-3 py-1 text-[13px] font-medium text-ink"
+              >
+                {chip}
+              </span>
+            ))}
+          </div>
+        </section>
+
+        <section className="mt-6 rounded-3xl border border-line bg-paper p-6 shadow-sm">
+          <h2 className="text-lg font-semibold text-ink">Clientèle cible</h2>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {segmentChips.map((chip) => (
+              <span
+                key={chip}
+                className="rounded-full border border-line bg-surface-alt px-3 py-1 text-[13px] font-medium text-ink"
+              >
+                {chip}
+              </span>
+            ))}
+          </div>
+        </section>
+
+        <div id="interesse" className="mt-8">
+          <SectionTabs defaultId={defaultTab ?? "informations"}>
+            <SectionTab id="informations" label="Informations">
+              {information}
+            </SectionTab>
+            <SectionTab id="documents" label="Documents">
+              {documents}
+            </SectionTab>
+            <SectionTab id="position" label="Position">
+              {position}
+            </SectionTab>
+          </SectionTabs>
         </div>
       </div>
     </main>

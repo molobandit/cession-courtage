@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import {
   acceptNdaAction,
+  closeDealAction,
   confirmSignatureAction,
   confirmTransferAction,
   mockEscrowAction,
@@ -29,7 +30,7 @@ export function NdaButton({ dealId }: { dealId: string }) {
     <form action={action}>
       <input type="hidden" name="dealId" value={dealId} />
       <Button type="submit" disabled={pending}>
-        {pending ? "Enregistrement…" : "Accepter l'accord de confidentialité (mock)"}
+        {pending ? "Enregistrement…" : "Accepter l'accord de confidentialité"}
       </Button>
       {state.error ? <p className="mt-1 text-xs text-danger">{state.error}</p> : null}
     </form>
@@ -58,19 +59,23 @@ function StageActionButton({
 }
 
 export function SignLoiButton({ dealId }: { dealId: string }) {
-  return <StageActionButton dealId={dealId} action={signLoiAction} label="Signer la lettre d'intention (mock)" />;
+  return <StageActionButton dealId={dealId} action={signLoiAction} label="Signer la lettre d'intention" />;
 }
 
 export function ValidateDeedButton({ dealId }: { dealId: string }) {
-  return <StageActionButton dealId={dealId} action={validateDeedAction} label="Valider le protocole (mock)" />;
+  return <StageActionButton dealId={dealId} action={validateDeedAction} label="Valider le protocole" />;
 }
 
 export function ConfirmSignatureButton({ dealId }: { dealId: string }) {
-  return <StageActionButton dealId={dealId} action={confirmSignatureAction} label="Confirmer la signature (mock)" />;
+  return <StageActionButton dealId={dealId} action={confirmSignatureAction} label="Confirmer la signature" />;
 }
 
 export function ConfirmTransferButton({ dealId }: { dealId: string }) {
-  return <StageActionButton dealId={dealId} action={confirmTransferAction} label="Confirmer le transfert ORIAS (mock)" />;
+  return <StageActionButton dealId={dealId} action={confirmTransferAction} label="Confirmer le transfert ORIAS" />;
+}
+
+export function CloseDealButton({ dealId }: { dealId: string }) {
+  return <StageActionButton dealId={dealId} action={closeDealAction} label="Clôturer la cession" />;
 }
 
 export function KycButton({ dealId }: { dealId: string }) {
@@ -79,7 +84,7 @@ export function KycButton({ dealId }: { dealId: string }) {
     <form action={action}>
       <input type="hidden" name="dealId" value={dealId} />
       <Button type="submit" size="sm" disabled={pending}>
-        {pending ? "KYC…" : "Lancer le KYC (mock)"}
+        {pending ? "KYC…" : "Enregistrer la vérification KYC"}
       </Button>
       {state.error ? <p className="text-xs text-danger">{state.error}</p> : null}
     </form>
@@ -94,14 +99,14 @@ export function EscrowButtons({ dealId }: { dealId: string }) {
         <input type="hidden" name="dealId" value={dealId} />
         <input type="hidden" name="intent" value="hold" />
         <Button type="submit" size="sm" disabled={pending}>
-          Séquestrer les fonds (mock)
+          Séquestrer 80 % du prix
         </Button>
       </form>
       <form action={action}>
         <input type="hidden" name="dealId" value={dealId} />
         <input type="hidden" name="intent" value="release" />
         <Button type="submit" size="sm" variant="outline" disabled={pending}>
-          Libérer (mock)
+          Libérer le solde 20 %
         </Button>
       </form>
       {state.error ? <p className="text-xs text-danger">{state.error}</p> : null}
@@ -116,7 +121,7 @@ export function SignDocButton({ dealId, documentId }: { dealId: string; document
       <input type="hidden" name="dealId" value={dealId} />
       <input type="hidden" name="documentId" value={documentId} />
       <Button type="submit" size="sm" variant="outline" disabled={pending}>
-        {pending ? "…" : "Signer (mock)"}
+        {pending ? "…" : "Signer"}
       </Button>
       {state.error ? <p className="text-xs text-danger">{state.error}</p> : null}
     </form>
