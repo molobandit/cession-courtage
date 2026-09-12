@@ -245,3 +245,67 @@ export async function findCertificationDocForAdmin(actor: Actor, documentId: str
     select: { id: true, fileName: true, storageKey: true },
   });
 }
+
+/**
+ * Tous les dossiers en cours, pour le contrôle de l'éditeur.
+ *
+ * L'éditeur engage sa responsabilité sur ce qui se passe ici : il certifie,
+ * séquestre et accompagne. Il doit donc voir l'état réel des cessions, pas
+ * seulement leurs compteurs — où chacune est bloquée, et depuis quand.
+ */
+export async function listDealsForOversight(actor: Actor) {
+  assertAdmin(actor);
+  return prisma.deal.findMany({
+    orderBy: { updatedAt: "desc" },
+    select: {
+      id: true,
+      stage: true,
+      agreedPrice: true,
+      carriers: true,
+      createdAt: true,
+      updatedAt: true,
+      listing: { select: { publicNumber: true, status: true } },
+      seller: { select: { publicAlias: true, email: true } },
+      buyer: { select: { publicAlias: true, email: true } },
+    },
+  });
+}
+
+/** Dossiers de gré à gré, même exigence de contrôle. */
+export async function listDirectDealsForOversight(actor: Actor) {
+  assertAdmin(actor);
+  return prisma.directDeal.findMany({
+    orderBy: { updatedAt: "desc" },
+    select: {
+      id: true,
+      stage: true,
+      portfolioLabel: true,
+      salePrice: true,
+      upfrontPercent: true,
+      kit: true,
+      escrow: true,
+      attestations: true,
+      counterpartyEmail: true,
+      createdAt: true,
+      updatedAt: true,
+      openedBy: { select: { publicAlias: true, email: true } },
+    },
+  });
+}
+
+/** Dépôts de garantie et leur sort : c'est de l'argent engagé. */
+export async function listDepositsForOversight(actor: Actor) {
+  assertAdmin(actor);
+  return prisma.interestDeposit.findMany({
+    orderBy: { placedAt: "desc" },
+    select: {
+      id: true,
+      amount: true,
+      outcome: true,
+      placedAt: true,
+      settledAt: true,
+      listing: { select: { publicNumber: true } },
+      buyer: { select: { publicAlias: true, email: true } },
+    },
+  });
+}

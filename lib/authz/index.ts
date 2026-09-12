@@ -42,6 +42,9 @@ export {
   listCertificationRequests,
   getCertificationDossier,
   findCertificationDocForAdmin,
+  listDealsForOversight,
+  listDirectDealsForOversight,
+  listDepositsForOversight,
 } from "@/lib/authz/admin";
 export {
   listPublicListings,
