@@ -72,14 +72,19 @@ export const SALE_SPEED_CLAIM = "Nos portefeuilles sont vendus en moyenne en moi
  *
  * Trois entrées sans forme commune s'y trouvaient — deux chiffres et le mot
  * « Trust » — posées sur des cartes claires au milieu d'une page claire :
- * rien n'accrochait l'œil et rien ne poussait à descendre. Quatre repères de
- * même forme, sur fond sombre, donnent au premier défilement la rupture qui
- * lui manquait.
+ * rien n'accrochait l'œil et rien ne poussait à descendre.
+ *
+ * Trois et non quatre, volontairement. Trois repères peuvent être énormes,
+ * quatre restent moyens ; sur un bandeau, la taille est l'argument. « ORIAS »
+ * en faisait partie et n'y disait rien au visiteur : l'immatriculation est une
+ * condition d'entrée, pas un chiffre qui se compare.
  *
  * `note` dit aussi la limite de la mesure. Un délai moyen présenté sans sa
  * réserve se lit comme un engagement ; l'annoncer soi-même inspire plus
  * confiance que de le laisser deviner.
  */
+export const MARKET_FIGURES_KICKER = "Le marché en trois chiffres";
+
 export const MARKET_FIGURES = [
   {
     figure: "0 €",
@@ -88,18 +93,13 @@ export const MARKET_FIGURES = [
   },
   {
     figure: "< 1 sem.",
-    label: "Délai moyen de cession*",
+    label: "Délai moyen*",
     note: "Sur les cessions que nous accompagnons.",
   },
   {
     figure: `${CERTIFICATION_POINTS}+`,
     label: "Points de contrôle",
     note: "Vérifiés un par un sur chaque dossier certifié.",
-  },
-  {
-    figure: "ORIAS",
-    label: "Immatriculation vérifiée",
-    note: "Contrôlée avant tout accès au marché.",
   },
 ] as const;
 
