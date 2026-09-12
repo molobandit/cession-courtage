@@ -11,6 +11,13 @@ import { hasContactSubscription } from "@/lib/billing/contact-access";
 import { offPlatformPhoneError } from "@/lib/chat/phone-block";
 import { prisma } from "@/lib/prisma";
 import { ensureDealChecklist } from "@/lib/deal/seed-checklist";
+import {
+  checkOfferLot,
+  conflictingOfferIds,
+  listingLots,
+  readCarriers,
+} from "@/lib/listing/lot-availability";
+import { fullyCommitted } from "@/lib/listing/lots";
 import { firstIssue, offerIdSchema, offerSchema } from "@/lib/validations/actions";
 
 export type OfferFormState = { error?: string };
@@ -57,12 +64,26 @@ export async function submitOfferAction(
     if (listing.status !== ListingStatus.OFFERS_OPEN || !isOfferWindowSealed(listing)) {
       return { error: "La fenêtre d'offres n'est pas ouverte." };
     }
+    /*
+     * Lot visé. Vide = portefeuille entier, ce qui reste le cas courant.
+     * La vérification a lieu ici, avant l'écriture : une offre déposée sur un
+     * fournisseur déjà cédé serait invisible jusqu'à son acceptation, et le
+     * cédant découvrirait le conflit au pire moment.
+     */
+    const demandes = formData
+      .getAll("carriers")
+      .map((v) => String(v).trim())
+      .filter(Boolean);
+    const lot = await checkOfferLot(listingId, demandes);
+    if (!lot.ok) return { error: lot.error };
+
     await prisma.offer.upsert({
       where: { listingId_buyerId: { listingId, buyerId: actor.id } },
       update: {
         amount: amount.toFixed(2),
         upfrontPercent: upfront.toFixed(2),
         message,
+        carriers: lot.carriers,
         status: OfferStatus.SUBMITTED,
         submittedAt: new Date(),
       },
@@ -72,6 +93,7 @@ export async function submitOfferAction(
         amount: amount.toFixed(2),
         upfrontPercent: upfront.toFixed(2),
         message,
+        carriers: lot.carriers,
       },
     });
     const offer = await prisma.offer.findUnique({
@@ -198,6 +220,9 @@ export async function acceptOfferAction(
     }
 
     // 2. Création du dossier, sans doublon possible.
+    // Le dossier reprend le lot de l'offre : c'est lui qui sera transféré.
+    const lotRetenu = readCarriers(offer.carriers);
+
     const deal = await prisma.deal.upsert({
       where: { listingId_buyerId: dealKey },
       update: {},
@@ -208,6 +233,7 @@ export async function acceptOfferAction(
         agreedPrice: amount.toFixed(2),
         upfrontAmount: upfront.toFixed(2),
         deferredAmount: (amount - upfront).toFixed(2),
+        carriers: lotRetenu,
         stage: DealStage.NDA,
         sellerAlias: `Cédant ${seller?.publicAlias ?? "C"}`,
         buyerAlias: `Acquéreur ${offer.buyer.publicAlias}`,
@@ -216,14 +242,39 @@ export async function acceptOfferAction(
     await ensureDealChecklist(deal.id);
 
     // 3. Conséquences dérivables : rejouables sans dommage.
-    await prisma.offer.updateMany({
-      where: { listingId: offer.listingId, id: { not: offer.id }, status: OfferStatus.SUBMITTED },
-      data: { status: OfferStatus.DECLINED },
+    /*
+     * Seules les offres qui visent un fournisseur du lot retenu sont écartées.
+     * Retenir le livre AXA ne doit pas faire tomber l'offre de celui qui voulait
+     * le Generali : c'est toute la raison d'être de la vente par lots.
+     */
+    const lots = await listingLots(offer.listingId);
+    const aEcarter = await conflictingOfferIds(offer.listingId, offer.id, lotRetenu, lots);
+    if (aEcarter.length > 0) {
+      await prisma.offer.updateMany({
+        where: { id: { in: aEcarter } },
+        data: { status: OfferStatus.DECLINED },
+      });
+    }
+
+    /*
+     * L'annonce ne quitte le marché que lorsque plus aucun fournisseur n'est
+     * libre. Sinon elle reste ouverte, pour que le reliquat trouve preneur.
+     */
+    const deals = await prisma.deal.findMany({
+      where: { listingId: offer.listingId },
+      select: { carriers: true },
     });
-    await prisma.listing.update({
-      where: { id: offer.listingId },
-      data: { status: ListingStatus.UNDER_NEGOTIATION },
+    const tous = lots.map((l) => l.carrier);
+    const engages = deals.map((d) => {
+      const c = readCarriers(d.carriers);
+      return c.length > 0 ? c : tous;
     });
+    if (lots.length === 0 || fullyCommitted(lots, engages)) {
+      await prisma.listing.update({
+        where: { id: offer.listingId },
+        data: { status: ListingStatus.UNDER_NEGOTIATION },
+      });
+    }
     if (quota && !resumable) {
       await prisma.subscription.update({
         where: { id: quota.id },

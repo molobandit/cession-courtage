@@ -21,6 +21,8 @@ describe("sendLoggedInVisitorToApp", () => {
     expect(sendLoggedInVisitorToApp("/connexion")).toBe(false);
     expect(sendLoggedInVisitorToApp("/app")).toBe(false);
     expect(sendLoggedInVisitorToApp("/mentions-legales")).toBe(false);
+    expect(sendLoggedInVisitorToApp("/partenaires")).toBe(false);
+    expect(sendLoggedInVisitorToApp("/financer")).toBe(false);
     expect(sendLoggedInVisitorToApp("/en-attente-orias")).toBe(false);
   });
 

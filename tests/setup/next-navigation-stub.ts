@@ -6,9 +6,19 @@
  * exactement comme le fait le moteur.
  */
 export class RedirectionDeTest extends Error {
+  /*
+   * Next marque ses exceptions de contrôle par un `digest`, et c'est sur lui
+   * que le code applicatif décide de les relayer plutôt que de les traiter
+   * comme des pannes. Sans cette propriété, une redirection levée dans un
+   * `try` se faisait avaler et ressortait en message d'erreur : le stub
+   * mentait sur le contrat qu'il imite.
+   */
+  readonly digest: string;
+
   constructor(public readonly destination: string) {
     super(`NEXT_REDIRECT:${destination}`);
     this.name = "RedirectionDeTest";
+    this.digest = `NEXT_REDIRECT;replace;${destination};307;`;
   }
 }
 

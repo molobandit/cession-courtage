@@ -43,4 +43,4 @@ export const DATA_AUTHORITY = {
   website: "https://www.cnil.fr",
 } as const;
 
-export const LAST_UPDATED = "08/09/2026";
+export const LAST_UPDATED = "12/09/2026";

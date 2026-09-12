@@ -13,6 +13,8 @@ const PUBLIC_ROUTES = [
   { path: "/investisseurs/opportunites", priority: 0.7 },
   { path: "/certification", priority: 0.7 },
   { path: "/tarifs", priority: 0.7 },
+  { path: "/partenaires", priority: 0.7 },
+  { path: "/financer", priority: 0.6 },
   { path: "/faq", priority: 0.8 },
   { path: "/journal", priority: 0.6 },
   { path: "/mentions-legales", priority: 0.3 },

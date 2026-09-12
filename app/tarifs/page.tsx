@@ -18,6 +18,8 @@ import {
 import { formatEuroWhole } from "@/lib/format/number";
 import { safeInternalPath } from "@/lib/nav/safe-next";
 import { CERTIFIED_BADGE, CERTIFIED_LABEL } from "@/lib/site";
+import { presentPartners } from "@/lib/partners/status";
+import { PartnerStrip } from "@/components/partners/partner-grid";
 import {
   ACCESS_MARKET_POINTS,
   ACCESS_PRICE_LINE,
@@ -146,6 +148,7 @@ export default async function TarifsPage({
   const next = safeInternalPath(nextRaw);
   const subscribed = Boolean(actor && (await hasContactSubscription(actor)));
   const canPay = Boolean(actor && isOriasVerified(actor) && !subscribed);
+  const partners = presentPartners();
 
   return (
     <main>
@@ -180,11 +183,28 @@ export default async function TarifsPage({
               Cession et séquestre
             </a>
             <Link
+              href="/partenaires"
+              className="rounded-full border border-line bg-surface px-5 py-2.5 text-[14px] font-medium text-ink shadow-sm hover:border-indigo"
+            >
+              Paiement sécurisé
+            </Link>
+            <Link
               href="/annonces"
               className="rounded-full border border-line bg-surface px-5 py-2.5 text-[14px] font-medium text-ink shadow-sm hover:border-indigo"
             >
               {CTA_BROWSE}
             </Link>
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-page px-4 pb-2 pt-2">
+        <div className="mx-auto max-w-5xl rounded-3xl border border-line bg-paper px-5 py-5">
+          <p className="text-center text-[13px] font-medium text-ink">
+            Stripe, Trustap, Yousign, DocuSign. La bourse ne reçoit pas le prix de cession.
+          </p>
+          <div className="mt-3 flex justify-center">
+            <PartnerStrip partners={partners} />
           </div>
         </div>
       </section>
@@ -417,12 +437,12 @@ export default async function TarifsPage({
               cta="Choisir l’annonce simple"
             />
             <ServiceCard
-              title="Séquestre"
-              lede="Les fonds ne vont jamais directement de l’acheteur au vendeur."
+              title="Séquestre Trustap"
+              lede="Les fonds de cession ne transitent pas par La bourse du portefeuille."
               price="Inclus"
               items={[
                 "Consignation jusqu’à la remise du portefeuille",
-                "Déblocage à la prise de possession",
+                "Quatre cinquièmes à la signature, le reste après vérification",
                 "Restitution à l’acquéreur si la vente n’aboutit pas",
                 "Aucun frais de séquestre en plus des honoraires",
               ]}

@@ -10,6 +10,7 @@ import {
 } from "@/lib/billing/rates";
 import { ASKING_MAX, ASKING_MIN, OFFER_WINDOW_DAYS } from "@/lib/listing/constants";
 import { formatEuroWhole } from "@/lib/format/number";
+import { PAYMENT_FAQ } from "@/lib/partners/faq";
 
 export const metadata: Metadata = {
   title: "Questions fréquentes",
@@ -139,6 +140,11 @@ const SECTIONS: Section[] = [
         a: "Les fonds restent sous séquestre jusqu’à ce que l’acquéreur ait le portefeuille en sa possession. Si la vente n’aboutit pas, le dépôt et les fonds consignés sont restitués à l’acquéreur. Aucun paiement réel n’est traité sur cette démo.",
       },
     ],
+  },
+  {
+    title: "Paiement et signatures",
+    intro: "Où va l’argent, qui signe, qui vérifie. Sans copier une autre place de marché.",
+    questions: PAYMENT_FAQ,
   },
   {
     title: "Données et conformité",

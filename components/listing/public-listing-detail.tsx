@@ -360,7 +360,10 @@ export function PublicListingDetail({
             <p className="mt-3 text-[12px] leading-relaxed text-muted">
               Abonnement {GROWTH_PLAN_ANNUAL_EUR.toLocaleString("fr-FR")} € HT / an
               pour le contact. Anonymat jusqu’au dépôt de {INTEREST_DEPOSIT_LABEL} (
-              {formatEuroWhole(deposit)}). Aucun débit en démo.
+              {formatEuroWhole(deposit)}). Aucun débit en démo.{" "}
+              <Link href="/partenaires" className="font-medium text-indigo-dark underline-offset-2 hover:underline">
+                Paiement sécurisé
+              </Link>
             </p>
           </aside>
         </div>

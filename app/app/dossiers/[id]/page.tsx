@@ -24,6 +24,8 @@ import { DueDiligencePanel } from "@/components/deal/due-diligence-panel";
 import { checklistProgress, type DueDiligenceCategory } from "@/lib/deal/due-diligence";
 import { nextPipelineAction } from "@/lib/deal/pipeline";
 import { ensureDealChecklist } from "@/lib/deal/seed-checklist";
+import { PartnerStrip } from "@/components/partners/partner-grid";
+import { escrowRailLive, presentPartners, signatureRailLive } from "@/lib/partners/status";
 import { prisma } from "@/lib/prisma";
 
 export const metadata = { title: "Dossier" };
@@ -53,10 +55,14 @@ export default async function DealPage({ params }: { params: Promise<{ id: strin
     select: { id: true, category: true, label: true, required: true, providedAt: true },
   });
   const progress = checklistProgress(checklist);
+  const partners = presentPartners();
+  const escrowLive = escrowRailLive();
+  const signLive = signatureRailLive();
 
   const parcours = (
     <div className="grid gap-6">
       <SalePipeline currentKey={deal.stage} />
+      <PartnerStrip partners={partners} />
       <section className="rounded-3xl border border-indigo-line bg-indigo-soft p-6">
         <p className="text-[12px] font-medium uppercase tracking-wide text-indigo-dark">
           Étape en cours
@@ -64,8 +70,9 @@ export default async function DealPage({ params }: { params: Promise<{ id: strin
         <h2 className="mt-1 text-xl font-semibold text-ink">{next.title}</h2>
         <p className="mt-2 text-[15px] leading-relaxed text-muted">{next.body}</p>
         <p className="mt-3 text-[13px] text-muted">
-          Parcours de démonstration : les signatures et le séquestre sont enregistrés
-          sans prestataire externe.
+          {escrowLive && signLive
+            ? "Le séquestre et la signature passent par les prestataires du circuit."
+            : "Le circuit Trustap et Yousign est prêt. Tant que les contrats ne sont pas validés, l’étape est enregistrée sans mouvement d’argent et sans signature qualifiée."}
         </p>
         <div className="mt-4">
           {deal.stage === "NDA" ? <NdaButton dealId={deal.id} /> : null}

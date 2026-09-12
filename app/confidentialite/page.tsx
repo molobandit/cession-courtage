@@ -127,10 +127,12 @@ export default function ConfidentialitePage() {
           qu’à la signature de la lettre d’intention, et jamais avant.
         </p>
         <p>
-          Les prestataires de vérification d’identité, de signature électronique et
-          de séquestre sont, à ce stade, des interfaces simulées : aucune donnée
-          n’est transmise à un tiers à ce titre. Aucune coordonnée bancaire n’est
-          collectée.
+          Les prestataires prévus (Stripe, Trustap, Yousign ou DocuSign, et le
+          partenaire de conformité) ne reçoivent des données que lorsque leur
+          contrat est validé et que le rail correspondant est actif. Avant cela,
+          aucune pièce d’identité ni aucun fonds de cession ne leur est transmis.
+          Stripe, lorsqu’il est configuré, traite le règlement de l’abonnement.
+          Aucune coordonnée bancaire complète n’est stockée par l’éditeur.
         </p>
       </LegalSection>
 

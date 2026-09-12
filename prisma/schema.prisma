@@ -644,6 +644,11 @@ model Offer {
   status         OfferStatus @default(SUBMITTED)
   submittedAt    DateTime    @default(now())
 
+  /// Fournisseurs visés par l'offre. Tableau JSON de noms ; "[]" = portefeuille entier.
+  /// Le fournisseur est la maille du lot : c'est lui qui détient le code de
+  /// courtage et signe l'attestation de transfert.
+  carriers       Json        @default("[]")
+
   listing Listing @relation(fields: [listingId], references: [id], onDelete: Restrict)
   buyer   User    @relation(fields: [buyerId], references: [id], onDelete: Restrict)
 
@@ -726,6 +731,12 @@ model Deal {
   agreedPrice   Decimal
   upfrontAmount Decimal
   deferredAmount Decimal
+
+  /// Fournisseurs cédés par ce dossier. "[]" = portefeuille entier.
+  /// Deux dossiers peuvent coexister sur une annonce tant que leurs lots ne se
+  /// recoupent pas : un fournisseur ne se cède qu'une fois.
+  carriers      Json      @default("[]")
+
   stage         DealStage
   createdAt     DateTime  @default(now())
 

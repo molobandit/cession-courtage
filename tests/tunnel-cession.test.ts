@@ -217,6 +217,7 @@ describe("de l’offre retenue au dossier ouvert", () => {
   let offresInitiales: { id: string; status: OfferStatus }[] = [];
   let statutListingInitial: ListingStatus;
   let dealCree: string | null = null;
+  let quota: { id: string; dealQuota: number | null; dealsUsed: number } | null = null;
 
   beforeAll(async () => {
     const listing = await prisma.listing.findUnique({
@@ -229,6 +230,30 @@ describe("de l’offre retenue au dossier ouvert", () => {
       where: { listingId: LISTING },
       select: { id: true, status: true },
     });
+
+    /*
+     * Le forfait du cédant plafonne le nombre de dossiers. Ce plafond est réel
+     * et couvert ailleurs ; ici il empêcherait d'observer ce qu'on teste.
+     */
+    const cedantId = (
+      await prisma.listing.findUnique({
+        where: { id: LISTING },
+        select: { portfolio: { select: { firm: { select: { users: { select: { id: true } } } } } } },
+      })
+    )?.portfolio.firm.users[0]?.id;
+    if (cedantId) {
+      const abonnement = await prisma.subscription.findFirst({
+        where: { userId: cedantId, status: "ACTIVE" },
+        select: { id: true, dealQuota: true, dealsUsed: true },
+      });
+      if (abonnement) {
+        quota = abonnement;
+        await prisma.subscription.update({
+          where: { id: abonnement.id },
+          data: { dealQuota: null },
+        });
+      }
+    }
   });
 
   afterAll(async () => {
@@ -245,6 +270,12 @@ describe("de l’offre retenue au dossier ouvert", () => {
       where: { id: LISTING },
       data: { status: statutListingInitial },
     });
+    if (quota) {
+      await prisma.subscription.update({
+        where: { id: quota.id },
+        data: { dealQuota: quota.dealQuota, dealsUsed: quota.dealsUsed },
+      });
+    }
   });
 
   it("refuse un tiers : seul le cédant retient une offre", async () => {

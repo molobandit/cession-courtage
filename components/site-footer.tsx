@@ -36,6 +36,8 @@ const COLUMNS = [
     title: "Comprendre",
     links: [
       { href: "/faq", label: "Questions fréquentes" },
+      { href: "/partenaires", label: "Paiement sécurisé" },
+      { href: "/financer", label: "Financer" },
       { href: "/journal", label: "Journal" },
     ],
   },

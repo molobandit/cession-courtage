@@ -155,7 +155,25 @@ export default function ConditionsGeneralesPage() {
         </p>
       </LegalSection>
 
-      <LegalSection title="10. Droit applicable">
+      <LegalSection title="10. Prestataires de paiement et de signature">
+        <p>
+          L’éditeur ne détient, ne reçoit ni ne conserve le prix de cession. Les
+          opérations financières et les signatures électroniques sont conçues pour
+          être réalisées par des prestataires indépendants, notamment Stripe pour
+          l’abonnement d’accès, Trustap pour le séquestre du prix, Yousign ou
+          DocuSign pour la signature électronique, et un prestataire de conformité
+          pour la vérification d’identité professionnelle.
+        </p>
+        <p>
+          Tant que le contrat d’un prestataire n’est pas validé, l’étape
+          correspondante est enregistrée sur le dossier à titre de démonstration,
+          sans mouvement de fonds et sans transmission de pièces d’identité à un
+          tiers. Dès validation, les conditions de ce prestataire s’appliquent en
+          sus des présentes.
+        </p>
+      </LegalSection>
+
+      <LegalSection title="11. Droit applicable">
         <p>
           Les présentes conditions sont régies par le droit français. À défaut de
           résolution amiable, tout différend relève de la compétence des juridictions

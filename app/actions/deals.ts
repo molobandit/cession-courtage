@@ -11,7 +11,7 @@ import {
   isListingMailboxParty,
   listingSellerUserId,
 } from "@/lib/authz/messages";
-import { mockEscrowHold, mockEscrowRelease, mockSignDocument, mockVerifyKyc } from "@/lib/integrations/mocks";
+import { holdEscrowFunds, releaseEscrowFunds, signDealDocument, verifyPartyIdentity } from "@/lib/partners/runtime";
 import { prisma } from "@/lib/prisma";
 import { offPlatformPhoneError } from "@/lib/chat/phone-block";
 import { putObject } from "@/lib/storage/objects";
@@ -118,7 +118,7 @@ export async function mockKycAction(_prev: DealFormState, formData: FormData): P
     if (deal.stage !== DealStage.KYC && deal.stage !== DealStage.LOI) {
       return { error: "KYC hors séquence." };
     }
-    await mockVerifyKyc(actor.id);
+    await verifyPartyIdentity(actor.id);
     /*
      * Deux temps, comme l'annonce le parcours : « lancer la vérification » à
      * l'accord de prix, « terminer la conformité » à l'étape suivante.
@@ -143,7 +143,7 @@ export async function mockSignDealDocAction(_prev: DealFormState, formData: Form
   try {
     const { deal } = await loadDeal(String(formData.get("dealId") ?? ""));
     const documentId = String(formData.get("documentId") ?? "");
-    await mockSignDocument(documentId);
+    await signDealDocument(documentId);
     if (deal.stage === DealStage.SIGNATURE || deal.stage === DealStage.DEED) {
       const next = deal.stage === DealStage.DEED ? DealStage.SIGNATURE : DealStage.ESCROW;
       await prisma.deal.update({ where: { id: deal.id }, data: { stage: next } });
@@ -159,8 +159,8 @@ export async function mockEscrowAction(_prev: DealFormState, formData: FormData)
   try {
     const { deal } = await loadDeal(String(formData.get("dealId") ?? ""));
     const intent = String(formData.get("intent") ?? "hold");
-    if (intent === "release") await mockEscrowRelease(deal.id);
-    else await mockEscrowHold(deal.id);
+    if (intent === "release") await releaseEscrowFunds(deal.id);
+    else await holdEscrowFunds(deal.id);
     if (deal.stage === DealStage.ESCROW && intent === "hold") {
       await prisma.deal.update({ where: { id: deal.id }, data: { stage: DealStage.TRANSFER } });
     }
@@ -263,7 +263,7 @@ export async function closeDealAction(
     if (deal.stage !== DealStage.RETENTION) {
       return { error: "La clôture n’est possible qu’après le transfert et la période de vérification." };
     }
-    await mockEscrowRelease(deal.id);
+    await releaseEscrowFunds(deal.id);
     await prisma.deal.update({ where: { id: deal.id }, data: { stage: DealStage.CLOSED } });
     await prisma.listing.update({
       where: { id: deal.listingId },
