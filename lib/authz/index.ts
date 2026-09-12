@@ -28,7 +28,7 @@ export {
 export { listMyImports, findMyImport, getMyImport, ensureSellerFirm } from "@/lib/authz/imports";
 export { listMyOffers, listOffersForListing } from "@/lib/authz/offers";
 export { listMyDeals, getMyDeal, findMyDeal, counterpartyDisplayName } from "@/lib/authz/deals";
-export { listMyMandates, getMyMandate, listPublicMandates } from "@/lib/authz/mandates";
+export { listMyMandates, getMyMandate, listPublicMandates, getPublicMandateByNumber } from "@/lib/authz/mandates";
 export {
   listPendingOriasUsers,
   verifyOrias,

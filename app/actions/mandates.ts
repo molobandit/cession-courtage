@@ -3,6 +3,7 @@
 import { FinancingMode, type ClientSegment, type RiskType } from "@prisma/client";
 import { firstIssue, mandateSchema } from "@/lib/validations/actions";
 import { redirect } from "next/navigation";
+import { assignMandatePublicNumber } from "@/lib/mandate/assign-number";
 import { canBuy, getActor, isOriasVerified } from "@/lib/authz";
 import { ForbiddenError, UnauthenticatedError } from "@/lib/authz/errors";
 import { rematchMandate } from "@/lib/matching/run";
@@ -87,7 +88,13 @@ export async function createMandateAction(
       },
     });
     await rematchMandate(mandate.id);
-    destination = "/app/opportunites";
+    const publish = formData.get("publish") === "on" || formData.get("publish") === "true";
+    if (publish) {
+      const publicNumber = await assignMandatePublicNumber(mandate.id);
+      destination = `/annonces/demandes/${publicNumber}`;
+    } else {
+      destination = "/app/opportunites";
+    }
   } catch (error) {
     return { error: error instanceof Error ? error.message : "Création impossible." };
   }

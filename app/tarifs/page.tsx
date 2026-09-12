@@ -12,11 +12,11 @@ import {
   VERIFIED_FEE_RANGE_LABEL,
   VERIFIED_FEE_RATE_MAX,
   VERIFIED_FEE_RATE_MIN,
-  growthPlanAnnualTtcEur,
   interestDepositFor,
   successFeeFor,
 } from "@/lib/billing/rates";
 import { formatEuroWhole } from "@/lib/format/number";
+import { safeInternalPath } from "@/lib/nav/safe-next";
 import { CERTIFIED_BADGE, CERTIFIED_LABEL } from "@/lib/site";
 import {
   ACCESS_MARKET_POINTS,
@@ -111,7 +111,7 @@ const VERIFY_BLOCKS = [
 const FAQ = [
   {
     q: "Que donne l’abonnement ?",
-    a: `Pour ${formatEuroWhole(GROWTH_PLAN_ANNUAL_EUR)} HT par an (${formatEuroWhole(growthPlanAnnualTtcEur())} TTC, TVA 20 %), réglé par carte via Stripe. Vous accédez au détail de l’offre : contact, messages et dépôt d’offre. Ce n’est pas une vérification du portefeuille. Le vendeur reste anonyme à cette étape.`,
+    a: `Pour ${formatEuroWhole(GROWTH_PLAN_ANNUAL_EUR)} HT par an, réglé par carte via Stripe. Vous accédez au détail de l’offre : contact, messages et dépôt d’offre. Ce n’est pas une vérification du portefeuille. Le vendeur reste anonyme à cette étape.`,
   },
   {
     q: "Quelle est la différence entre l’abonnement, le dépôt et la vérification ?",
@@ -135,9 +135,15 @@ const FAQ = [
   },
 ];
 
-export default async function TarifsPage() {
+export default async function TarifsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string }>;
+}) {
   const annual = formatEuroWhole(GROWTH_PLAN_ANNUAL_EUR);
   const actor = await getActor();
+  const { next: nextRaw } = await searchParams;
+  const next = safeInternalPath(nextRaw);
   const subscribed = Boolean(actor && (await hasContactSubscription(actor)));
   const canPay = Boolean(actor && isOriasVerified(actor) && !subscribed);
 
@@ -226,7 +232,7 @@ export default async function TarifsPage() {
               <span className="ml-1 text-[1.35rem]">€</span>
               <span className="ml-1 align-top text-base font-semibold text-indigo/70">HT</span>
             </p>
-            <p className="mt-1 text-center text-[13px] text-muted">{annual} HT par an · {formatEuroWhole(growthPlanAnnualTtcEur())} TTC (TVA 20 %)</p>
+            <p className="mt-1 text-center text-[13px] text-muted">{annual} HT par an</p>
             <ul className="mt-8 flex-1 space-y-3">
               {PLAN_ROWS.map((row) => (
                 <PlanRow key={row.label} label={row.label} on={row.paid} accent />
@@ -237,16 +243,18 @@ export default async function TarifsPage() {
                 <Link href="/app/profil">Abonnement actif</Link>
               </Button>
             ) : canPay ? (
-              <SubscribeButton className="mt-8" label="Payer 250 € HT (300 € TTC)" />
+              <SubscribeButton className="mt-8" label="Payer 250 € HT" next={next ?? undefined} />
             ) : (
               <Button asChild variant="primary" className="mt-8 w-full" size="lg">
                 <Link
                   href={
                     actor
                       ? isOriasVerified(actor)
-                        ? "/app/profil#factures"
+                        ? next
+                          ? `/app/profil?next=${encodeURIComponent(next)}#factures`
+                          : "/app/profil#factures"
                         : "/en-attente-orias"
-                      : "/connexion?next=/tarifs#abonnements"
+                      : `/connexion?next=${encodeURIComponent(next ? `/tarifs?next=${encodeURIComponent(next)}#abonnements` : "/tarifs#abonnements")}`
                   }
                 >
                   {actor ? "Continuer vers le paiement" : "Se connecter pour s’abonner"}
@@ -254,7 +262,7 @@ export default async function TarifsPage() {
               </Button>
             )}
             <p className="mt-3 text-center text-[12px] text-muted">
-              Paiement sécurisé Stripe. 250 € HT, soit 300 € TTC. Renouvellement annuel.
+              Paiement sécurisé Stripe. 250 € HT par an. Renouvellement annuel.
             </p>
           </article>
         </div>

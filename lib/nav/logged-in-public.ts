@@ -24,7 +24,7 @@ export function sendLoggedInVisitorToApp(pathname: string): boolean {
 
 /** Où envoyer un visiteur déjà connecté qui ouvre une page vitrine. */
 export function loggedInPublicDestination(pathname: string): string | null {
-  if (pathname === "/acquerir") return "/app/mandats";
+  if (pathname === "/acquerir") return "/annonces";
   if (sendLoggedInVisitorToApp(pathname)) return "/app";
   return null;
 }

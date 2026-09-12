@@ -9,13 +9,16 @@ const initial: BillingFormState = {};
 export function SubscribeButton({
   label,
   className,
+  next,
 }: {
   label: string;
   className?: string;
+  next?: string;
 }) {
   const [state, action, pending] = useActionState(startGrowthCheckoutAction, initial);
   return (
     <form action={action} className={className}>
+      {next ? <input type="hidden" name="next" value={next} /> : null}
       <Button type="submit" variant="primary" size="lg" className="w-full" disabled={pending}>
         {pending ? "Redirection vers le paiement…" : label}
       </Button>

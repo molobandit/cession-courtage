@@ -5,7 +5,7 @@ import { getActor, isOriasVerified, canBuy } from "@/lib/authz/actor";
 import { ForbiddenError, UnauthenticatedError } from "@/lib/authz/errors";
 import { prisma } from "@/lib/prisma";
 import { idSchema } from "@/lib/validations/actions";
-import { nextMandatePublicNumber } from "@/lib/mandate/public";
+import { assignMandatePublicNumber } from "@/lib/mandate/assign-number";
 
 export type MandatePublicationState = { error?: string };
 
@@ -41,19 +41,13 @@ export async function toggleMandatePublicationAction(
     // republié garde sa référence, comme une annonce.
     let publicNumber = mandate.publicNumber;
     if (publish && publicNumber === null) {
-      const taken = await prisma.buyerMandate.findMany({
-        where: { publicNumber: { not: null } },
-        select: { publicNumber: true },
+      publicNumber = await assignMandatePublicNumber(mandate.id);
+    } else {
+      await prisma.buyerMandate.update({
+        where: { id: mandate.id },
+        data: { isPublic: publish, publicNumber },
       });
-      publicNumber = nextMandatePublicNumber(
-        taken.map((t) => t.publicNumber).filter((n): n is number => n !== null),
-      );
     }
-
-    await prisma.buyerMandate.update({
-      where: { id: mandate.id },
-      data: { isPublic: publish, publicNumber },
-    });
 
     await prisma.auditLog.create({
       data: {
@@ -67,6 +61,7 @@ export async function toggleMandatePublicationAction(
 
     revalidatePath("/app/mandats");
     revalidatePath("/annonces");
+    revalidatePath("/annonces/demandes");
     return {};
   } catch (error) {
     if (error instanceof UnauthenticatedError) return { error: "Authentification requise." };

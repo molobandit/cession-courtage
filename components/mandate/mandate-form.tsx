@@ -12,10 +12,17 @@ const initial: MandateFormState = {};
 const selectClass =
   "flex h-9 w-full rounded-sm border border-line bg-paper px-2.5 text-sm outline-none focus:border-navy";
 
-export function MandateForm() {
+export function MandateForm({
+  publish = false,
+  submitLabel,
+}: {
+  publish?: boolean;
+  submitLabel?: string;
+}) {
   const [state, action, pending] = useActionState(createMandateAction, initial);
   return (
     <form action={action} className="grid max-w-2xl gap-3">
+      {publish ? <input type="hidden" name="publish" value="true" /> : null}
       <div className="grid gap-3 sm:grid-cols-3">
         <div className="grid gap-1">
           <Label htmlFor="maxBudget">Budget max (€)</Label>
@@ -74,7 +81,7 @@ export function MandateForm() {
       </label>
       {state.error ? <p className="text-sm text-danger">{state.error}</p> : null}
       <Button type="submit" disabled={pending}>
-        {pending ? "Enregistrement…" : "Enregistrer le mandat"}
+        {pending ? "Enregistrement…" : submitLabel ?? "Enregistrer le mandat"}
       </Button>
     </form>
   );

@@ -25,7 +25,7 @@ describe("sendLoggedInVisitorToApp", () => {
   });
 
   it("envoie l'acheteur connecté vers les mandats, pas le tableau de bord", () => {
-    expect(loggedInPublicDestination("/acquerir")).toBe("/app/mandats");
+    expect(loggedInPublicDestination("/acquerir")).toBe("/annonces");
     expect(loggedInPublicDestination("/")).toBe("/app");
     expect(loggedInPublicDestination("/annonces")).toBeNull();
   });

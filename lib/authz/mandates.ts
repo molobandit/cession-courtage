@@ -31,6 +31,26 @@ export async function getMyMandate(mandateId: string, actor?: Actor) {
  * Ne renvoie que des donnees anonymes : l'alias public de l'acquereur, jamais
  * son nom ni sa raison sociale. Aucune session n'est requise.
  */
+export async function getPublicMandateByNumber(publicNumber: number) {
+  if (!Number.isInteger(publicNumber) || publicNumber < 1) return null;
+  return prisma.buyerMandate.findFirst({
+    where: { isPublic: true, isActive: true, publicNumber },
+    select: {
+      id: true,
+      publicNumber: true,
+      maxBudget: true,
+      minCommissions: true,
+      maxCommissions: true,
+      riskTypes: true,
+      carriers: true,
+      zones: true,
+      clientSegments: true,
+      financingMode: true,
+      buyer: { select: { publicAlias: true } },
+    },
+  });
+}
+
 export async function listPublicMandates() {
   return prisma.buyerMandate.findMany({
     where: { isPublic: true, isActive: true, publicNumber: { not: null } },

@@ -3,10 +3,9 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { PublicMandateList } from "@/components/mandate/public-mandate-list";
 import { canBuy, getActor, isOriasVerified, listPublicMandates } from "@/lib/authz";
-import { asStringArray } from "@/lib/json-array";
-import { FINANCING_LABELS, RISK_TYPE_LABELS, SEGMENT_LABELS } from "@/lib/labels";
+import { mapPublicMandateCard } from "@/lib/mandate/map-public";
 import type { PublicMandateCard } from "@/lib/mandate/public";
-import { acquisitionContinueHref } from "@/lib/nav/acquisition";
+import { acquisitionRequestHref } from "@/lib/nav/acquisition";
 
 export const metadata: Metadata = {
   title: "Demandes d’acquisition",
@@ -17,32 +16,14 @@ export const metadata: Metadata = {
 
 export default async function PublicMandatesPage() {
   const [rows, actor] = await Promise.all([listPublicMandates(), getActor()]);
-  const acquireHref = acquisitionContinueHref({
+  const acquireHref = acquisitionRequestHref({
     loggedIn: Boolean(actor),
     canBuy: Boolean(actor && isOriasVerified(actor) && canBuy(actor)),
   });
 
-  const mandates: PublicMandateCard[] = rows.map((m) => {
-    const zones = asStringArray(m.zones);
-    return {
-      id: m.id,
-      publicNumber: m.publicNumber ?? 0,
-      buyerAlias: m.buyer.publicAlias,
-      maxBudget: Number(m.maxBudget),
-      minCommissions: Number(m.minCommissions),
-      maxCommissions: Number(m.maxCommissions),
-      riskTypes: asStringArray(m.riskTypes).map(
-        (r) => RISK_TYPE_LABELS[r as keyof typeof RISK_TYPE_LABELS] ?? r,
-      ),
-      carriers: asStringArray(m.carriers),
-      zones: zones.filter((z) => z !== "NATIONAL"),
-      clientSegments: asStringArray(m.clientSegments).map(
-        (s) => SEGMENT_LABELS[s as keyof typeof SEGMENT_LABELS] ?? s,
-      ),
-      financingLabel: FINANCING_LABELS[m.financingMode] ?? "Non précisé",
-      isNationwide: zones.includes("NATIONAL"),
-    };
-  });
+  const mandates: PublicMandateCard[] = rows
+    .map((m) => mapPublicMandateCard(m))
+    .filter((m): m is PublicMandateCard => m !== null);
 
   return (
     <main>

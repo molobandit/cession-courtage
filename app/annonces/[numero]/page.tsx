@@ -187,11 +187,12 @@ export default async function PublicListingPage({
     ...regulatoryFacts(brief.regulatory),
   ];
 
+  const listingPath = `/annonces/${listing.publicNumber}`;
   const interestHref = !actor
-    ? `/connexion?next=/annonces/${listing.publicNumber}`
+    ? `/connexion?next=${encodeURIComponent(listingPath)}`
     : subscribed
       ? "#depot"
-      : "/tarifs#abonnement";
+      : `/tarifs?next=${encodeURIComponent(listingPath)}#abonnements`;
   const followHref = !actor
     ? `/connexion?next=${encodeURIComponent(`/annonces/${listing.publicNumber}?voie=investir`)}`
     : isInvestor(actor)
@@ -305,12 +306,12 @@ export default async function PublicListingPage({
           </p>
           <Button asChild variant="outline" className="mt-4">
             <Link
-              href={
+                href={
                 !actor
-                  ? `/connexion?next=/annonces/${listing.publicNumber}`
+                  ? `/connexion?next=${encodeURIComponent(`/annonces/${listing.publicNumber}`)}`
                   : subscribed
                     ? "#depot"
-                    : "/tarifs#abonnement"
+                    : `/tarifs?next=${encodeURIComponent(`/annonces/${listing.publicNumber}`)}#abonnements`
               }
             >
               {!actor
@@ -346,7 +347,7 @@ export default async function PublicListingPage({
               </Button>
             ) : (
               <Button asChild variant="primary">
-                <Link href="/tarifs#abonnement">S’abonner pour le détail de l’offre</Link>
+                <Link href={`/tarifs?next=${encodeURIComponent(`/annonces/${listing.publicNumber}`)}#abonnements`}>S’abonner pour le détail de l’offre</Link>
               </Button>
             )}
             <Button asChild variant="outline">
@@ -424,7 +425,7 @@ export default async function PublicListingPage({
             </Button>
           ) : !subscribed && canBuy(actor) && !isSeller ? (
             <Button asChild variant="primary" className="mt-5">
-              <Link href="/tarifs#abonnement">S’abonner pour le détail de l’offre</Link>
+              <Link href={`/tarifs?next=${encodeURIComponent(`/annonces/${listing.publicNumber}`)}#abonnements`}>S’abonner pour le détail de l’offre</Link>
             </Button>
           ) : null}
         </section>

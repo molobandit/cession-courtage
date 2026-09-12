@@ -16,12 +16,13 @@ import { SearchPrefsForm } from "@/components/app/search-prefs-form";
 import { parseNotifyPrefs } from "@/lib/account/notify-prefs";
 import { parseSearchPrefs } from "@/lib/account/search-prefs";
 import { hasContactSubscription } from "@/lib/billing/contact-access";
-import { GROWTH_PLAN_ANNUAL_EUR, INTEREST_DEPOSIT_LABEL, growthPlanAnnualTtcEur } from "@/lib/billing/rates";
+import { GROWTH_PLAN_ANNUAL_EUR, INTEREST_DEPOSIT_LABEL } from "@/lib/billing/rates";
 import { formatDate, formatEuroPrecise } from "@/lib/format/fr";
 import { formatEuroWhole } from "@/lib/format/number";
 import { DOCUMENT_TYPE_LABELS, KYC_STATUS_LABELS, ROLE_LABELS } from "@/lib/labels";
 import { ProfileForm } from "@/components/app/profile-form";
 import { prisma } from "@/lib/prisma";
+import { safeInternalPath } from "@/lib/nav/safe-next";
 
 export const metadata: Metadata = { title: "Mon compte" };
 
@@ -30,15 +31,17 @@ const card = "mt-6 rounded-[1.75rem] border border-line bg-paper p-5 shadow-sm s
 export default async function ProfilPage({
   searchParams,
 }: {
-  searchParams: Promise<{ session_id?: string }>;
+  searchParams: Promise<{ session_id?: string; next?: string }>;
 }) {
   const actor = await getActor();
   if (!actor) redirect("/connexion?next=/app/profil");
   if (!isOriasVerified(actor)) redirect("/en-attente-orias");
-  const { session_id: sessionId } = await searchParams;
+  const { session_id: sessionId, next: nextRaw } = await searchParams;
   const checkoutConfirmed = sessionId
     ? await confirmGrowthCheckout(sessionId, actor.id)
     : false;
+  const next = safeInternalPath(nextRaw);
+  if (checkoutConfirmed && next) redirect(next);
 
   const [
     firmRow,
@@ -273,8 +276,7 @@ export default async function ProfilPage({
       <section id="factures" className={card}>
         <h2 className="text-lg font-semibold text-ink">Factures et engagements</h2>
         <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-muted">
-          Abonnement annuel {formatEuroWhole(GROWTH_PLAN_ANNUAL_EUR)} HT (
-          {formatEuroWhole(growthPlanAnnualTtcEur())} TTC), réglé par carte via Stripe.
+          Abonnement annuel {formatEuroWhole(GROWTH_PLAN_ANNUAL_EUR)} HT, réglé par carte via Stripe.
           Les dépôts de {INTEREST_DEPOSIT_LABEL} restent un engagement de démo, sans
           encaissement.
         </p>
@@ -299,7 +301,7 @@ export default async function ProfilPage({
           <p className="mt-4 text-[15px] text-ink">Abonnement actif.</p>
         ) : isInvestor(actor) ? null : (
           <div className="mt-5 max-w-sm">
-            <SubscribeButton label={`Payer ${GROWTH_PLAN_ANNUAL_EUR} € HT (${formatEuroWhole(growthPlanAnnualTtcEur())} TTC)`} />
+            <SubscribeButton label={`Payer ${GROWTH_PLAN_ANNUAL_EUR} € HT`} next={next ?? undefined} />
           </div>
         )}
       </section>

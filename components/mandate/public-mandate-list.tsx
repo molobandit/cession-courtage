@@ -202,10 +202,10 @@ export function PublicMandateList({
                 </p>
                 <div className="mt-5">
                   <a
-                    href={acquireHref}
+                    href={`/annonces/demandes/${m.publicNumber}`}
                     className="flex h-11 w-full items-center justify-center rounded-full bg-indigo text-center text-[14px] font-semibold leading-none text-white hover:bg-indigo-dark"
                   >
-                    Déposer ma demande d’acquisition
+                    Voir la demande
                   </a>
                 </div>
               </article>

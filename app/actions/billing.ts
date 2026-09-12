@@ -14,20 +14,28 @@ import {
 } from "@/lib/billing/stripe";
 import { prisma } from "@/lib/prisma";
 import { siteUrl } from "@/lib/site";
+import { safeInternalPath } from "@/lib/nav/safe-next";
 
 export type BillingFormState = { error?: string };
 
 export async function startGrowthCheckoutAction(
   _prev: BillingFormState,
-  _formData: FormData,
+  formData: FormData,
 ): Promise<BillingFormState> {
+  const next = safeInternalPath(formData.get("next"));
   const actor = await getActor();
-  if (!actor) redirect("/connexion?next=/tarifs#abonnements");
+  if (!actor) {
+    const afterLogin = next
+      ? `/tarifs?next=${encodeURIComponent(next)}#abonnements`
+      : "/tarifs#abonnements";
+    redirect(`/connexion?next=${encodeURIComponent(afterLogin)}`);
+  }
   if (!isOriasVerified(actor)) redirect("/en-attente-orias");
   if (!stripeConfigured()) {
     return { error: "Le paiement par carte n’est pas encore ouvert." };
   }
   if (await hasContactSubscription(actor)) {
+    if (next) redirect(next);
     return { error: "Votre abonnement est déjà actif." };
   }
 
@@ -52,11 +60,12 @@ export async function startGrowthCheckoutAction(
     }
 
     const origin = siteUrl();
+    const successNext = next ? `&next=${encodeURIComponent(next)}` : "";
     const session = await stripeCreateCheckoutSession({
       customerId,
       userId: actor.id,
-      successUrl: `${origin}/app/profil?session_id={CHECKOUT_SESSION_ID}`,
-      cancelUrl: `${origin}/tarifs#abonnements`,
+      successUrl: `${origin}/app/profil?session_id={CHECKOUT_SESSION_ID}${successNext}`,
+      cancelUrl: next ? `${origin}${next}` : `${origin}/tarifs#abonnements`,
     });
     if (!session.url) return { error: "Session de paiement incomplète." };
     redirect(session.url);
