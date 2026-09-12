@@ -340,3 +340,32 @@ export const mandateSchema = z
 export function firstIssue(error: z.ZodError): string {
   return error.issues[0]?.message ?? "Saisie invalide.";
 }
+
+/**
+ * Ouverture d'un dossier de gré à gré.
+ *
+ * Le prix est saisi à la main : il vient d'une négociation menée hors
+ * plateforme, aucune valorisation ne le propose.
+ */
+export const directDealSchema = z.object({
+  openerRole: z.enum(["SELLER", "BUYER"], { message: "Précisez si vous cédez ou reprenez." }),
+  counterpartyEmail: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .email("Adresse e-mail de la contrepartie invalide.")
+    .max(120, "Adresse trop longue."),
+  portfolioLabel: z
+    .string()
+    .trim()
+    .min(3, "Décrivez le portefeuille en quelques mots.")
+    .max(160, "Description trop longue."),
+  salePrice: z.coerce
+    .number()
+    .positive("Le prix doit être supérieur à zéro.")
+    .max(100_000_000, "Montant hors limites."),
+  upfrontPercent: z.coerce
+    .number()
+    .min(0, "Le comptant ne peut pas être négatif.")
+    .max(100, "Le comptant ne peut pas dépasser 100 %."),
+});

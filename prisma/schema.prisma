@@ -278,6 +278,8 @@ model User {
   imports                 PortfolioImport[]
   dataRoomViews           DataRoomView[]
   deposits                InterestDeposit[]
+  directDealsOpened       DirectDeal[]      @relation("DirectDealOpened")
+  directDealsReceived     DirectDeal[]      @relation("DirectDealCounterparty")
   twoFactor               TwoFactor?
   recoveryCodes           RecoveryCode[]
   companyDocuments        ListingCompanyDocument[]
@@ -1005,6 +1007,40 @@ model AdvisorBooking {
 
   @@index([startsAt, status])
   @@index([email, createdAt])
+}
+
+/// Cession de gré à gré : les parties se sont trouvées seules et n'achètent
+/// que la formalisation. Trois services indépendants, un parcours qui s'adapte
+/// à ceux qui ont été pris.
+model DirectDeal {
+  id                 String    @id @default(cuid())
+  openedById         String
+  /// SELLER ou BUYER : le rôle de celui qui ouvre le dossier.
+  openerRole         String
+  /// La contrepartie n'a pas forcément de compte au moment de l'ouverture.
+  counterpartyEmail  String
+  counterpartyUserId String?
+  /// Description libre du portefeuille : aucune annonce n'est en jeu ici.
+  portfolioLabel     String
+  salePrice          Decimal
+  upfrontPercent     Decimal   @default(100)
+
+  kit                Boolean   @default(false)
+  escrow             Boolean   @default(false)
+  attestations       Boolean   @default(false)
+
+  stage              String    @default("INVITED")
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  closedAt           DateTime?
+
+  openedBy           User      @relation("DirectDealOpened", fields: [openedById], references: [id], onDelete: Restrict)
+  counterparty       User?     @relation("DirectDealCounterparty", fields: [counterpartyUserId], references: [id], onDelete: SetNull)
+
+  @@index([openedById])
+  @@index([counterpartyUserId])
+  @@index([counterpartyEmail])
+  @@index([stage, createdAt])
 }
 
 /// Mock mailer outbox (magic links, later transactional mail). Swap for Resend later.

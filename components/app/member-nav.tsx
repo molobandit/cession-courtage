@@ -52,7 +52,12 @@ export function memberWorkspaceLinks(
       { href: "/annonces/demandes", label: "Demandes" },
     );
   }
-  links.push({ href: "/app/outils", label: "Outils" }, { href: "/app/profil", label: "Compte" });
+  // Le gré à gré s'adresse aux deux rôles : les parties se sont trouvées seules.
+  links.push(
+    { href: "/app/formaliser", label: "Gré à gré" },
+    { href: "/app/outils", label: "Outils" },
+    { href: "/app/profil", label: "Compte" },
+  );
   return links;
 }
 
