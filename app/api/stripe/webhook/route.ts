@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import { handleStripeEvent } from "@/lib/billing/handle-stripe-event";
 import { verifyStripeWebhook } from "@/lib/billing/stripe-webhook";
+import { runtimeEnv } from "@/lib/runtime-env";
 
 export async function POST(request: Request) {
-  const secret = process.env.STRIPE_WEBHOOK_SECRET;
+  const secret = runtimeEnv("STRIPE_WEBHOOK_SECRET");
   const payload = await request.text();
   const signature = request.headers.get("stripe-signature");
   if (!secret || !(await verifyStripeWebhook(payload, signature, secret))) {

@@ -1,5 +1,6 @@
 import "server-only";
 import { BRAND_NAME } from "@/lib/site";
+import { runtimeEnv } from "@/lib/runtime-env";
 import {
   stripeKeyRefusal,
   stripeKeyUsable,
@@ -22,18 +23,18 @@ const API = "https://api.stripe.com/v1";
  * le site de demonstration encaisserait un vrai abonnement.
  */
 export function stripeConfigured(): boolean {
-  return stripeKeyUsable(process.env.STRIPE_SECRET_KEY, process.env.STRIPE_ALLOW_LIVE);
+  return stripeKeyUsable(runtimeEnv("STRIPE_SECRET_KEY"), runtimeEnv("STRIPE_ALLOW_LIVE"));
 }
 
 /** Mode courant, pour le dire au visiteur. `null` si le paiement est ferme. */
 export function stripeMode(): StripeMode | null {
   if (!stripeConfigured()) return null;
-  return stripeModeFromKey(process.env.STRIPE_SECRET_KEY);
+  return stripeModeFromKey(runtimeEnv("STRIPE_SECRET_KEY"));
 }
 
 function secretKey(): string {
-  const key = process.env.STRIPE_SECRET_KEY;
-  const refus = stripeKeyRefusal(key, process.env.STRIPE_ALLOW_LIVE);
+  const key = runtimeEnv("STRIPE_SECRET_KEY");
+  const refus = stripeKeyRefusal(key, runtimeEnv("STRIPE_ALLOW_LIVE"));
   if (refus) throw new Error(refus);
   return (key as string).trim();
 }

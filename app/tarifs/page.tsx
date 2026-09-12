@@ -2,8 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { SubscribeButton } from "@/components/billing/subscribe-button";
-import { TestModeNotice } from "@/components/billing/test-mode-notice";
-import { stripeMode } from "@/lib/billing/stripe";
 import { getActor, isOriasVerified } from "@/lib/authz";
 import { hasContactSubscription } from "@/lib/billing/contact-access";
 import {
@@ -245,10 +243,7 @@ export default async function TarifsPage({
                 <Link href="/app/profil">Abonnement actif</Link>
               </Button>
             ) : canPay ? (
-              <>
-                <SubscribeButton className="mt-8" label="Payer 250 € HT" next={next ?? undefined} />
-                {stripeMode() === "test" ? <TestModeNotice /> : null}
-              </>
+              <SubscribeButton className="mt-8" label="Payer 250 € HT" next={next ?? undefined} />
             ) : (
               <Button asChild variant="primary" className="mt-8 w-full" size="lg">
                 <Link
