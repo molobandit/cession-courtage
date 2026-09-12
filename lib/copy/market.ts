@@ -23,7 +23,8 @@ export const HERO_TITLE = `${HERO_HEADLINE} ${HERO_HEADLINE_REST}`;
  * sur l’accueil (marché / marché, portefeuille / portefeuilles).
  */
 export const HERO_LEDE =
-  "Cédants, acquéreurs et investisseurs s’y rencontrent pour conclure. Chaque dossier est valorisé, certifié, puis mené jusqu’au transfert des contrats.";
+  "Cédants, acquéreurs et investisseurs s’y rencontrent pour conclure — sur des dossiers ouverts, chiffrés et vérifiés.";
+
 
 export const MARKET_HALL = "Salle de marché";
 export const MARKET_HALL_TITLE = "Salle de marché — Portefeuilles disponibles";
@@ -43,7 +44,64 @@ export const UNCERTIFIED_LABEL = "Portefeuille non certifié";
 export const CERTIFICATION_POINTS = 50;
 export const CERTIFICATION_POINTS_LABEL = `plus de ${CERTIFICATION_POINTS} points de contrôle`;
 
+/**
+ * Preuves du premier écran.
+ *
+ * Cinq faits vérifiables, pas cinq adjectifs. Un visiteur qui doit céder le
+ * travail de vingt ans ne se décide pas sur « sécurisé » et « professionnel » :
+ * il cherche ce qui est contrôlé, par qui, et à quel moment son nom sort. Trois
+ * étiquettes vagues occupaient cette place et ne donnaient aucune raison de
+ * continuer à lire.
+ *
+ * Chaque ligne est tenue par du code : la capacité financière par un contrôle
+ * daté, les cinquante points par les pièces de certification, l'anonymat par
+ * `canReadCedantIdentity`. Aucune ne peut donc être démentie par le produit.
+ */
+export const HERO_PROOFS = [
+  "Le prix de marché est établi avant la mise en vente",
+  "La capacité financière des acquéreurs est vérifiée",
+  `Les dossiers certifiés passent ${CERTIFICATION_POINTS_LABEL}`,
+  "Les contrats sont contrôlés par nos avocats, le paiement séquestré",
+  "Votre nom n’est révélé qu’à un acquéreur qui a engagé un dépôt",
+] as const;
+
 export const SALE_SPEED_CLAIM = "Nos portefeuilles sont vendus en moyenne en moins d’une semaine.";
+
+/**
+ * Bandeau de chiffres de l'accueil.
+ *
+ * Trois entrées sans forme commune s'y trouvaient — deux chiffres et le mot
+ * « Trust » — posées sur des cartes claires au milieu d'une page claire :
+ * rien n'accrochait l'œil et rien ne poussait à descendre. Quatre repères de
+ * même forme, sur fond sombre, donnent au premier défilement la rupture qui
+ * lui manquait.
+ *
+ * `note` dit aussi la limite de la mesure. Un délai moyen présenté sans sa
+ * réserve se lit comme un engagement ; l'annoncer soi-même inspire plus
+ * confiance que de le laisser deviner.
+ */
+export const MARKET_FIGURES = [
+  {
+    figure: "0 €",
+    label: "Frais de dépôt",
+    note: "Mettre un portefeuille en vente ne coûte rien.",
+  },
+  {
+    figure: "< 1 sem.",
+    label: "Délai moyen de cession*",
+    note: "Sur les cessions que nous accompagnons.",
+  },
+  {
+    figure: `${CERTIFICATION_POINTS}+`,
+    label: "Points de contrôle",
+    note: "Vérifiés un par un sur chaque dossier certifié.",
+  },
+  {
+    figure: "ORIAS",
+    label: "Immatriculation vérifiée",
+    note: "Contrôlée avant tout accès au marché.",
+  },
+] as const;
 
 export const ACCESS_PRICE_LINE = `${GROWTH_PLAN_ANNUAL_EUR.toLocaleString("fr-FR")} € HT / an`;
 
@@ -55,21 +113,35 @@ export const ADVISOR_BOOKING_LEDE =
 export const CTA_DEPOSIT = "Déposer votre portefeuille";
 export const CTA_CONSULT = "Consulter les portefeuilles";
 
+export const SELL_KICKER = "Cédants";
+export const SELL_TITLE = "Vendez au juste prix, à un acquéreur qui peut payer";
+export const SELL_LEDE =
+  "Vous avez mis des années à bâtir ce portefeuille. Sa cession ne devrait pas se jouer sur un chiffre lancé au téléphone et la parole d’un inconnu.";
+export const SELL_REASSURANCE =
+  "Le dépôt est sans frais. Des honoraires ne sont dus que si la vente aboutit.";
+
+export const BUY_KICKER = "Acquéreurs";
+export const BUY_TITLE = "Achetez sur pièces, pas sur parole";
+export const BUY_LEDE =
+  "Un portefeuille certifié a été ouvert, contrôlé et chiffré avant de vous être présenté. Vous savez ce que vous achetez avant de vous engager.";
+export const BUY_REASSURANCE =
+  "Chaque dossier reste anonyme jusqu’à votre engagement : vous jugez les chiffres, pas une enseigne.";
+
 export const SELL_PILLARS = [
   {
-    title: "Valorisation",
+    title: "Le juste prix, établi d’abord",
     body: "Une évaluation du portefeuille pour vous positionner au juste prix du marché.",
   },
   {
-    title: "Acheteurs qualifiés",
+    title: "Des acquéreurs dont l’argent est vérifié",
     body: "Mise en relation avec des acquéreurs sérieux et sélectionnés, dont la capacité financière est vérifiée, afin d’éviter les démarches inutiles et les pertes de temps.",
   },
   {
-    title: "Rapidité",
+    title: "Une cession qui ne traîne pas",
     body: `${SALE_SPEED_CLAIM}*`,
   },
   {
-    title: "Sécurité",
+    title: "Rien ne se règle sans séquestre ni avocat",
     body: "Contrats contrôlés par nos avocats et paiement sécurisé via un Trust. Nous accompagnons la transaction jusqu’au transfert des contrats.",
   },
 ] as const;

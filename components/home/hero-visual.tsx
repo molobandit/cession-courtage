@@ -8,7 +8,7 @@ export function HomeHeroVisual({ listings }: { listings: PublicListingCard[] }) 
   const rows = listings.slice(0, 3);
 
   return (
-    <div className="relative mx-auto w-full max-w-md lg:max-w-none">
+    <div className="relative mx-auto w-full min-w-0 max-w-md lg:max-w-none">
       <div className="absolute -right-3 -top-3 z-10 hidden rounded-full border border-line bg-paper px-3 py-1 text-[12px] font-semibold text-ok sm:inline-flex">
         En direct
       </div>

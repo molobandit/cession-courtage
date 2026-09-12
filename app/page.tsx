@@ -14,16 +14,25 @@ import {
   CTA_CONSULT,
   CTA_DEPOSIT,
   CTA_SELL,
+  BUY_KICKER,
+  BUY_LEDE,
+  BUY_REASSURANCE,
+  BUY_TITLE,
+  SELL_KICKER,
+  SELL_LEDE,
+  SELL_REASSURANCE,
+  SELL_TITLE,
   HERO_HEADLINE,
   HERO_HEADLINE_REST,
   HERO_LEDE,
+  HERO_PROOFS,
   HERO_TITLE,
   MARKET_HALL_TITLE,
   NAV_BUY,
   NAV_INVESTOR,
   NAV_SELL,
   NO_FEE_LABEL,
-  SALE_SPEED_CLAIM,
+  MARKET_FIGURES,
   SELL_PILLARS,
   TAKE_POSITION,
 } from "@/lib/copy/market";
@@ -36,8 +45,6 @@ export const metadata: Metadata = {
     "Salle de marché pour acheter ou vendre un portefeuille d’assurance. Valorisation, certification, transaction sécurisée.",
   alternates: { canonical: "/" },
 };
-
-const CHECKS = ["Valorisation", "Certification", "Transaction sécurisée"];
 
 function CheckIcon() {
   return (
@@ -73,7 +80,7 @@ export default async function HomePage() {
         <div className="pointer-events-none absolute -left-24 top-10 h-56 w-56 rounded-full bg-indigo-soft" />
         <div className="pointer-events-none absolute -right-16 top-32 h-40 w-40 rounded-full bg-indigo-soft/80" />
         <div className="relative mx-auto grid max-w-6xl items-center gap-12 px-4 py-14 lg:grid-cols-[1.05fr_0.95fr] lg:py-20">
-          <div>
+          <div className="min-w-0">
             <p className="inline-flex items-center gap-1.5 rounded-full border border-indigo-line bg-indigo-soft px-3 py-1 text-[12px] font-semibold text-indigo">
               <CheckIcon />
               Salle de marché
@@ -90,14 +97,13 @@ export default async function HomePage() {
                 {HERO_LEDE}
               </span>
             </p>
-            <ul className="mt-6 flex flex-wrap gap-2">
-              {CHECKS.map((label) => (
-                <li
-                  key={label}
-                  className="inline-flex items-center gap-1.5 rounded-full bg-indigo-soft px-3 py-1.5 text-[13px] font-medium text-indigo-dark"
-                >
-                  <CheckIcon />
-                  {label}
+            <ul className="mt-7 grid max-w-xl gap-2.5">
+              {HERO_PROOFS.map((proof) => (
+                <li key={proof} className="flex items-start gap-2.5 text-[15px] leading-snug text-ink">
+                  <span className="mt-0.5 shrink-0 text-indigo">
+                    <CheckIcon />
+                  </span>
+                  {proof}
                 </li>
               ))}
             </ul>
@@ -125,22 +131,26 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="border-y border-line bg-page">
-        <div className="mx-auto grid max-w-6xl gap-4 px-4 py-12 sm:grid-cols-3 sm:gap-6 sm:py-16">
-          {[
-            { v: "< 1 semaine", k: "Délai moyen", l: `${SALE_SPEED_CLAIM}*` },
-            { v: "50+", k: "Points de contrôle", l: "Chaque dossier certifié est vérifié pièce par pièce." },
-            { v: "Trust", k: "Paiement sécurisé", l: "Accompagnement jusqu’au transfert des contrats." },
-          ].map((row) => (
-            <article
-              key={row.v}
-              className="rounded-[1.75rem] border border-line bg-paper px-6 py-8 shadow-sm sm:px-8"
-            >
-              <p className="text-4xl font-bold tracking-tight text-indigo sm:text-5xl">{row.v}</p>
-              <p className="mt-4 text-[15px] font-semibold tracking-tight text-ink">{row.k}</p>
-              <p className="mt-1 text-[14px] leading-relaxed text-muted">{row.l}</p>
-            </article>
-          ))}
+      {/*
+        Bandeau sombre, seule rupture de valeur de la page : c'est elle qui
+        donne envie de continuer a descendre. Les quatre reperes partagent la
+        meme forme, ce que « Trust » pose a cote de « 50+ » ne faisait pas.
+      */}
+      <section className="bg-ink">
+        <div className="mx-auto max-w-6xl px-4 py-14 sm:py-16">
+          <dl className="grid gap-10 sm:grid-cols-2 sm:gap-x-8 lg:grid-cols-4 lg:divide-x lg:divide-white/15">
+            {MARKET_FIGURES.map((row, index) => (
+              <div key={row.figure} className={index > 0 ? "lg:pl-8" : undefined}>
+                <dd className="text-4xl font-bold tracking-tight text-white sm:text-[2.75rem]">
+                  {row.figure}
+                </dd>
+                <dt className="mt-3 text-[13px] font-semibold uppercase tracking-[0.14em] text-white">
+                  {row.label}
+                </dt>
+                <p className="mt-2 text-[14px] leading-relaxed text-white/65">{row.note}</p>
+              </div>
+            ))}
+          </dl>
         </div>
       </section>
 
@@ -187,12 +197,13 @@ export default async function HomePage() {
       <section className="bg-paper">
         <div className="mx-auto grid max-w-6xl gap-8 px-4 py-16 lg:grid-cols-2">
           <article className="rounded-[1.75rem] border border-line bg-page p-8 sm:p-10">
-            <h2 className="text-4xl font-bold tracking-tight text-ink sm:text-5xl">
-              Vendre
-            </h2>
-            <p className="mt-3 text-xl font-semibold tracking-tight text-indigo">
-              un portefeuille, dans un cadre sécurisé
+            <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-indigo">
+              {SELL_KICKER}
             </p>
+            <h2 className="mt-3 text-[1.75rem] font-bold leading-[1.15] tracking-tight text-ink sm:text-4xl">
+              {SELL_TITLE}
+            </h2>
+            <p className="mt-4 text-[16px] leading-relaxed text-muted">{SELL_LEDE}</p>
             <ol className="mt-8 space-y-5">
               {SELL_PILLARS.map((item, index) => (
                 <li key={item.title} className="flex gap-4">
@@ -206,17 +217,21 @@ export default async function HomePage() {
                 </li>
               ))}
             </ol>
-            <Button asChild variant="primary" className="mt-8">
+            <p className="mt-8 rounded-xl bg-indigo-soft/60 px-4 py-3 text-[14px] font-medium text-indigo-dark">
+              {SELL_REASSURANCE}
+            </p>
+            <Button asChild variant="primary" className="mt-6">
               <Link href={ADVISOR_BOOKING_HREF}>{CTA_ADVISOR}</Link>
             </Button>
           </article>
           <article className="rounded-[1.75rem] border border-line bg-page p-8 sm:p-10">
-            <h2 className="text-4xl font-bold tracking-tight text-ink sm:text-5xl">
-              Acheter
-            </h2>
-            <p className="mt-3 text-xl font-semibold tracking-tight text-indigo">
-              un portefeuille, en positionnant votre offre
+            <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-indigo">
+              {BUY_KICKER}
             </p>
+            <h2 className="mt-3 text-[1.75rem] font-bold leading-[1.15] tracking-tight text-ink sm:text-4xl">
+              {BUY_TITLE}
+            </h2>
+            <p className="mt-4 text-[16px] leading-relaxed text-muted">{BUY_LEDE}</p>
             <ul className="mt-8 space-y-3 text-[15px] text-ink">
               {BUY_POINTS.map((item) => (
                 <li key={item} className="flex items-start gap-3">
@@ -227,7 +242,10 @@ export default async function HomePage() {
                 </li>
               ))}
             </ul>
-            <Button asChild variant="outline" className="mt-8">
+            <p className="mt-8 rounded-xl bg-indigo-soft/60 px-4 py-3 text-[14px] font-medium text-indigo-dark">
+              {BUY_REASSURANCE}
+            </p>
+            <Button asChild variant="primary" className="mt-6">
               <Link href="/annonces">{CTA_BROWSE}</Link>
             </Button>
           </article>
