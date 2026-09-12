@@ -1,6 +1,12 @@
 import "server-only";
 import { BRAND_NAME } from "@/lib/site";
 import {
+  stripeKeyRefusal,
+  stripeKeyUsable,
+  stripeModeFromKey,
+  type StripeMode,
+} from "@/lib/billing/stripe-mode";
+import {
   GROWTH_PLAN_ANNUAL_EUR,
   VAT_RATE,
   growthPlanAnnualTtcCents,
@@ -8,16 +14,28 @@ import {
 
 const API = "https://api.stripe.com/v1";
 
+/**
+ * Stripe est-il utilisable ?
+ *
+ * Le simple prefixe « sk_ » ne suffit plus : une cle en mode direct exige
+ * `STRIPE_ALLOW_LIVE=true`. Sans cette garde, coller la cle de production sur
+ * le site de demonstration encaisserait un vrai abonnement.
+ */
 export function stripeConfigured(): boolean {
-  return Boolean(process.env.STRIPE_SECRET_KEY?.startsWith("sk_"));
+  return stripeKeyUsable(process.env.STRIPE_SECRET_KEY, process.env.STRIPE_ALLOW_LIVE);
+}
+
+/** Mode courant, pour le dire au visiteur. `null` si le paiement est ferme. */
+export function stripeMode(): StripeMode | null {
+  if (!stripeConfigured()) return null;
+  return stripeModeFromKey(process.env.STRIPE_SECRET_KEY);
 }
 
 function secretKey(): string {
   const key = process.env.STRIPE_SECRET_KEY;
-  if (!key?.startsWith("sk_")) {
-    throw new Error("Stripe n’est pas configuré (STRIPE_SECRET_KEY).");
-  }
-  return key;
+  const refus = stripeKeyRefusal(key, process.env.STRIPE_ALLOW_LIVE);
+  if (refus) throw new Error(refus);
+  return (key as string).trim();
 }
 
 async function stripeRequest<T>(
