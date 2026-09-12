@@ -11,7 +11,7 @@ export function ListingRecordCard({ item }: { item: PublicListingCard }) {
     <article className="relative flex h-full min-h-[22rem] w-[18.5rem] shrink-0 flex-col overflow-hidden rounded-3xl border border-line bg-paper p-5 shadow-sm sm:w-[20rem]">
       <div className="absolute right-3 top-3 z-10 flex flex-col items-end gap-2">
         {item.sold ? <MarketStamp kind="sold" size="sm" /> : null}
-        {item.certified ? <MarketStamp kind="certified" size="sm" /> : null}
+        {item.certified ? <MarketStamp kind="certified" size="sm" withLabel /> : null}
       </div>
       <div className="flex min-h-[1.25rem] items-start justify-between gap-2 pr-16">
         {item.certified ? null : (

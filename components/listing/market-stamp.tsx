@@ -12,12 +12,22 @@ import { STAMP_SOLD } from "@/lib/copy/market";
 export function MarketStamp({
   kind,
   size = "md",
+  withLabel,
 }: {
   kind: "certified" | "sold";
   size?: "sm" | "md" | "lg";
+  /**
+   * Afficher « CERTIFIÉ » à côté du sceau.
+   *
+   * Par défaut le petit format s'en passe, faute de place. Mais la
+   * certification est l'argument principal du site : là où la vignette a la
+   * largeur, le mot doit être lisible sans survol ni clic — un pictogramme
+   * seul ne dit pas ce qu'il certifie.
+   */
+  withLabel?: boolean;
 }) {
   if (kind === "certified") {
-    return <CertificationSeal size={size} withLabel={size !== "sm"} />;
+    return <CertificationSeal size={size} withLabel={withLabel ?? size !== "sm"} />;
   }
 
   const sizeClass =

@@ -18,7 +18,7 @@ export function ListingAdRow({ item }: { item: PublicListingCard }) {
           <div className="flex flex-wrap items-center gap-2">
             <p className="tabular font-medium text-ink">Dossier n° {item.publicNumber}</p>
             {item.sold ? <MarketStamp kind="sold" size="sm" /> : null}
-            {item.certified ? <MarketStamp kind="certified" size="sm" /> : null}
+            {item.certified ? <MarketStamp kind="certified" size="sm" withLabel /> : null}
             {!item.certified ? (
               <span className="text-[12px] text-muted">{UNCERTIFIED_LABEL}</span>
             ) : null}
