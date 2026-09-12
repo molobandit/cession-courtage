@@ -70,36 +70,36 @@ export const SALE_SPEED_CLAIM = "Nos portefeuilles sont vendus en moyenne en moi
 /**
  * Bandeau de chiffres de l'accueil.
  *
- * Trois entrées sans forme commune s'y trouvaient — deux chiffres et le mot
- * « Trust » — posées sur des cartes claires au milieu d'une page claire :
- * rien n'accrochait l'œil et rien ne poussait à descendre.
+ * Trois repères, pas quatre : « ORIAS » n'était pas un chiffre qui se compare,
+ * et à quatre aucun ne peut être grand.
  *
- * Trois et non quatre, volontairement. Trois repères peuvent être énormes,
- * quatre restent moyens ; sur un bandeau, la taille est l'argument. « ORIAS »
- * en faisait partie et n'y disait rien au visiteur : l'immatriculation est une
- * condition d'entrée, pas un chiffre qui se compare.
+ * Trois infinitifs de même longueur, et non trois étiquettes : « pour déposer »
+ * dit au lecteur ce que le nombre lui coûte ou lui rapporte, là où « frais de
+ * dépôt » ne nommait qu'une rubrique comptable. Ils tiennent aussi sur une
+ * seule ligne, ce qui garde la ligne de base des trois colonnes alignée — le
+ * bandeau n'existe que pour cet ordre.
  *
- * `note` dit aussi la limite de la mesure. Un délai moyen présenté sans sa
- * réserve se lit comme un engagement ; l'annoncer soi-même inspire plus
- * confiance que de le laisser deviner.
+ * La note du délai annonce elle-même sa limite : un chiffre moyen présenté sans
+ * réserve se lit comme un engagement, et le reconnaître avant qu'on ne le
+ * demande inspire plus confiance que de le laisser deviner.
  */
 export const MARKET_FIGURES_KICKER = "Le marché en trois chiffres";
 
 export const MARKET_FIGURES = [
   {
     figure: "0 €",
-    label: "Frais de dépôt",
-    note: "Mettre un portefeuille en vente ne coûte rien.",
+    label: "Pour déposer",
+    note: "Vous ne payez qu’une fois la vente conclue.",
   },
   {
     figure: "< 1 sem.",
-    label: "Délai moyen*",
-    note: "Sur les cessions que nous accompagnons.",
+    label: "Pour vendre*",
+    note: "Constaté, jamais garanti.",
   },
   {
     figure: `${CERTIFICATION_POINTS}+`,
-    label: "Points de contrôle",
-    note: "Vérifiés un par un sur chaque dossier certifié.",
+    label: "Pour certifier",
+    note: "Kbis, ORIAS, commissions, contrats.",
   },
 ] as const;
 

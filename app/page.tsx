@@ -136,31 +136,29 @@ export default async function HomePage() {
         Bandeau sombre, seule rupture de valeur de la page : c'est elle qui
         donne envie de continuer a descendre.
 
-        Trois chiffres enormes plutot que quatre moyens. Le halo indigo evite
-        le rectangle noir plat, et le filet sous chaque chiffre tient la
-        colonne sans ajouter les separateurs verticaux, qui se battaient avec
-        des caracteres de cette taille.
+        Resserre a max-w-3xl et centre. Etale sur toute la largeur, chaque
+        colonne tramait un vide a sa droite et les trois chiffres flottaient
+        sans se repondre ; groupes, ils se lisent comme une seule affirmation.
+        A cette largeur les filets verticaux redeviennent utiles, ce qui
+        n'etait pas le cas quand les colonnes etaient larges.
       */}
       <section className="relative overflow-hidden bg-ink">
-        <div className="pointer-events-none absolute -left-24 -top-28 h-80 w-80 rounded-full bg-indigo/30 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-32 right-0 h-72 w-72 rounded-full bg-indigo/20 blur-3xl" />
-        <div className="relative mx-auto max-w-6xl px-4 py-16 sm:py-20">
-          <p className="text-[12px] font-semibold uppercase tracking-[0.22em] text-indigo-line">
+        <div className="pointer-events-none absolute -left-24 -top-28 h-72 w-72 rounded-full bg-indigo/25 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-28 right-0 h-64 w-64 rounded-full bg-indigo/20 blur-3xl" />
+        <div className="relative mx-auto max-w-3xl px-4 py-14 text-center sm:py-16">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-indigo-line">
             {MARKET_FIGURES_KICKER}
           </p>
-          <dl className="mt-10 grid gap-12 sm:mt-12 sm:grid-cols-3 sm:gap-10">
+          <dl className="mt-9 grid gap-9 sm:grid-cols-3 sm:gap-0 sm:divide-x sm:divide-white/12">
             {MARKET_FIGURES.map((row) => (
-              <div key={row.figure}>
-                <dd className="text-[3.5rem] font-bold leading-none tracking-tight text-white sm:text-[4.5rem]">
+              <div key={row.figure} className="sm:px-5">
+                <dd className="text-[2.75rem] font-bold leading-none tracking-tight text-white sm:text-[3rem]">
                   {row.figure}
                 </dd>
-                <span aria-hidden="true" className="mt-6 block h-[3px] w-10 bg-indigo" />
-                <dt className="mt-5 text-[14px] font-semibold uppercase tracking-[0.16em] text-white">
+                <dt className="mt-4 text-[13px] font-semibold uppercase tracking-[0.12em] text-white">
                   {row.label}
                 </dt>
-                <p className="mt-2 max-w-[18rem] text-[14px] leading-relaxed text-white/60">
-                  {row.note}
-                </p>
+                <p className="mt-1.5 text-[13px] leading-snug text-white/60">{row.note}</p>
               </div>
             ))}
           </dl>
