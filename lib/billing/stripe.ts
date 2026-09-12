@@ -26,6 +26,18 @@ export function stripeConfigured(): boolean {
   return stripeKeyUsable(runtimeEnv("STRIPE_SECRET_KEY"), runtimeEnv("STRIPE_ALLOW_LIVE"));
 }
 
+/**
+ * Pourquoi la cle est refusee, pour le journal du serveur.
+ *
+ * Le visiteur ne doit lire qu'un message neutre, mais l'exploitant a besoin de
+ * savoir si la cle est absente, mal formee, ou en mode direct non autorise :
+ * les trois se ressemblent de l'exterieur et n'ont pas le meme remede. Le
+ * motif ne contient jamais la valeur de la cle.
+ */
+export function stripeRefusalReason(): string | null {
+  return stripeKeyRefusal(runtimeEnv("STRIPE_SECRET_KEY"), runtimeEnv("STRIPE_ALLOW_LIVE"));
+}
+
 /** Mode courant, pour le dire au visiteur. `null` si le paiement est ferme. */
 export function stripeMode(): StripeMode | null {
   if (!stripeConfigured()) return null;

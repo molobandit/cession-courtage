@@ -10,6 +10,7 @@ import {
   stripeCreateCustomer,
   stripeId,
   stripeRetrieveCheckoutSession,
+  stripeRefusalReason,
   stripeRetrieveSubscription,
 } from "@/lib/billing/stripe";
 import { prisma } from "@/lib/prisma";
@@ -32,6 +33,8 @@ export async function startGrowthCheckoutAction(
   }
   if (!isOriasVerified(actor)) redirect("/en-attente-orias");
   if (!stripeConfigured()) {
+    // Trace le motif exact cote serveur : le visiteur n'a pas a le lire.
+    console.error("stripe indisponible:", stripeRefusalReason());
     return { error: "Le paiement par carte n’est pas encore ouvert." };
   }
   if (await hasContactSubscription(actor)) {
