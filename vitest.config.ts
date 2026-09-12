@@ -17,6 +17,10 @@ export default defineConfig({
       { find: /^@\/lib\/prisma$/, replacement: path.resolve(__dirname, "tests/setup/prisma-test.ts") },
       // NextAuth ne se charge pas hors runtime Next : les tests fournissent l'acteur.
       { find: /^@\/auth$/, replacement: path.resolve(__dirname, "tests/setup/auth-stub.ts") },
+      // Les actions serveur appellent ces deux modules, qui exigent le contexte
+      // de requete de Next : on les remplace pour pouvoir les appeler telles quelles.
+      { find: /^next\/cache$/, replacement: path.resolve(__dirname, "tests/setup/next-cache-stub.ts") },
+      { find: /^next\/navigation$/, replacement: path.resolve(__dirname, "tests/setup/next-navigation-stub.ts") },
       { find: /^@\//, replacement: path.resolve(__dirname) + "/" },
     ],
   },

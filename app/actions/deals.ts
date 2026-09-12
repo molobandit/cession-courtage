@@ -119,9 +119,19 @@ export async function mockKycAction(_prev: DealFormState, formData: FormData): P
       return { error: "KYC hors séquence." };
     }
     await mockVerifyKyc(actor.id);
-    if (deal.stage === DealStage.KYC) {
-      await prisma.deal.update({ where: { id: deal.id }, data: { stage: DealStage.DEED } });
-    }
+    /*
+     * Deux temps, comme l'annonce le parcours : « lancer la vérification » à
+     * l'accord de prix, « terminer la conformité » à l'étape suivante.
+     *
+     * Le premier manquait. Rien dans le code n'écrivait jamais `KYC`, si bien
+     * qu'un dossier arrivé à la lettre d'intention y restait pour toujours : la
+     * garde du protocole exige l'étape KYC, que plus rien ne pouvait produire.
+     * Le tunnel s'arrêtait là, sans message d'erreur — l'action répondait même
+     * un succès, puisqu'elle enregistrait bien la vérification.
+     */
+    const suivante =
+      deal.stage === DealStage.LOI ? DealStage.KYC : DealStage.DEED;
+    await prisma.deal.update({ where: { id: deal.id }, data: { stage: suivante } });
     revalidatePath(`/app/dossiers/${deal.id}`);
     return {};
   } catch (error) {
