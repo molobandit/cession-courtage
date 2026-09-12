@@ -6,7 +6,7 @@ import { SIMPLE_FEE_LABEL, VERIFIED_FEE_RANGE_LABEL } from "@/lib/billing/rates"
 import { BRAND_NAME, CERTIFIED_LABEL } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "Portefeuille certifié",
+  title: "Certification",
   description: `Vérification de la société, pièces d’identité et documents. Honoraires de ${VERIFIED_FEE_RANGE_LABEL} si la vente aboutit. Séquestre jusqu’à la prise de possession.`,
   alternates: { canonical: "/certification" },
 };
@@ -78,7 +78,7 @@ export default function CertificationPage() {
           </p>
         </article>
         <article className="rounded-2xl border border-line bg-paper p-7">
-          <h2 className="text-2xl font-bold tracking-tight text-ink">Portefeuille certifié</h2>
+          <h2 className="text-2xl font-bold tracking-tight text-ink">Certification</h2>
           <p className="mt-3 text-[15px] leading-relaxed text-muted">
             Contrôle de la société (Kbis), de l’identité du représentant, du
             justificatif ORIAS du dossier et des documents du portefeuille.

@@ -204,6 +204,71 @@ export async function notifyDepositPlaced(input: {
   });
 }
 
+const PURPOSE_LABEL: Record<string, string> = {
+  DEPOSIT: "Déposer un portefeuille",
+  BUY: "Acheter / se renseigner",
+  OTHER: "Autre",
+};
+
+export async function notifyAdvisorBooking(input: {
+  bookingId: string;
+  startsAt: Date;
+  endsAt: Date;
+  fullName: string;
+  email: string;
+  phone: string | null;
+  organisation: string | null;
+  purpose: string;
+  note: string | null;
+}): Promise<void> {
+  const { formatParisSlot } = await import("@/lib/booking/time");
+  const slot = formatParisSlot(input.startsAt, input.endsAt);
+  const when = `${slot.dayLabel}, ${slot.timeLabel}`;
+  const purpose = PURPOSE_LABEL[input.purpose] ?? input.purpose;
+
+  await sendMail({
+    to: input.email,
+    purpose: "ADVISOR_BOOKING_USER",
+    dedupeKey: `advisor:user:${input.bookingId}`,
+    subject: `Entretien confirmé — ${when}`,
+    bodyText: [
+      `Bonjour ${input.fullName},`,
+      "",
+      `Votre entretien de 30 minutes avec un conseiller ${BRAND_NAME} est réservé.`,
+      "",
+      `Quand : ${when} (heure de Paris).`,
+      `Objet : ${purpose}.`,
+      "",
+      "Si vous devez décaler, répondez à ce message.",
+      "",
+      `— ${BRAND_NAME}`,
+    ].join("\n"),
+  });
+
+  const adminTo = await adminInbox();
+  if (adminTo) {
+    await sendMail({
+      to: adminTo,
+      purpose: "ADVISOR_BOOKING_ADMIN",
+      dedupeKey: `advisor:admin:${input.bookingId}`,
+      subject: `Entretien réservé — ${input.fullName} — ${when}`,
+      bodyText: [
+        "Un entretien conseiller a été réservé sur le site.",
+        "",
+        `Quand : ${when} (heure de Paris)`,
+        `Nom : ${input.fullName}`,
+        `E-mail : ${input.email}`,
+        `Téléphone : ${input.phone ?? "Non renseigné"}`,
+        `Cabinet : ${input.organisation ?? "Non renseigné"}`,
+        `Objet : ${purpose}`,
+        ...(input.note ? [`Message : ${input.note}`] : []),
+        "",
+        "Agenda : /admin/agenda",
+      ].join("\n"),
+    });
+  }
+}
+
 export async function findFirmSeller(firmId: string): Promise<{ id: string; email: string } | null> {
   return prisma.user.findFirst({
     where: { firmId, role: { in: ["SELLER", "BOTH"] }, erasedAt: null },

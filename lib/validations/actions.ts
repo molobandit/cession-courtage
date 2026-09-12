@@ -281,6 +281,46 @@ export const investorInquirySchema = z
     },
   );
 
+export const ADVISOR_PURPOSES = ["DEPOSIT", "BUY", "OTHER"] as const;
+
+export const advisorBookingSchema = z.object({
+  startsAt: z
+    .string()
+    .trim()
+    .refine((value) => !Number.isNaN(Date.parse(value)), { message: "Choisissez un créneau." }),
+  fullName: z
+    .string()
+    .trim()
+    .min(2, "Indiquez votre nom.")
+    .max(80, "Nom trop long."),
+  email: z
+    .string()
+    .trim()
+    .email("Adresse e-mail invalide.")
+    .max(120, "Adresse e-mail trop longue."),
+  phone: z
+    .string()
+    .trim()
+    .max(30, "Numéro trop long.")
+    .optional()
+    .transform((v) => (v && v.length > 0 ? v : undefined)),
+  organisation: z
+    .string()
+    .trim()
+    .max(120, "Nom de cabinet trop long.")
+    .optional()
+    .transform((v) => (v && v.length > 0 ? v : undefined)),
+  purpose: z.enum(ADVISOR_PURPOSES, {
+    message: "Indiquez l’objet de l’entretien.",
+  }),
+  note: z
+    .string()
+    .trim()
+    .max(800, "Message trop long.")
+    .optional()
+    .transform((v) => (v && v.length > 0 ? v : undefined)),
+});
+
 export const mandateSchema = z
   .object({
     maxBudget: frenchAmount.refine((v) => v > 0, { message: "Budget invalide." }),

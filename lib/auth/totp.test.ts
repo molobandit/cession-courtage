@@ -104,7 +104,7 @@ describe("secrets et codes de secours", () => {
   });
 
   it("compose une URI lisible par les applications", () => {
-    const uri = uriOtpauth("JBSWY3DPEHPK3PXP", "courtier@exemple.fr", "Le Bon Portefeuille");
+    const uri = uriOtpauth("JBSWY3DPEHPK3PXP", "courtier@exemple.fr", "La bourse du portefeuille");
     expect(uri).toMatch(/^otpauth:\/\/totp\//);
     expect(uri).toContain("secret=JBSWY3DPEHPK3PXP");
     expect(uri).toContain("algorithm=SHA1");

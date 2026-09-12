@@ -30,7 +30,7 @@ import {
 
 export const metadata: Metadata = {
   title: MARKET_ACCESS,
-  description: `Mettre en vente : ${NO_FEE_LABEL.toLowerCase()}. Accès au marché ${GROWTH_PLAN_ANNUAL_EUR} € HT par an, illimité pendant la durée de l’abonnement.`,
+  description: `Mettre en vente : ${NO_FEE_LABEL.toLowerCase()}. Accès au marché ${GROWTH_PLAN_ANNUAL_EUR} € HT par an.`,
 };
 
 const EXAMPLES = [12_000, 34_000, 80_000, 150_000];
@@ -152,8 +152,7 @@ export default async function TarifsPage() {
             {TAKE_POSITION}
           </h1>
           <p className="mx-auto mt-4 max-w-2xl text-[16px] leading-relaxed text-muted">
-            Accès illimité aux portefeuilles disponibles à l’achat pendant la
-            durée de l’abonnement. {ACCESS_PRICE_LINE}.
+            Accès à toutes les opportunités de portefeuille. {ACCESS_PRICE_LINE}.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             <a
@@ -221,7 +220,7 @@ export default async function TarifsPage() {
             <p className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-indigo px-3 py-1 text-[12px] font-semibold text-white">
               Recommandé
             </p>
-            <h3 className="text-center text-xl font-bold text-ink">{MARKET_ACCESS}</h3>
+            <h3 className="text-center text-xl font-bold text-ink">Abonnement annuel</h3>
             <p className="tabular mt-4 text-center text-5xl font-bold tracking-tight text-indigo">
               {GROWTH_PLAN_ANNUAL_EUR.toLocaleString("fr-FR")}
               <span className="ml-1 text-[1.35rem]">€</span>

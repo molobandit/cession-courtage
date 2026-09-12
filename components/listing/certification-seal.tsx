@@ -1,5 +1,3 @@
-import { COMPANY_LEGAL_NAME } from "@/lib/site";
-
 /**
  * Sceau de certification.
  *
@@ -24,14 +22,14 @@ export function CertificationSeal({
   return (
     <span
       className="inline-flex items-center gap-2"
-      title={`Portefeuille certifié par ${COMPANY_LEGAL_NAME}`}
+      title="Certifié"
     >
       <svg
         width={px}
         height={px}
         viewBox="0 0 48 48"
         role="img"
-        aria-label={`Portefeuille certifié par ${COMPANY_LEGAL_NAME}`}
+        aria-label="Certifié"
         className="shrink-0"
       >
         {/* Couronne dentelée : la silhouette d'un sceau, sans imiter un cachet. */}

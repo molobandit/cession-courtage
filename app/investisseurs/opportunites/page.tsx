@@ -42,7 +42,7 @@ export default async function InvestorOpportunitiesPage({
               <li>Clients / contrats : {formatCount(item.contractCount)}</li>
               <li>Commission annuelle : {formatEuroWhole(item.annualCommissions)}</li>
               <li>Prix de cession : {formatEuroWhole(item.askingPrice)}</li>
-              <li>Statut : {item.certified ? "Portefeuille certifié" : "Annonce simple"}</li>
+              <li>Statut : {item.certified ? "Certifié" : "Non certifié"}</li>
             </ul>
             {item.certified ? <MarketStamp kind="certified" /> : null}
             {item.sold ? <MarketStamp kind="sold" /> : null}

@@ -17,8 +17,9 @@ const COLUMNS = [
     title: "Céder",
     links: [
       { href: "/ceder", label: NAV_SELL },
+      { href: "/rendez-vous", label: "Entretien avec un conseiller" },
       { href: "/valoriser", label: "Valoriser un portefeuille" },
-      { href: "/certification", label: "Portefeuille certifié" },
+      { href: "/certification", label: "Certification" },
       { href: "/tarifs", label: MARKET_ACCESS },
     ],
   },

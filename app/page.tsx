@@ -3,18 +3,21 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { HomeHeroVisual } from "@/components/home/hero-visual";
 import { ListingRecordCard } from "@/components/home/listing-record-card";
-import { HOME_FAQ } from "@/lib/copy/audience";
 import {
+  ADVISOR_BOOKING_HREF,
   ACCESS_MARKET_POINTS,
   ACCESS_PRICE_LINE,
   BUY_POINTS,
-  CERTIFICATION_POINTS_LABEL,
+  COMPANY_LEGAL_NAME,
+  CTA_ADVISOR,
   CTA_BROWSE,
+  CTA_CONSULT,
+  CTA_DEPOSIT,
   CTA_SELL,
   HERO_HEADLINE,
   HERO_HEADLINE_REST,
+  HERO_LEDE,
   HERO_TITLE,
-  MARKET_ACCESS,
   MARKET_HALL_TITLE,
   NAV_BUY,
   NAV_INVESTOR,
@@ -25,7 +28,7 @@ import {
   TAKE_POSITION,
 } from "@/lib/copy/market";
 import { loadPublicListingCards } from "@/lib/listing/load-public-cards";
-import { BRAND_NAME } from "@/lib/site";
+import type { PublicListingCard } from "@/lib/listing/public-card";
 
 export const metadata: Metadata = {
   title: HERO_TITLE,
@@ -50,19 +53,18 @@ function CheckIcon() {
   );
 }
 
+function featuredSpotlight(listings: PublicListingCard[]): PublicListingCard[] {
+  const sold = listings.find((item) => item.sold);
+  const others = listings.filter((item) => item.id !== sold?.id);
+  if (!sold) return others.slice(0, 3);
+  return [others[0], sold, others[1]].filter((item): item is PublicListingCard => Boolean(item));
+}
+
 export default async function HomePage() {
   const listings = await loadPublicListingCards();
-
-  /*
-   * La vitrine montre d'abord ce qui distingue le site : un portefeuille
-   * certifie, puis un dossier vendu. Sans ce tri, les trois premieres lignes
-   * tombaient sur des annonces non certifiees et le cachet, argument principal,
-   * n'apparaissait nulle part sur l'accueil.
-   * L'ordre d'origine est conserve a l'interieur de chaque groupe.
-   */
   const rang = (item: (typeof listings)[number]) => (item.certified ? 0 : item.sold ? 1 : 2);
   const vitrine = [...listings].sort((a, b) => rang(a) - rang(b));
-  const latest = vitrine.slice(0, 3);
+  const latest = featuredSpotlight(vitrine);
   const preview = vitrine.slice(0, 8);
 
   return (
@@ -80,9 +82,13 @@ export default async function HomePage() {
               {HERO_HEADLINE}{" "}
               <span className="text-indigo">{HERO_HEADLINE_REST}</span>
             </h1>
-            <p className="mt-5 max-w-lg text-[16px] leading-relaxed text-muted">
-              {BRAND_NAME} est la salle de marché des portefeuilles d’assurance.
-              Cédants, acquéreurs et investisseurs y prennent position.
+            <p className="mt-6 max-w-xl">
+              <span className="block text-[1.65rem] font-bold leading-tight tracking-tight text-ink sm:text-3xl">
+                {COMPANY_LEGAL_NAME}
+              </span>
+              <span className="mt-3 block text-[16px] leading-relaxed text-muted sm:text-[17px]">
+                {HERO_LEDE}
+              </span>
             </p>
             <ul className="mt-6 flex flex-wrap gap-2">
               {CHECKS.map((label) => (
@@ -119,17 +125,21 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="border-y border-line bg-paper">
-        <div className="mx-auto grid max-w-6xl gap-8 px-4 py-10 sm:grid-cols-3">
+      <section className="border-y border-line bg-page">
+        <div className="mx-auto grid max-w-6xl gap-4 px-4 py-12 sm:grid-cols-3 sm:gap-6 sm:py-16">
           {[
-            { v: "< 1 semaine", l: `${SALE_SPEED_CLAIM}*` },
-            { v: "50+", l: `Certification : ${CERTIFICATION_POINTS_LABEL}.` },
-            { v: "Trust", l: "Paiement sécurisé et accompagnement jusqu’au transfert des contrats." },
+            { v: "< 1 semaine", k: "Délai moyen", l: `${SALE_SPEED_CLAIM}*` },
+            { v: "50+", k: "Points de contrôle", l: "Chaque dossier certifié est vérifié pièce par pièce." },
+            { v: "Trust", k: "Paiement sécurisé", l: "Accompagnement jusqu’au transfert des contrats." },
           ].map((row) => (
-            <div key={row.v}>
-              <p className="text-2xl font-bold tracking-tight text-indigo">{row.v}</p>
+            <article
+              key={row.v}
+              className="rounded-[1.75rem] border border-line bg-paper px-6 py-8 shadow-sm sm:px-8"
+            >
+              <p className="text-4xl font-bold tracking-tight text-indigo sm:text-5xl">{row.v}</p>
+              <p className="mt-4 text-[15px] font-semibold tracking-tight text-ink">{row.k}</p>
               <p className="mt-1 text-[14px] leading-relaxed text-muted">{row.l}</p>
-            </div>
+            </article>
           ))}
         </div>
       </section>
@@ -177,33 +187,39 @@ export default async function HomePage() {
       <section className="bg-paper">
         <div className="mx-auto grid max-w-6xl gap-8 px-4 py-16 lg:grid-cols-2">
           <article className="rounded-[1.75rem] border border-line bg-page p-8 sm:p-10">
-            <p className="text-[12px] font-semibold uppercase tracking-[0.14em] text-indigo">Vendre</p>
-            <h2 className="mt-3 text-2xl font-bold tracking-tight text-ink sm:text-3xl">
-              Vendre un portefeuille
+            <h2 className="text-4xl font-bold tracking-tight text-ink sm:text-5xl">
+              Vendre
             </h2>
-            <p className="mt-4 text-[15px] leading-relaxed text-muted">
-              Valorisez et cédez votre portefeuille dans un cadre sécurisé.
+            <p className="mt-3 text-xl font-semibold tracking-tight text-indigo">
+              un portefeuille, dans un cadre sécurisé
             </p>
-            <ul className="mt-6 space-y-3 text-[15px] text-ink">
-              {SELL_PILLARS.map((item) => (
-                <li key={item.title}>
-                  <p className="font-semibold">{item.title}</p>
-                  <p className="mt-0.5 text-muted">{item.body}</p>
+            <ol className="mt-8 space-y-5">
+              {SELL_PILLARS.map((item, index) => (
+                <li key={item.title} className="flex gap-4">
+                  <span className="tabular shrink-0 text-[13px] font-bold text-indigo">
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
+                  <div>
+                    <p className="text-[16px] font-semibold text-ink">{item.title}</p>
+                    <p className="mt-1 text-[15px] leading-relaxed text-muted">{item.body}</p>
+                  </div>
                 </li>
               ))}
-            </ul>
+            </ol>
             <Button asChild variant="primary" className="mt-8">
-              <Link href="/ceder">{CTA_SELL}</Link>
+              <Link href={ADVISOR_BOOKING_HREF}>{CTA_ADVISOR}</Link>
             </Button>
           </article>
           <article className="rounded-[1.75rem] border border-line bg-page p-8 sm:p-10">
-            <p className="text-[12px] font-semibold uppercase tracking-[0.14em] text-indigo">Acheter</p>
-            <h2 className="mt-3 text-2xl font-bold tracking-tight text-ink sm:text-3xl">
-              Acheter un portefeuille
+            <h2 className="text-4xl font-bold tracking-tight text-ink sm:text-5xl">
+              Acheter
             </h2>
-            <ul className="mt-6 space-y-2 text-[15px] text-ink">
+            <p className="mt-3 text-xl font-semibold tracking-tight text-indigo">
+              un portefeuille, en positionnant votre offre
+            </p>
+            <ul className="mt-8 space-y-3 text-[15px] text-ink">
               {BUY_POINTS.map((item) => (
-                <li key={item} className="flex items-start gap-2">
+                <li key={item} className="flex items-start gap-3">
                   <span className="mt-1 text-indigo">
                     <CheckIcon />
                   </span>
@@ -221,40 +237,59 @@ export default async function HomePage() {
       <section className="bg-page">
         <div className="mx-auto max-w-6xl px-4 py-16">
           <div className="text-center">
-            <h2 className="text-3xl font-bold tracking-tight text-ink">
-              {MARKET_ACCESS}
+            <p className="text-[13px] font-semibold uppercase tracking-[0.18em] text-indigo">
+              {TAKE_POSITION}
+            </p>
+            <h2 className="mt-3 text-4xl font-bold tracking-tight text-ink sm:text-5xl">
+              Entrez sur la salle de marché
             </h2>
-            <p className="mx-auto mt-3 max-w-2xl text-[15px] text-muted">
-              {TAKE_POSITION} Accès illimité aux portefeuilles disponibles à l’achat.
+            <p className="mx-auto mt-4 max-w-2xl text-[16px] leading-relaxed text-muted">
+              Consultez les portefeuilles disponibles et déposez le vôtre.
             </p>
           </div>
           <div className="mx-auto mt-10 grid max-w-4xl gap-6 md:grid-cols-2">
             <article className="rounded-[1.75rem] border border-line bg-paper p-8">
               <h3 className="text-xl font-bold text-ink">{NO_FEE_LABEL}</h3>
               <p className="mt-3 text-[15px] leading-relaxed text-muted">
-                Mettre en vente un portefeuille, sans frais de dépôt.
+                Déposez votre portefeuille sans frais, ou parcourez ceux qui sont
+                ouverts avant de vous décider.
               </p>
-              <ul className="mt-6 space-y-2 text-[15px] text-muted">
-                <li>Déposer un portefeuille</li>
-                <li>Valorisation pour se positionner au prix de marché</li>
-                <li>Certification optionnelle</li>
-              </ul>
-              <Button asChild variant="outline" className="mt-8">
-                <Link href="/ceder">{CTA_SELL}</Link>
-              </Button>
+              {/*
+                Les deux actions demandées, dans cet ordre. L'entretien reste
+                offert en dessous : c'est le chemin le plus utile à qui dépose,
+                mais il ne doit pas prendre la place des deux premières.
+              */}
+              <div className="mt-8 flex flex-col gap-3">
+                <Button asChild variant="primary">
+                  <Link href="/ceder">{CTA_DEPOSIT}</Link>
+                </Button>
+                <Button asChild variant="outline">
+                  <Link href="/annonces">{CTA_CONSULT}</Link>
+                </Button>
+                <Link
+                  href={ADVISOR_BOOKING_HREF}
+                  className="mt-1 text-center text-[14px] font-medium text-indigo underline underline-offset-2"
+                >
+                  {CTA_ADVISOR}
+                </Link>
+              </div>
             </article>
             <article className="rounded-[1.75rem] border border-indigo bg-indigo-soft/50 p-8">
-              <h3 className="text-xl font-bold text-ink">{MARKET_ACCESS}</h3>
-              <p className="mt-1 text-[28px] font-bold tracking-tight text-indigo">
+              <p className="tabular text-[28px] font-bold tracking-tight text-indigo sm:text-4xl">
                 {ACCESS_PRICE_LINE}
               </p>
-              <ul className="mt-6 space-y-2 text-[15px] text-ink">
+              <ul className="mt-6 space-y-3 text-[15px] text-ink">
                 {ACCESS_MARKET_POINTS.map((item) => (
-                  <li key={item}>{item}</li>
+                  <li key={item} className="flex items-start gap-3">
+                    <span className="mt-1 text-indigo">
+                      <CheckIcon />
+                    </span>
+                    {item}
+                  </li>
                 ))}
               </ul>
               <Button asChild variant="primary" className="mt-8">
-                <Link href="/tarifs">{MARKET_ACCESS}</Link>
+                <Link href="/tarifs">S’abonner</Link>
               </Button>
             </article>
           </div>
@@ -262,26 +297,6 @@ export default async function HomePage() {
             * Délai constaté sur les cessions accompagnées. Il ne constitue pas
             une garantie de délai.
           </p>
-        </div>
-      </section>
-
-      <section className="border-t border-line bg-paper">
-        <div className="mx-auto max-w-3xl px-4 py-16">
-          <h2 className="text-center text-3xl font-bold tracking-tight text-ink">
-            Questions fréquentes
-          </h2>
-          <ul className="mt-10 divide-y divide-line overflow-hidden rounded-[1.75rem] border border-line bg-page">
-            {HOME_FAQ.map((item) => (
-              <li key={item.q}>
-                <details className="group px-6 py-4">
-                  <summary className="cursor-pointer list-none text-[16px] font-semibold text-ink">
-                    {item.q}
-                  </summary>
-                  <p className="mt-2 text-[15px] leading-relaxed text-muted">{item.a}</p>
-                </details>
-              </li>
-            ))}
-          </ul>
         </div>
       </section>
 

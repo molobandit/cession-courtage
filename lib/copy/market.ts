@@ -17,6 +17,14 @@ export const HERO_HEADLINE = "Prenez position.";
 export const HERO_HEADLINE_REST = "Achetez ou vendez votre portefeuille d’assurance.";
 export const HERO_TITLE = `${HERO_HEADLINE} ${HERO_HEADLINE_REST}`;
 
+/**
+ * Chapô sous le slogan. Le nom de société ne doit pas précéder « salle de
+ * marché » ni « portefeuilles » dans la même phrase : c’est le défaut relevé
+ * sur l’accueil (marché / marché, portefeuille / portefeuilles).
+ */
+export const HERO_LEDE =
+  "Cédants, acquéreurs et investisseurs s’y rencontrent pour conclure. Chaque dossier est valorisé, certifié, puis mené jusqu’au transfert des contrats.";
+
 export const MARKET_HALL = "Salle de marché";
 export const MARKET_HALL_TITLE = "Salle de marché — Portefeuilles disponibles";
 export const MARKET_ACCESS = "Accès au marché";
@@ -38,6 +46,14 @@ export const CERTIFICATION_POINTS_LABEL = `plus de ${CERTIFICATION_POINTS} point
 export const SALE_SPEED_CLAIM = "Nos portefeuilles sont vendus en moyenne en moins d’une semaine.";
 
 export const ACCESS_PRICE_LINE = `${GROWTH_PLAN_ANNUAL_EUR.toLocaleString("fr-FR")} € HT / an`;
+
+export const ADVISOR_BOOKING_HREF = "/rendez-vous";
+export const CTA_ADVISOR = "Réserver un entretien de 30 min";
+export const ADVISOR_BOOKING_TITLE = "Un conseiller vous reçoit";
+export const ADVISOR_BOOKING_LEDE =
+  "Choisissez l’un des créneaux encore libres. L’entretien dure 30 minutes.";
+export const CTA_DEPOSIT = "Déposer votre portefeuille";
+export const CTA_CONSULT = "Consulter les portefeuilles";
 
 export const SELL_PILLARS = [
   {
@@ -69,6 +85,7 @@ export const BUY_POINTS = [
 ] as const;
 
 export const ACCESS_MARKET_POINTS = [
-  "Accès illimité aux portefeuilles disponibles à l’achat.",
-  "L’abonnement donne accès de manière illimitée aux opportunités disponibles sur la plateforme pendant la durée de l’abonnement.",
+  "Accès à toutes les opportunités de portefeuille.",
+  "Évaluation de votre portefeuille.",
+  "Encadrement de la transaction de A à Z.",
 ] as const;

@@ -23,11 +23,7 @@ export function ListingAdCard({ item }: { item: PublicListingCard }) {
         <h3 className={`text-[17px] font-semibold leading-snug text-ink ${item.certified || item.sold ? "pr-24" : ""}`}>
           {title}
         </h3>
-        {item.certified ? (
-          <p className="mt-2 text-[12px] font-semibold uppercase tracking-[0.08em] text-red-800">
-            Portefeuille certifié · 50 points de contrôle
-          </p>
-        ) : (
+        {item.certified ? null : (
           <p className="mt-2 text-[12px] text-muted">{UNCERTIFIED_LABEL}</p>
         )}
 

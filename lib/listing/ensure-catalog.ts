@@ -18,8 +18,18 @@ async function ensurePublicCatalogUnsafe(): Promise<void> {
     where: { id: "lst_catalog_80" },
     select: { id: true },
   });
-  if (already) return;
+  if (!already) {
+    await createPublicCatalog();
+  }
 
+  // Un dossier vendu visible en vitrine (cachet VENDU), sans recréer le catalogue.
+  await prisma.listing.updateMany({
+    where: { id: "lst_catalog_02", status: { not: "SOLD" } },
+    data: { status: "SOLD" },
+  });
+}
+
+async function createPublicCatalog(): Promise<void> {
   const rows = buildCatalogListings();
 
   await prisma.firm.upsert({

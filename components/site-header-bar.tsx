@@ -4,11 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BrandMark } from "@/components/brand-mark";
-import {
-  CTA_SELL,
-  MARKET_ACCESS,
-  MARKET_HALL,
-} from "@/lib/copy/market";
+import { MARKET_ACCESS, MARKET_HALL } from "@/lib/copy/market";
 import { BRAND_NAME } from "@/lib/site";
 
 const NAV = [
@@ -79,27 +75,15 @@ export function SiteHeaderBar({
             </Link>
           )}
           {/*
-            Une seule action dans la barre, et non deux. Les deux boutons
-            pesaient 484 px a eux seuls : la navigation ne tenait plus et
-            rognait un onglet, « Inves » au lieu d'« Investir ». Les deux
-            appels a l'action restent offerts dans le heros, juste en dessous,
-            ou ils sont lus les premiers.
+            Aucun bouton d'action dans la barre. Les deux qui s'y trouvaient
+            pesaient 484 px et rognaient la navigation ; le dernier restant
+            alourdissait encore l'en-tete sans rien apporter, les memes appels
+            etant offerts dans le heros juste en dessous, ou ils sont lus les
+            premiers.
           */}
-          <Link
-            href="/ceder"
-            className="rounded-full bg-indigo px-5 py-2.5 text-[14px] font-semibold !text-white hover:bg-indigo-dark"
-          >
-            {CTA_SELL}
-          </Link>
         </div>
 
         <div className="ml-auto flex items-center gap-2 lg:hidden">
-          <Link
-            href="/ceder"
-            className="rounded-full bg-indigo px-3.5 py-2 text-[13px] font-semibold !text-white"
-          >
-            Vendre
-          </Link>
           <button
             type="button"
             className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-line"

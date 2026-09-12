@@ -105,7 +105,7 @@ export default function CederPage() {
               <article className="rounded-2xl border border-line bg-paper p-7">
                 <p className="text-[13px] font-semibold text-indigo">Option 2</p>
                 <h2 className="mt-2 text-2xl font-bold tracking-tight text-ink">
-                  Portefeuille certifié
+                  Certification
                 </h2>
                 <p className="mt-3 text-[15px] leading-relaxed text-muted">
                   Nous contrôlons la société (Kbis), l’identité du représentant,

@@ -13,12 +13,8 @@ export function ListingRecordCard({ item }: { item: PublicListingCard }) {
         {item.sold ? <MarketStamp kind="sold" size="sm" /> : null}
         {item.certified ? <MarketStamp kind="certified" size="sm" /> : null}
       </div>
-      <div className="flex items-start justify-between gap-2 pr-16">
-        {item.certified ? (
-          <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-red-800">
-            Portefeuille certifié
-          </span>
-        ) : (
+      <div className="flex min-h-[1.25rem] items-start justify-between gap-2 pr-16">
+        {item.certified ? null : (
           <span className="text-[11px] text-muted">{UNCERTIFIED_LABEL}</span>
         )}
       </div>

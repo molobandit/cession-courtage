@@ -933,6 +933,63 @@ model DataRequest {
   @@index([userId, type])
 }
 
+/// Horaires et flux iCal du conseiller. Singleton id = "default".
+model AdvisorCalendarSettings {
+  id             String    @id
+  timezone       String    @default("Europe/Paris")
+  slotMinutes    Int       @default(30)
+  horizonDays    Int       @default(14)
+  bufferMinutes  Int       @default(120)
+  icsUrl         String?
+  lastSyncAt     DateTime?
+  lastSyncError  String?
+  updatedAt      DateTime  @updatedAt
+}
+
+/// Plage récurrente (weekday ISO 1 = lundi … 7 = dimanche), minutes depuis minuit Paris.
+model AdvisorAvailability {
+  id           String @id @default(cuid())
+  weekday      Int
+  startMinutes Int
+  endMinutes   Int
+
+  @@index([weekday])
+}
+
+model AdvisorBlockedDay {
+  id   String @id @default(cuid())
+  date String @unique
+}
+
+/// Occupation importée depuis le calendrier iCal (Google / Outlook).
+model AdvisorBusyBlock {
+  id       String   @id @default(cuid())
+  uid      String   @unique
+  startsAt DateTime
+  endsAt   DateTime
+  source   String
+
+  @@index([startsAt])
+}
+
+model AdvisorBooking {
+  id           String    @id @default(cuid())
+  startsAt     DateTime
+  endsAt       DateTime
+  status       String
+  fullName     String
+  email        String
+  phone        String?
+  organisation String?
+  purpose      String
+  note         String?
+  createdAt    DateTime  @default(now())
+  cancelledAt  DateTime?
+
+  @@index([startsAt, status])
+  @@index([email, createdAt])
+}
+
 /// Mock mailer outbox (magic links, later transactional mail). Swap for Resend later.
 model OutboundEmail {
   id        String   @id @default(cuid())

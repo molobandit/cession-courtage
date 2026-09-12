@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 
 const LINKS = [
   { href: "/admin/orias", label: "Validation ORIAS" },
+  { href: "/admin/agenda", label: "Agenda" },
   { href: "/admin/investisseurs", label: "Investisseurs" },
   { href: "/admin/certifications", label: "Certifications" },
   { href: "/admin/capacites", label: "Capacités" },
