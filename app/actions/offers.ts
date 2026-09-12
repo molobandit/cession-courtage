@@ -18,6 +18,8 @@ import {
   readCarriers,
 } from "@/lib/listing/lot-availability";
 import { fullyCommitted } from "@/lib/listing/lots";
+import { findMyDeposit } from "@/lib/listing/deposit";
+import { INTEREST_DEPOSIT_LABEL } from "@/lib/billing/rates";
 import { firstIssue, offerIdSchema, offerSchema } from "@/lib/validations/actions";
 
 export type OfferFormState = { error?: string };
@@ -63,6 +65,20 @@ export async function submitOfferAction(
     }
     if (listing.status !== ListingStatus.OFFERS_OPEN || !isOfferWindowSealed(listing)) {
       return { error: "La fenêtre d'offres n'est pas ouverte." };
+    }
+
+    /*
+     * Dépôt de garantie exigé avant toute offre.
+     *
+     * Une offre engage le cédant : il ouvre ses pièces et cesse de chercher
+     * d'autres repreneurs. Le dépôt est ce qui rend cet engagement réciproque.
+     * Le refus arrive ici, avant l'écriture, avec le geste à faire.
+     */
+    const depot = await findMyDeposit(listingId, actor.id);
+    if (!depot) {
+      return {
+        error: `Versez le dépôt de garantie de ${INTEREST_DEPOSIT_LABEL} du prix demandé avant de déposer une offre. Il viendra en déduction du prix si la cession aboutit.`,
+      };
     }
     /*
      * Lot visé. Vide = portefeuille entier, ce qui reste le cas courant.
@@ -127,6 +143,7 @@ export async function submitOfferAction(
   }
 }
 
+/** Le retrait d'une offre rend le dépôt acquis au cédant, à titre indemnitaire. */
 export async function withdrawOfferAction(
   _prev: OfferFormState,
   formData: FormData,
@@ -140,6 +157,19 @@ export async function withdrawOfferAction(
     if (!offer || offer.buyerId !== actor.id) return { error: "Offre introuvable." };
     if (offer.status !== OfferStatus.SUBMITTED) return { error: "Cette offre ne peut plus être retirée." };
     await prisma.offer.update({ where: { id: offerId }, data: { status: OfferStatus.WITHDRAWN } });
+
+    /*
+     * Le dépôt reste acquis au cédant. C'est la contrepartie annoncée avant
+     * le versement : il a ouvert ses pièces et cessé de chercher ailleurs.
+     * `updateMany` plutôt que `update` : un acquéreur peut retirer une offre
+     * sans avoir de dépôt sur d'anciens dossiers, et l'absence n'est pas une
+     * erreur.
+     */
+    await prisma.interestDeposit.updateMany({
+      where: { listingId: offer.listingId, buyerId: actor.id, outcome: "PENDING" },
+      data: { outcome: "RETAINED", settledAt: new Date() },
+    });
+
     revalidatePath("/app");
     return {};
   } catch (error) {

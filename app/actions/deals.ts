@@ -269,6 +269,14 @@ export async function closeDealAction(
       where: { id: deal.listingId },
       data: { status: ListingStatus.SOLD },
     });
+
+    // Le dépôt a joué son rôle : il vient en déduction du prix, il n'est pas
+    // remboursé à part — ce serait un mouvement d'argent dans les deux sens.
+    await prisma.interestDeposit.updateMany({
+      where: { listingId: deal.listingId, buyerId: deal.buyerId, outcome: "PENDING" },
+      data: { outcome: "DEDUCTED", settledAt: new Date() },
+    });
+
     revalidatePath(`/app/dossiers/${deal.id}`);
     revalidatePath("/app");
     revalidatePath("/annonces");

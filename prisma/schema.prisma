@@ -710,6 +710,12 @@ model InterestDeposit {
   rate      Decimal
   placedAt  DateTime @default(now())
 
+  /// PENDING tant que le dossier suit son cours, puis DEDUCTED (cession close,
+  /// le depot vient en deduction du prix) ou RETAINED (retrait de l'acquereur,
+  /// le depot reste au cedant a titre indemnitaire).
+  outcome   String   @default("PENDING")
+  settledAt DateTime?
+
   listing Listing @relation(fields: [listingId], references: [id], onDelete: Restrict)
   buyer   User    @relation(fields: [buyerId], references: [id], onDelete: Restrict)
 
