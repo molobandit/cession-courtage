@@ -1,5 +1,6 @@
 import "server-only";
 import { UserRole, type KycStatus } from "@prisma/client";
+import { unstable_rethrow } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { ForbiddenError, OriasPendingError, UnauthenticatedError } from "@/lib/authz/errors";
@@ -50,6 +51,19 @@ export async function getActor(): Promise<Actor | null> {
     const { erasedAt: _efface, ...acteur } = user;
     return acteur;
   } catch (error) {
+    /*
+     * Ne jamais avaler les signaux de Next.
+     *
+     * `notFound()`, `redirect()` et la bascule en rendu dynamique passent par
+     * des exceptions internes. Ce catch les capturait toutes et rendait `null` :
+     * une page qui appelait `getActor()` perdait le signal de dynamisme, ce qui
+     * a rendu `force-dynamic` obligatoire sur le layout racine — et, par
+     * ricochet, `notFound()` renvoyait 200 au lieu de 404.
+     *
+     * `unstable_rethrow` relaie ces exceptions et ne laisse ici que les vraies
+     * pannes, celles qu'on veut effectivement traduire par « pas de session ».
+     */
+    unstable_rethrow(error);
     console.error("getActor", error);
     return null;
   }
