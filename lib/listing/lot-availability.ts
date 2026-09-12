@@ -22,21 +22,40 @@ import {
  * le jour où elle existera, c'est ici qu'elle libérera les fournisseurs.
  */
 
-/** Lots d'un portefeuille, calculés depuis ses lignes de contrat. */
+/**
+ * Lots d'une annonce, calculés sur les lignes qu'elle expose réellement.
+ *
+ * Une annonce peut ne mettre en vente qu'une partie du portefeuille du cabinet
+ * (`isPartial`), la sélection étant portée par `ListingLine`. Lire le
+ * portefeuille entier ferait apparaître des fournisseurs qui ne sont pas à
+ * céder — et laisserait un acquéreur enchérir dessus.
+ */
 export async function listingLots(listingId: string): Promise<CarrierLot[]> {
   const listing = await prisma.listing.findUnique({
     where: { id: listingId },
-    select: { portfolioId: true },
+    select: {
+      portfolioId: true,
+      isPartial: true,
+      lines: { select: { contractLineId: true } },
+    },
   });
   if (!listing) return [];
 
   const lines = await prisma.contractLine.findMany({
     where: { portfolioId: listing.portfolioId },
-    select: { carrier: true, annualCommission: true },
+    select: { id: true, carrier: true, annualCommission: true },
   });
 
+  const exposees =
+    listing.isPartial && listing.lines.length > 0
+      ? (() => {
+          const permises = new Set(listing.lines.map((l) => l.contractLineId));
+          return lines.filter((line) => permises.has(line.id));
+        })()
+      : lines;
+
   return buildCarrierLots(
-    lines.map((line) => ({
+    exposees.map((line) => ({
       carrier: line.carrier,
       annualCommission: Number(line.annualCommission),
     })),

@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { OfferChat } from "@/components/chat/offer-chat";
 import { PublicListingDetail } from "@/components/listing/public-listing-detail";
 import { SubmitOfferForm } from "@/components/offer/offer-forms";
+import { CarrierLots } from "@/components/listing/carrier-lots";
+import { lotAvailability } from "@/lib/listing/lot-availability";
 import {
   canBuy,
   getActor,
@@ -118,6 +120,9 @@ export default async function PublicListingPage({
   const investorMode = Boolean(voie === "investir" || (actor && isInvestor(actor)));
   const isSeller = Boolean(actor && ownsFirm(actor, listing.portfolio.firmId));
   const sealed = isOfferWindowSealed(listing);
+  // Lots du portefeuille : l'acquéreur peut ne reprendre qu'une partie des
+  // fournisseurs, et ceux déjà engagés ailleurs doivent apparaître comme pris.
+  const { lots, available } = await lotAvailability(listing.id);
   const subscribed = Boolean(actor && (await hasContactSubscription(actor)));
   const canOffer = Boolean(
     verified &&
@@ -247,7 +252,13 @@ export default async function PublicListingPage({
         interestHref,
         followHref,
         manageHref: isSeller ? `/app/annonces/${listing.id}` : null,
-        supplierCount: byCarrier.length,
+        /*
+         * Le nombre réel d'assureurs, pas le nombre de lignes du graphique :
+         * `breakdownBy` plafonne à sept et regroupe le reste sous « Autres »,
+         * si bien que tout portefeuille de plus de sept fournisseurs en
+         * annonçait huit.
+         */
+        supplierCount: lots.length,
         riskChips: byRisk.map((share) => share.label),
         segmentChips: bySegment.map((share) => share.label),
         coverageTitle: listing.isNationwide ? "Couverture nationale" : zone,
@@ -258,6 +269,8 @@ export default async function PublicListingPage({
         dealHref: myDeal ? `/app/dossiers/${myDeal.id}` : null,
         defaultTab: ownOffer || myDeal || myDeposit ? "position" : "informations",
       }}
+      /* Ce que l'acquéreur regarde en premier : où sont les commissions. */
+      carriers={<CarrierLots lots={lots} available={available} />}
       documents={
         <div className="grid gap-6">
           {cedantIdentity ? <CedantIdentityCard identity={cedantIdentity} /> : null}
@@ -418,7 +431,12 @@ export default async function PublicListingPage({
                 Vous pouvez la retirer tant qu’elle n’a pas été retenue.
               </p>
             ) : (
-              <SubmitOfferForm listingId={listing.id} asking={String(askingPrice)} />
+              <SubmitOfferForm
+                listingId={listing.id}
+                asking={String(askingPrice)}
+                lots={lots}
+                availableCarriers={available}
+              />
             )}
           </div>
         </section>

@@ -90,10 +90,13 @@ export function PublicListingDetail({
   model,
   documents,
   position,
+  carriers,
 }: {
   model: PublicListingDetailModel;
   documents: ReactNode;
   position: ReactNode;
+  /** Répartition par fournisseur, sous les informations du portefeuille. */
+  carriers?: ReactNode;
 }) {
   const {
     publicNumber,
@@ -419,6 +422,7 @@ export function PublicListingDetail({
           <SectionTabs defaultId={defaultTab ?? "informations"}>
             <SectionTab id="informations" label="Informations">
               {information}
+              {carriers ? <div className="mt-6">{carriers}</div> : null}
             </SectionTab>
             <SectionTab id="documents" label="Documents">
               {documents}
