@@ -20,7 +20,7 @@ import { SALE_PIPELINE } from "@/lib/deal/pipeline";
 import {
   SIGNOFF_LABELS,
   STAGE_INTRO,
-  currentPrice,
+
   stageTasks,
   type Side,
   type Task,
@@ -28,7 +28,7 @@ import {
 import type { DealProcess } from "@/lib/deal/process-load";
 import { DATA_ROOM_KINDS, companyDocLabel } from "@/lib/listing/company-doc-kinds";
 import { adjustedDeferredAmount } from "@/lib/retention/adjust";
-import { formatDate, formatDateTime, formatEuro, formatPercent } from "@/lib/format/fr";
+import { formatDateTime, formatEuro, formatPercent } from "@/lib/format/fr";
 import { cn } from "@/lib/utils";
 
 /**
