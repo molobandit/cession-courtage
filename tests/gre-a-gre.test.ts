@@ -15,8 +15,8 @@ import { disposePlatformProxy } from "./setup/prisma-test";
 import { connecterUtilisateur } from "./setup/auth-stub";
 import { advanceDirectDealAction, openDirectDealAction } from "@/app/actions/direct-deals";
 
-let cedant: { id: string; email: string };
-let acquereur: { id: string; email: string };
+let cedant: { id: string; email: string; kycStatus: string };
+let acquereur: { id: string; email: string; kycStatus: string };
 const crees: string[] = [];
 
 function form(champs: Record<string, string>): FormData {
@@ -44,7 +44,7 @@ async function ouvrir(services: Record<string, string>, prix = "40000") {
 beforeAll(async () => {
   const deux = await prisma.user.findMany({
     where: { oriasVerifiedAt: { not: null }, erasedAt: null },
-    select: { id: true, email: true },
+    select: { id: true, email: true, kycStatus: true },
     take: 2,
   });
   if (deux.length < 2) throw new Error("Deux comptes vérifiés sont nécessaires.");
@@ -56,6 +56,10 @@ beforeEach(() => connecterUtilisateur(cedant.id));
 
 afterAll(async () => {
   connecterUtilisateur(null);
+  // La vérification simulée marque les comptes KYC vérifiés : on rend l'état initial.
+  for (const u of [cedant, acquereur]) {
+    await prisma.user.update({ where: { id: u.id }, data: { kycStatus: u.kycStatus as never } });
+  }
   for (const id of crees) {
     await prisma.auditLog.deleteMany({ where: { entityType: "DirectDeal", entityId: id } });
     await prisma.directDeal.delete({ where: { id } }).catch(() => undefined);
@@ -148,11 +152,24 @@ describe("on avance d’un cran, jamais plus", () => {
 
     const deal = await prisma.directDeal.findUnique({
       where: { id },
-      select: { stage: true, closedAt: true },
+      select: {
+        stage: true,
+        closedAt: true,
+        deedSignedAt: true,
+        signatureProviderRef: true,
+        escrowStage: true,
+        escrowProviderRef: true,
+      },
     });
     expect(deal?.stage).toBe("CLOSED");
     // La clôture est datée : c'est elle qui fait foi, pas l'étape seule.
     expect(deal?.closedAt).not.toBeNull();
+    // Chaque étape a réellement appelé son rail, et en garde la trace.
+    expect(deal?.deedSignedAt).not.toBeNull();
+    expect(deal?.signatureProviderRef).toBeTruthy();
+    expect(deal?.escrowProviderRef).toBeTruthy();
+    // Bloqués au séquestre, puis libérés à la clôture.
+    expect(deal?.escrowStage).toBe("RELEASED");
   });
 
   it("saute l’étape que les services ne prévoient pas", async () => {
@@ -168,5 +185,13 @@ describe("on avance d’un cran, jamais plus", () => {
 
     const ok = await advanceDirectDealAction({}, form({ dealId: id, stage: "TRANSFER" }));
     expect(ok.error).toBeUndefined();
+
+    // Sans séquestre acheté, aucun fonds n'a jamais été bloqué.
+    const deal = await prisma.directDeal.findUnique({
+      where: { id },
+      select: { escrowStage: true, escrowProviderRef: true },
+    });
+    expect(deal?.escrowStage).toBe("NONE");
+    expect(deal?.escrowProviderRef).toBeNull();
   });
 });

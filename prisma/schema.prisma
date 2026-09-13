@@ -1034,6 +1034,13 @@ model DirectDeal {
   updatedAt          DateTime  @updatedAt
   closedAt           DateTime?
 
+  /// NONE, FUNDS_HELD puis RELEASED. Tenu ici et non sur `Deal` : un dossier
+  /// de gré à gré n'a pas de ligne dans le tunnel intermédié.
+  escrowStage          String    @default("NONE")
+  escrowProviderRef    String?
+  deedSignedAt         DateTime?
+  signatureProviderRef String?
+
   openedBy           User      @relation("DirectDealOpened", fields: [openedById], references: [id], onDelete: Restrict)
   counterparty       User?     @relation("DirectDealCounterparty", fields: [counterpartyUserId], references: [id], onDelete: SetNull)
 

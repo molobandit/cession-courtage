@@ -6,6 +6,12 @@ import { prisma } from "@/lib/prisma";
 import { hasAnyService, type DirectServices } from "@/lib/direct/fees";
 import { canAdvance, type DirectStage } from "@/lib/direct/stages";
 import { directDealSchema, firstIssue } from "@/lib/validations/actions";
+import {
+  holdDirectEscrow,
+  releaseDirectEscrow,
+  signDirectDeed,
+  verifyPartyIdentity,
+} from "@/lib/partners/runtime";
 
 export type DirectDealState = { error?: string; id?: string };
 
@@ -125,6 +131,27 @@ export async function advanceDirectDealAction(
 
     if (!canAdvance(deal.stage as DirectStage, cible, services)) {
       return { error: "Cette étape n’est pas celle qui vient." };
+    }
+
+    /*
+     * L'étape est exécutée avant d'être enregistrée.
+     *
+     * Le bouton porte le nom de l'étape qu'il accomplit : cliquer « Signature »,
+     * c'est signer. Si le prestataire échoue, l'exception remonte et le dossier
+     * ne bouge pas — l'inverse laisserait un acte réputé signé que personne n'a
+     * signé, ou des fonds réputés bloqués qui n'ont jamais quitté un compte.
+     */
+    if (cible === "KYC") {
+      const parties = [deal.openedById, deal.counterpartyUserId ?? actor.id];
+      for (const userId of new Set(parties)) {
+        await verifyPartyIdentity(userId);
+      }
+    }
+    if (cible === "SIGNATURE") await signDirectDeed(deal.id);
+    if (cible === "ESCROW") await holdDirectEscrow(deal.id);
+    // Les fonds ne se libèrent qu'à la clôture, et seulement s'ils ont été bloqués.
+    if (cible === "CLOSED" && deal.escrow && deal.escrowStage === "FUNDS_HELD") {
+      await releaseDirectEscrow(deal.id);
     }
 
     // La contrepartie qui confirme se rattache au dossier par la même occasion.
