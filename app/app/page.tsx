@@ -108,13 +108,13 @@ export default async function MemberHomePage() {
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-3">
                 <LivePill />
-                <span className="text-[13px] text-muted">Séance du {seance.format(new Date())}</span>
+                <span className="text-[13px] font-medium text-ink/80">Séance du {seance.format(new Date())}</span>
               </div>
               <h1 className="mt-4 text-[1.9rem] font-bold leading-tight tracking-tight sm:text-4xl">
                 {prenom ? `Bonjour ${prenom}.` : "Bonjour."}{" "}
-                <span className="text-indigo">Prenez position.</span>
+                <span className="text-[#1e3a8a]">Prenez position.</span>
               </h1>
-              <p className="mt-2 max-w-xl text-[15px] leading-relaxed text-muted">
+              <p className="mt-2 max-w-xl text-[15px] leading-relaxed text-ink/80">
                 Le marché du jour, ce qui vous attend et l’avancement de chacune de vos positions.
               </p>
             </div>
@@ -136,7 +136,7 @@ export default async function MemberHomePage() {
             </div>
           </div>
 
-          <p className="mt-7 text-[11px] font-semibold uppercase tracking-[0.24em] text-indigo-dark/70">Le marché</p>
+          <p className="mt-7 text-[11px] font-semibold uppercase tracking-[0.24em] text-ink/75">Le marché</p>
           <div className="mt-3 grid grid-cols-2 gap-3 lg:grid-cols-4">
             <DeskKpi
               label="En séance"
@@ -154,7 +154,7 @@ export default async function MemberHomePage() {
             />
           </div>
 
-          <p className="mt-6 text-[11px] font-semibold uppercase tracking-[0.24em] text-indigo-dark/70">Votre activité</p>
+          <p className="mt-6 text-[11px] font-semibold uppercase tracking-[0.24em] text-ink/75">Votre activité</p>
           <div className="mt-3 grid grid-cols-2 gap-3 lg:grid-cols-4">
             <DeskKpi label="Positions ouvertes" value={formatCount(compteurs.positionsOuvertes)} href="#positions" />
             <DeskKpi
