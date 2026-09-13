@@ -83,7 +83,7 @@ export default async function MemberHomePage() {
               </div>
               <h1 className="mt-4 text-[1.9rem] font-bold leading-tight tracking-tight sm:text-4xl">
                 {prenom ? `Bonjour ${prenom}.` : "Bonjour."}{" "}
-                <span className="underline decoration-white/70 decoration-4 underline-offset-8">Prenez position.</span>
+                <span>Prenez position.</span>
               </h1>
               <p className="mt-2 max-w-xl text-[15px] font-medium leading-relaxed text-ink">
                 Le marché du jour, ce qui vous attend et l’avancement de chacune de vos positions.
