@@ -17,12 +17,10 @@ import {
   RecentPanel,
   SectionHeading,
 } from "@/components/app/toolbox";
-import { ReadinessPanel } from "@/components/dashboard/readiness-panel";
 import { DirectDealCard } from "@/components/direct/direct-deal-card";
-import { getActor, isOriasVerified, listMyPortfolios, listPublicMandates } from "@/lib/authz";
+import { getActor, isOriasVerified, listMyPortfolios } from "@/lib/authz";
 import { loadDesk } from "@/lib/dashboard/desk";
 import { loadMemberDossiers } from "@/lib/dashboard/member-dossiers";
-import { readinessAxes, readinessScore } from "@/lib/dashboard/readiness";
 import {
   SERVICE_ENTRIES,
   countByFilter,
@@ -32,7 +30,6 @@ import {
 } from "@/lib/direct/services";
 import { formatCount, formatEuroWhole } from "@/lib/format/number";
 import { formatMultiple } from "@/lib/market/indices";
-import { prisma } from "@/lib/prisma";
 
 export const metadata = { title: "Poste de marché" };
 
@@ -66,39 +63,13 @@ export default async function MemberHomePage() {
   if (!isOriasVerified(actor)) redirect("/en-attente-orias");
   if (actor.role === "INVESTOR") redirect("/app/mes-dossiers");
 
-  const [desk, portfolios, demandes] = await Promise.all([
-    loadDesk(actor),
-    listMyPortfolios(actor),
-    listPublicMandates(),
-  ]);
+  const [desk, portfolios] = await Promise.all([loadDesk(actor), listMyPortfolios(actor)]);
   const { cessions, achats } = await loadMemberDossiers(actor);
   const { vendeur, acheteur, indices, cote, bandeau, aFaire, lignes, compteurs, directs, enAttenteDuCedant } = desk;
 
   const annonceHref = portfolios.length > 0 ? "/app/annonces/nouvelle" : "/app/import";
   const directCounts = countByFilter(directs);
   const prenom = actor.fullName?.split(" ")[0] ?? null;
-
-  const firmId = actor.firmId;
-  const [carrierTotal, carrierDecided, checklistRows] = firmId
-    ? await Promise.all([
-        prisma.carrierCode.count({ where: { portfolio: { firmId } } }),
-        prisma.carrierCode.count({ where: { portfolio: { firmId }, status: { in: ["AGREED", "REFUSED"] } } }),
-        prisma.dueDiligenceItem.findMany({
-          where: { deal: { sellerId: actor.id }, required: true },
-          select: { providedAt: true },
-        }),
-      ])
-    : [0, 0, []];
-  const axes = readinessAxes({
-    portfolioCount: portfolios.length,
-    valuedCount: portfolios.filter((p) => p.valuations.length > 0).length,
-    publishedListings: lignes.filter((l) => l.side === "Vente").length,
-    carrierCodesTotal: carrierTotal,
-    carrierCodesDecided: carrierDecided,
-    checklistRequired: checklistRows.length,
-    checklistProvided: checklistRows.filter((i) => i.providedAt !== null).length,
-    firstPortfolioId: portfolios[0]?.id ?? null,
-  });
 
   return (
     <main className="mx-auto w-full max-w-7xl px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
@@ -211,30 +182,6 @@ export default async function MemberHomePage() {
           <DeskPanel title="Cote de la salle" subtitle="Les séances qui ferment en premier." action={{ href: "/annonces", label: "Toute la salle" }}>
             <QuoteTable items={cote} />
           </DeskPanel>
-          <DeskPanel title="Ils cherchent un portefeuille" subtitle="Demandes d’acquisition publiées, sous alias.">
-            <div className="p-5">
-              <p className="tabular text-3xl font-bold text-ink">{formatCount(demandes.length)}</p>
-              <p className="mt-1 text-[14px] text-muted">
-                acquéreurs attendent un portefeuille. Si le vôtre correspond, proposez-le directement.
-              </p>
-              <div className="mt-4 flex flex-wrap gap-2">
-                <Link
-                  href="/annonces/demandes"
-                  className="inline-flex h-10 items-center rounded-full bg-indigo px-4 text-[14px] font-semibold !text-white hover:bg-indigo-dark"
-                >
-                  Voir les demandes
-                </Link>
-                {acheteur ? (
-                  <Link
-                    href="/app/mandats"
-                    className="inline-flex h-10 items-center rounded-full border border-line px-4 text-[14px] font-medium text-ink hover:bg-surface-alt"
-                  >
-                    Publier la mienne
-                  </Link>
-                ) : null}
-              </div>
-            </div>
-          </DeskPanel>
         </aside>
       </div>
 
@@ -340,11 +287,6 @@ export default async function MemberHomePage() {
         </section>
       ) : null}
 
-      {vendeur && portfolios.length > 0 ? (
-        <div className="mt-10">
-          <ReadinessPanel axes={axes} score={readinessScore(axes)} />
-        </div>
-      ) : null}
     </main>
   );
 }
