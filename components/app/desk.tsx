@@ -8,22 +8,22 @@ import { cn } from "@/lib/utils";
 /**
  * Poste de marché : les briques de l'espace membre.
  *
- * Même grammaire que l'accueil — bandeau sombre, chiffres en grand, pastilles
- * de cotation — pour que l'intérieur du site se lise comme la salle qu'il
- * promet : ce qui est en séance, ce qui vous attend, où en sont vos positions.
+ * Chiffres en grand, pastilles de cotation, bande des titres en séance : la
+ * grammaire de l'accueil, pour que l'intérieur du site se lise comme la salle
+ * qu'il promet.
  */
 
 /**
- * Bandeau d'en-tête en dégradé bleu, la couleur de la marque.
+ * Bandeau d'en-tête, bleu clair et texte foncé.
  *
- * Un premier essai en fond sombre a été écarté : l'intérieur reste bleu, comme
- * l'encart « Place de marché » qu'il remplace.
+ * Deux essais écartés : le fond sombre, puis le grand aplat bleu vif, qui
+ * éblouissait. Le bleu reste la couleur de la marque, mais en teinte douce, et
+ * les chiffres s'écrivent en noir pour se lire sans fatigue.
  */
 export function DeskBand({ children }: { children: React.ReactNode }) {
   return (
-    <section className="relative overflow-hidden rounded-[1.75rem] bg-gradient-to-br from-indigo via-indigo-mid to-indigo-dark text-white shadow-[0_24px_60px_-30px_rgba(37,99,235,0.7)]">
-      <div className="pointer-events-none absolute -left-24 -top-28 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-32 right-0 h-64 w-64 rounded-full bg-sky-300/20 blur-3xl" />
+    <section className="relative overflow-hidden rounded-[1.75rem] border border-indigo-line bg-gradient-to-br from-indigo-soft via-[#e0ecff] to-[#d4e4fe] text-ink shadow-sm">
+      <div className="pointer-events-none absolute -right-20 -top-24 h-64 w-64 rounded-full bg-white/60 blur-3xl" />
       <div className="relative">{children}</div>
     </section>
   );
@@ -31,10 +31,10 @@ export function DeskBand({ children }: { children: React.ReactNode }) {
 
 export function LivePill({ label = "En séance" }: { label?: string }) {
   return (
-    <span className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/15 px-3 py-1 text-[12px] font-semibold text-white">
+    <span className="inline-flex items-center gap-2 rounded-full border border-indigo-line bg-paper px-3 py-1 text-[12px] font-semibold text-ink">
       <span className="relative flex h-2 w-2">
-        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-70 motion-reduce:hidden" />
-        <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-60 motion-reduce:hidden" />
+        <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
       </span>
       {label}
     </span>
@@ -57,16 +57,16 @@ export function DeskKpi({
 }) {
   const contenu = (
     <>
-      <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/75">{label}</p>
-      <p className={cn("tabular mt-2 text-[1.9rem] font-bold leading-none tracking-tight", accent ? "text-emerald-300" : "text-white")}>
+      <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-indigo-dark">{label}</p>
+      <p className={cn("tabular mt-2 text-[1.9rem] font-bold leading-none tracking-tight", accent ? "text-indigo" : "text-ink")}>
         {value}
       </p>
-      {note ? <p className="mt-2 text-[12px] leading-snug text-white/70">{note}</p> : null}
+      {note ? <p className="mt-2 text-[12px] leading-snug text-muted">{note}</p> : null}
     </>
   );
-  const classe = "block h-full rounded-2xl border border-white/20 bg-white/10 p-4 backdrop-blur-sm transition";
+  const classe = "block h-full rounded-2xl border border-indigo-line/70 bg-paper/85 p-4 transition";
   return href ? (
-    <Link href={href} className={cn(classe, "hover:border-white/40 hover:bg-white/15")}>
+    <Link href={href} className={cn(classe, "hover:border-indigo hover:bg-paper")}>
       {contenu}
     </Link>
   ) : (
@@ -88,21 +88,21 @@ export function MarketTicker({ items }: { items: PublicListingCard[] }) {
       <Link
         key={`${item.id}-${suffixe}`}
         href={`/annonces/${item.publicNumber}`}
-        className="flex shrink-0 items-center gap-2 px-5 text-[13px] text-white/80 hover:text-white"
+        className="flex shrink-0 items-center gap-2 px-5 text-[13px] text-ink hover:text-indigo-dark"
         tabIndex={suffixe === "b" ? -1 : undefined}
       >
-        <span className="font-semibold text-white">N° {item.publicNumber}</span>
-        <span className="text-white/65">{item.riskTypes[0] ?? "Portefeuille"}</span>
-        <span className="tabular font-semibold text-white">{formatEuroWhole(item.askingPrice)}</span>
-        <span className="tabular text-sky-100">{formatMultiple(listingMultiple(item.askingPrice, item.annualCommissions))}</span>
-        <span className={cn("text-[12px] font-semibold", item.marketTone === "sealed" ? "text-sky-100" : "text-emerald-200")}>
+        <span className="font-semibold">N° {item.publicNumber}</span>
+        <span className="text-muted">{item.riskTypes[0] ?? "Portefeuille"}</span>
+        <span className="tabular font-semibold">{formatEuroWhole(item.askingPrice)}</span>
+        <span className="tabular text-indigo-dark">{formatMultiple(listingMultiple(item.askingPrice, item.annualCommissions))}</span>
+        <span className={cn("text-[12px] font-semibold", item.marketTone === "sealed" ? "text-indigo-dark" : "text-ok")}>
           {item.marketTone === "sealed" ? (item.marketDetail ?? item.statusLabel) : item.statusLabel}
         </span>
-        <span className="text-white/30">│</span>
+        <span className="text-indigo-line">│</span>
       </Link>
     ));
   return (
-    <div className="relative overflow-hidden border-t border-white/15 bg-indigo-dark/40 py-2.5" aria-label="Titres en séance">
+    <div className="relative overflow-hidden border-t border-indigo-line bg-paper/70 py-2.5" aria-label="Titres en séance">
       <div className="market-ticker-track flex w-max">
         {ligne("a")}
         <span aria-hidden="true" className="flex">
