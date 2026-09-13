@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import {
   canBuy,
@@ -5,7 +6,6 @@ import {
   counterpartyDisplayName,
   getActor,
   isOriasVerified,
-  listBuyerMatches,
   listMyDeals,
   listMyListings,
   listMyMandates,
@@ -22,13 +22,21 @@ import {
   MarketplaceHero,
   Panel,
   PublishBanner,
-  ShortcutCard,
   ToolTeaser,
 } from "@/components/app/dashboard-cards";
+import { ServiceIcon, type ServiceIconName } from "@/components/direct/service-icon";
 import { NextActionBanner } from "@/components/dashboard/next-action-banner";
 import { ReadinessPanel } from "@/components/dashboard/readiness-panel";
 import { nextAction } from "@/lib/dashboard/next-action";
 import { pipelineProgressPercent } from "@/lib/deal/pipeline";
+import { ATTESTATIONS_LABEL, ESCROW_LABEL, KIT_LABEL } from "@/lib/direct/fees";
+import { listMyDirectDeals } from "@/lib/direct/load";
+import { SERVICE_ENTRIES, countByFilter, matchesFilter } from "@/lib/direct/services";
+import {
+  progressPercent as directProgress,
+  stepByKey as directStep,
+  type DirectStage,
+} from "@/lib/direct/stages";
 import { readinessAxes, readinessScore } from "@/lib/dashboard/readiness";
 import { formatCount, formatEuroWhole } from "@/lib/format/number";
 import { asStringArray } from "@/lib/json-array";
@@ -61,7 +69,7 @@ export default async function MemberHomePage() {
   const seller = canSell(actor);
   const buyer = canBuy(actor);
 
-  const [portfolios, listings, mandates, offers, deals, publicListings, publicMandates, matches] =
+  const [portfolios, listings, mandates, offers, deals, publicListings, publicMandates, directs] =
     await Promise.all([
       seller ? listMyPortfolios(actor) : Promise.resolve([]),
       seller ? listMyListings(actor) : Promise.resolve([]),
@@ -70,7 +78,7 @@ export default async function MemberHomePage() {
       listMyDeals(actor),
       loadPublicListingCards(),
       listPublicMandates(),
-      buyer ? listBuyerMatches(actor) : Promise.resolve([]),
+      listMyDirectDeals(actor.id, actor.email),
     ]);
 
   const draft = listings.find((l) => l.status === "DRAFT");
@@ -144,37 +152,80 @@ export default async function MemberHomePage() {
   const myOffers = offers.slice(0, 3);
   const myMandates = mandates.slice(0, 3);
 
-  const totalCommissions = portfolios.reduce((sum, p) => sum + Number(p.annualCommissions), 0);
-  const totalValuation = portfolios.reduce(
-    (sum, p) => sum + (p.valuations[0] ? Number(p.valuations[0].midValue) : 0),
-    0,
-  );
+  /*
+   * Vos dossiers en un coup d'œil : les deux parcours côte à côte. Le parcours
+   * intermédié se compte en annonces et en offres, les services à la carte en
+   * dossiers — un kit pris avec un séquestre compte dans les deux listes, parce
+   * qu'on le cherchera dans l'une comme dans l'autre.
+   */
+  const directCounts = countByFilter(directs);
+  const glance = [
+    {
+      href: "#mes-cessions",
+      label: "Mes cessions",
+      value: formatCount(seller ? listings.length : deals.filter((d) => d.sellerId === actor.id).length),
+    },
+    {
+      href: "#mes-achats",
+      label: "Mes achats",
+      value: formatCount(buyer ? offers.length : deals.filter((d) => d.buyerId === actor.id).length),
+    },
+    ...SERVICE_ENTRIES.map((entry) => ({
+      href: `/app/formaliser?dossiers=${entry.filter}#dossiers`,
+      label: entry.listTitle,
+      value: formatCount(directCounts[entry.filter]),
+    })),
+  ];
 
-  const glance = seller
-    ? [
-        { href: "/app/import", label: "Commissions / an", value: formatEuroWhole(totalCommissions) },
-        {
-          href: portfolios[0] ? `/app/portefeuilles/${portfolios[0].id}` : "/app/import",
-          label: "Valorisation médiane",
-          value: formatEuroWhole(totalValuation),
-        },
-        { href: "/app/annonces/nouvelle", label: "Annonces", value: formatCount(listings.length) },
-        {
-          href: recentDeals[0] ? `/app/dossiers/${recentDeals[0].id}` : "/app",
-          label: "Dossiers",
-          value: formatCount(deals.length),
-        },
-      ]
-    : [
-        { href: "/app/mandats", label: "Mandats", value: formatCount(mandates.length) },
-        { href: "/app/opportunites", label: "Correspondances", value: formatCount(matches.length) },
-        { href: "/annonces", label: "Offres", value: formatCount(offers.length) },
-        {
-          href: recentDeals[0] ? `/app/dossiers/${recentDeals[0].id}` : "/app",
-          label: "Dossiers",
-          value: formatCount(deals.length),
-        },
-      ];
+  const serviceTiles: {
+    icon: ServiceIconName;
+    title: string;
+    detail: string;
+    price?: string;
+    href: string;
+  }[] = [
+    {
+      icon: "kit",
+      title: "Kit contractuel",
+      detail: "Confidentialité, protocole et attestations, prêts à signer.",
+      price: KIT_LABEL,
+      href: "/app/formaliser?service=kit#nouveau",
+    },
+    {
+      icon: "escrow",
+      title: "Transaction sécurisée",
+      detail: "Le prix bloqué sur un séquestre, libéré à la clôture.",
+      price: ESCROW_LABEL,
+      href: "/app/formaliser?service=escrow#nouveau",
+    },
+    {
+      icon: "attestations",
+      title: "Attestations de transfert",
+      detail: "Une par compagnie, prête à envoyer.",
+      price: ATTESTATIONS_LABEL,
+      href: "/app/formaliser?service=attestations#nouveau",
+    },
+    ...(seller
+      ? [
+          {
+            icon: "listing" as const,
+            title: "Créer une annonce",
+            detail: "Mettre en vente sous alias, sans frais de dépôt.",
+            href: portfolios.length > 0 ? "/app/annonces/nouvelle" : "/app/import",
+          },
+        ]
+      : []),
+    ...(buyer
+      ? [
+          {
+            icon: "wanted" as const,
+            title: "Annonce d’achat",
+            detail: "Décrivez le portefeuille que vous cherchez.",
+            href: "/app/mandats",
+          },
+        ]
+      : []),
+  ];
 
   const tools = [
     ...(seller
@@ -285,41 +336,94 @@ export default async function MemberHomePage() {
         </Panel>
       </div>
 
-      <section className="mt-8">
-        <h2 className="text-xl font-bold tracking-tight text-ink">Actions rapides</h2>
-        <ul className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {seller ? (
-            <li>
-              <ShortcutCard
-                kicker="Céder"
-                title="Mettre un portefeuille en vente"
-                detail="Import, valorisation en cascade, puis annonce sous alias."
-                href={portfolios.length > 0 ? "/app/annonces/nouvelle" : "/app/import"}
-                cta={portfolios.length > 0 ? "Créer une annonce" : "Importer un bordereau"}
-              />
-            </li>
-          ) : null}
-          {buyer ? (
-            <li>
-              <ShortcutCard
-                kicker="Acquérir"
-                title="Parcourir les portefeuilles"
-                detail="Commissions, zone, fenêtre d’offres. Sans raison sociale."
-                href="/annonces"
-                cta="Voir le catalogue"
-              />
-            </li>
-          ) : null}
-          <li>
-            <ShortcutCard
-              kicker="Conclure"
-              title="Suivre un dossier jusqu’au transfert"
-              detail="Confidentialité, salle de données, séquestre, ORIAS."
-              href={activeDeals[0] ? `/app/dossiers/${activeDeals[0].id}` : "/app/outils"}
-              cta={activeDeals[0] ? "Ouvrir le projet" : "Voir les outils"}
-            />
-          </li>
-        </ul>
+      <section className="mt-8" aria-labelledby="actions-rapides">
+        <h2 id="actions-rapides" className="text-xl font-bold tracking-tight text-ink">
+          Actions rapides
+        </h2>
+
+        <div className="mt-4 rounded-[1.75rem] border border-line bg-paper p-5 shadow-sm sm:p-6">
+          <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+            <h3 className="text-[17px] font-semibold text-ink">Parcours intermédié, tout compris</h3>
+            <span className="rounded-full bg-indigo-soft px-2.5 py-1 text-[12px] font-medium text-indigo-dark">
+              Accompagnement de A à Z
+            </span>
+          </div>
+          <p className="mt-1 text-[14px] leading-relaxed text-muted">
+            Nous menons la cession de bout en bout : aucun service à ajouter, tout est inclus.
+          </p>
+          <ul className="mt-4 grid gap-3 sm:grid-cols-2">
+            {[
+              ...(seller
+                ? [
+                    {
+                      icon: "sell" as const,
+                      title: "Vendre",
+                      detail: "Mettre votre portefeuille en vente",
+                      href: portfolios.length > 0 ? "/app/annonces/nouvelle" : "/app/import",
+                    },
+                  ]
+                : []),
+              ...(buyer
+                ? [
+                    {
+                      icon: "buy" as const,
+                      title: "Acheter",
+                      detail: "Trouver un portefeuille",
+                      href: "/annonces",
+                    },
+                  ]
+                : []),
+            ].map((t) => (
+              <li key={t.title}>
+                <Link
+                  href={t.href}
+                  className="lift flex items-center gap-4 rounded-2xl border border-line bg-surface p-4 hover:border-indigo"
+                >
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-indigo text-white">
+                    <ServiceIcon name={t.icon} className="h-5 w-5" />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block text-[16px] font-semibold text-ink">{t.title}</span>
+                    <span className="block text-[14px] text-muted">{t.detail}</span>
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="mt-4 rounded-[1.75rem] border border-line bg-paper p-5 shadow-sm sm:p-6">
+          <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+            <h3 className="text-[17px] font-semibold text-ink">
+              Boîte à malice : services à la carte, en toute autonomie
+            </h3>
+            <Link href="/app/formaliser" className="text-[14px] font-medium text-indigo-dark">
+              Tous les services
+            </Link>
+          </div>
+          <p className="mt-1 text-[14px] leading-relaxed text-muted">
+            Prenez seulement ce qui vous manque : vous économisez, sans rien céder sur la sécurité.
+          </p>
+          <ul className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+            {serviceTiles.map((t) => (
+              <li key={t.title}>
+                <Link
+                  href={t.href}
+                  className="lift flex h-full flex-col rounded-2xl border border-line bg-surface p-4 hover:border-indigo"
+                >
+                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-soft text-indigo-dark">
+                    <ServiceIcon name={t.icon} className="h-5 w-5" />
+                  </span>
+                  <span className="mt-3 text-[15px] font-semibold leading-snug text-ink">{t.title}</span>
+                  <span className="mt-1 flex-1 text-[13px] leading-relaxed text-muted">{t.detail}</span>
+                  {t.price ? (
+                    <span className="mt-3 text-[12px] font-medium text-indigo-dark">{t.price}</span>
+                  ) : null}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
       </section>
 
       <div className="mt-8">
@@ -329,6 +433,7 @@ export default async function MemberHomePage() {
       <div className="mt-8 grid gap-4 lg:grid-cols-2">
         <div className="space-y-4">
         {seller ? (
+          <div id="mes-cessions" className="scroll-mt-24">
           <Panel title="Mes cessions" href="/app/annonces/nouvelle" action="Nouvelle annonce" count={listings.length}>
             {myListings.length === 0 ? (
               myPortfolios.length > 0 ? (
@@ -377,9 +482,11 @@ export default async function MemberHomePage() {
               </ul>
             )}
           </Panel>
+          </div>
         ) : null}
 
         {buyer ? (
+          <div id="mes-achats" className="scroll-mt-24">
           <Panel title="Mes achats" href="/app/mandats" action="Mandats" count={offers.length + mandates.length}>
             {myOffers.length === 0 && myMandates.length === 0 ? (
               <EmptyHint
@@ -420,6 +527,7 @@ export default async function MemberHomePage() {
               </ul>
             )}
           </Panel>
+          </div>
         ) : null}
         </div>
 
@@ -467,6 +575,51 @@ export default async function MemberHomePage() {
             </ul>
           )}
         </Panel>
+      </div>
+
+      <div className="mt-8 grid gap-4 lg:grid-cols-3">
+        {SERVICE_ENTRIES.map((entry) => {
+          const liste = directs.filter((d) => matchesFilter(d, entry.filter));
+          return (
+            <Panel
+              key={entry.key}
+              title={entry.listTitle}
+              href={`/app/formaliser?dossiers=${entry.filter}#dossiers`}
+              action="Voir tout"
+              count={liste.length}
+            >
+              {liste.length === 0 ? (
+                <EmptyHint
+                  text={`Pas encore de dossier « ${entry.title.toLowerCase()} ».`}
+                  href={`/app/formaliser?service=${entry.key}#nouveau`}
+                  label={entry.heading}
+                />
+              ) : (
+                <ul className="grid gap-3">
+                  {liste.slice(0, 3).map((d) => {
+                    const services = { kit: d.kit, escrow: d.escrow, attestations: d.attestations };
+                    return (
+                      <ActivityCard
+                        key={d.id}
+                        href={`/app/formaliser/${d.id}`}
+                        kicker={directStep(d.stage as DirectStage).label}
+                        kickerTone={d.stage === "CLOSED" ? "ok" : "indigo"}
+                        title={d.portfolioLabel}
+                        facts={[
+                          { label: "Prix convenu", value: formatEuroWhole(Number(d.salePrice)) },
+                          {
+                            label: "Avancement",
+                            value: `${directProgress(d.stage as DirectStage, services)} %`,
+                          },
+                        ]}
+                      />
+                    );
+                  })}
+                </ul>
+              )}
+            </Panel>
+          );
+        })}
       </div>
 
       {seller ? (

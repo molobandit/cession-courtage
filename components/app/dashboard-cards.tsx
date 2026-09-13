@@ -125,8 +125,13 @@ export function GlanceTiles({
 }) {
   return (
     <section aria-label="Vos dossiers en un coup d’œil">
-      <h2 className="text-xl font-bold tracking-tight text-ink">En un coup d’œil</h2>
-      <ul className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <h2 className="text-xl font-bold tracking-tight text-ink">Vos dossiers en un coup d’œil</h2>
+      <ul
+        className={cn(
+          "mt-4 grid grid-cols-2 gap-3",
+          items.length > 4 ? "sm:grid-cols-3 lg:grid-cols-5" : "lg:grid-cols-4",
+        )}
+      >
         {items.map((item) => (
           <li key={item.label}>
             <Link
