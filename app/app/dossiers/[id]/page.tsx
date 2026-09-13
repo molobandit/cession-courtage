@@ -87,7 +87,12 @@ export default async function DealPage({ params }: { params: Promise<{ id: strin
                 Séquestre : {ESCROW_STAGE_LABELS[deal.escrowStage as keyof typeof ESCROW_STAGE_LABELS]}
                 {deal.escrowProviderRef ? ` · ${deal.escrowProviderRef}` : ""}
               </p>
-              <EscrowButtons dealId={deal.id} />
+              {/*
+               * Le bouton ne s'affiche qu'à l'étape du séquestre. Laissé visible
+               * ensuite, il permettait de rebloquer des fonds déjà libérés sur
+               * un dossier clos. Le solde se libère à la clôture, pas à la main.
+               */}
+              {deal.stage === "ESCROW" ? <EscrowButtons dealId={deal.id} /> : null}
             </div>
           ) : null}
           {deal.stage === "TRANSFER" ? <ConfirmTransferButton dealId={deal.id} /> : null}

@@ -132,6 +132,11 @@ async function acheterJusquALaVente(listingId: string, acheteur: Compte) {
   expect(fin.stage).toBe(DealStage.CLOSED);
   expect(fin.escrowStage).toBe("RELEASED");
 
+  // Constaté en direct : le bouton de séquestre restait actif sur un dossier clos.
+  expect((await mockEscrowAction({}, form({ dealId, intent: "hold" }))).error).toBeTruthy();
+  const apres = await prisma.deal.findUniqueOrThrow({ where: { id: dealId }, select: { escrowStage: true } });
+  expect(apres.escrowStage).toBe("RELEASED");
+
   const annonce = await prisma.listing.findUniqueOrThrow({ where: { id: listingId }, select: { status: true } });
   expect(annonce.status).toBe(ListingStatus.SOLD);
 

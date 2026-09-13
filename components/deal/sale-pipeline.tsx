@@ -73,7 +73,8 @@ function PipelineRow({
         }`}
       >
         {step.label}
-        {current ? " · en cours" : done ? " · fait" : ""}
+        {/* La dernière étape atteinte n'est plus « en cours » : la cession est close. */}
+        {current ? (step.key === "CLOSED" ? " · terminé" : " · en cours") : done ? " · fait" : ""}
       </p>
       <p className="mt-1 text-[12px] leading-relaxed text-muted">{step.summary}</p>
     </li>

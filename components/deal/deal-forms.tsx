@@ -102,13 +102,6 @@ export function EscrowButtons({ dealId }: { dealId: string }) {
           Séquestrer 80 % du prix
         </Button>
       </form>
-      <form action={action}>
-        <input type="hidden" name="dealId" value={dealId} />
-        <input type="hidden" name="intent" value="release" />
-        <Button type="submit" size="sm" variant="outline" disabled={pending}>
-          Libérer le solde 20 %
-        </Button>
-      </form>
       {state.error ? <p className="text-xs text-danger">{state.error}</p> : null}
     </div>
   );

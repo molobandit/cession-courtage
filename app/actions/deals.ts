@@ -160,12 +160,17 @@ export async function mockSignDealDocAction(_prev: DealFormState, formData: Form
 export async function mockEscrowAction(_prev: DealFormState, formData: FormData): Promise<DealFormState> {
   try {
     const { deal } = await loadDeal(String(formData.get("dealId") ?? ""));
-    const intent = String(formData.get("intent") ?? "hold");
-    if (intent === "release") await releaseEscrowFunds(deal.id);
-    else await holdEscrowFunds(deal.id);
-    if (deal.stage === DealStage.ESCROW && intent === "hold") {
-      await prisma.deal.update({ where: { id: deal.id }, data: { stage: DealStage.TRANSFER } });
+    /*
+     * Le séquestre ne se déclenche qu'à son étape, une seule fois. Les fonds se
+     * libèrent à la clôture (closeDealAction), jamais par ce bouton : l'accepter
+     * en dehors de l'étape rebloquait ou libérait des fonds sur un dossier
+     * déjà clos.
+     */
+    if (deal.stage !== DealStage.ESCROW) {
+      return { error: "Le séquestre n’est pas à cette étape." };
     }
+    await holdEscrowFunds(deal.id);
+    await prisma.deal.update({ where: { id: deal.id }, data: { stage: DealStage.TRANSFER } });
     revalidatePath(`/app/dossiers/${deal.id}`);
     return {};
   } catch (error) {
