@@ -22,7 +22,8 @@ import { DEAL_STAGE_LABELS, ESCROW_STAGE_LABELS } from "@/lib/labels";
 import { isStageAtLeast } from "@/lib/authz/policies";
 import { DueDiligencePanel } from "@/components/deal/due-diligence-panel";
 import { checklistProgress, type DueDiligenceCategory } from "@/lib/deal/due-diligence";
-import { nextPipelineAction } from "@/lib/deal/pipeline";
+import { nextPipelineAction, pipelineProgressPercent } from "@/lib/deal/pipeline";
+import { DeskPageHeader } from "@/components/app/desk";
 import { ensureDealChecklist } from "@/lib/deal/seed-checklist";
 import { PartnerStrip } from "@/components/partners/partner-grid";
 import { escrowRailLive, presentPartners, signatureProvider, signatureRailLive } from "@/lib/partners/status";
@@ -236,31 +237,32 @@ export default async function DealPage({ params }: { params: Promise<{ id: strin
 
   return (
     <main className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 sm:py-8 lg:py-10">
-      <p className="text-[13px] font-medium text-indigo-dark">
-        <Link href="/app" className="inline-flex min-h-11 items-center hover:text-indigo">
-          Accueil
-        </Link>
-        {" · "}
-        <Link
-          href={`/annonces/${deal.listing.publicNumber}`}
-          className="inline-flex min-h-11 items-center hover:text-indigo"
-        >
-          Fiche
-        </Link>
-      </p>
-
-      <section className="rounded-3xl bg-indigo-soft p-5 sm:p-8">
-        <span className="inline-flex rounded-full bg-white px-3 py-1 text-[12px] font-medium text-indigo-dark">
-          {isSeller ? "Cession" : "Acquisition"} · {DEAL_STAGE_LABELS[deal.stage]}
-        </span>
-        <h1 className="mt-3 text-2xl font-bold tracking-tight text-ink sm:text-3xl">
-          Dossier n° {deal.listing.publicNumber}
-        </h1>
-        <p className="mt-2 text-[15px] leading-relaxed text-muted">
-          Contrepartie : {counterpartyLabel}. Confidentialité, pièces, accord, acte,
-          séquestre 80/20, transfert, clôture.
-        </p>
-      </section>
+      <DeskPageHeader
+        back={{ href: isSeller ? "/app/cessions" : "/app/achats", label: isSeller ? "Mes cessions" : "Mes achats" }}
+        kicker={isSeller ? "Dossier de cession" : "Dossier d’acquisition"}
+        badge={
+          <span className="rounded-full border border-indigo-line bg-paper px-2.5 py-0.5 text-[12px] font-semibold text-indigo-dark">
+            {DEAL_STAGE_LABELS[deal.stage]}
+          </span>
+        }
+        title={`Dossier N° ${deal.listing.publicNumber} — ${deal.stage === "CLOSED" ? "Cession close" : next.title}`}
+        subtitle={<>Contrepartie : {counterpartyLabel}. Chaque étape franchie prévient l’autre partie.</>}
+        progress={{ percent: pipelineProgressPercent(deal.stage), tone: deal.stage === "CLOSED" ? "closed" : "active" }}
+        figures={[
+          { label: "Prix convenu", value: formatEuro(agreed) },
+          { label: "Comptant séquestré", value: formatEuro(upfront), note: "Versé au séquestre à la signature" },
+          { label: "Solde différé", value: formatEuro(deferred), note: "Libéré après vérification" },
+          { label: "Séquestre", value: ESCROW_STAGE_LABELS[deal.escrowStage as keyof typeof ESCROW_STAGE_LABELS] ?? deal.escrowStage },
+        ]}
+        actions={
+          <Link
+            href={`/annonces/${deal.listing.publicNumber}`}
+            className="inline-flex h-10 items-center rounded-full border border-indigo bg-paper px-4 text-[14px] font-semibold !text-indigo-dark hover:bg-indigo-soft"
+          >
+            Voir la fiche
+          </Link>
+        }
+      />
 
       <div className="mt-6">
         <SectionTabs defaultId="parcours">

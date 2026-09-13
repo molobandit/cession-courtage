@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { DeskPageHeader } from "@/components/app/desk";
 import { ToolIcon } from "@/components/app/toolbox";
+import { formatMultiple, listingMultiple } from "@/lib/market/indices";
 import { OfferChat } from "@/components/chat/offer-chat";
 import { DepositForm } from "@/components/listing/deposit-form";
 import { AcceptOfferButton, SubmitOfferForm, WithdrawOfferButton } from "@/components/offer/offer-forms";
@@ -156,46 +158,30 @@ export default async function PositionPage({ params }: { params: Promise<{ id: s
 
   return (
     <main className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 sm:py-8">
-      <Link
-        href={estAcheteur ? "/app/achats" : "/app/cessions"}
-        className="inline-flex items-center gap-2 text-[14px] text-muted hover:text-ink"
-      >
-        <ToolIcon name="arrow-left" className="h-4 w-4" />
-        {estAcheteur ? "Mes achats" : "Mes cessions"}
-      </Link>
-
-      <header className="mt-4 flex flex-wrap items-start justify-between gap-4 border-b border-line pb-5">
-        <div className="min-w-0">
-          <p className="text-[13px] font-medium text-muted">
-            {estAcheteur ? "Position Acheteur" : `Candidat ${position.buyer.publicAlias}`} · pris le{" "}
-            {formatDateTime(position.createdAt)}
-          </p>
-          <h1 className="mt-1 text-2xl font-bold tracking-tight text-ink sm:text-[28px]">
-            Dossier N° {listing.publicNumber} — {state.title}
-          </h1>
-        </div>
-        <div className="w-full sm:w-72">
-          <div
-            className="relative h-6 overflow-hidden rounded-full bg-surface-alt"
-            role="progressbar"
-            aria-valuenow={state.percent}
-            aria-valuemin={0}
-            aria-valuemax={100}
-          >
-            <div
-              className={`h-full rounded-full ${state.outcome === "lost" ? "bg-muted/40" : "bg-indigo-dark"}`}
-              style={{ width: `${Math.max(state.percent, 6)}%` }}
-            />
-            <span
-              className={`tabular absolute inset-0 flex items-center justify-center text-[12px] font-bold ${
-                state.percent >= 55 && state.outcome !== "lost" ? "text-white" : "text-ink"
-              }`}
-            >
-              {state.percent}%
-            </span>
-          </div>
-        </div>
-      </header>
+      <DeskPageHeader
+        back={{ href: estAcheteur ? "/app/achats" : "/app/cessions", label: estAcheteur ? "Mes achats" : "Mes cessions" }}
+        kicker={estAcheteur ? "Position Acheteur" : `Candidat ${position.buyer.publicAlias}`}
+        badge={<span className="text-[13px] text-muted">pris le {formatDateTime(position.createdAt)}</span>}
+        title={`Dossier N° ${listing.publicNumber} — ${state.title}`}
+        progress={{
+          percent: state.percent,
+          tone: state.outcome === "closed" ? "closed" : state.outcome === "lost" || state.outcome === "withdrawn" ? "lost" : "active",
+        }}
+        figures={[
+          { label: "Prix demandé", value: formatEuroWhole(prix) },
+          { label: "Commissions / an", value: formatEuroWhole(Number(listing.portfolio.annualCommissions)) },
+          {
+            label: "Multiple",
+            value: formatMultiple(listingMultiple(prix, Number(listing.portfolio.annualCommissions))),
+            note: "Prix ÷ commissions",
+          },
+          deal
+            ? { label: "Prix convenu", value: formatEuroWhole(Number(deal.agreedPrice)), accent: true }
+            : offer
+              ? { label: estAcheteur ? "Votre offre" : "Offre reçue", value: formatEuroWhole(Number(offer.amount)), accent: true }
+              : { label: "Dépôt de garantie", value: deposit ? formatEuroWhole(Number(deposit.amount)) : "À verser" },
+        ]}
+      />
 
       <section
         className={`mt-6 rounded-2xl border p-6 shadow-sm ${

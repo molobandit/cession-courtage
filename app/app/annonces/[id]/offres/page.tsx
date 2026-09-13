@@ -45,9 +45,30 @@ export default async function ListingOffersPage({
   const candidats = ownsFirm(actor, listing.portfolio.firmId) ? await listListingPositions(listing.id) : [];
 
   return (
-    <>
+    <OfferReviewBoard
+      listing={{
+        id: listing.id,
+        publicNumber: listing.publicNumber,
+        askingPrice: Number(listing.askingPrice),
+        displayedZone: listing.displayedZone,
+        status: listing.status,
+        offerWindowClosesAt: listing.offerWindowClosesAt,
+        annualCommissions: Number(listing.portfolio.annualCommissions),
+      }}
+      offers={result.offers.map((offer) => ({
+        id: offer.id,
+        amount: Number(offer.amount),
+        upfrontPercent: Number(offer.upfrontPercent),
+        message: offer.message,
+        status: offer.status,
+        submittedAt: offer.submittedAt,
+        buyer: { publicAlias: offer.buyer.publicAlias },
+      }))}
+      access={result.access}
+      canRetain={canRetain}
+    >
     {candidats.length > 0 ? (
-      <section className="mx-auto w-full max-w-5xl px-4 pt-6 sm:px-6">
+      <section className="mt-6">
         {/*
          * Chaque candidat a son dossier, du premier contact à la clôture. Le
          * cédant y lit l'avancement et y répond, sans mélanger les fils.
@@ -75,28 +96,6 @@ export default async function ListingOffersPage({
         </div>
       </section>
     ) : null}
-    <OfferReviewBoard
-      listing={{
-        id: listing.id,
-        publicNumber: listing.publicNumber,
-        askingPrice: Number(listing.askingPrice),
-        displayedZone: listing.displayedZone,
-        status: listing.status,
-        offerWindowClosesAt: listing.offerWindowClosesAt,
-        annualCommissions: Number(listing.portfolio.annualCommissions),
-      }}
-      offers={result.offers.map((offer) => ({
-        id: offer.id,
-        amount: Number(offer.amount),
-        upfrontPercent: Number(offer.upfrontPercent),
-        message: offer.message,
-        status: offer.status,
-        submittedAt: offer.submittedAt,
-        buyer: { publicAlias: offer.buyer.publicAlias },
-      }))}
-      access={result.access}
-      canRetain={canRetain}
-    />
-    </>
+    </OfferReviewBoard>
   );
 }

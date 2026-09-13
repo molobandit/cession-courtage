@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { AdvanceStep } from "@/components/direct/advance-step";
+import { DeskPageHeader } from "@/components/app/desk";
 import { CarriersForm } from "@/components/direct/carriers-form";
 import { PayFees } from "@/components/direct/pay-fees";
 import { getActor, isOriasVerified } from "@/lib/authz";
@@ -134,19 +135,22 @@ export default async function DirectDealPage({
   }
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-10">
-      <p className="text-sm text-muted">
-        <Link href={serviceListHref(serviceByKey(deal.kit ? "kit" : deal.escrow ? "escrow" : "attestations")!)} className="underline-offset-2 hover:underline">
-          {serviceByKey(deal.kit ? "kit" : deal.escrow ? "escrow" : "attestations")!.listTitle}
-        </Link>
-      </p>
-      <h1 className="mt-2 text-3xl font-bold tracking-tight text-ink">
-        {deal.portfolioLabel}
-      </h1>
-      <p className="mt-2 text-[15px] text-muted">
-        {formatEuroWhole(prix)} · comptant {Number(deal.upfrontPercent)} % · avec{" "}
-        {deal.counterpartyEmail}
-      </p>
+    <main className="mx-auto w-full max-w-4xl px-4 py-6 sm:px-6 sm:py-8">
+      <DeskPageHeader
+        back={{
+          href: serviceListHref(serviceByKey(deal.kit ? "kit" : deal.escrow ? "escrow" : "attestations")!),
+          label: serviceByKey(deal.kit ? "kit" : deal.escrow ? "escrow" : "attestations")!.listTitle,
+        }}
+        kicker="Service à la carte"
+        title={`${deal.portfolioLabel} — ${stepByKey(etape).label}`}
+        subtitle={<>Avec {deal.counterpartyEmail}. {stepByKey(etape).summary}</>}
+        progress={{ percent: avancement, tone: etape === "CLOSED" ? "closed" : "active" }}
+        figures={[
+          { label: "Prix", value: prix > 0 ? formatEuroWhole(prix) : "—" },
+          { label: "Comptant", value: `${Number(deal.upfrontPercent)} %` },
+          { label: "Honoraires", value: `${formatEuroWhole(totalHt)} HT`, note: deal.feesPaidAt ? "Réglés" : "À régler", accent: !deal.feesPaidAt && totalHt > 0 },
+        ]}
+      />
 
       {paiementConfirme ? (
         <p role="status" className="mt-4 rounded-xl border border-ok/30 bg-ok/10 px-4 py-3 text-[14px] text-ink">
@@ -154,27 +158,14 @@ export default async function DirectDealPage({
         </p>
       ) : null}
 
-      {/* L'avancement se lit d'un coup d'œil : c'est la question qu'on se pose. */}
-      <div className="mt-6 rounded-2xl border border-line bg-paper p-5">
-        <div className="flex items-baseline justify-between gap-4">
-          <p className="text-[15px] font-semibold text-ink">
-            {stepByKey(etape).label}
-          </p>
-          <p className="tabular text-[15px] font-semibold text-indigo">{avancement} %</p>
-        </div>
-        <div
-          className="mt-3 h-1.5 overflow-hidden rounded-full bg-surface-alt"
-          role="progressbar"
-          aria-valuenow={avancement}
-          aria-valuemin={0}
-          aria-valuemax={100}
-        >
-          <div className="h-full rounded-full bg-indigo" style={{ width: `${avancement}%` }} />
-        </div>
-        <p className="mt-3 text-[14px] leading-relaxed text-muted">
-          {stepByKey(etape).summary}
-        </p>
-        {prochaineAction ? <div className="mt-5">{prochaineAction}</div> : null}
+      {/* L'avancement est dans l'en-tête ; ici, seulement ce qu'il y a à faire. */}
+      <div className="mt-6 rounded-2xl border border-line bg-paper p-5 shadow-sm">
+        <p className="text-[12px] font-semibold uppercase tracking-wide text-indigo-dark">À faire maintenant</p>
+        {prochaineAction ? (
+          <div className="mt-3">{prochaineAction}</div>
+        ) : (
+          <p className="mt-2 text-[15px] text-muted">Formalisation terminée. Les pièces restent disponibles ci-dessous.</p>
+        )}
         {deal.escrow ? (
           <p className="mt-4 border-t border-line pt-3 text-[13px] text-muted">
             Séquestre : {ESCROW_STAGE_LABEL[deal.escrowStage] ?? deal.escrowStage}

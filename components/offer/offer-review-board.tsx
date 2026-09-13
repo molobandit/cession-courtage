@@ -1,9 +1,11 @@
 import Link from "next/link";
-import { MemberPageHeader } from "@/components/app/member-page-header";
+import { DeskPageHeader } from "@/components/app/desk";
+import { MarketBadge } from "@/components/listing/market-badge";
+import { marketStatus } from "@/lib/listing/market-status";
 import { Pill } from "@/components/app/dashboard-cards";
 import { AcceptOfferButton } from "@/components/offer/offer-forms";
 import { formatDate, formatEuro, formatPercent } from "@/lib/format/fr";
-import { LISTING_STATUS_LABELS, OFFER_STATUS_LABELS } from "@/lib/labels";
+import { OFFER_STATUS_LABELS } from "@/lib/labels";
 import { barScale, cashSplit, rankOffers, vsAsking } from "@/lib/offer/compare";
 import { cn } from "@/lib/utils";
 import type { ListingStatus, OfferStatus } from "@prisma/client";
@@ -56,11 +58,14 @@ export function OfferReviewBoard({
   offers,
   access,
   canRetain,
+  children,
 }: {
   listing: OfferReviewListing;
   offers: ReviewableOffer[];
   access: "sealed" | "full" | "own";
   canRetain: boolean;
+  /** Bloc inséré sous l'en-tête : les candidats de l'annonce. */
+  children?: React.ReactNode;
 }) {
   const ranked = rankOffers(offers.map((o) => ({ ...o, amount: Number(o.amount) })));
   const submitted = ranked.filter((o) => o.status === "SUBMITTED");
@@ -68,60 +73,47 @@ export function OfferReviewBoard({
   const asking = Number(listing.askingPrice);
   const scale = barScale(asking, ranked.map((o) => o.amount)) * 1.08;
   const askingWidth = (asking / scale) * 100;
+  const cotation = marketStatus({ status: listing.status, offerWindowClosesAt: listing.offerWindowClosesAt });
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-8">
-      <p className="text-[13px] text-muted">
-        <Link href="/app" className="hover:text-ink">
-          Tableau de bord
-        </Link>
-        <span className="mx-1.5">·</span>
-        Dossier n° {listing.publicNumber}
-      </p>
-      <MemberPageHeader title="Comparer les offres">
-        Les acquéreurs restent sous alias. Retenir une proposition ouvre un dossier de
-        confidentialité et écarte les autres.
-      </MemberPageHeader>
-
-      <section className="rounded-[1.75rem] border border-line bg-paper p-5 sm:p-6">
-        <div className="flex flex-wrap items-center gap-2">
-          <Pill>{LISTING_STATUS_LABELS[listing.status]}</Pill>
-          <p className="text-[15px] font-semibold text-ink">Dossier n° {listing.publicNumber}</p>
-        </div>
-        <p className="mt-2 text-[14px] text-muted">{listing.displayedZone}</p>
-        <dl className="mt-5 grid gap-4 border-t border-line pt-5 sm:grid-cols-3">
-          <div>
-            <dt className="text-[12px] text-muted">Prix demandé</dt>
-            <dd className="tabular mt-1 text-[20px] font-bold text-ink">{formatEuro(asking)}</dd>
-          </div>
-          <div>
-            <dt className="text-[12px] text-muted">Commissions / an</dt>
-            <dd className="tabular mt-1 text-[20px] font-bold text-ink">
-              {formatEuro(listing.annualCommissions)}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-[12px] text-muted">Fenêtre d’offres</dt>
-            <dd className="mt-1 text-[15px] font-medium text-ink">
-              {listing.offerWindowClosesAt
-                ? access === "sealed"
-                  ? `Ouverte jusqu’au ${formatDate(listing.offerWindowClosesAt)}`
-                  : `Close depuis le ${formatDate(listing.offerWindowClosesAt)}`
-                : "Non ouverte"}
-            </dd>
-          </div>
-        </dl>
-        <div className="mt-5 flex flex-wrap gap-4 text-[14px]">
-          <Link href={`/annonces/${listing.publicNumber}`} className="font-medium text-indigo-dark hover:underline">
-            Fiche publique
-          </Link>
-          {canRetain ? (
-            <Link href={`/app/annonces/${listing.id}`} className="font-medium text-indigo-dark hover:underline">
-              Gérer l’annonce
+      <DeskPageHeader
+        back={{ href: "/app/cessions", label: "Mes cessions" }}
+        kicker="Carnet d’offres"
+        badge={<MarketBadge label={cotation.label} tone={cotation.tone} detail={cotation.detail} />}
+        title={`Dossier N° ${listing.publicNumber} — ${access === "sealed" ? "offres scellées" : ranked.length ? `${ranked.length} offre${ranked.length > 1 ? "s" : ""} à comparer` : "aucune offre pour le moment"}`}
+        subtitle="Les acquéreurs restent sous alias. Retenir une offre ouvre le dossier de cession et écarte les offres concurrentes sur les mêmes compagnies."
+        figures={[
+          { label: "Prix demandé", value: formatEuro(asking), note: listing.displayedZone },
+          { label: "Commissions / an", value: formatEuro(listing.annualCommissions) },
+          access === "sealed"
+            ? { label: "Meilleure offre", value: "Scellée", note: listing.offerWindowClosesAt ? `Visible le ${formatDate(listing.offerWindowClosesAt)}` : undefined }
+            : { label: "Meilleure offre", value: best ? formatEuro(best.amount) : "—", note: best ? vsAskingCopy(best.amount, asking).label.split(" · ")[0] : undefined, accent: Boolean(best) },
+          access === "sealed"
+            ? { label: "Comptant proposé", value: "—" }
+            : { label: "Comptant, meilleure offre", value: best ? formatPercent(best.upfrontPercent, 0) : "—" },
+        ]}
+        actions={
+          <>
+            <Link
+              href={`/annonces/${listing.publicNumber}`}
+              className="inline-flex h-10 items-center rounded-full border border-indigo bg-paper px-4 text-[14px] font-semibold !text-indigo-dark hover:bg-indigo-soft"
+            >
+              Fiche publique
             </Link>
-          ) : null}
-        </div>
-      </section>
+            {canRetain ? (
+              <Link
+                href={`/app/annonces/${listing.id}`}
+                className="inline-flex h-10 items-center rounded-full bg-indigo px-4 text-[14px] font-semibold !text-white hover:bg-indigo-dark"
+              >
+                Gérer l’annonce
+              </Link>
+            ) : null}
+          </>
+        }
+      />
+
+      {children}
 
       {access === "sealed" ? (
         <section className="mt-6 rounded-[1.75rem] border border-line bg-indigo-soft/60 p-6">
@@ -140,35 +132,6 @@ export function OfferReviewBoard({
         </section>
       ) : (
         <>
-          <section className="mt-6" aria-label="Synthèse">
-            <ul className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-              <li className="rounded-[1.25rem] border border-line bg-paper px-4 py-4">
-                <p className="tabular text-2xl font-bold text-ink">{ranked.length}</p>
-                <p className="mt-1 text-[13px] text-muted">
-                  {ranked.length === 1 ? "Proposition" : "Propositions"}
-                </p>
-              </li>
-              <li className="rounded-[1.25rem] border border-line bg-paper px-4 py-4">
-                <p className="tabular text-2xl font-bold text-ink">
-                  {best ? formatEuro(best.amount) : "Aucun"}
-                </p>
-                <p className="mt-1 text-[13px] text-muted">Meilleure offre</p>
-              </li>
-              <li className="rounded-[1.25rem] border border-line bg-paper px-4 py-4">
-                <p className="tabular text-2xl font-bold text-ink">
-                  {best ? vsAskingCopy(best.amount, asking).label.split(" · ")[0] : "Aucun"}
-                </p>
-                <p className="mt-1 text-[13px] text-muted">Écart au demandé</p>
-              </li>
-              <li className="rounded-[1.25rem] border border-line bg-paper px-4 py-4">
-                <p className="tabular text-2xl font-bold text-ink">
-                  {best ? formatPercent(best.upfrontPercent, 0) : "Aucun"}
-                </p>
-                <p className="mt-1 text-[13px] text-muted">Comptant, meilleure offre</p>
-              </li>
-            </ul>
-          </section>
-
           <section className="mt-6 rounded-[1.75rem] border border-line bg-paper p-5 sm:p-6">
             <h2 className="text-lg font-bold tracking-tight text-ink">Positionnement</h2>
             <p className="mt-1 text-[14px] text-muted">

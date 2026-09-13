@@ -1,6 +1,10 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { DeskPageHeader } from "@/components/app/desk";
 import { EmptyState, ToolIcon, type ToolIconName } from "@/components/app/toolbox";
+import { ATTESTATIONS_LABEL, ESCROW_LABEL, KIT_LABEL } from "@/lib/direct/fees";
+
+const TARIF: Record<ServiceKey, string> = { kit: KIT_LABEL, escrow: ESCROW_LABEL, attestations: ATTESTATIONS_LABEL };
 import { DirectDealCard } from "@/components/direct/direct-deal-card";
 import { ListControls } from "@/components/direct/list-controls";
 import { getActor, isOriasVerified } from "@/lib/authz";
@@ -54,28 +58,27 @@ export default async function ServiceListPage({
 
   return (
     <main className="w-full">
-      <header className="border-b border-line bg-paper">
-        <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-4 px-4 py-5 sm:px-6">
-          <div className="flex items-center gap-4">
-            <Link href="/app" aria-label="Retour au tableau de bord" className="text-muted hover:text-ink">
-              <ToolIcon name="arrow-left" className="h-5 w-5" />
-            </Link>
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight text-ink sm:text-[28px]">{service.listTitle}</h1>
-              <p className="mt-0.5 text-[15px] text-muted">{service.listLede}</p>
-            </div>
-          </div>
-          <Link
-            href={serviceCreateHref(service)}
-            className="inline-flex h-11 items-center gap-2 rounded-lg bg-indigo-dark px-5 text-[15px] font-semibold !text-white hover:bg-indigo"
-          >
-            <ToolIcon name="plus" className="h-4 w-4" />
-            {service.newLabel}
-          </Link>
-        </div>
-      </header>
-
       <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
+        <DeskPageHeader
+          back={{ href: "/app#actions-rapides", label: "Poste de marché" }}
+          kicker="Services à la carte"
+          title={service.listTitle}
+          subtitle={`${service.listLede}. ${service.pitch}`}
+          figures={[
+            { label: "Dossiers", value: String(total) },
+            { label: "Tarif", value: TARIF[service.key].split(",")[0], note: TARIF[service.key] },
+          ]}
+          actions={
+            <Link
+              href={serviceCreateHref(service)}
+              className="inline-flex h-11 items-center gap-2 rounded-full bg-indigo px-5 text-[15px] font-semibold !text-white hover:bg-indigo-dark"
+            >
+              <ToolIcon name="plus" className="h-4 w-4" />
+              {service.newLabel}
+            </Link>
+          }
+        />
+        <div className="mt-6" />
         <ListControls tri={reglages.tri} ordre={reglages.ordre} parPage={reglages.parPage} />
 
         {total === 0 ? (
