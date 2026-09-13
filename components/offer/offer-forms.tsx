@@ -54,7 +54,7 @@ export function SubmitOfferForm({
       </div>
       {state.error ? <p className="text-sm text-danger">{state.error}</p> : null}
       <Button type="submit" disabled={pending}>
-        {pending ? "Dépôt…" : "Déposer une offre scellée"}
+        {pending ? "Dépôt…" : "Déposer mon offre"}
       </Button>
     </form>
   );

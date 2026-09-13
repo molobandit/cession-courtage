@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { RefreshOnce } from "@/components/app/refresh-once";
 import { EmptyState, ToolIcon } from "@/components/app/toolbox";
 import { getActor, isOriasVerified } from "@/lib/authz";
 import { formatDateTime } from "@/lib/format/fr";
@@ -35,6 +36,7 @@ export default async function NotificationsPage() {
 
   return (
     <main className="mx-auto w-full max-w-3xl px-4 py-6 sm:px-6 sm:py-8">
+      <RefreshOnce when={nonLues.length > 0} />
       <h1 className="text-2xl font-bold tracking-tight text-ink sm:text-[28px]">Notifications</h1>
       <p className="mt-1 text-[15px] text-muted">
         Prises de position, offres, étapes de dossier et messages. Chaque ligne mène au dossier concerné.
