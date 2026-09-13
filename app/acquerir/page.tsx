@@ -97,15 +97,14 @@ export default async function AcquerirPage() {
             </h2>
             <p className="mt-4 text-[15px] leading-relaxed text-muted">
               Plutôt que de surveiller la salle de marché, vous décrivez une fois ce que
-              vous cherchez. Chaque nouvelle annonce est confrontée à votre mandat,
-              et vous êtes prévenu quand l’adéquation dépasse le seuil de mise en
-              relation. Vous recevez au plus un message par jour, et aucun message
-              quand rien ne correspond.
+              vous cherchez. Chaque portefeuille en séance est confronté à votre demande,
+              et ceux qui dépassent le seuil de mise en relation apparaissent dans vos
+              correspondances, avec leur score.
             </p>
             <p className="mt-4 text-[15px] leading-relaxed text-muted">
-              Un mandat exclusif vous donne une avance de 48 heures sur les autres
-              acquéreurs pour les dossiers qui correspondent exactement à vos
-              critères.
+              Publiée en salle de marché, votre demande reste sous alias. Un cédant dont le
+              portefeuille correspond peut vous le proposer directement : vous êtes prévenu,
+              et vous prenez position depuis sa fiche.
             </p>
           </div>
           <dl className="rounded-3xl border border-line bg-paper p-7">

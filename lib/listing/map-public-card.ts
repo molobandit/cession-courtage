@@ -1,4 +1,5 @@
 import { LISTING_STATUS_LABELS, RISK_TYPE_LABELS, SEGMENT_LABELS } from "@/lib/labels";
+import { marketStatus } from "@/lib/listing/market-status";
 import type { PublicListingCard } from "@/lib/listing/public-card";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -35,11 +36,14 @@ export function daysUntil(date: Date | null): number | null {
 }
 
 export function mapPublicListingCard(item: ListingForCard, facet: Facets): PublicListingCard {
+  const cotation = marketStatus({ status: item.status, offerWindowClosesAt: item.offerWindowClosesAt });
   return {
     id: item.id,
     publicNumber: item.publicNumber,
     status: item.status,
-    statusLabel: LISTING_STATUS_LABELS[item.status],
+    statusLabel: cotation.label,
+    marketDetail: cotation.detail,
+    marketTone: cotation.tone,
     zone: item.displayedZone,
     askingPrice: Number(item.askingPrice),
     annualCommissions: Number(item.portfolio.annualCommissions),

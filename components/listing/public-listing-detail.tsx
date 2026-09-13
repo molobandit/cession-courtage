@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { SectionTab, SectionTabLink, SectionTabs } from "@/components/ui/section-tabs";
+import { MarketBadge } from "@/components/listing/market-badge";
+import type { MarketTone } from "@/lib/listing/market-status";
 import { TakePositionButton } from "@/components/listing/take-position-button";
 import { MarketStamp } from "@/components/listing/market-stamp";
 import { MixDonut } from "@/components/charts/mix-donut";
@@ -20,6 +22,8 @@ export type PublicListingDetailModel = {
   title: string;
   zone: string;
   statusLabel: string;
+  marketTone: MarketTone;
+  marketDetail: string | null;
   certified: boolean;
   sold: boolean;
   isPartial: boolean;
@@ -72,14 +76,6 @@ function formatDateLong(value: Date) {
   }).format(value);
 }
 
-function windowCopy(daysLeft: number | null): string {
-  if (daysLeft === null) return "Fenêtre non datée";
-  if (daysLeft < 0) return "Fenêtre d’offres close";
-  if (daysLeft === 0) return "Clôture aujourd’hui";
-  if (daysLeft === 1) return "Clôture demain";
-  return `Clôture dans ${daysLeft} jours`;
-}
-
 function PinIcon() {
   return (
     <svg className="h-4 w-4 shrink-0" viewBox="0 0 16 16" fill="none" aria-hidden="true">
@@ -110,6 +106,8 @@ export function PublicListingDetail({
     title,
     zone,
     statusLabel,
+    marketTone,
+    marketDetail,
     certified,
     sold,
     isPartial,
@@ -121,7 +119,7 @@ export function PublicListingDetail({
     clientCount,
     multiple,
     deposit,
-    daysLeft,
+    daysLeft: _daysLeft,
     publishedAt,
     presentation,
     facts,
@@ -270,7 +268,7 @@ export function PublicListingDetail({
       <div className="mx-auto max-w-6xl px-4 pt-6">
         <p className="text-[13px] text-muted">
           <Link href="/annonces" className="font-medium hover:text-ink">
-            Annonces
+            Salle de marché
           </Link>
           {" · "}
           Dossier n° {publicNumber}
@@ -286,9 +284,7 @@ export function PublicListingDetail({
                   {!certified ? (
                     <span className="text-[12px] text-muted">{UNCERTIFIED_LABEL}</span>
                   ) : null}
-                  <span className="rounded-full border border-line bg-surface-alt px-3 py-1 text-[12px] text-ink">
-                    {statusLabel}
-                  </span>
+                  <MarketBadge label={statusLabel} tone={marketTone} />
                   <span className="rounded-full border border-line bg-surface-alt px-3 py-1 text-[12px] text-ink">
                     {isPartial ? "Cession partielle" : "Cession totale"}
                   </span>
@@ -303,7 +299,7 @@ export function PublicListingDetail({
                     {zone}
                   </span>
                   {publishedAt ? <span>Publié le {formatDateLong(publishedAt)}</span> : null}
-                  <span>{windowCopy(daysLeft)}</span>
+                  {marketDetail ? <span>{marketDetail}</span> : null}
                 </p>
               </div>
               <div className="text-right">
@@ -376,7 +372,7 @@ export function PublicListingDetail({
                 </SectionTabLink>
               )
             )}
-            {followHref ? (
+            {followHref && !sold ? (
               <Link
                 href={followHref}
                 className="mt-2 flex h-11 items-center justify-center rounded-full border border-line text-[14px] font-medium text-ink hover:bg-surface-alt"
@@ -384,6 +380,8 @@ export function PublicListingDetail({
                 Suivre ce dossier
               </Link>
             ) : null}
+            {/* Adjugé ou en négociation exclusive : plus d'abonnement ni de dépôt à annoncer. */}
+            {sold || (exclusive && !dealHref) ? null : (
             <p className="mt-3 text-[12px] leading-relaxed text-muted">
               Abonnement {GROWTH_PLAN_ANNUAL_EUR.toLocaleString("fr-FR")} € HT / an
               pour le contact. Anonymat jusqu’au dépôt de {INTEREST_DEPOSIT_LABEL} (
@@ -392,6 +390,7 @@ export function PublicListingDetail({
                 Paiement sécurisé
               </Link>
             </p>
+            )}
           </aside>
         </div>
 

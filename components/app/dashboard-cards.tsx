@@ -1,20 +1,13 @@
 import Link from "next/link";
+import { MarketBadge } from "@/components/listing/market-badge";
 import { formatEuroWhole } from "@/lib/format/number";
 import type { PublicListingCard } from "@/lib/listing/public-card";
 import { cn } from "@/lib/utils";
 
-function windowLabel(daysLeft: number | null): string | null {
-  if (daysLeft === null) return null;
-  if (daysLeft < 0) return "Fenêtre close";
-  if (daysLeft === 0) return "Clôture aujourd’hui";
-  if (daysLeft === 1) return "Clôture demain";
-  return `${daysLeft} jours restants`;
-}
-
 export function MarketplaceHero() {
   return (
     <section className="overflow-hidden rounded-[1.75rem] bg-gradient-to-br from-indigo via-indigo-mid to-indigo-dark p-5 text-white shadow-sm sm:p-8">
-      <p className="text-[13px] font-medium text-white/80">Place de marché</p>
+      <p className="text-[13px] font-medium text-white/80">Salle de marché</p>
       <h2 className="mt-1 text-xl font-bold tracking-tight sm:text-2xl">
         Portefeuilles et demandes d’acquisition
       </h2>
@@ -35,15 +28,17 @@ export function MarketplaceHero() {
 export function CompactListingCard({ item }: { item: PublicListingCard }) {
   const zone = item.isNationwide ? "France entière" : item.zone;
   const branches = item.riskTypes.slice(0, 4).join(", ");
-  const closing = windowLabel(item.daysLeft);
 
   return (
     <li>
       <Link href={`/annonces/${item.publicNumber}`} className="lift block rounded-2xl border border-line bg-surface p-4 hover:border-indigo sm:p-5">
         <div className="flex flex-wrap gap-2">
-          <Pill>{item.statusLabel}</Pill>
-          {item.certified ? <Pill tone="ok">Vérifié</Pill> : null}
-          {closing ? <Pill tone="warn">{closing}</Pill> : null}
+          <MarketBadge
+            label={item.statusLabel}
+            tone={item.marketTone}
+            detail={item.marketTone === "sealed" ? item.marketDetail : null}
+          />
+          {item.certified ? <Pill tone="ok">Certifié</Pill> : null}
         </div>
         <p className="mt-3 text-[16px] font-semibold text-ink">Dossier n° {item.publicNumber}</p>
         {branches ? <p className="mt-1 line-clamp-2 text-[13px] leading-relaxed text-muted">{branches}</p> : null}

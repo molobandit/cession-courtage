@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { MarketBadge } from "@/components/listing/market-badge";
 import { MarketStamp } from "@/components/listing/market-stamp";
 import { UNCERTIFIED_LABEL } from "@/lib/copy/market";
 import { formatCount, formatEuroWhole } from "@/lib/format/number";
@@ -23,6 +24,12 @@ export function ListingAdCard({ item }: { item: PublicListingCard }) {
         <h3 className={`text-[17px] font-semibold leading-snug text-ink ${item.certified || item.sold ? "pr-24" : ""}`}>
           {title}
         </h3>
+        <MarketBadge
+          className="mt-2"
+          label={item.statusLabel}
+          tone={item.marketTone}
+          detail={item.marketTone === "sealed" ? item.marketDetail : null}
+        />
         {item.certified ? null : (
           <p className="mt-2 text-[12px] text-muted">{UNCERTIFIED_LABEL}</p>
         )}
@@ -41,7 +48,10 @@ export function ListingAdCard({ item }: { item: PublicListingCard }) {
             <p className="mt-0.5 text-[12px] text-muted">Prix demandé</p>
           </div>
         </div>
-        <p className="mt-3 text-[13px] font-medium text-ink">{perception.modeLine}</p>
+        {/* « Non précisé » sur chaque carte n'apprenait rien : la ligne n'apparaît que si le mode est connu. */}
+        {perception.mode !== "UNSTATED" ? (
+          <p className="mt-3 text-[13px] font-medium text-ink">{perception.modeLine}</p>
+        ) : null}
         {perception.amountLine ? (
           <p className="mt-0.5 text-[13px] text-muted">{perception.amountLine}</p>
         ) : null}

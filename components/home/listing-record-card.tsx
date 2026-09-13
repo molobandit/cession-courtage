@@ -31,7 +31,7 @@ export function ListingRecordCard({ item }: { item: PublicListingCard }) {
           <dd className="tabular mt-0.5 text-[16px] font-semibold text-indigo">
             {formatEuroWhole(item.annualCommissions)}
           </dd>
-          <p className="mt-1 text-[12px] text-muted">{perception.modeLine}</p>
+          {perception.mode !== "UNSTATED" ? <p className="mt-1 text-[12px] text-muted">{perception.modeLine}</p> : null}
         </div>
       </dl>
       <div className="mt-auto pt-6">

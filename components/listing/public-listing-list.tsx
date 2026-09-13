@@ -263,7 +263,14 @@ export function PublicListingList({
           <p className="mt-4 text-[15px] text-muted" aria-live="polite">
             {visible.length === 0
               ? "Aucun dossier pour le moment."
-              : `${formatCount(visible.length)} portefeuille${visible.length > 1 ? "s" : ""}`}
+              : (() => {
+                  // Comme une cote : les titres en séance d'abord, les adjugés ensuite.
+                  const vendus = visible.filter((item) => item.sold).length;
+                  const enSeance = visible.length - vendus;
+                  return `${formatCount(enSeance)} portefeuille${enSeance > 1 ? "s" : ""} en séance${
+                    vendus > 0 ? ` · ${formatCount(vendus)} vendu${vendus > 1 ? "s" : ""}` : ""
+                  }`;
+                })()}
           </p>
         </div>
       )}

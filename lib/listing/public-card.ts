@@ -3,6 +3,9 @@ export type PublicListingCard = {
   publicNumber: number;
   status: string;
   statusLabel: string;
+  /** Compte à rebours ou précision de cotation. */
+  marketDetail: string | null;
+  marketTone: "open" | "sealed" | "negotiation" | "sold" | "off";
   zone: string;
   askingPrice: number;
   annualCommissions: number;

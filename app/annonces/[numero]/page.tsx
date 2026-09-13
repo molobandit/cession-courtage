@@ -20,13 +20,14 @@ import {
 } from "@/lib/authz";
 import { listingAcceptsOffers } from "@/lib/offer/acceptance";
 import { findPositionId } from "@/lib/position/load";
+import { marketStatus } from "@/lib/listing/market-status";
 import { isOfferWindowSealed, ownsFirm } from "@/lib/authz/policies";
 import { hasContactSubscription } from "@/lib/billing/contact-access";
 import { GROWTH_PLAN_ANNUAL_EUR, INTEREST_DEPOSIT_LABEL, interestDepositFor } from "@/lib/billing/rates";
 import { CESSION_FUNDS_DISCLAIMER } from "@/lib/partners/catalog";
 import { EMPTY_CELL, formatDateTime } from "@/lib/format/fr";
 import { formatEuroWhole } from "@/lib/format/number";
-import { LISTING_STATUS_LABELS, RISK_TYPE_LABELS, SEGMENT_LABELS } from "@/lib/labels";
+import { RISK_TYPE_LABELS, SEGMENT_LABELS } from "@/lib/labels";
 import { OFFER_WINDOW_DAYS } from "@/lib/listing/constants";
 import { commissionPerceptionCopy } from "@/lib/listing/perception";
 import { loadListingBriefFields } from "@/lib/listing/brief-fields";
@@ -206,6 +207,7 @@ export default async function PublicListingPage({
     ...regulatoryFacts(brief.regulatory),
   ];
 
+  const cotation = marketStatus({ status: listing.status, offerWindowClosesAt: listing.offerWindowClosesAt });
   const listingPath = `/annonces/${listing.publicNumber}`;
   const interestHref = !actor
     ? `/connexion?next=${encodeURIComponent(listingPath)}`
@@ -231,7 +233,9 @@ export default async function PublicListingPage({
         publicNumber: listing.publicNumber,
         title,
         zone,
-        statusLabel: LISTING_STATUS_LABELS[listing.status],
+        statusLabel: cotation.label,
+        marketTone: cotation.tone,
+        marketDetail: cotation.detail,
         certified,
         sold,
         isPartial: listing.isPartial,

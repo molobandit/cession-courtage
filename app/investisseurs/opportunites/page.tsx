@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { MarketBadge } from "@/components/listing/market-badge";
 import { MarketStamp } from "@/components/listing/market-stamp";
 import { InvestorInquiryForm } from "@/components/investor/inquiry-form";
 import { formatCount, formatEuroWhole } from "@/lib/format/number";
@@ -39,18 +40,25 @@ export default async function InvestorOpportunitiesPage({
               {item.riskTypes[0] ? ` · ${item.riskTypes[0]}` : ""}
             </p>
             <ul className="mt-3 space-y-1 text-[14px] text-muted">
-              <li>Clients / contrats : {formatCount(item.contractCount)}</li>
+              <li>Contrats : {formatCount(item.contractCount)}</li>
               <li>Commission annuelle : {formatEuroWhole(item.annualCommissions)}</li>
               <li>Prix de cession : {formatEuroWhole(item.askingPrice)}</li>
-              <li>Statut : {item.certified ? "Certifié" : "Non certifié"}</li>
+              <li>{item.certified ? "Portefeuille certifié" : "Portefeuille non certifié"}</li>
             </ul>
-            {item.certified ? <MarketStamp kind="certified" /> : null}
-            {item.sold ? <MarketStamp kind="sold" /> : null}
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <MarketBadge
+                label={item.statusLabel}
+                tone={item.marketTone}
+                detail={item.marketTone === "sealed" ? item.marketDetail : null}
+              />
+              {item.certified ? <MarketStamp kind="certified" /> : null}
+              {item.sold ? <MarketStamp kind="sold" /> : null}
+            </div>
             <Link
               href={`/annonces/${item.publicNumber}?voie=investir`}
               className="mt-4 inline-block text-[14px] font-medium text-indigo underline-offset-2 hover:underline"
             >
-              Suivre ce dossier
+              {item.sold ? "Voir le dossier" : "Suivre ce dossier"}
             </Link>
           </li>
         ))}

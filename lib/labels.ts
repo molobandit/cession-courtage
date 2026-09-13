@@ -45,14 +45,19 @@ export const COMMISSION_TYPE_LABELS: Record<CommissionType, string> = {
   ADVANCED: "Précomptée",
 };
 
+/**
+ * Vocabulaire de cotation, identique à `MARKET_STATUS_LABELS` : une annonce dont
+ * la fenêtre scellée est terminée reçoit encore des offres, elle est donc
+ * « ouverte », pas « close ».
+ */
 export const LISTING_STATUS_LABELS: Record<ListingStatus, string> = {
   DRAFT: "Brouillon",
-  PUBLISHED: "Publiée",
-  OFFERS_OPEN: "Offres ouvertes",
-  OFFERS_CLOSED: "Fenêtre close",
+  PUBLISHED: "Offres ouvertes",
+  OFFERS_OPEN: "Offres scellées",
+  OFFERS_CLOSED: "Offres ouvertes",
   UNDER_NEGOTIATION: "En négociation",
-  SOLD: "Cédée",
-  WITHDRAWN: "Retirée",
+  SOLD: "Vendu",
+  WITHDRAWN: "Retiré du marché",
 };
 
 export const DEAL_STAGE_LABELS: Record<DealStage, string> = {
