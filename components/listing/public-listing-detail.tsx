@@ -210,11 +210,13 @@ export function PublicListingDetail({
         <div className="mt-6 grid gap-6 lg:grid-cols-2">
           <RankedBars
             title="Compagnies"
+            unit={["compagnie", "compagnies"]}
             subtitle="Commissions annuelles par porteur."
             shares={byCarrier}
           />
           <RankedBars
             title="Clientèles"
+            unit={["profil", "profils"]}
             subtitle="Commissions annuelles par profil : particuliers, professionnels, entreprises."
             shares={bySegment}
           />
@@ -223,6 +225,7 @@ export function PublicListingDetail({
         <div className="mt-6 grid gap-6 lg:grid-cols-2">
           <RankedBars
             title="Zones"
+            unit={["département", "départements"]}
             subtitle="Départements du portefeuille, grain maximal autorisé. Commissions annuelles."
             shares={byDepartment}
           />
@@ -515,16 +518,66 @@ function YearlyRenewals({ years }: { years: RenewalYear[] }) {
     </tbody>
   );
 
+  const max = Math.max(...years.map((y) => y.commissions), 0);
+  const aVenirTotal = aVenir.reduce((somme, y) => somme + y.commissions, 0);
+  const aVenirContrats = aVenir.reduce((somme, y) => somme + y.contracts, 0);
+  const premiere = passees.find((y) => y.commissions > 0);
+  const derniere = passees[passees.length - 1];
+
   return (
-    <article className="rounded-3xl border border-line bg-paper p-7 shadow-sm">
-      <h3 className="text-lg font-semibold text-ink">Renouvellements par année</h3>
-      <p className="mt-1 text-sm text-muted">
-        Les quatre dernières années, puis les échéances des douze prochains mois. L’historique est
-        reconstitué sur les contrats encore en portefeuille, d’après leur date d’effet.
-      </p>
+    <article className="flex h-full flex-col rounded-3xl border border-line bg-paper p-6 shadow-sm">
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <h3 className="text-lg font-semibold text-ink">Renouvellements par année</h3>
+          <p className="mt-1 text-sm text-muted">
+            Les quatre dernières années, puis les échéances des douze prochains mois. L’historique est
+            reconstitué sur les contrats encore en portefeuille, d’après leur date d’effet.
+          </p>
+        </div>
+        {hasData ? (
+          <div className="shrink-0 text-right">
+            <p className="tabular text-[20px] font-bold leading-none text-ink">{formatEuroWhole(aVenirTotal)}</p>
+            <p className="mt-1 text-[12px] text-muted">à renouveler · 12 mois</p>
+          </div>
+        ) : null}
+      </div>
       {!hasData ? (
         <p className="mt-4 text-[15px] text-muted">Aucune date d’effet ni échéance renseignée.</p>
       ) : (
+        <>
+        <div className="mt-6">
+          <div className="flex h-40 items-end gap-2 border-b border-line" role="img" aria-label={`Renouvellements : ${years.map((y) => `${y.year} ${formatEuroWhole(y.commissions)}`).join(", ")}`}>
+            {years.map((y) => {
+              const hauteur = max > 0 ? (y.commissions / max) * 100 : 0;
+              return (
+                <div
+                  key={`${y.kind}-${y.year}`}
+                  className="flex h-full flex-1 flex-col items-center justify-end gap-1"
+                  title={`${y.year} · ${y.kind === "past" ? "renouvelé" : "à venir"} — ${formatEuroWhole(y.commissions)} · ${formatCount(y.contracts)} contrats`}
+                >
+                  <span className="tabular whitespace-nowrap text-[11px] font-medium text-ink">
+                    {formatEuroWhole(y.commissions)}
+                  </span>
+                  <div
+                    className={`w-full max-w-12 rounded-t ${y.kind === "past" ? "bg-indigo-line" : "bg-indigo"}`}
+                    style={{ height: `${Math.max(hauteur * 0.82, y.commissions > 0 ? 2 : 0)}%` }}
+                  />
+                </div>
+              );
+            })}
+          </div>
+          <div className="mt-1.5 flex gap-2">
+            {years.map((y) => (
+              <span key={`${y.kind}-${y.year}-l`} className="tabular flex-1 text-center text-[12px] font-semibold text-muted">
+                {y.year}
+              </span>
+            ))}
+          </div>
+          <div className="mt-3 flex flex-wrap gap-4 text-[12px] text-muted">
+            <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-[3px] bg-indigo-line" />Renouvelés</span>
+            <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-[3px] bg-indigo" />À venir</span>
+          </div>
+        </div>
         <div className="overflow-x-auto">
           <table className="mt-3 w-full min-w-[20rem] border-collapse text-left">
             <thead>
@@ -538,7 +591,23 @@ function YearlyRenewals({ years }: { years: RenewalYear[] }) {
             {aVenir.length ? bloc("À venir", aVenir) : null}
           </table>
         </div>
+        </>
       )}
+      <div className="flex-1" />
+      {hasData ? (
+        <p className="mt-4 border-t border-line pt-4 text-[13px] leading-relaxed text-muted">
+          <span className="font-medium text-ink">{formatEuroWhole(aVenirTotal)}</span> de commissions
+          arrivent à échéance sur les douze prochains mois ({formatCount(aVenirContrats)} contrats)
+          {premiere && derniere && premiere.year !== derniere.year ? (
+            <>
+              . Sur la clientèle actuelle, les renouvellements sont passés de{" "}
+              <span className="font-medium text-ink">{formatEuroWhole(premiere.commissions)}</span> en {premiere.year} à{" "}
+              <span className="font-medium text-ink">{formatEuroWhole(derniere.commissions)}</span> en {derniere.year}
+            </>
+          ) : null}
+          .
+        </p>
+      ) : null}
     </article>
   );
 }

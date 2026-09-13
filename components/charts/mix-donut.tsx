@@ -74,14 +74,14 @@ export function MixDonut({
   const seconde = parts.filter((p) => !p.label.startsWith("Autres"))[1];
 
   return (
-    <figure className="flex h-full flex-col rounded-3xl border border-line bg-paper p-6 shadow-sm">
-      <figcaption className="flex flex-wrap items-start justify-between gap-3">
+    <figure className="@container flex h-full flex-col rounded-3xl border border-line bg-paper p-6 shadow-sm">
+      <figcaption className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <h3 className="text-lg font-semibold text-ink">{title}</h3>
           {subtitle ? <p className="mt-1 text-sm text-muted">{subtitle}</p> : null}
         </div>
         {parts.length ? (
-          <div className="text-right">
+          <div className="shrink-0 text-right">
             <p className="tabular text-[20px] font-bold leading-none text-ink">{formatEuroWhole(total)}</p>
             <p className="mt-1 text-[12px] text-muted">
               commissions / an · {formatCount(nombreBranches)} branche{nombreBranches > 1 ? "s" : ""}
@@ -93,7 +93,7 @@ export function MixDonut({
       {parts.length === 0 ? (
         <p className="mt-4 text-[15px] text-muted">{emptyLabel}</p>
       ) : (
-        <div className="mt-6 grid items-center gap-6 sm:grid-cols-[11rem_minmax(0,1fr)]">
+        <div className="mt-6 grid items-center gap-6 @[34rem]:grid-cols-[11rem_minmax(0,1fr)]">
           <svg viewBox="0 0 200 200" className="mx-auto h-44 w-44" role="img" aria-label={`Répartition par branche : ${parts.map((p) => `${p.label} ${pourcent(p.share)}`).join(", ")}`}>
             <circle cx="100" cy="100" r="80" fill="none" stroke="#eef2f7" strokeWidth="30" />
             {parts.length === 1 ? (

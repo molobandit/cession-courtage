@@ -257,11 +257,13 @@ export default async function PortfolioPage({ params }: { params: Promise<{ id: 
         <div className="mt-5 grid gap-5 lg:grid-cols-2">
           <RankedBars
             title="Répartition par compagnie"
+            unit={["compagnie", "compagnies"]}
             subtitle="Part des commissions annuelles portée par chaque compagnie."
             shares={byCarrier}
           />
           <RankedBars
             title="Répartition par branche"
+            unit={["branche", "branches"]}
             subtitle="Les branches professionnelles se négocient plus cher que les particuliers."
             shares={byRisk}
           />
@@ -270,11 +272,13 @@ export default async function PortfolioPage({ params }: { params: Promise<{ id: 
         <div className="mt-5 grid gap-5 lg:grid-cols-2">
           <RankedBars
             title="Répartition par clientèle"
+            unit={["profil", "profils"]}
             subtitle="La clientèle dominante détermine la fourchette de multiple applicable."
             shares={bySegment}
           />
           <RankedBars
             title="Implantation géographique"
+            unit={["département", "départements"]}
             subtitle="Un acquéreur cherche une zone qu’il sait déjà servir."
             shares={byDepartment}
           />
