@@ -44,6 +44,10 @@ export type DocumentContext = {
   effectiveDate: Date | null;
   deedSignedAt: Date | null;
   issuedAt: Date;
+  /** Référence affichée ; à défaut, celle d'un dossier de gré à gré. */
+  reference?: string;
+  /** Conditions particulières de la lettre d'intention. */
+  conditions?: string | null;
 };
 
 export type DocumentSection = { heading?: string; paragraphs: string[] };
@@ -91,6 +95,10 @@ export function formatLongDate(value: Date | null): string {
 
 export function dealReference(dealId: string): string {
   return `GG-${dealId.slice(-8).toUpperCase()}`;
+}
+
+function referenceOf(ctx: DocumentContext): string {
+  return ctx.reference ?? dealReference(ctx.dealId);
 }
 
 /** « Cabinet X, SAS, SIREN 123, 1 rue…, ORIAS n° 07… » — le cabinet seul. */
@@ -162,7 +170,7 @@ export function buildConfidentialityAgreement(ctx: DocumentContext): GeneratedDo
     key: "confidentialite",
     title: "Accord de confidentialité",
     subtitle: "Engagement réciproque préalable à la cession d’un portefeuille de courtage",
-    reference: dealReference(ctx.dealId),
+    reference: referenceOf(ctx),
     sections: [
       {
         heading: "Entre les soussignés",
@@ -211,6 +219,70 @@ export function buildConfidentialityAgreement(ctx: DocumentContext): GeneratedDo
 }
 
 // ---------------------------------------------------------------------------
+// Lettre d'intention
+// ---------------------------------------------------------------------------
+
+export function buildLetterOfIntent(ctx: DocumentContext): GeneratedDocument {
+  const comptant = Math.round(ctx.salePrice * (ctx.upfrontPercent / 100) * 100) / 100;
+  const solde = Math.round((ctx.salePrice - comptant) * 100) / 100;
+  const sections: DocumentSection[] = [
+    {
+      heading: "Entre les soussignés",
+      paragraphs: [
+        `${describeParty(ctx.buyer)}, ci-après « l’acquéreur » ;`,
+        `${describeParty(ctx.seller)}, ci-après « le cédant ».`,
+      ],
+    },
+    {
+      heading: "Article 1 — Objet",
+      paragraphs: [
+        `Après examen des pièces mises à sa disposition, l’acquéreur fait part de son intention d’acquérir le portefeuille suivant : ${ctx.portfolioLabel}.`,
+      ],
+    },
+    {
+      heading: "Article 2 — Prix",
+      paragraphs: [
+        `Le prix proposé est de ${euro.format(ctx.salePrice)}, net vendeur.`,
+        solde > 0
+          ? `${euro.format(comptant)} (${ctx.upfrontPercent.toLocaleString("fr-FR")} %) sont versés sur un compte séquestre à la signature du protocole. Le solde de ${euro.format(solde)} est libéré après la vérification de conservation à douze mois : il est ajusté au taux de conservation constaté rapporté à l’objectif de 90 %, dans la limite de 50 % à 100 % du solde.`
+          : "Il est payable en totalité comptant, par l’intermédiaire du compte séquestre.",
+      ],
+    },
+    {
+      heading: "Article 3 — Date d’effet envisagée",
+      paragraphs: [`Les parties envisagent un transfert des contrats au ${formatLongDate(ctx.effectiveDate)}.`],
+    },
+    {
+      heading: "Article 4 — Conditions",
+      paragraphs: [
+        "La présente intention est subordonnée à la vérification de l’identité et de l’immatriculation des deux cabinets, à la signature d’un protocole de cession, et, lorsque la compagnie l’exige, à son accord sur le transfert des contrats.",
+        ...(ctx.conditions?.trim() ? [`Conditions particulières : ${ctx.conditions.trim()}`] : []),
+      ],
+    },
+    {
+      heading: "Article 5 — Exclusivité et portée",
+      paragraphs: [
+        "À compter de son acceptation, le cédant s’interdit de négocier la cession du portefeuille avec un tiers pendant soixante jours.",
+        "La présente lettre ne vaut pas cession. Seules les stipulations relatives à l’exclusivité et à la confidentialité engagent les parties dès son acceptation.",
+      ],
+    },
+  ];
+  return {
+    key: "lettre-intention",
+    title: "Lettre d’intention",
+    subtitle: "Acquisition d’un portefeuille de contrats d’assurance",
+    reference: referenceOf(ctx),
+    sections,
+    signatories: [
+      { label: "L’acquéreur", name: fill(ctx.buyer.legalName), capacity: `Représentée par ${fill(ctx.buyer.representative)}` },
+      { label: "Le cédant", name: fill(ctx.seller.legalName), capacity: `Représentée par ${fill(ctx.seller.representative)}` },
+    ],
+    notice: NOTICE,
+    signedAt: null,
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Protocole de cession
 // ---------------------------------------------------------------------------
 
@@ -234,7 +306,7 @@ export function buildTransferDeed(ctx: DocumentContext): GeneratedDocument {
     key: "protocole",
     title: "Protocole de cession de portefeuille",
     subtitle: "Cession d’un portefeuille de contrats d’assurance entre intermédiaires",
-    reference: dealReference(ctx.dealId),
+    reference: referenceOf(ctx),
     sections: [
       {
         heading: "Entre les soussignés",
@@ -323,7 +395,7 @@ export function buildTransferCertificate(
     key: certificateKey(carrierIndex),
     title: "Attestation de transfert de portefeuille",
     subtitle: `Compagnie : ${carrier.name}`,
-    reference: `${dealReference(ctx.dealId)}-${carrierIndex + 1}`,
+    reference: `${referenceOf(ctx)}-${carrierIndex + 1}`,
     addressee: [carrier.name, "À l’attention du service partenaires / courtage"],
     sections: [
       {

@@ -1,23 +1,22 @@
 "use server";
 
-import { DealStage, DocumentType, ListingStatus } from "@prisma/client";
-import { createHash } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { getActor, isOriasVerified } from "@/lib/authz/actor";
-import { isDealParticipant, isStageAtLeast, ownsFirm } from "@/lib/authz/policies";
+import { isDealParticipant, ownsFirm } from "@/lib/authz/policies";
 import { ForbiddenError, UnauthenticatedError } from "@/lib/authz/errors";
 import { firstIssue, messageSchema } from "@/lib/validations/actions";
 import {
   isListingMailboxParty,
   listingSellerUserId,
 } from "@/lib/authz/messages";
-import { holdEscrowFunds, releaseEscrowFunds, signDealDocument, verifyPartyIdentity } from "@/lib/partners/runtime";
 import { prisma } from "@/lib/prisma";
-import { notifyDealStage, notifyListingMessage } from "@/lib/position/events";
+import { notifyDealEvent, notifyListingMessage } from "@/lib/position/events";
 import { offPlatformPhoneError } from "@/lib/chat/phone-block";
-import { putObject } from "@/lib/storage/objects";
-import { listingLots, readCarriers } from "@/lib/listing/lot-availability";
-import { fullyCommitted } from "@/lib/listing/lots";
+
+/*
+ * Les étapes du dossier de cession vivent dans `deal-process.ts` : chacune y
+ * exige ses pièces et ses validations. Il ne reste ici que les messageries.
+ */
 
 export type DealFormState = { error?: string };
 
@@ -35,292 +34,6 @@ async function loadDeal(dealId: string) {
   return { actor, deal };
 }
 
-export async function acceptNdaAction(_prev: DealFormState, formData: FormData): Promise<DealFormState> {
-  try {
-    const { actor, deal } = await loadDeal(String(formData.get("dealId") ?? ""));
-    if (deal.stage !== DealStage.NDA) return { error: "L'accord de confidentialité n'est plus à cette étape." };
-    await prisma.deal.update({
-      where: { id: deal.id },
-      data: { ndaAcceptedAt: new Date(), stage: DealStage.DATA_ROOM },
-    });
-    await prisma.document.create({
-      data: {
-        dealId: deal.id,
-        type: DocumentType.NDA,
-        fileName: "accord-confidentialite-mock.pdf",
-        storageKey: `deals/${deal.id}/nda-mock.pdf`,
-        sha256: createHash("sha256").update(`nda:${deal.id}`).digest("hex"),
-        uploadedById: deal.sellerId,
-        signedAt: new Date(),
-      },
-    });
-    await notifyDealStage(deal.id, actor.id).catch((e) => console.error("notifyDealStage", e));
-    revalidatePath(`/app/dossiers/${deal.id}`);
-    return {};
-  } catch (error) {
-    return { error: error instanceof Error ? error.message : "Signature impossible." };
-  }
-}
-
-export async function uploadDataRoomFileAction(
-  _prev: DealFormState,
-  formData: FormData,
-): Promise<DealFormState> {
-  try {
-    const { actor, deal } = await loadDeal(String(formData.get("dealId") ?? ""));
-    if (!isStageAtLeast(deal.stage, DealStage.DATA_ROOM)) {
-      return { error: "Salle de données fermée tant que l'NDA n'est pas accepté." };
-    }
-    if (actor.id !== deal.sellerId) return { error: "Seul le cédant dépose les fichiers." };
-    const file = formData.get("file");
-    if (!(file instanceof File) || file.size === 0) return { error: "Choisissez un fichier." };
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const sha256 = createHash("sha256").update(buffer).digest("hex");
-    const safe = file.name.replace(/[^a-zA-Z0-9._-]+/g, "_").slice(0, 80) || "document";
-    // Horodatage passe en parametre : le nom de cle ne doit pas dependre de
-    // l'instant d'execution ailleurs que ici.
-    const storageKey = `deals/${deal.id}/${Date.now()}-${safe}`;
-    // Workers n'a pas de systeme de fichiers : le contenu part dans R2.
-    await putObject(storageKey, new Uint8Array(buffer));
-    await prisma.document.create({
-      data: {
-        dealId: deal.id,
-        type: DocumentType.OTHER,
-        fileName: file.name,
-        storageKey,
-        sha256,
-        uploadedById: actor.id,
-      },
-    });
-    revalidatePath(`/app/dossiers/${deal.id}`);
-    return {};
-  } catch (error) {
-    return { error: error instanceof Error ? error.message : "Dépôt impossible." };
-  }
-}
-
-export async function logDataRoomViewAction(dealId: string, documentId: string): Promise<void> {
-  const { actor, deal } = await loadDeal(dealId);
-  if (!isStageAtLeast(deal.stage, DealStage.DATA_ROOM)) return;
-  await prisma.dataRoomView.create({
-    data: { dealId, viewerId: actor.id, documentId },
-  });
-  await prisma.auditLog.create({
-    data: {
-      actorId: actor.id,
-      action: "DATA_ROOM_VIEW",
-      entityType: "Document",
-      entityId: documentId,
-      metadata: { dealId },
-    },
-  });
-}
-
-export async function mockKycAction(_prev: DealFormState, formData: FormData): Promise<DealFormState> {
-  try {
-    const { actor, deal } = await loadDeal(String(formData.get("dealId") ?? ""));
-    if (deal.stage !== DealStage.KYC && deal.stage !== DealStage.LOI) {
-      return { error: "KYC hors séquence." };
-    }
-    await verifyPartyIdentity(actor.id);
-    /*
-     * Deux temps, comme l'annonce le parcours : « lancer la vérification » à
-     * l'accord de prix, « terminer la conformité » à l'étape suivante.
-     *
-     * Le premier manquait. Rien dans le code n'écrivait jamais `KYC`, si bien
-     * qu'un dossier arrivé à la lettre d'intention y restait pour toujours : la
-     * garde du protocole exige l'étape KYC, que plus rien ne pouvait produire.
-     * Le tunnel s'arrêtait là, sans message d'erreur — l'action répondait même
-     * un succès, puisqu'elle enregistrait bien la vérification.
-     */
-    const suivante =
-      deal.stage === DealStage.LOI ? DealStage.KYC : DealStage.DEED;
-    await prisma.deal.update({ where: { id: deal.id }, data: { stage: suivante } });
-    await notifyDealStage(deal.id, actor.id).catch((e) => console.error("notifyDealStage", e));
-    revalidatePath(`/app/dossiers/${deal.id}`);
-    return {};
-  } catch (error) {
-    return { error: error instanceof Error ? error.message : "KYC impossible." };
-  }
-}
-
-export async function mockSignDealDocAction(_prev: DealFormState, formData: FormData): Promise<DealFormState> {
-  try {
-    const { actor, deal } = await loadDeal(String(formData.get("dealId") ?? ""));
-    const documentId = String(formData.get("documentId") ?? "");
-    await signDealDocument(documentId);
-    if (deal.stage === DealStage.SIGNATURE || deal.stage === DealStage.DEED) {
-      const next = deal.stage === DealStage.DEED ? DealStage.SIGNATURE : DealStage.ESCROW;
-      await prisma.deal.update({ where: { id: deal.id }, data: { stage: next } });
-    }
-    await notifyDealStage(deal.id, actor.id).catch((e) => console.error("notifyDealStage", e));
-    revalidatePath(`/app/dossiers/${deal.id}`);
-    return {};
-  } catch (error) {
-    return { error: error instanceof Error ? error.message : "Signature impossible." };
-  }
-}
-
-export async function mockEscrowAction(_prev: DealFormState, formData: FormData): Promise<DealFormState> {
-  try {
-    const { actor, deal } = await loadDeal(String(formData.get("dealId") ?? ""));
-    /*
-     * Le séquestre ne se déclenche qu'à son étape, une seule fois. Les fonds se
-     * libèrent à la clôture (closeDealAction), jamais par ce bouton : l'accepter
-     * en dehors de l'étape rebloquait ou libérait des fonds sur un dossier
-     * déjà clos.
-     */
-    if (deal.stage !== DealStage.ESCROW) {
-      return { error: "Le séquestre n’est pas à cette étape." };
-    }
-    await holdEscrowFunds(deal.id);
-    await prisma.deal.update({ where: { id: deal.id }, data: { stage: DealStage.TRANSFER } });
-    await notifyDealStage(deal.id, actor.id).catch((e) => console.error("notifyDealStage", e));
-    revalidatePath(`/app/dossiers/${deal.id}`);
-    return {};
-  } catch (error) {
-    return { error: error instanceof Error ? error.message : "Séquestre impossible." };
-  }
-}
-
-export async function signLoiAction(
-  _prev: DealFormState,
-  formData: FormData,
-): Promise<DealFormState> {
-  try {
-    const { actor, deal } = await loadDeal(String(formData.get("dealId") ?? ""));
-    if (deal.stage !== DealStage.DATA_ROOM) {
-      return { error: "La lettre d'intention n'est possible qu'après ouverture de la salle de données." };
-    }
-    if (!deal.ndaAcceptedAt) return { error: "Acceptez d'abord l'accord de confidentialité." };
-    await prisma.deal.update({ where: { id: deal.id }, data: { stage: DealStage.LOI } });
-    await prisma.document.create({
-      data: {
-        dealId: deal.id,
-        type: DocumentType.LOI,
-        fileName: "lettre-intention-mock.pdf",
-        storageKey: `deals/${deal.id}/loi-mock.pdf`,
-        sha256: createHash("sha256").update(`loi:${deal.id}`).digest("hex"),
-        uploadedById: actor.id,
-        signedAt: new Date(),
-      },
-    });
-    await prisma.auditLog.create({
-      data: {
-        actorId: actor.id,
-        action: "IDENTIFYING_DATA_VIEW",
-        entityType: "Deal",
-        entityId: deal.id,
-        metadata: { reason: "stage_loi" },
-      },
-    });
-    await notifyDealStage(deal.id, actor.id).catch((e) => console.error("notifyDealStage", e));
-    revalidatePath(`/app/dossiers/${deal.id}`);
-    return {};
-  } catch (error) {
-    return { error: error instanceof Error ? error.message : "LOI impossible." };
-  }
-}
-
-export async function validateDeedAction(
-  _prev: DealFormState,
-  formData: FormData,
-): Promise<DealFormState> {
-  try {
-    const { actor, deal } = await loadDeal(String(formData.get("dealId") ?? ""));
-    if (deal.stage !== DealStage.DEED) return { error: "Le protocole n'est pas à cette étape." };
-    await prisma.deal.update({ where: { id: deal.id }, data: { stage: DealStage.SIGNATURE } });
-    await notifyDealStage(deal.id, actor.id).catch((e) => console.error("notifyDealStage", e));
-    revalidatePath(`/app/dossiers/${deal.id}`);
-    return {};
-  } catch (error) {
-    return { error: error instanceof Error ? error.message : "Validation impossible." };
-  }
-}
-
-export async function confirmSignatureAction(
-  _prev: DealFormState,
-  formData: FormData,
-): Promise<DealFormState> {
-  try {
-    const { actor, deal } = await loadDeal(String(formData.get("dealId") ?? ""));
-    if (deal.stage !== DealStage.SIGNATURE) return { error: "La signature n'est pas à cette étape." };
-    await prisma.deal.update({ where: { id: deal.id }, data: { stage: DealStage.ESCROW } });
-    await notifyDealStage(deal.id, actor.id).catch((e) => console.error("notifyDealStage", e));
-    revalidatePath(`/app/dossiers/${deal.id}`);
-    return {};
-  } catch (error) {
-    return { error: error instanceof Error ? error.message : "Confirmation impossible." };
-  }
-}
-
-export async function confirmTransferAction(
-  _prev: DealFormState,
-  formData: FormData,
-): Promise<DealFormState> {
-  try {
-    const { actor, deal } = await loadDeal(String(formData.get("dealId") ?? ""));
-    if (deal.stage !== DealStage.TRANSFER) return { error: "Le transfert ORIAS n'est pas à cette étape." };
-    await prisma.deal.update({ where: { id: deal.id }, data: { stage: DealStage.RETENTION } });
-    await notifyDealStage(deal.id, actor.id).catch((e) => console.error("notifyDealStage", e));
-    revalidatePath(`/app/dossiers/${deal.id}`);
-    return {};
-  } catch (error) {
-    return { error: error instanceof Error ? error.message : "Transfert impossible." };
-  }
-}
-
-export async function closeDealAction(
-  _prev: DealFormState,
-  formData: FormData,
-): Promise<DealFormState> {
-  try {
-    const { actor, deal } = await loadDeal(String(formData.get("dealId") ?? ""));
-    if (deal.stage !== DealStage.RETENTION) {
-      return { error: "La clôture n’est possible qu’après le transfert et la période de vérification." };
-    }
-    await releaseEscrowFunds(deal.id);
-    await prisma.deal.update({ where: { id: deal.id }, data: { stage: DealStage.CLOSED } });
-
-    /*
-     * L'annonce n'est vendue que lorsque tous ses fournisseurs le sont. Clore
-     * la reprise du seul lot AXA ne doit pas retirer du marché le Generali qui
-     * attend encore preneur.
-     */
-    const lots = await listingLots(deal.listingId);
-    const clos = await prisma.deal.findMany({
-      where: { listingId: deal.listingId, stage: DealStage.CLOSED },
-      select: { carriers: true },
-    });
-    const tous = lots.map((l) => l.carrier);
-    const cedes = clos.map((d) => {
-      const c = readCarriers(d.carriers);
-      return c.length > 0 ? c : tous;
-    });
-    if (lots.length === 0 || fullyCommitted(lots, cedes)) {
-      await prisma.listing.update({
-        where: { id: deal.listingId },
-        data: { status: ListingStatus.SOLD },
-      });
-    }
-
-    // Le dépôt a joué son rôle : il vient en déduction du prix, il n'est pas
-    // remboursé à part — ce serait un mouvement d'argent dans les deux sens.
-    await prisma.interestDeposit.updateMany({
-      where: { listingId: deal.listingId, buyerId: deal.buyerId, outcome: "PENDING" },
-      data: { outcome: "DEDUCTED", settledAt: new Date() },
-    });
-
-    await notifyDealStage(deal.id, actor.id).catch((e) => console.error("notifyDealStage", e));
-    revalidatePath(`/app/dossiers/${deal.id}`);
-    revalidatePath("/app");
-    revalidatePath("/annonces");
-    return {};
-  } catch (error) {
-    return { error: error instanceof Error ? error.message : "Clôture impossible." };
-  }
-}
-
 export async function sendDealMessageAction(
   _prev: DealFormState,
   formData: FormData,
@@ -334,6 +47,13 @@ export async function sendDealMessageAction(
     const blockedDeal = offPlatformPhoneError(body);
     if (blockedDeal) return { error: blockedDeal };
     await prisma.message.create({ data: { dealId: deal.id, senderId: actor.id, body: body.slice(0, 4000) } });
+    await notifyDealEvent({
+      dealId: deal.id,
+      actorId: actor.id,
+      key: `message:${new Date().toISOString().slice(0, 13)}`,
+      title: "Nouveau message",
+      body: "Vous avez reçu un message dans le dossier de cession.",
+    }).catch((e) => console.error("notifyDealEvent", e));
     revalidatePath(`/app/dossiers/${deal.id}`);
     return {};
   } catch (error) {
@@ -401,21 +121,5 @@ export async function sendListingMessageAction(
     return {};
   } catch (error) {
     return { error: error instanceof Error ? error.message : "Envoi impossible." };
-  }
-}
-
-export async function recordDataRoomViewAction(
-  _prev: DealFormState,
-  formData: FormData,
-): Promise<DealFormState> {
-  try {
-    await logDataRoomViewAction(
-      String(formData.get("dealId") ?? ""),
-      String(formData.get("documentId") ?? ""),
-    );
-    revalidatePath(`/app/dossiers/${String(formData.get("dealId") ?? "")}`);
-    return {};
-  } catch (error) {
-    return { error: error instanceof Error ? error.message : "Journal impossible." };
   }
 }

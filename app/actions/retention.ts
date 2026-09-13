@@ -6,7 +6,7 @@ import { isDealParticipant } from "@/lib/authz/policies";
 import { ForbiddenError, UnauthenticatedError } from "@/lib/authz/errors";
 import { firstIssue, retentionReportSchema } from "@/lib/validations/actions";
 import { prisma } from "@/lib/prisma";
-import { adjustedDeferredAmount } from "@/lib/retention/adjust";
+import { notifyDealEvent } from "@/lib/position/events";
 
 export type RetentionFormState = { error?: string };
 
@@ -36,9 +36,16 @@ export async function submitRetentionReportAction(
 
     const deal = await prisma.deal.findUnique({ where: { id: dealId } });
     if (!deal || !isDealParticipant(actor, deal)) return { error: "Dossier inaccessible." };
-    if (deal.stage !== "RETENTION" && deal.stage !== "CLOSED") {
-      return { error: "La rétention n'est ouverte qu'après transfert." };
+    if (deal.stage !== "RETENTION") {
+      return {
+        error:
+          deal.stage === "CLOSED"
+            ? "La cession est close : la déclaration ne se modifie plus."
+            : "La conservation se déclare après le transfert des contrats.",
+      };
     }
+    // C'est l'acquéreur qui détient le portefeuille après le transfert : lui seul sait ce qui reste.
+    if (actor.id !== deal.buyerId) return { error: "La conservation est déclarée par l’acquéreur." };
     const retentionRate = contractsRetained / contractsTransferred;
 
     await prisma.retentionReport.upsert({
@@ -60,22 +67,21 @@ export async function submitRetentionReportAction(
       },
     });
 
-    if (monthIndex === 12) {
-      const adjusted = adjustedDeferredAmount({
-        deferredAmount: Number(deal.deferredAmount),
-        retentionRate,
-        targetRate: Number(deal.retentionTargetRate),
-      });
-      await prisma.deal.update({
-        where: { id: dealId },
-        data: {
-          adjustedDeferredAmount: adjusted.toFixed(2),
-          stage: "CLOSED",
-        },
-      });
-    } else if (deal.stage === "RETENTION") {
-      await prisma.deal.update({ where: { id: dealId }, data: { stage: "RETENTION" } });
-    }
+    /*
+     * La déclaration ne clôt plus rien d'elle-même : à douze mois, le cédant la
+     * valide, et c'est sa validation qui libère le séquestre et le solde ajusté.
+     * Une déclaration modifiée après validation doit être validée de nouveau.
+     */
+    await notifyDealEvent({
+      dealId,
+      actorId: actor.id,
+      key: `retention:${monthIndex}:${Date.now()}`,
+      title: `Conservation déclarée à M+${monthIndex}`,
+      body:
+        monthIndex === 12
+          ? `L’acquéreur déclare ${contractsRetained} contrats conservés sur ${contractsTransferred}. Validez la déclaration pour clore la cession.`
+          : `L’acquéreur déclare ${contractsRetained} contrats conservés sur ${contractsTransferred}.`,
+    }).catch((e) => console.error("notifyDealEvent", e));
 
     revalidatePath(`/app/dossiers/${dealId}`);
     revalidatePath(`/app/dossiers/${dealId}/retention`);

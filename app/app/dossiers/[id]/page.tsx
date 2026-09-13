@@ -1,35 +1,27 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import {
-  CloseDealButton,
-  ConfirmSignatureButton,
-  ConfirmTransferButton,
-  DataRoomUpload,
-  EscrowButtons,
-  KycButton,
-  MarkDocumentViewedButton,
-  NdaButton,
-  SignDocButton,
-  SignLoiButton,
-  ValidateDeedButton,
-} from "@/components/deal/deal-forms";
-import { SalePipeline } from "@/components/deal/sale-pipeline";
+import { DeskPageHeader } from "@/components/app/desk";
 import { OfferChat } from "@/components/chat/offer-chat";
+import { DealJournal, DealProcessPanel } from "@/components/deal/deal-process-panel";
+import { DueDiligencePanel } from "@/components/deal/due-diligence-panel";
+import { PieceUpload, RemovePiece } from "@/components/deal/process-forms";
+import { SalePipeline } from "@/components/deal/sale-pipeline";
+import { PartnerStrip } from "@/components/partners/partner-grid";
 import { SectionTab, SectionTabs } from "@/components/ui/section-tabs";
 import { counterpartyDisplayName, findMyDeal, getActor, isOriasVerified } from "@/lib/authz";
+import { isStageAtLeast } from "@/lib/authz/policies";
+import { buildChecklist, type DueDiligenceCategory } from "@/lib/deal/due-diligence";
+import { dealPieces } from "@/lib/deal/pieces";
+import { pipelineProgressPercent } from "@/lib/deal/pipeline";
+import { KYC_PIECES, kycSlot, stageTasks, tasksFor, transferSlot, type Side } from "@/lib/deal/process";
+import { loadDealProcess } from "@/lib/deal/process-load";
 import { formatDate, formatDateTime, formatEuro } from "@/lib/format/fr";
 import { DEAL_STAGE_LABELS, ESCROW_STAGE_LABELS } from "@/lib/labels";
-import { isStageAtLeast } from "@/lib/authz/policies";
-import { DueDiligencePanel } from "@/components/deal/due-diligence-panel";
-import { checklistProgress, type DueDiligenceCategory } from "@/lib/deal/due-diligence";
-import { nextPipelineAction, pipelineProgressPercent } from "@/lib/deal/pipeline";
-import { DeskPageHeader } from "@/components/app/desk";
-import { ensureDealChecklist } from "@/lib/deal/seed-checklist";
-import { PartnerStrip } from "@/components/partners/partner-grid";
-import { escrowRailLive, presentPartners, signatureProvider, signatureRailLive } from "@/lib/partners/status";
-import { prisma } from "@/lib/prisma";
+import { escrowRailLive, presentPartners } from "@/lib/partners/status";
 
 export const metadata = { title: "Dossier" };
+
+const lien = "font-medium text-indigo-dark underline-offset-2 hover:underline";
 
 export default async function DealPage({ params }: { params: Promise<{ id: string }> }) {
   const actor = await getActor();
@@ -38,78 +30,41 @@ export default async function DealPage({ params }: { params: Promise<{ id: strin
   const { id } = await params;
   const deal = await findMyDeal(id, actor);
   if (!deal) notFound();
+  const p = await loadDealProcess(deal.id);
+  if (!p) notFound();
 
-  await ensureDealChecklist(deal.id);
-
-  const counterparty = deal.sellerId === actor.id ? deal.buyer : deal.seller;
-  const counterpartyLabel = counterpartyDisplayName(counterparty);
   const isSeller = deal.sellerId === actor.id;
+  const side: Side = isSeller ? "seller" : "buyer";
+  const counterparty = isSeller ? deal.buyer : deal.seller;
+  const counterpartyLabel = counterpartyDisplayName(counterparty);
   const roomOpen = isStageAtLeast(deal.stage, "DATA_ROOM");
-  const next = nextPipelineAction(deal.stage, isSeller ? "seller" : "buyer");
-  const agreed = Number(deal.agreedPrice);
-  const upfront = Number(deal.upfrontAmount);
-  const deferred = Number(deal.deferredAmount);
+  const agreed = Number(p.deal.agreedPrice);
+  const upfront = Number(p.deal.upfrontAmount);
+  const deferred = Number(p.deal.deferredAmount);
 
-  const checklist = await prisma.dueDiligenceItem.findMany({
-    where: { dealId: deal.id },
-    orderBy: [{ category: "asc" }, { label: "asc" }],
-    select: { id: true, category: true, label: true, required: true, providedAt: true },
-  });
-  const progress = checklistProgress(checklist);
-  const partners = presentPartners();
-  const escrowLive = escrowRailLive();
-  const signLive = signatureRailLive();
-  const signName = signatureProvider() === "docusign" ? "DocuSign" : "Yousign";
+  const suivi = tasksFor(p.snapshot, side);
+  const tasks = stageTasks(p.snapshot);
+  const titre =
+    deal.stage === "CLOSED"
+      ? "Cession close"
+      : suivi.mine[0]
+        ? suivi.mine[0].label
+        : suivi.waiting.length
+          ? `En attente ${suivi.waiting.every((t) => t.owner === "seller") ? "du cédant" : suivi.waiting.every((t) => t.owner === "buyer") ? "de l’acquéreur" : "des deux parties"}`
+          : DEAL_STAGE_LABELS[deal.stage];
+
+  const details = new Map(buildChecklist(p.carriers.map((c) => c.name), true).map((e) => [e.label, e.detail]));
+  const pieces = dealPieces({ stage: deal.stage, loiProposed: Boolean(p.deal.loiProposedAt), carriers: p.carriers });
+  const autres = p.deal.documents.filter((d) => d.slot === "other");
+  const views = p.deal.documents.length ? deal.dataRoomViews : [];
+  const nomDoc = new Map(p.deal.documents.map((d) => [d.id, d.fileName]));
 
   const parcours = (
     <div className="grid gap-6">
+      <DealProcessPanel p={p} side={side} escrowLive={escrowRailLive()} />
       <SalePipeline currentKey={deal.stage} />
-      <PartnerStrip partners={partners} />
-      <section className="rounded-3xl border border-indigo-line bg-indigo-soft p-6">
-        <p className="text-[12px] font-medium uppercase tracking-wide text-indigo-dark">
-          Étape en cours
-        </p>
-        <h2 className="mt-1 text-xl font-semibold text-ink">{next.title}</h2>
-        <p className="mt-2 text-[15px] leading-relaxed text-muted">{next.body}</p>
-        <p className="mt-3 text-[13px] text-muted">
-          {escrowLive && signLive
-            ? "Le séquestre et la signature passent par les prestataires du circuit."
-            : `Trustap et ${signName} sont prévus. Tant que les contrats ne sont pas validés, l’étape est enregistrée sans mouvement d’argent et sans signature qualifiée.`}
-        </p>
-        <div className="mt-4">
-          {deal.stage === "NDA" ? <NdaButton dealId={deal.id} /> : null}
-          {deal.stage === "DATA_ROOM" ? <SignLoiButton dealId={deal.id} /> : null}
-          {deal.stage === "KYC" || deal.stage === "LOI" ? <KycButton dealId={deal.id} /> : null}
-          {deal.stage === "DEED" ? <ValidateDeedButton dealId={deal.id} /> : null}
-          {deal.stage === "SIGNATURE" ? <ConfirmSignatureButton dealId={deal.id} /> : null}
-          {deal.stage === "ESCROW" || deal.escrowStage !== "NONE" ? (
-            <div>
-              <p className="mb-2 text-sm text-muted">
-                Séquestre : {ESCROW_STAGE_LABELS[deal.escrowStage as keyof typeof ESCROW_STAGE_LABELS]}
-                {deal.escrowProviderRef ? ` · ${deal.escrowProviderRef}` : ""}
-              </p>
-              {/*
-               * Le bouton ne s'affiche qu'à l'étape du séquestre. Laissé visible
-               * ensuite, il permettait de rebloquer des fonds déjà libérés sur
-               * un dossier clos. Le solde se libère à la clôture, pas à la main.
-               */}
-              {deal.stage === "ESCROW" ? <EscrowButtons dealId={deal.id} /> : null}
-            </div>
-          ) : null}
-          {deal.stage === "TRANSFER" ? <ConfirmTransferButton dealId={deal.id} /> : null}
-          {deal.stage === "RETENTION" || deal.stage === "CLOSED" ? (
-            <div className="flex flex-wrap items-center gap-3">
-              <Link
-                href={`/app/dossiers/${deal.id}/retention`}
-                className="text-[15px] font-medium text-indigo-dark underline-offset-2 hover:underline"
-              >
-                Déclarations de conservation
-              </Link>
-              {deal.stage === "RETENTION" ? <CloseDealButton dealId={deal.id} /> : null}
-            </div>
-          ) : null}
-        </div>
-      </section>
+      <DealJournal p={p} />
+      <PartnerStrip partners={presentPartners()} />
     </div>
   );
 
@@ -120,10 +75,7 @@ export default async function DealPage({ params }: { params: Promise<{ id: strin
         <div>
           <dt className="text-[12px] uppercase tracking-wide text-muted">Annonce</dt>
           <dd className="mt-1">
-            <Link
-              href={`/annonces/${deal.listing.publicNumber}`}
-              className="font-medium text-indigo-dark underline-offset-2 hover:underline"
-            >
+            <Link href={`/annonces/${deal.listing.publicNumber}`} className={lien}>
               Dossier n° {deal.listing.publicNumber}
             </Link>
           </dd>
@@ -137,6 +89,10 @@ export default async function DealPage({ params }: { params: Promise<{ id: strin
           <dd className="tabular mt-1 text-[15px] font-semibold">{formatEuro(agreed)}</dd>
         </div>
         <div>
+          <dt className="text-[12px] uppercase tracking-wide text-muted">Date d’effet</dt>
+          <dd className="mt-1 text-[15px] font-semibold">{p.deal.loiEffectiveDate ? formatDate(p.deal.loiEffectiveDate) : "Fixée par la lettre d’intention"}</dd>
+        </div>
+        <div>
           <dt className="text-[12px] uppercase tracking-wide text-muted">Séquestre 80 %</dt>
           <dd className="tabular mt-1 text-[15px] font-semibold">{formatEuro(upfront)}</dd>
         </div>
@@ -144,71 +100,165 @@ export default async function DealPage({ params }: { params: Promise<{ id: strin
           <dt className="text-[12px] uppercase tracking-wide text-muted">Solde 20 % (différé)</dt>
           <dd className="tabular mt-1 text-[15px] font-semibold">{formatEuro(deferred)}</dd>
         </div>
-        {deal.adjustedDeferredAmount ? (
+        <div className="sm:col-span-2">
+          <dt className="text-[12px] uppercase tracking-wide text-muted">Compagnies cédées</dt>
+          <dd className="mt-1 text-[15px] text-ink">
+            {p.carriers.length ? p.carriers.map((c) => (c.code ? `${c.name} (${c.code})` : c.name)).join(", ") : "—"}
+          </dd>
+        </div>
+        {p.deal.adjustedDeferredAmount ? (
           <div>
-            <dt className="text-[12px] uppercase tracking-wide text-muted">Différé ajusté</dt>
-            <dd className="tabular mt-1 text-[15px] font-semibold">
-              {formatEuro(Number(deal.adjustedDeferredAmount))}
-            </dd>
+            <dt className="text-[12px] uppercase tracking-wide text-muted">Solde ajusté</dt>
+            <dd className="tabular mt-1 text-[15px] font-semibold">{formatEuro(Number(p.deal.adjustedDeferredAmount))}</dd>
           </div>
         ) : null}
       </dl>
     </section>
   );
 
+  const canUploadRoom = isSeller && roomOpen && deal.stage !== "CLOSED";
+
   const documents = (
     <div className="grid gap-6">
+      <section className="rounded-3xl border border-line bg-paper p-5 sm:p-6">
+        <h2 className="text-lg font-semibold text-ink">Pièces du dossier</h2>
+        <p className="mt-1 text-[14px] text-muted">Rédigées à partir du dossier, à relire, imprimer et signer.</p>
+        <ul className="mt-3 divide-y divide-line">
+          {pieces.map((piece) => (
+            <li key={piece.key} className="flex flex-wrap items-center justify-between gap-2 py-3">
+              <div>
+                <p className="text-[14px] font-medium text-ink">{piece.title}</p>
+                <p className="text-[13px] text-muted">{piece.hint}</p>
+              </div>
+              {piece.available ? (
+                <Link href={`/app/dossiers/${deal.id}/pieces/${piece.key}`} className={`text-[14px] ${lien}`}>
+                  Ouvrir
+                </Link>
+              ) : (
+                <span className="text-[13px] text-muted">Pas encore disponible</span>
+              )}
+            </li>
+          ))}
+        </ul>
+      </section>
+
       {roomOpen ? (
-        <section className="rounded-3xl border border-line bg-paper p-6">
-          <h2 className="text-lg font-semibold text-ink">Salle de données</h2>
-          <p className="text-[14px] text-muted">Fichiers hors base, hashés. Aucune PII client final.</p>
-          {isSeller ? (
+        <DueDiligencePanel
+          dealId={deal.id}
+          actorId={actor.id}
+          canUpload={canUploadRoom}
+          items={p.deal.dueDiligence.map((item) => ({
+            id: item.id,
+            category: item.category as DueDiligenceCategory,
+            label: item.label,
+            detail: details.get(item.label),
+            required: item.required,
+          }))}
+          files={p.deal.documents}
+        />
+      ) : (
+        <p className="rounded-3xl border border-line bg-paper p-6 text-[15px] text-muted">
+          La salle de données s’ouvre quand les deux parties ont signé l’accord de confidentialité.
+        </p>
+      )}
+
+      {isStageAtLeast(deal.stage, "KYC") ? (
+        <section className="rounded-3xl border border-line bg-paper p-5 sm:p-6">
+          <h2 className="text-lg font-semibold text-ink">Pièces d’identification</h2>
+          <div className="mt-3 grid gap-4 sm:grid-cols-2">
+            {(["seller", "buyer"] as const).map((cote) => (
+              <div key={cote} className="rounded-2xl border border-line p-4">
+                <h3 className="text-[14px] font-semibold text-ink">{cote === "seller" ? "Cédant" : "Acquéreur"}</h3>
+                <ul className="mt-2 grid gap-2">
+                  {KYC_PIECES.map((k) => {
+                    const doc = [...p.deal.documents].reverse().find((d) => d.slot === kycSlot(cote, k.kind));
+                    return (
+                      <li key={k.kind} className="text-[13px]">
+                        <span className="text-muted">{k.label} : </span>
+                        {doc ? (
+                          <a href={`/api/dossiers/${deal.id}/${doc.id}`} target="_blank" rel="noreferrer" className={lien}>
+                            {doc.fileName}
+                          </a>
+                        ) : (
+                          <span className="text-ink/60">non déposée</span>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      {isStageAtLeast(deal.stage, "TRANSFER") ? (
+        <section className="rounded-3xl border border-line bg-paper p-5 sm:p-6">
+          <h2 className="text-lg font-semibold text-ink">Attestations de transfert signées</h2>
+          <ul className="mt-3 divide-y divide-line">
+            {p.carriers.map((c) => {
+              const doc = [...p.deal.documents].reverse().find((d) => d.slot === transferSlot(c.name));
+              return (
+                <li key={c.name} className="flex flex-wrap items-center justify-between gap-2 py-2.5 text-[14px]">
+                  <span className="text-ink">{c.name}</span>
+                  {doc ? (
+                    <a href={`/api/dossiers/${deal.id}/${doc.id}`} target="_blank" rel="noreferrer" className={lien}>
+                      {doc.fileName}
+                    </a>
+                  ) : (
+                    <span className="text-muted">En attente</span>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      ) : null}
+
+      {roomOpen ? (
+        <section className="rounded-3xl border border-line bg-paper p-5 sm:p-6">
+          <h2 className="text-lg font-semibold text-ink">Pièces complémentaires</h2>
+          <p className="mt-1 text-[14px] text-muted">Tout ce que l’acquéreur demande en plus du bordereau.</p>
+          {autres.length ? (
+            <ul className="mt-3 divide-y divide-line">
+              {autres.map((doc) => (
+                <li key={doc.id} className="flex flex-wrap items-center justify-between gap-2 py-2.5 text-[14px]">
+                  <a href={`/api/dossiers/${deal.id}/${doc.id}`} target="_blank" rel="noreferrer" className={lien}>
+                    {doc.fileName}
+                  </a>
+                  <span className="flex items-center gap-3 text-[13px] text-muted">
+                    {formatDate(doc.createdAt)}
+                    {canUploadRoom && doc.uploadedById === actor.id ? <RemovePiece dealId={deal.id} documentId={doc.id} /> : null}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="mt-3 text-[14px] text-muted">Aucune pièce complémentaire.</p>
+          )}
+          {canUploadRoom ? (
             <div className="mt-3">
-              <DataRoomUpload dealId={deal.id} />
+              <PieceUpload dealId={deal.id} slot="other" />
             </div>
           ) : null}
-          <ul className="mt-3 text-sm">
-            {deal.documents.map((doc) => (
-              <li key={doc.id} className="flex flex-wrap items-center justify-between gap-2 border-t border-line py-1.5">
-                <span>
-                  {doc.fileName} · {doc.type}
-                  {doc.signedAt ? ` · signé ${formatDate(doc.signedAt)}` : ""}
-                </span>
-                <span className="flex gap-2">
-                  <MarkDocumentViewedButton dealId={deal.id} documentId={doc.id} />
-                  {!doc.signedAt ? <SignDocButton dealId={deal.id} documentId={doc.id} /> : null}
+        </section>
+      ) : null}
+
+      {views.length > 0 ? (
+        <section className="rounded-3xl border border-line bg-paper p-5 sm:p-6">
+          <h2 className="text-lg font-semibold text-ink">Journal de consultation</h2>
+          <ul className="mt-2 divide-y divide-line text-[13px]">
+            {views.map((view) => (
+              <li key={view.id} className="flex flex-wrap gap-x-4 py-1.5">
+                <span className="tabular w-36 text-muted">{formatDateTime(view.viewedAt)}</span>
+                <span className="text-ink">
+                  {view.viewerId === deal.sellerId ? "Le cédant" : "L’acquéreur"} a ouvert{" "}
+                  {view.documentId ? (nomDoc.get(view.documentId) ?? "une pièce retirée depuis") : "la salle de données"}
                 </span>
               </li>
             ))}
           </ul>
-          {deal.dataRoomViews.length > 0 ? (
-            <div className="mt-4">
-              <h3 className="text-sm font-medium text-ink">Journal de consultation</h3>
-              <ul className="mt-1 text-xs text-muted">
-                {deal.dataRoomViews.map((view) => (
-                  <li key={view.id}>
-                    {formatDate(view.viewedAt)}
-                    {view.documentId ? " · pièce consultée" : ""}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ) : null}
         </section>
-      ) : (
-        <p className="rounded-3xl border border-line bg-paper p-6 text-[15px] text-muted">
-          Salle de données verrouillée tant que l’accord de confidentialité n’est pas accepté.
-        </p>
-      )}
-      {checklist.length > 0 ? (
-        <DueDiligencePanel
-          items={checklist.map((item) => ({
-            ...item,
-            category: item.category as DueDiligenceCategory,
-          }))}
-          canEdit={isSeller}
-          progress={progress}
-        />
       ) : null}
     </div>
   );
@@ -243,15 +293,25 @@ export default async function DealPage({ params }: { params: Promise<{ id: strin
         badge={
           <span className="rounded-full border border-indigo-line bg-paper px-2.5 py-0.5 text-[12px] font-semibold text-indigo-dark">
             {DEAL_STAGE_LABELS[deal.stage]}
+            {tasks.length ? ` · ${suivi.done}/${suivi.total}` : ""}
           </span>
         }
-        title={`Dossier N° ${deal.listing.publicNumber} — ${deal.stage === "CLOSED" ? "Cession close" : next.title}`}
-        subtitle={<>Contrepartie : {counterpartyLabel}. Chaque étape franchie prévient l’autre partie.</>}
+        title={`Dossier N° ${deal.listing.publicNumber} — ${titre}`}
+        subtitle={
+          <>
+            Contrepartie : {counterpartyLabel}.{" "}
+            {suivi.mine.length
+              ? `${suivi.mine.length} action${suivi.mine.length > 1 ? "s" : ""} vous attend${suivi.mine.length > 1 ? "ent" : ""} à cette étape.`
+              : deal.stage === "CLOSED"
+                ? "Toutes les pièces restent consultables."
+                : "Rien à faire de votre côté pour l’instant : vous serez prévenu dès que l’autre partie aura agi."}
+          </>
+        }
         progress={{ percent: pipelineProgressPercent(deal.stage), tone: deal.stage === "CLOSED" ? "closed" : "active" }}
         figures={[
           { label: "Prix convenu", value: formatEuro(agreed) },
-          { label: "Comptant séquestré", value: formatEuro(upfront), note: "Versé au séquestre à la signature" },
-          { label: "Solde différé", value: formatEuro(deferred), note: "Libéré après vérification" },
+          { label: "Comptant séquestré", value: formatEuro(upfront), note: "80 % du prix" },
+          { label: "Solde différé", value: formatEuro(deferred), note: "Libéré après la conservation" },
           { label: "Séquestre", value: ESCROW_STAGE_LABELS[deal.escrowStage as keyof typeof ESCROW_STAGE_LABELS] ?? deal.escrowStage },
         ]}
         actions={
@@ -269,11 +329,11 @@ export default async function DealPage({ params }: { params: Promise<{ id: strin
           <SectionTab id="parcours" label="Parcours">
             {parcours}
           </SectionTab>
-          <SectionTab id="informations" label="Informations">
-            {informations}
-          </SectionTab>
           <SectionTab id="documents" label="Documents">
             {documents}
+          </SectionTab>
+          <SectionTab id="informations" label="Informations">
+            {informations}
           </SectionTab>
           <SectionTab id="messages" label="Messages">
             {messages}

@@ -2,19 +2,8 @@
 
 import { useActionState } from "react";
 import {
-  acceptNdaAction,
-  closeDealAction,
-  confirmSignatureAction,
-  confirmTransferAction,
-  mockEscrowAction,
-  mockKycAction,
-  mockSignDealDocAction,
-  recordDataRoomViewAction,
   sendDealMessageAction,
   sendListingMessageAction,
-  signLoiAction,
-  uploadDataRoomFileAction,
-  validateDeedAction,
   type DealFormState,
 } from "@/app/actions/deals";
 import { submitRetentionReportAction, type RetentionFormState } from "@/app/actions/retention";
@@ -23,137 +12,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 const initial: DealFormState = {};
-
-export function NdaButton({ dealId }: { dealId: string }) {
-  const [state, action, pending] = useActionState(acceptNdaAction, initial);
-  return (
-    <form action={action}>
-      <input type="hidden" name="dealId" value={dealId} />
-      <Button type="submit" disabled={pending}>
-        {pending ? "Enregistrement…" : "Accepter l'accord de confidentialité"}
-      </Button>
-      {state.error ? <p className="mt-1 text-xs text-danger">{state.error}</p> : null}
-    </form>
-  );
-}
-
-function StageActionButton({
-  dealId,
-  action,
-  label,
-}: {
-  dealId: string;
-  action: (prev: DealFormState, formData: FormData) => Promise<DealFormState>;
-  label: string;
-}) {
-  const [state, formAction, pending] = useActionState(action, initial);
-  return (
-    <form action={formAction}>
-      <input type="hidden" name="dealId" value={dealId} />
-      <Button type="submit" variant="outline" size="sm" disabled={pending}>
-        {pending ? "…" : label}
-      </Button>
-      {state.error ? <p className="mt-1 text-xs text-danger">{state.error}</p> : null}
-    </form>
-  );
-}
-
-export function SignLoiButton({ dealId }: { dealId: string }) {
-  return <StageActionButton dealId={dealId} action={signLoiAction} label="Signer la lettre d'intention" />;
-}
-
-export function ValidateDeedButton({ dealId }: { dealId: string }) {
-  return <StageActionButton dealId={dealId} action={validateDeedAction} label="Valider le protocole" />;
-}
-
-export function ConfirmSignatureButton({ dealId }: { dealId: string }) {
-  return <StageActionButton dealId={dealId} action={confirmSignatureAction} label="Confirmer la signature" />;
-}
-
-export function ConfirmTransferButton({ dealId }: { dealId: string }) {
-  return <StageActionButton dealId={dealId} action={confirmTransferAction} label="Confirmer le transfert ORIAS" />;
-}
-
-export function CloseDealButton({ dealId }: { dealId: string }) {
-  return <StageActionButton dealId={dealId} action={closeDealAction} label="Clôturer la cession" />;
-}
-
-export function KycButton({ dealId }: { dealId: string }) {
-  const [state, action, pending] = useActionState(mockKycAction, initial);
-  return (
-    <form action={action}>
-      <input type="hidden" name="dealId" value={dealId} />
-      <Button type="submit" size="sm" disabled={pending}>
-        {pending ? "KYC…" : "Enregistrer la vérification KYC"}
-      </Button>
-      {state.error ? <p className="text-xs text-danger">{state.error}</p> : null}
-    </form>
-  );
-}
-
-export function EscrowButtons({ dealId }: { dealId: string }) {
-  const [state, action, pending] = useActionState(mockEscrowAction, initial);
-  return (
-    <div className="flex flex-wrap gap-2">
-      <form action={action}>
-        <input type="hidden" name="dealId" value={dealId} />
-        <input type="hidden" name="intent" value="hold" />
-        <Button type="submit" size="sm" disabled={pending}>
-          Séquestrer 80 % du prix
-        </Button>
-      </form>
-      {state.error ? <p className="text-xs text-danger">{state.error}</p> : null}
-    </div>
-  );
-}
-
-export function SignDocButton({ dealId, documentId }: { dealId: string; documentId: string }) {
-  const [state, action, pending] = useActionState(mockSignDealDocAction, initial);
-  return (
-    <form action={action}>
-      <input type="hidden" name="dealId" value={dealId} />
-      <input type="hidden" name="documentId" value={documentId} />
-      <Button type="submit" size="sm" variant="outline" disabled={pending}>
-        {pending ? "…" : "Signer"}
-      </Button>
-      {state.error ? <p className="text-xs text-danger">{state.error}</p> : null}
-    </form>
-  );
-}
-
-export function MarkDocumentViewedButton({
-  dealId,
-  documentId,
-}: {
-  dealId: string;
-  documentId: string;
-}) {
-  const [state, action, pending] = useActionState(recordDataRoomViewAction, initial);
-  return (
-    <form action={action} className="inline">
-      <input type="hidden" name="dealId" value={dealId} />
-      <input type="hidden" name="documentId" value={documentId} />
-      <Button type="submit" size="sm" variant="outline" disabled={pending}>
-        {pending ? "…" : "Consulter"}
-      </Button>
-      {state.error ? <p className="text-xs text-danger">{state.error}</p> : null}
-    </form>
-  );
-}
-
-export function DataRoomUpload({ dealId }: { dealId: string }) {
-  const [state, action, pending] = useActionState(uploadDataRoomFileAction, initial);
-  return (
-    <form action={action} className="flex flex-wrap items-end gap-2">
-      <input type="hidden" name="dealId" value={dealId} />
-      <Input name="file" type="file" required className="max-w-xs" />
-      <Button type="submit" size="sm" disabled={pending}>
-        {pending ? "Dépôt…" : "Déposer"}
-      </Button>
-      {state.error ? <p className="text-xs text-danger">{state.error}</p> : null}
-    </form>
-  );
-}
 
 export function MessageForm({
   dealId,

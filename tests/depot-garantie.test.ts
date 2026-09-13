@@ -16,7 +16,7 @@ import { prisma } from "@/lib/prisma";
 import { disposePlatformProxy } from "./setup/prisma-test";
 import { connecterUtilisateur } from "./setup/auth-stub";
 import { submitOfferAction, withdrawOfferAction } from "@/app/actions/offers";
-import { closeDealAction } from "@/app/actions/deals";
+import { acceptRetentionAction } from "@/app/actions/deal-process";
 
 const LISTING = "lst_03"; // fenêtre d'offres encore ouverte
 let acheteur: string;
@@ -161,10 +161,22 @@ describe("la clôture impute le dépôt sur le prix", () => {
       });
     }
 
+    // La clôture passe par la validation, par le cédant, de la déclaration à douze mois.
+    const douzeMois = await prisma.retentionReport.findUnique({
+      where: { dealId_monthIndex: { dealId: deal.id, monthIndex: 12 } },
+    });
+    if (!douzeMois) {
+      await prisma.retentionReport.create({
+        data: { dealId: deal.id, monthIndex: 12, contractsRetained: 92, contractsTransferred: 100, actualCommissions: "10000.00", retentionRate: "0.9200" },
+      });
+    }
     await prisma.deal.update({ where: { id: deal.id }, data: { stage: DealStage.RETENTION } });
     connecterUtilisateur(deal.sellerId);
-    const resultat = await closeDealAction({}, form({ dealId: deal.id }));
+    const resultat = await acceptRetentionAction({}, form({ dealId: deal.id, consent: "on" }));
     expect(resultat.error).toBeUndefined();
+    expect((await prisma.deal.findUniqueOrThrow({ where: { id: deal.id }, select: { stage: true } })).stage).toBe(DealStage.CLOSED);
+    await prisma.dealSignoff.deleteMany({ where: { dealId: deal.id, kind: "RETENTION_ACCEPTED" } });
+    if (!douzeMois) await prisma.retentionReport.delete({ where: { dealId_monthIndex: { dealId: deal.id, monthIndex: 12 } } });
 
     const depot = await prisma.interestDeposit.findUnique({
       where: { listingId_buyerId: { listingId: deal.listingId, buyerId: deal.buyerId } },

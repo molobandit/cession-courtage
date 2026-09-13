@@ -1464,13 +1464,14 @@ async function main() {
         agreedPrice: money(dealLoiPrice),
         upfrontAmount: money(dealLoiPrice * 0.6),
         deferredAmount: money(dealLoiPrice * 0.4),
-        stage: DealStage.LOI,
+        // Lettre d'intention acceptée : le dossier en est à la conformité.
+        stage: DealStage.KYC,
         createdAt: daysAgo(22),
         sellerAlias: "Cédant #C52",
         buyerAlias: "Acquéreur #A33",
         ndaAcceptedAt: daysAgo(21),
-        escrowStage: EscrowStage.FUNDS_HELD,
-        escrowProviderRef: "mock_escrow_loi_08",
+        // Le séquestre se constitue après la signature du protocole.
+        escrowStage: EscrowStage.NONE,
       },
       {
         id: "deal_closed",

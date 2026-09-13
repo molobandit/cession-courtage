@@ -118,14 +118,15 @@ describe("depot d'interet et levee d'anonymat", () => {
     expect(count).toBe(1);
   });
 
-  it("laisse un dossier en LOI sans depot continuer de reveler les identites", async () => {
+  it("laisse un dossier a la LOI acceptee sans depot continuer de reveler les identites", async () => {
     const loi = await prisma.deal.findUnique({
       where: { id: "deal_loi" },
       select: { buyerId: true },
     });
     const loiBuyer = await actorById(loi!.buyerId);
     const deal = await findMyDeal("deal_loi", loiBuyer);
-    expect(deal!.stage).toBe("LOI");
+    // Lettre acceptee : le dossier en est a la conformite.
+    expect(deal!.stage).toBe("KYC");
     expect(deal!.identitiesRevealed).toBe(true);
     expect(deal!.seller.kind).toBe("identified");
   });

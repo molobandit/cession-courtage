@@ -64,8 +64,18 @@ export async function notifyOfferDecision(input: {
   });
 }
 
-/** Étape de dossier franchie : l'autre partie est prévenue. */
-export async function notifyDealStage(dealId: string, actorId: string): Promise<void> {
+/**
+ * Étape de dossier franchie.
+ *
+ * L'étape se franchit d'elle-même quand la dernière tâche est faite : celui
+ * qui l'a faite n'a pas décidé du passage, il est donc prévenu lui aussi
+ * (`notifyActor`).
+ */
+export async function notifyDealStage(
+  dealId: string,
+  actorId: string,
+  options: { notifyActor?: boolean } = {},
+): Promise<void> {
   const deal = await prisma.deal.findUnique({
     where: { id: dealId },
     select: { stage: true, listingId: true, buyerId: true, sellerId: true },
@@ -82,18 +92,19 @@ export async function notifyDealStage(dealId: string, actorId: string): Promise<
     deal.stage === "CLOSED"
       ? "La cession est close. Les fonds séquestrés sont libérés."
       : `Le dossier passe à l’étape « ${etape?.label ?? deal.stage} ». ${etape?.summary ?? ""}`.trim();
+  const tous = options.notifyActor === true;
 
-  if (actorId !== deal.buyerId) {
+  if (tous || actorId !== deal.buyerId) {
     await notifyPositionEvent({
       key: `deal:${dealId}:${deal.stage}`,
       userId: c.buyer.id,
       email: c.buyer.email,
       title: titre,
       body: corps,
-      href: c.positionHref,
+      href: `/app/dossiers/${dealId}`,
     });
   }
-  if (actorId !== deal.sellerId) {
+  if (tous || actorId !== deal.sellerId) {
     const seller = await prisma.user.findUnique({ where: { id: deal.sellerId }, select: { id: true, email: true } });
     if (seller) {
       await notifyPositionEvent({
@@ -106,6 +117,41 @@ export async function notifyDealStage(dealId: string, actorId: string): Promise<
       });
     }
   }
+}
+
+/**
+ * Fait nouveau dans un dossier — pièce déposée, lettre proposée, signature —
+ * adressé à l'autre partie, qui a souvent quelque chose à faire ensuite.
+ * `key` rend l'envoi unique : un dépôt de quinze pièces ne fait pas quinze courriels.
+ */
+export async function notifyDealEvent(input: {
+  dealId: string;
+  actorId: string;
+  key: string;
+  title: string;
+  body: string;
+}): Promise<void> {
+  const deal = await prisma.deal.findUnique({
+    where: { id: input.dealId },
+    select: {
+      sellerId: true,
+      buyerId: true,
+      listing: { select: { publicNumber: true } },
+      seller: { select: { id: true, email: true } },
+      buyer: { select: { id: true, email: true } },
+    },
+  });
+  if (!deal) return;
+  const destinataire = input.actorId === deal.sellerId ? deal.buyer : input.actorId === deal.buyerId ? deal.seller : null;
+  if (!destinataire) return;
+  await notifyPositionEvent({
+    key: `dealevent:${input.dealId}:${input.key}`,
+    userId: destinataire.id,
+    email: destinataire.email,
+    title: `Dossier n° ${deal.listing.publicNumber} · ${input.title}`,
+    body: input.body,
+    href: `/app/dossiers/${input.dealId}`,
+  });
 }
 
 /** Nouveau message sur une annonce : le destinataire est prévenu, une fois par heure au plus. */

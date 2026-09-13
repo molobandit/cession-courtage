@@ -23,47 +23,47 @@ export const SALE_PIPELINE: PipelineStep[] = [
   {
     key: "NDA",
     label: "Confidentialité",
-    summary: "Accord de confidentialité. Aucune raison sociale avant cet engagement, hors dépôt de 2,5 %.",
+    summary: "Les deux parties signent l’accord de confidentialité.",
   },
   {
     key: "DATA_ROOM",
     label: "Salle de données",
-    summary: "Pièces du cabinet et bordereau de vérification, hors donnée nominative d’assuré.",
+    summary: "Le cédant dépose les pièces du bordereau, l’acquéreur les examine.",
   },
   {
     key: "LOI",
-    label: "Accord de prix",
-    summary: "Lettre d’intention : prix, comptant et différé. Les identités peuvent s’ouvrir.",
+    label: "Lettre d’intention",
+    summary: "L’acquéreur propose un prix ferme et une date d’effet, le cédant accepte ou refuse.",
   },
   {
     key: "KYC",
     label: "Conformité",
-    summary: "Vérification KYC / KYB des parties avant l’acte.",
+    summary: "Kbis, pièce d’identité et ORIAS de chaque cabinet, contrôlés par l’autre.",
   },
   {
     key: "DEED",
-    label: "Kit contractuel",
-    summary: "Protocole de cession, attestations, conditions de transfert des codes.",
+    label: "Protocole",
+    summary: "Protocole rédigé depuis le dossier, codes courtier, approbation des deux parties.",
   },
   {
     key: "SIGNATURE",
     label: "Signature",
-    summary: "Signature de l’acte. Le séquestre peut alors recevoir les fonds.",
+    summary: "Signature électronique du protocole par les deux représentants.",
   },
   {
     key: "ESCROW",
     label: "Séquestre 80 %",
-    summary: "Le comptant (80 % du prix convenu) est séquestré, puis le transfert peut commencer.",
+    summary: "L’acquéreur verse le comptant sur le compte séquestre.",
   },
   {
     key: "TRANSFER",
     label: "Transfert",
-    summary: "Information des compagnies, transfert de fichier et formalités ORIAS.",
+    summary: "Attestations signées adressées à chaque compagnie, rattachement confirmé par l’acquéreur.",
   },
   {
     key: "RETENTION",
-    label: "Vérification et solde",
-    summary: "Contrôle de conservation du portefeuille, puis libération du solde (20 %).",
+    label: "Conservation et solde",
+    summary: "Déclaration à douze mois validée par le cédant : séquestre et solde ajusté libérés.",
   },
   {
     key: "CLOSED",
@@ -111,50 +111,43 @@ export function nextPipelineAction(
     case "NDA":
       return {
         title: "Signer l’accord de confidentialité",
-        body: seller
-          ? "Les deux parties confirment l’engagement de confidentialité pour ouvrir la salle de données."
-          : "Acceptez l’accord pour accéder aux pièces, hors noms d’assurés.",
+        body: "Les deux parties signent ; la salle de données s’ouvre avec la seconde signature.",
       };
     case "DATA_ROOM":
-      return {
-        title: seller ? "Déposer les pièces et préparer la LOI" : "Consulter la salle de données",
-        body: "Quand les pièces utiles sont là, signez la lettre d’intention pour figer le prix.",
-      };
+      return seller
+        ? { title: "Déposer les pièces du bordereau", body: "Un fichier par ligne obligatoire. L’acquéreur les examine ensuite." }
+        : { title: "Examiner la salle de données", body: "Consultez les pièces déposées, puis validez l’examen pour proposer votre lettre d’intention." };
     case "LOI":
-      return {
-        title: "Lancer la vérification de conformité",
-        body: "KYC / KYB des cabinets avant de rédiger l’acte.",
-      };
+      return seller
+        ? { title: "Répondre à la lettre d’intention", body: "Acceptez-la pour figer le prix, ou refusez-la avec un motif." }
+        : { title: "Proposer la lettre d’intention", body: "Prix ferme, date d’effet et conditions particulières." };
     case "KYC":
       return {
-        title: "Terminer la conformité",
-        body: "Une fois la vérification enregistrée, le kit contractuel s’ouvre.",
+        title: "Déposer et contrôler les pièces d’identification",
+        body: "Kbis, pièce d’identité du représentant et ORIAS ; chaque partie contrôle celles de l’autre.",
       };
     case "DEED":
       return {
-        title: "Valider le protocole de cession",
-        body: "L’acte, les attestations et les conditions de transfert des codes.",
+        title: seller ? "Compléter et approuver le protocole" : "Relire et approuver le protocole",
+        body: seller ? "Codes courtier par compagnie, puis approbation du texte." : "Le protocole est rédigé depuis le dossier : relisez-le et approuvez-le.",
       };
     case "SIGNATURE":
       return {
-        title: "Confirmer la signature de l’acte",
-        body: "Ensuite, 80 % du prix convenu partent au séquestre.",
+        title: "Signer le protocole de cession",
+        body: "Signature électronique horodatée, liée à l’empreinte du texte approuvé.",
       };
     case "ESCROW":
-      return {
-        title: "Séquestrer 80 % du prix",
-        body: "Le comptant est bloqué. Le solde de 20 % reste jusqu’à la vérification de conservation.",
-      };
+      return seller
+        ? { title: "En attente du séquestre", body: "L’acquéreur verse le comptant (80 %) sur le compte séquestre." }
+        : { title: "Verser le comptant au séquestre", body: "80 % du prix, bloqués jusqu’à la clôture." };
     case "TRANSFER":
-      return {
-        title: "Confirmer le transfert ORIAS et compagnies",
-        body: "Fichier clients (anonymisé ici), codes et immatriculation : la cession devient opérationnelle.",
-      };
+      return seller
+        ? { title: "Déposer les attestations de transfert", body: "Une attestation signée par compagnie, adressée à la compagnie." }
+        : { title: "Confirmer le rattachement des contrats", body: "Quand les compagnies ont basculé les contrats sur votre code." };
     case "RETENTION":
-      return {
-        title: "Déclarer la conservation, puis clôturer",
-        body: "Cible 90 %. Le différé (20 %) peut être ajusté, puis libéré à la clôture.",
-      };
+      return seller
+        ? { title: "Valider la déclaration de conservation", body: "Votre validation libère le séquestre et le solde ajusté." }
+        : { title: "Déclarer la conservation à douze mois", body: "Contrats conservés et commissions encaissées : le solde de 20 % en dépend." };
     case "CLOSED":
       return {
         title: "Cession close",

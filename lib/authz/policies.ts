@@ -30,8 +30,13 @@ export function isDealParticipant(
   return actor.id === deal.sellerId || actor.id === deal.buyerId;
 }
 
+/**
+ * L'étape « LOI » est celle où la lettre se négocie ; elle est acceptée quand
+ * le dossier passe à la conformité. C'est donc à « KYC » que la lettre est
+ * signée et que l'anonymat tombe.
+ */
 export function identitiesRevealed(stage: DealStage): boolean {
-  return isStageAtLeast(stage, "LOI");
+  return isStageAtLeast(stage, "KYC");
 }
 
 /**

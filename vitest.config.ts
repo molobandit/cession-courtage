@@ -21,6 +21,8 @@ export default defineConfig({
       // de requete de Next : on les remplace pour pouvoir les appeler telles quelles.
       { find: /^next\/cache$/, replacement: path.resolve(__dirname, "tests/setup/next-cache-stub.ts") },
       { find: /^next\/navigation$/, replacement: path.resolve(__dirname, "tests/setup/next-navigation-stub.ts") },
+      // Les pièces des dossiers partent dans R2, qui n'existe pas hors Workers.
+      { find: /^@\/lib\/storage\/objects$/, replacement: path.resolve(__dirname, "tests/setup/storage-stub.ts") },
       { find: /^@\//, replacement: path.resolve(__dirname) + "/" },
     ],
   },

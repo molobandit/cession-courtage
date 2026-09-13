@@ -181,13 +181,15 @@ describe("identitiesRevealedFor", () => {
     expect(identitiesRevealedFor({ stage: "DATA_ROOM", hasDeposit: true })).toBe(true);
   });
 
-  it("garde l'anonymat sans depot tant que la LOI n'est pas atteinte", () => {
+  it("garde l'anonymat sans depot tant que la LOI n'est pas acceptee", () => {
     expect(identitiesRevealedFor({ stage: "NDA", hasDeposit: false })).toBe(false);
     expect(identitiesRevealedFor({ stage: "DATA_ROOM", hasDeposit: false })).toBe(false);
+    // A l'etape LOI, la lettre se negocie encore.
+    expect(identitiesRevealedFor({ stage: "LOI", hasDeposit: false })).toBe(false);
   });
 
-  it("continue de lever l'anonymat a la LOI pour un dossier sans depot", () => {
-    expect(identitiesRevealedFor({ stage: "LOI", hasDeposit: false })).toBe(true);
+  it("leve l'anonymat une fois la LOI acceptee pour un dossier sans depot", () => {
+    expect(identitiesRevealedFor({ stage: "KYC", hasDeposit: false })).toBe(true);
     expect(identitiesRevealedFor({ stage: "SIGNATURE", hasDeposit: false })).toBe(true);
     expect(identitiesRevealedFor({ stage: "CLOSED", hasDeposit: false })).toBe(true);
   });

@@ -20,16 +20,16 @@ import { prisma } from "@/lib/prisma";
 // Importés directement : l'alias de vitest ne vaut pas pour tsc.
 import { disposePlatformProxy } from "./setup/prisma-test";
 import { connecterUtilisateur } from "./setup/auth-stub";
+import { effacerParcours, etapeDe, formulaire as form, jouerEtape, menerDossier, pdf } from "./setup/dossier";
 import {
-  acceptNdaAction,
-  closeDealAction,
-  confirmSignatureAction,
-  confirmTransferAction,
-  mockEscrowAction,
-  mockKycAction,
-  signLoiAction,
-  validateDeedAction,
-} from "@/app/actions/deals";
+  answerLoiAction,
+  fundEscrowAction,
+  proposeLoiAction,
+  reviewDataRoomAction,
+  signDeedAction,
+  signNdaAction,
+  uploadDealPieceAction,
+} from "@/app/actions/deal-process";
 import { acceptOfferAction } from "@/app/actions/offers";
 
 const DEAL = "deal_nda";
@@ -37,22 +37,21 @@ const DEAL = "deal_nda";
 let sellerId: string;
 let buyerId: string;
 let listingId: string;
-let etatInitial: { stage: DealStage; ndaAcceptedAt: Date | null; listingStatus: ListingStatus };
-
-function form(champs: Record<string, string>): FormData {
-  const data = new FormData();
-  for (const [cle, valeur] of Object.entries(champs)) data.set(cle, valeur);
-  return data;
-}
-
-async function etape(): Promise<DealStage> {
-  const deal = await prisma.deal.findUnique({ where: { id: DEAL }, select: { stage: true } });
-  if (!deal) throw new Error(`Dossier ${DEAL} absent. Lancez npm run db:seed.`);
-  return deal.stage;
-}
+let etatInitial: {
+  stage: DealStage;
+  ndaAcceptedAt: Date | null;
+  listingStatus: ListingStatus;
+  agreedPrice: string;
+  upfrontAmount: string;
+  deferredAmount: string;
+  escrowStage: string;
+  escrowProviderRef: string | null;
+  kyc: { seller: string; buyer: string };
+};
 
 async function poser(stage: DealStage): Promise<void> {
-  await prisma.deal.update({ where: { id: DEAL }, data: { stage } });
+  await effacerParcours(DEAL);
+  await prisma.deal.update({ where: { id: DEAL }, data: { stage, escrowStage: "NONE" } });
 }
 
 beforeAll(async () => {
@@ -64,7 +63,14 @@ beforeAll(async () => {
       listingId: true,
       stage: true,
       ndaAcceptedAt: true,
+      agreedPrice: true,
+      upfrontAmount: true,
+      deferredAmount: true,
+      escrowStage: true,
+      escrowProviderRef: true,
       listing: { select: { status: true } },
+      seller: { select: { kycStatus: true } },
+      buyer: { select: { kycStatus: true } },
     },
   });
   if (!deal) throw new Error(`Dossier ${DEAL} absent. Lancez npm run db:seed.`);
@@ -75,6 +81,12 @@ beforeAll(async () => {
     stage: deal.stage,
     ndaAcceptedAt: deal.ndaAcceptedAt,
     listingStatus: deal.listing.status,
+    agreedPrice: String(deal.agreedPrice),
+    upfrontAmount: String(deal.upfrontAmount),
+    deferredAmount: String(deal.deferredAmount),
+    escrowStage: deal.escrowStage,
+    escrowProviderRef: deal.escrowProviderRef,
+    kyc: { seller: deal.seller.kycStatus, buyer: deal.buyer.kycStatus },
   };
 });
 
@@ -85,10 +97,23 @@ beforeEach(() => {
 afterAll(async () => {
   // Le dossier de démonstration retrouve son état d'origine.
   connecterUtilisateur(null);
+  await effacerParcours(DEAL);
+  await prisma.retentionReport.deleteMany({ where: { dealId: DEAL } });
   await prisma.deal.update({
     where: { id: DEAL },
-    data: { stage: etatInitial.stage, ndaAcceptedAt: etatInitial.ndaAcceptedAt },
+    data: {
+      stage: etatInitial.stage,
+      ndaAcceptedAt: etatInitial.ndaAcceptedAt,
+      agreedPrice: etatInitial.agreedPrice,
+      upfrontAmount: etatInitial.upfrontAmount,
+      deferredAmount: etatInitial.deferredAmount,
+      adjustedDeferredAmount: null,
+      escrowStage: etatInitial.escrowStage as never,
+      escrowProviderRef: etatInitial.escrowProviderRef,
+    },
   });
+  await prisma.user.update({ where: { id: sellerId }, data: { kycStatus: etatInitial.kyc.seller as never } });
+  await prisma.user.update({ where: { id: buyerId }, data: { kycStatus: etatInitial.kyc.buyer as never } });
   await prisma.listing.update({
     where: { id: listingId },
     data: { status: etatInitial.listingStatus },
@@ -96,84 +121,125 @@ afterAll(async () => {
   await disposePlatformProxy();
 });
 
-describe("le tunnel se déroule dans l’ordre, du NDA à la clôture", () => {
-  it("va de bout en bout et marque l’annonce cédée", async () => {
+describe("le parcours se déroule dans l’ordre, du NDA à la clôture", () => {
+  it("va de bout en bout, chaque partie faisant sa part, et marque l’annonce cédée", async () => {
     await poser(DealStage.NDA);
+    await menerDossier(DEAL, "CLOSED");
+    expect(await etapeDe(DEAL)).toBe(DealStage.CLOSED);
 
-    // L'acquéreur signe la confidentialité : la salle de données s'ouvre.
-    connecterUtilisateur(buyerId);
-    expect(await acceptNdaAction({}, form({ dealId: DEAL }))).toEqual({});
-    expect(await etape()).toBe(DealStage.DATA_ROOM);
-
-    // Le cédant mène le reste.
-    connecterUtilisateur(sellerId);
-    expect(await signLoiAction({}, form({ dealId: DEAL }))).toEqual({});
-    expect(await etape()).toBe(DealStage.LOI);
-
-    expect(await mockKycAction({}, form({ dealId: DEAL }))).toEqual({});
-    expect(await etape()).toBe(DealStage.KYC);
-
-    expect(await mockKycAction({}, form({ dealId: DEAL }))).toEqual({});
-    expect(await etape()).toBe(DealStage.DEED);
-
-    expect(await validateDeedAction({}, form({ dealId: DEAL }))).toEqual({});
-    expect(await etape()).toBe(DealStage.SIGNATURE);
-
-    expect(await confirmSignatureAction({}, form({ dealId: DEAL }))).toEqual({});
-    expect(await etape()).toBe(DealStage.ESCROW);
-
-    expect(await mockEscrowAction({}, form({ dealId: DEAL, intent: "hold" }))).toEqual({});
-    expect(await etape()).toBe(DealStage.TRANSFER);
-
-    expect(await confirmTransferAction({}, form({ dealId: DEAL }))).toEqual({});
-    expect(await etape()).toBe(DealStage.RETENTION);
-
-    expect(await closeDealAction({}, form({ dealId: DEAL }))).toEqual({});
-    expect(await etape()).toBe(DealStage.CLOSED);
-
-    // La clôture doit retirer l'annonce du marché, pas seulement clore le dossier.
-    const listing = await prisma.listing.findUnique({
-      where: { id: listingId },
-      select: { status: true },
+    const deal = await prisma.deal.findUniqueOrThrow({
+      where: { id: DEAL },
+      select: { escrowStage: true, adjustedDeferredAmount: true, ndaAcceptedAt: true },
     });
+    expect(deal.escrowStage).toBe("RELEASED");
+    expect(deal.ndaAcceptedAt).not.toBeNull();
+    // 92 % conservés pour une cible de 90 % : le solde est versé en entier.
+    expect(deal.adjustedDeferredAmount).not.toBeNull();
+
+    // Les pièces signées sont archivées avec leur empreinte.
+    const archives = await prisma.document.findMany({
+      where: { dealId: DEAL, slot: { startsWith: "generated:" } },
+      select: { slot: true, sha256: true, signedAt: true },
+    });
+    expect(archives.map((a) => a.slot).sort()).toEqual(["generated:confidentialite", "generated:lettre-intention", "generated:protocole"]);
+    expect(archives.every((a) => a.sha256.length === 64 && a.signedAt)).toBe(true);
+
+    const signatures = await prisma.dealSignoff.findMany({ where: { dealId: DEAL, kind: "DEED_SIGNED" } });
+    expect(signatures).toHaveLength(2);
+    expect(new Set(signatures.map((x) => x.contentHash)).size).toBe(1);
+
+    const listing = await prisma.listing.findUnique({ where: { id: listingId }, select: { status: true } });
     expect(listing?.status).toBe(ListingStatus.SOLD);
   });
 });
 
-describe("aucune étape ne se saute", () => {
-  it("refuse de clôturer avant la période de vérification", async () => {
+describe("aucune étape ne se franchit d’un clic", () => {
+  it("une seule signature de confidentialité n’ouvre pas la salle de données", async () => {
     await poser(DealStage.NDA);
-    const resultat = await closeDealAction({}, form({ dealId: DEAL }));
-    expect(resultat.error).toBeTruthy();
-    expect(await etape()).toBe(DealStage.NDA);
+    connecterUtilisateur(buyerId);
+    expect(await signNdaAction({}, form({ dealId: DEAL, consent: "on" }))).toEqual({ ok: "Accord signé." });
+    expect(await etapeDe(DEAL)).toBe(DealStage.NDA);
   });
 
-  it("refuse de signer l’acte avant le protocole", async () => {
+  it("refuse de signer sans cocher l’engagement", async () => {
+    await poser(DealStage.NDA);
+    connecterUtilisateur(buyerId);
+    expect((await signNdaAction({}, form({ dealId: DEAL }))).error).toBeTruthy();
+  });
+
+  it("refuse l’examen de la salle de données tant que des pièces obligatoires manquent", async () => {
     await poser(DealStage.DATA_ROOM);
-    const resultat = await confirmSignatureAction({}, form({ dealId: DEAL }));
-    expect(resultat.error).toBeTruthy();
-    expect(await etape()).toBe(DealStage.DATA_ROOM);
+    connecterUtilisateur(buyerId);
+    const r = await reviewDataRoomAction({}, form({ dealId: DEAL, consent: "on" }));
+    expect(r.error).toContain("pièces obligatoires");
+    expect(await etapeDe(DEAL)).toBe(DealStage.DATA_ROOM);
   });
 
-  it("refuse la lettre d’intention avant la salle de données", async () => {
-    await poser(DealStage.NDA);
-    const resultat = await signLoiAction({}, form({ dealId: DEAL }));
-    expect(resultat.error).toBeTruthy();
-    expect(await etape()).toBe(DealStage.NDA);
+  it("l’acquéreur ne dépose pas les pièces du cédant, et un emplacement fabriqué est refusé", async () => {
+    await poser(DealStage.DATA_ROOM);
+    const item = await prisma.dueDiligenceItem.findFirstOrThrow({ where: { dealId: DEAL } });
+    connecterUtilisateur(buyerId);
+    expect((await uploadDealPieceAction({}, form({ dealId: DEAL, slot: `dd:${item.id}`, file: pdf() }))).error).toContain("autre partie");
+    connecterUtilisateur(sellerId);
+    expect((await uploadDealPieceAction({}, form({ dealId: DEAL, slot: "dd:invente", file: pdf() }))).error).toContain("inconnu");
+    // Une pièce d'identification ne se dépose qu'à l'étape de conformité.
+    expect((await uploadDealPieceAction({}, form({ dealId: DEAL, slot: "kyc:seller:kbis", file: pdf() }))).error).toContain("pas ouvert");
   });
 
-  it("refuse le séquestre avant la signature", async () => {
+  it("refuse un fichier qui n’est ni PDF ni image", async () => {
+    await poser(DealStage.DATA_ROOM);
+    const item = await prisma.dueDiligenceItem.findFirstOrThrow({ where: { dealId: DEAL } });
+    const exe = new File([new Uint8Array([77, 90])], "outil.exe", { type: "application/octet-stream" });
+    const r = await uploadDealPieceAction({}, form({ dealId: DEAL, slot: `dd:${item.id}`, file: exe }));
+    expect(r.error).toContain("PDF");
+  });
+
+  it("la lettre d’intention se propose par l’acquéreur et s’accepte par le cédant", async () => {
     await poser(DealStage.LOI);
-    const resultat = await mockEscrowAction({}, form({ dealId: DEAL, intent: "hold" }));
-    expect(await etape()).toBe(DealStage.LOI);
-    expect(resultat).toBeDefined();
+    connecterUtilisateur(sellerId);
+    expect((await proposeLoiAction({}, form({ dealId: DEAL, price: "30000", effectiveDate: "2099-01-01" }))).error).toBeTruthy();
+    connecterUtilisateur(buyerId);
+    expect((await answerLoiAction({}, form({ dealId: DEAL, decision: "accept", consent: "on" }))).error).toBeTruthy();
+    expect(await proposeLoiAction({}, form({ dealId: DEAL, price: "30 000", effectiveDate: "2099-01-01" }))).toEqual({
+      ok: "Lettre d’intention envoyée au cédant.",
+    });
+
+    // Un refus renvoie la main à l'acquéreur, avec le motif.
+    connecterUtilisateur(sellerId);
+    expect((await answerLoiAction({}, form({ dealId: DEAL, decision: "decline", reason: "" }))).error).toContain("motif");
+    await answerLoiAction({}, form({ dealId: DEAL, decision: "decline", reason: "Prix trop bas au regard des liasses." }));
+    const refusee = await prisma.deal.findUniqueOrThrow({ where: { id: DEAL }, select: { loiProposedAt: true, loiDeclineReason: true } });
+    expect(refusee.loiProposedAt).toBeNull();
+    expect(refusee.loiDeclineReason).toBe("Prix trop bas au regard des liasses.");
+    expect(await etapeDe(DEAL)).toBe(DealStage.LOI);
+  });
+
+  it("le protocole se signe au nom du représentant, et pas avant d’être approuvé", async () => {
+    await poser(DealStage.DEED);
+    connecterUtilisateur(sellerId);
+    expect((await signDeedAction({}, form({ dealId: DEAL, consent: "on", signatureName: "Antoine Perrin" }))).error).toContain("ordre du jour");
+
+    await poser(DealStage.SIGNATURE);
+    const r = await signDeedAction({}, form({ dealId: DEAL, consent: "on", signatureName: "Quelqu’un d’autre" }));
+    expect(r.error).toContain("représentant");
+  });
+
+  it("refuse le séquestre avant la signature, et au cédant", async () => {
+    await poser(DealStage.SIGNATURE);
+    connecterUtilisateur(buyerId);
+    expect((await fundEscrowAction({}, form({ dealId: DEAL, consent: "on" }))).error).toBeTruthy();
+    await poser(DealStage.ESCROW);
+    connecterUtilisateur(sellerId);
+    expect((await fundEscrowAction({}, form({ dealId: DEAL, consent: "on" }))).error).toContain("autre partie");
+    expect(await etapeDe(DEAL)).toBe(DealStage.ESCROW);
   });
 
   it("refuse de rejouer une étape déjà franchie", async () => {
-    await poser(DealStage.DATA_ROOM);
-    const resultat = await acceptNdaAction({}, form({ dealId: DEAL }));
-    expect(resultat.error).toBeTruthy();
-    expect(await etape()).toBe(DealStage.DATA_ROOM);
+    await poser(DealStage.NDA);
+    await jouerEtape(DEAL);
+    expect(await etapeDe(DEAL)).toBe(DealStage.DATA_ROOM);
+    connecterUtilisateur(buyerId);
+    expect((await signNdaAction({}, form({ dealId: DEAL, consent: "on" }))).error).toBeTruthy();
   });
 });
 
@@ -191,17 +257,17 @@ describe("le dossier n’est ouvert qu’à ses deux parties", () => {
     if (!tiers) throw new Error("Aucun tiers vérifié en base. Lancez npm run db:seed.");
 
     connecterUtilisateur(tiers.id);
-    const resultat = await acceptNdaAction({}, form({ dealId: DEAL }));
+    const resultat = await signNdaAction({}, form({ dealId: DEAL, consent: "on" }));
     expect(resultat.error).toBeTruthy();
-    expect(await etape()).toBe(DealStage.NDA);
+    expect(await etapeDe(DEAL)).toBe(DealStage.NDA);
   });
 
   it("refuse un visiteur anonyme", async () => {
     await poser(DealStage.NDA);
     connecterUtilisateur(null);
-    const resultat = await acceptNdaAction({}, form({ dealId: DEAL }));
+    const resultat = await signNdaAction({}, form({ dealId: DEAL, consent: "on" }));
     expect(resultat.error).toBeTruthy();
-    expect(await etape()).toBe(DealStage.NDA);
+    expect(await etapeDe(DEAL)).toBe(DealStage.NDA);
   });
 });
 

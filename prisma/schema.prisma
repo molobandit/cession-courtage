@@ -286,6 +286,7 @@ model User {
   investorPositions       InvestorPosition[]
   mandateProposals        MandateProposal[]   @relation("MandateProposalSeller")
   buyerPositions          BuyerPosition[]     @relation("BuyerPositions")
+  dealSignoffs            DealSignoff[]       @relation("DealSignoffs")
 
   @@index([firmId])
   @@index([role])
@@ -800,6 +801,16 @@ model Deal {
   escrowStage       EscrowStage @default(NONE)
   escrowProviderRef String?
 
+  /// Lettre d'intention proposée par l'acquéreur, acceptée ou refusée par le cédant.
+  loiPrice         Decimal?
+  loiEffectiveDate DateTime?
+  loiConditions    String?
+  loiProposedAt    DateTime?
+  loiDeclinedAt    DateTime?
+  loiDeclineReason String?
+  /// Compagnies cédées et code courtier du cédant chez chacune : [{ name, code }].
+  transferCarriers Json      @default("[]")
+
   updatedAt DateTime @updatedAt
 
   listing          Listing           @relation(fields: [listingId], references: [id], onDelete: Restrict)
@@ -810,6 +821,7 @@ model Deal {
   messages         Message[]
   dataRoomViews    DataRoomView[]
   dueDiligence     DueDiligenceItem[]
+  signoffs         DealSignoff[]
 
   /// Un seul dossier par couple annonce/acquereur. Rend l'acceptation d'une
   /// offre rejouable : D1 ne gere pas les transactions, la reprise apres echec
@@ -831,12 +843,38 @@ model Document {
   uploadedById String
   signedAt     DateTime?
   createdAt    DateTime     @default(now())
+  /// Ce que le fichier justifie : "dd:<itemId>", "kyc:seller:kbis", "transfer:<compagnie>".
+  slot         String?
+  contentType  String?
+  sizeBytes    Int?
 
   deal       Deal @relation(fields: [dealId], references: [id], onDelete: Cascade)
   uploadedBy User @relation(fields: [uploadedById], references: [id], onDelete: Restrict)
 
   @@index([dealId])
   @@index([sha256])
+  @@index([dealId, slot])
+}
+
+/// Engagement d'une partie sur une étape du dossier : signature, validation, acceptation.
+model DealSignoff {
+  id            String   @id @default(cuid())
+  dealId        String
+  /// NDA_SIGNED, DATA_ROOM_REVIEWED, LOI_ACCEPTED, KYC_REVIEWED, DEED_APPROVED,
+  /// DEED_SIGNED, TRANSFER_CONFIRMED, RETENTION_ACCEPTED.
+  kind          String
+  userId        String
+  /// Empreinte du contenu approuvé ou signé : une pièce modifiée ensuite n'est plus couverte.
+  contentHash   String?
+  signatureName String?
+  ipAddress     String?
+  createdAt     DateTime @default(now())
+
+  deal Deal @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  user User @relation("DealSignoffs", fields: [userId], references: [id], onDelete: Restrict)
+
+  @@unique([dealId, kind, userId])
+  @@index([dealId])
 }
 
 model RetentionReport {

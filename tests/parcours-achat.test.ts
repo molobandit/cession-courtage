@@ -28,16 +28,8 @@ import { proposeListingAction } from "@/app/actions/mandate-proposals";
 import { acceptOfferAction, submitOfferAction } from "@/app/actions/offers";
 import { takePositionAction } from "@/app/actions/positions";
 import { loadPosition } from "@/lib/position/load";
-import {
-  acceptNdaAction,
-  closeDealAction,
-  confirmSignatureAction,
-  confirmTransferAction,
-  mockEscrowAction,
-  mockKycAction,
-  signLoiAction,
-  validateDeedAction,
-} from "@/app/actions/deals";
+import { fundEscrowAction } from "@/app/actions/deal-process";
+import { menerDossier } from "./setup/dossier";
 
 const ANNONCE_CATALOGUE = "lst_catalog_05";
 const ANNONCE_DEMANDE = "lst_catalog_10";
@@ -127,28 +119,17 @@ async function acheterJusquALaVente(listingId: string, acheteur: Compte) {
   expect(versDossier).toMatch(/^\/app\/dossiers\//);
   const dealId = versDossier.split("/").pop()!;
 
-  // Chaque partie agit à l'étape qui lui revient.
-  connecterUtilisateur(acheteur.id);
-  expect(await acceptNdaAction({}, form({ dealId }))).toEqual({});
-  expect(await signLoiAction({}, form({ dealId }))).toEqual({});
-  expect(await mockKycAction({}, form({ dealId }))).toEqual({});
-  connecterUtilisateur(cedant.id);
-  expect(await mockKycAction({}, form({ dealId }))).toEqual({});
-  expect(await validateDeedAction({}, form({ dealId }))).toEqual({});
-  expect(await confirmSignatureAction({}, form({ dealId }))).toEqual({});
-  connecterUtilisateur(acheteur.id);
-  expect(await mockEscrowAction({}, form({ dealId, intent: "hold" }))).toEqual({});
-  connecterUtilisateur(cedant.id);
-  expect(await confirmTransferAction({}, form({ dealId }))).toEqual({});
-  expect(await closeDealAction({}, form({ dealId }))).toEqual({});
+  // Chaque partie agit à l'étape qui lui revient, pièces et signatures comprises.
+  await menerDossier(dealId, "CLOSED");
 
-  // L'acquéreur a été prévenu de l'offre retenue et de chaque étape franchie par le cédant.
+  // L'acquéreur a été prévenu de l'offre retenue, puis de chaque étape du dossier.
   const avisAcheteur = await prisma.notification.findMany({
-    where: { userId: acheteur.id, href: versPosition },
-    select: { title: true },
+    where: { userId: acheteur.id, createdAt: { gte: debut } },
+    select: { title: true, href: true },
   });
-  expect(avisAcheteur.some((n) => n.title.startsWith("Offre retenue"))).toBe(true);
-  expect(avisAcheteur.some((n) => n.title.startsWith("Cession close"))).toBe(true);
+  expect(avisAcheteur.some((n) => n.title.startsWith("Offre retenue") && n.href === versPosition)).toBe(true);
+  expect(avisAcheteur.some((n) => n.title.includes("Lettre d’intention acceptée"))).toBe(true);
+  expect(avisAcheteur.some((n) => n.title.startsWith("Cession close") && n.href === versDossier)).toBe(true);
   const suivi = await loadPosition(positionId);
   expect(suivi?.state.percent).toBe(100);
 
@@ -160,7 +141,8 @@ async function acheterJusquALaVente(listingId: string, acheteur: Compte) {
   expect(fin.escrowStage).toBe("RELEASED");
 
   // Constaté en direct : le bouton de séquestre restait actif sur un dossier clos.
-  expect((await mockEscrowAction({}, form({ dealId, intent: "hold" }))).error).toBeTruthy();
+  connecterUtilisateur(acheteur.id);
+  expect((await fundEscrowAction({}, form({ dealId, consent: "on" }))).error).toBeTruthy();
   const apres = await prisma.deal.findUniqueOrThrow({ where: { id: dealId }, select: { escrowStage: true } });
   expect(apres.escrowStage).toBe("RELEASED");
 

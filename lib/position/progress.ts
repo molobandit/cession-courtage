@@ -84,7 +84,7 @@ export function positionState(facts: PositionFacts): PositionState {
           : `Le dossier de cession avance : étape « ${libelle} ».`,
       sellerMessage:
         stage === "NDA"
-          ? "Vous avez retenu cette offre. L’acquéreur signe la confidentialité, puis la salle de données s’ouvre."
+          ? "Vous avez retenu cette offre. Signez l’accord de confidentialité : la salle de données s’ouvre quand les deux signatures sont là."
           : `Le dossier de cession avance : étape « ${libelle} ».`,
     };
   }

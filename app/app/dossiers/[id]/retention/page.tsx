@@ -72,7 +72,12 @@ export default async function RetentionPage({ params }: { params: Promise<{ id: 
         </table>
       </div>
 
-      {deal.stage === "RETENTION" || deal.stage === "CLOSED" ? (
+      {deal.stage === "RETENTION" && deal.buyerId !== actor.id ? (
+        <p className="mt-6 rounded-2xl border border-line bg-paper p-4 text-[15px] text-muted">
+          L’acquéreur, qui gère désormais le portefeuille, déclare la conservation. À douze mois, vous validez sa
+          déclaration depuis le dossier : le séquestre et le solde ajusté sont alors libérés.
+        </p>
+      ) : deal.stage === "RETENTION" ? (
         <section className="mt-6">
           <h2 className="text-lg font-semibold text-ink">Nouvelle déclaration</h2>
           <div className="mt-3">
@@ -80,7 +85,11 @@ export default async function RetentionPage({ params }: { params: Promise<{ id: 
           </div>
         </section>
       ) : (
-        <p className="mt-4 text-sm text-muted">Disponible à l&apos;étape rétention.</p>
+        <p className="mt-4 text-sm text-muted">
+          {deal.stage === "CLOSED"
+            ? "La cession est close : les déclarations ne se modifient plus."
+            : "La conservation se déclare après le transfert des contrats."}
+        </p>
       )}
     </main>
   );

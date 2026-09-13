@@ -20,6 +20,6 @@ describe("sale pipeline", () => {
 
   it("séquestre 80 % à la signature", () => {
     expect(ESCROW_UPFRONT_SHARE).toBe(0.8);
-    expect(nextPipelineAction("ESCROW", "buyer").title).toMatch(/80/);
+    expect(nextPipelineAction("ESCROW", "buyer").body).toMatch(/80 %/);
   });
 });
