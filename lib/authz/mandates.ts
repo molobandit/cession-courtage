@@ -9,7 +9,7 @@ export async function listMyMandates(actor?: Actor) {
     where: { buyerId: user.id },
     orderBy: { createdAt: "desc" },
     include: {
-      _count: { select: { matches: true } },
+      _count: { select: { matches: true, proposals: true } },
     },
   });
 }
@@ -37,6 +37,8 @@ export async function getPublicMandateByNumber(publicNumber: number) {
     where: { isPublic: true, isActive: true, publicNumber },
     select: {
       id: true,
+      // Pour reconnaître l'auteur côté serveur ; jamais rendu dans la page.
+      buyerId: true,
       publicNumber: true,
       maxBudget: true,
       minCommissions: true,

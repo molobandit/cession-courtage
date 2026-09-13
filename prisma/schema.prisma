@@ -284,6 +284,7 @@ model User {
   recoveryCodes           RecoveryCode[]
   companyDocuments        ListingCompanyDocument[]
   investorPositions       InvestorPosition[]
+  mandateProposals        MandateProposal[]   @relation("MandateProposalSeller")
 
   @@index([firmId])
   @@index([role])
@@ -493,6 +494,7 @@ model Listing {
   lines                ListingLine[]
   valuations           Valuation[]
   matches              Match[]
+  proposals            MandateProposal[]
   offers               Offer[]
   deals                Deal[]
   messages             Message[]
@@ -612,10 +614,29 @@ model BuyerMandate {
   /// Reference publique, serie 20001, distincte des annonces de cession (10001).
   publicNumber Int? @unique
 
-  buyer   User    @relation(fields: [buyerId], references: [id], onDelete: Cascade)
-  matches Match[]
+  buyer     User               @relation(fields: [buyerId], references: [id], onDelete: Cascade)
+  matches   Match[]
+  proposals MandateProposal[]
 
   @@index([buyerId])
+}
+
+/// Un cédant propose l'une de ses annonces en réponse à une demande d'acquisition.
+model MandateProposal {
+  id        String   @id @default(cuid())
+  mandateId String
+  listingId String
+  sellerId  String
+  message   String?
+  createdAt DateTime @default(now())
+
+  mandate BuyerMandate @relation(fields: [mandateId], references: [id], onDelete: Cascade)
+  listing Listing      @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  seller  User         @relation("MandateProposalSeller", fields: [sellerId], references: [id], onDelete: Cascade)
+
+  @@unique([mandateId, listingId])
+  @@index([sellerId])
+  @@index([listingId])
 }
 
 model Match {

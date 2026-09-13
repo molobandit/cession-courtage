@@ -13,6 +13,7 @@ import type { Actor } from "@/lib/authz/actor";
 import { pipelineProgressPercent } from "@/lib/deal/pipeline";
 import { formatEuroWhole } from "@/lib/format/number";
 import { asStringArray } from "@/lib/json-array";
+import { listMyProposalsAsSeller } from "@/lib/mandate/proposals";
 import {
   DEAL_STAGE_LABELS,
   LISTING_STATUS_LABELS,
@@ -43,11 +44,12 @@ export type DossierItem = {
 export async function loadMemberDossiers(actor: Actor) {
   const seller = canSell(actor);
   const buyer = canBuy(actor);
-  const [deals, listings, offers, mandates] = await Promise.all([
+  const [deals, listings, offers, mandates, propositions] = await Promise.all([
     listMyDeals(actor),
     seller ? listMyListings(actor) : Promise.resolve([]),
     buyer ? listMyOffers(actor) : Promise.resolve([]),
     buyer ? listMyMandates(actor) : Promise.resolve([]),
+    seller ? listMyProposalsAsSeller(actor.id) : Promise.resolve([]),
   ]);
 
   const dealsVendeur = deals.filter((d) => d.sellerId === actor.id);
@@ -84,6 +86,26 @@ export async function loadMemberDossiers(actor: Actor) {
         amount: formatEuroWhole(Number(l.askingPrice)),
         active: l.status !== "WITHDRAWN" && l.status !== "SOLD",
       })),
+    // Réponses du cédant aux demandes d'acquisition : ses positions vendeur.
+    ...propositions.map((p) => {
+      const branches = asStringArray(p.mandate.riskTypes)
+        .map((r) => RISK_TYPE_LABELS[r as keyof typeof RISK_TYPE_LABELS] ?? r)
+        .join(", ");
+      return {
+        key: `proposal-${p.id}`,
+        href: p.mandate.publicNumber ? `/annonces/demandes/${p.mandate.publicNumber}` : "/annonces/demandes",
+        ribbon: { label: "Position Vendeur", icon: "user" as const },
+        tone: "escrow" as const,
+        title: `Demande N° ${p.mandate.publicNumber ?? "—"}`,
+        subtitle: `Acquéreur : ${p.mandate.buyer.publicAlias}`,
+        bullets: [
+          branches ? { text: branches } : { text: "Toutes branches", muted: true },
+          { text: `Portefeuille n° ${p.listing.publicNumber} proposé` },
+        ],
+        amount: `Budget : ${formatEuroWhole(Number(p.mandate.maxBudget))}`,
+        active: p.listing.status !== "SOLD" && p.listing.status !== "WITHDRAWN",
+      };
+    }),
   ];
 
   const achats: DossierItem[] = [
@@ -119,11 +141,11 @@ export async function loadMemberDossiers(actor: Actor) {
         .join(", ");
       return {
         key: `mandate-${m.id}`,
-        href: "/app/mandats",
+        href: m.isPublic && m.publicNumber ? `/annonces/demandes/${m.publicNumber}` : "/app/mandats",
         ribbon: { label: "Annonce d’achat", icon: "cart" as const },
         tone: "wanted" as const,
         title: m.publicNumber ? `Dossier N° ${m.publicNumber}` : "Annonce d’achat",
-        subtitle: `${m._count.matches} correspondance${m._count.matches > 1 ? "s" : ""}`,
+        subtitle: `${m._count.proposals} proposition${m._count.proposals > 1 ? "s" : ""} · ${m._count.matches} correspondance${m._count.matches > 1 ? "s" : ""}`,
         bullets: [
           branches ? { text: branches } : { text: "Toutes branches", muted: true },
           {

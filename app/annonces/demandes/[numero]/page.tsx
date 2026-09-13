@@ -3,8 +3,16 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { ChipGroup } from "@/components/listing/chips";
-import { canBuy, getActor, getPublicMandateByNumber, isOriasVerified } from "@/lib/authz";
+import { ProposeListingForm } from "@/components/mandate/propose-listing-form";
+import { canBuy, canSell, getActor, getPublicMandateByNumber, isOriasVerified } from "@/lib/authz";
 import { formatEuroWhole } from "@/lib/format/number";
+import { LISTING_STATUS_LABELS } from "@/lib/labels";
+import {
+  listMatchesForMandate,
+  listMyProposalsOnMandate,
+  listProposableListings,
+  listProposalsForMandate,
+} from "@/lib/mandate/proposals";
 import { mapPublicMandateCard } from "@/lib/mandate/map-public";
 import { acquisitionRequestHref } from "@/lib/nav/acquisition";
 
@@ -27,6 +35,27 @@ export default async function PublicMandateDetailPage({ params }: PageProps) {
     loggedIn: Boolean(actor),
     canBuy: Boolean(actor && isOriasVerified(actor) && canBuy(actor)),
   });
+
+  /*
+   * La même demande ne se lit pas pareil selon qui la regarde. Son auteur veut
+   * savoir ce qu'elle a produit : propositions reçues, portefeuilles
+   * correspondants. Un cédant veut pouvoir y répondre. Les autres la consultent.
+   */
+  const verifie = Boolean(actor && isOriasVerified(actor));
+  const estAuteur = Boolean(actor && row && row.buyerId === actor.id);
+  const estCedant = Boolean(actor && verifie && !estAuteur && canSell(actor));
+
+  const [propositions, correspondances] = estAuteur
+    ? await Promise.all([listProposalsForMandate(mandate.id), listMatchesForMandate(mandate.id)])
+    : [[], []];
+  const [annoncesProposables, dejaProposees] =
+    estCedant && actor
+      ? await Promise.all([
+          listProposableListings(actor.firmId),
+          listMyProposalsOnMandate(mandate.id, actor.id),
+        ])
+      : [[], []];
+  const proposees = new Set(dejaProposees.map((p) => p.listingId));
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-12">
@@ -71,14 +100,132 @@ export default async function PublicMandateDetailPage({ params }: PageProps) {
         )}
       </div>
 
-      <div className="mt-8 flex flex-wrap gap-3">
-        <Button asChild variant="primary">
-          <Link href="/annonces">Voir les portefeuilles à céder</Link>
-        </Button>
-        <Button asChild variant="outline">
-          <Link href={depositHref}>Déposer ma demande d’acquisition</Link>
-        </Button>
-      </div>
+      {estAuteur ? (
+        <>
+          <section className="mt-8 rounded-[1.75rem] border border-ok/30 bg-ok/10 p-6">
+            <h2 className="text-xl font-semibold text-ink">Votre demande est publiée</h2>
+            <p className="mt-2 text-[15px] leading-relaxed text-muted">
+              Elle apparaît au catalogue sous votre alias. Les cédants dont le portefeuille
+              correspond peuvent vous le proposer : vous êtes prévenu à chaque proposition.
+            </p>
+            <div className="mt-4 flex flex-wrap gap-3">
+              <Button asChild variant="primary">
+                <Link href="/app/mandats">Gérer mes demandes</Link>
+              </Button>
+              <Button asChild variant="outline">
+                <Link href="/annonces">Parcourir les portefeuilles</Link>
+              </Button>
+            </div>
+          </section>
+
+          <section className="mt-6 rounded-[1.75rem] border border-line bg-paper p-6">
+            <h2 className="text-xl font-semibold text-ink">
+              Propositions reçues <span className="tabular text-muted">{propositions.length}</span>
+            </h2>
+            {propositions.length === 0 ? (
+              <p className="mt-2 text-[15px] text-muted">
+                Aucune proposition pour le moment. En attendant, les portefeuilles
+                correspondants sont listés ci-dessous.
+              </p>
+            ) : (
+              <ul className="mt-4 grid gap-3">
+                {propositions.map((p) => (
+                  <li key={p.id} className="rounded-2xl border border-line bg-surface p-4">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="font-semibold text-ink">
+                          Portefeuille n° {p.listing.publicNumber} · cédant {p.seller.publicAlias}
+                        </p>
+                        <p className="mt-0.5 text-[14px] text-muted">
+                          {p.listing.displayedZone} · {formatEuroWhole(Number(p.listing.portfolio.annualCommissions))} de commissions / an ·{" "}
+                          {LISTING_STATUS_LABELS[p.listing.status]}
+                        </p>
+                        {p.message ? (
+                          <p className="mt-2 text-[14px] italic text-ink">« {p.message} »</p>
+                        ) : null}
+                      </div>
+                      <div className="text-right">
+                        <p className="tabular text-lg font-bold text-ink">
+                          {formatEuroWhole(Number(p.listing.askingPrice))}
+                        </p>
+                        <Button asChild variant="primary" size="sm" className="mt-2">
+                          <Link href={`/annonces/${p.listing.publicNumber}#position`}>Prendre position</Link>
+                        </Button>
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+
+          <section className="mt-6 rounded-[1.75rem] border border-line bg-paper p-6">
+            <h2 className="text-xl font-semibold text-ink">Portefeuilles correspondants</h2>
+            {correspondances.length === 0 ? (
+              <p className="mt-2 text-[15px] text-muted">
+                Aucun portefeuille publié ne correspond encore à vos critères. Vous serez
+                prévenu dès qu’une annonce correspondante paraît.
+              </p>
+            ) : (
+              <ul className="mt-4 grid gap-3 sm:grid-cols-2">
+                {correspondances.map((m) => (
+                  <li key={m.id}>
+                    <Link
+                      href={`/annonces/${m.listing.publicNumber}#position`}
+                      className="block rounded-2xl border border-line bg-surface p-4 hover:border-indigo"
+                    >
+                      <p className="flex items-baseline justify-between gap-3">
+                        <span className="font-semibold text-ink">Dossier n° {m.listing.publicNumber}</span>
+                        <span className="tabular text-[13px] font-semibold text-indigo-dark">{m.score}/100</span>
+                      </p>
+                      <p className="mt-0.5 text-[14px] text-muted">{m.listing.displayedZone}</p>
+                      <p className="tabular mt-2 font-bold text-ink">{formatEuroWhole(Number(m.listing.askingPrice))}</p>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        </>
+      ) : estCedant ? (
+        <section className="mt-8 rounded-[1.75rem] border border-indigo-line bg-indigo-soft p-6">
+          <h2 className="text-xl font-semibold text-ink">Proposer mon portefeuille</h2>
+          <p className="mt-2 text-[15px] leading-relaxed text-muted">
+            Votre annonce est signalée à l’acquéreur, qui peut prendre position dessus. Votre
+            cabinet reste anonyme jusqu’à son dépôt de garantie.
+          </p>
+          <div className="mt-5">
+            {annoncesProposables.length === 0 ? (
+              <div className="flex flex-wrap items-center gap-3">
+                <p className="text-[15px] text-ink">
+                  Il vous faut une annonce ouverte aux offres pour répondre à cette demande.
+                </p>
+                <Button asChild variant="primary">
+                  <Link href="/app/annonces/nouvelle">Publier un portefeuille</Link>
+                </Button>
+              </div>
+            ) : (
+              <ProposeListingForm
+                mandateId={mandate.id}
+                listings={annoncesProposables.map((l) => ({
+                  id: l.id,
+                  label: `N° ${l.publicNumber} · ${l.portfolio.label} · ${formatEuroWhole(Number(l.askingPrice))}`,
+                  alreadyProposed: proposees.has(l.id),
+                }))}
+              />
+            )}
+          </div>
+        </section>
+      ) : (
+        <div className="mt-8 flex flex-wrap gap-3">
+          <Button asChild variant="primary">
+            <Link href="/annonces">Voir les portefeuilles à céder</Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link href={depositHref}>Déposer ma demande d’acquisition</Link>
+          </Button>
+        </div>
+      )}
     </main>
   );
 }

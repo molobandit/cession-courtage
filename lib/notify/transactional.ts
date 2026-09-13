@@ -351,3 +351,35 @@ export async function notifyDirectDealAdvanced(input: {
     }
   }
 }
+
+/** Un cédant propose un portefeuille sur une demande : l'acquéreur est prévenu. */
+export async function notifyMandateProposal(input: {
+  proposalId: string;
+  buyerUserId: string;
+  buyerEmail: string;
+  mandateNumber: number;
+  listingNumber: number;
+  sellerAlias: string;
+}): Promise<void> {
+  const lien = `/annonces/${input.listingNumber}#position`;
+  await sendMail({
+    to: input.buyerEmail,
+    purpose: "MANDATE_PROPOSAL",
+    dedupeKey: `proposal:${input.proposalId}`,
+    subject: `Un portefeuille proposé sur votre demande n° ${input.mandateNumber}`,
+    bodyText: [
+      `Le cédant ${input.sellerAlias} vous propose le portefeuille n° ${input.listingNumber} en réponse à votre demande d’acquisition n° ${input.mandateNumber}.`,
+      "",
+      `Consulter la fiche et prendre position : ${lien}`,
+      "",
+      `— ${BRAND_NAME}`,
+    ].join("\n"),
+  });
+  await notifyInApp({
+    userId: input.buyerUserId,
+    type: NotificationType.MATCH,
+    title: `Portefeuille n° ${input.listingNumber} proposé`,
+    body: `En réponse à votre demande n° ${input.mandateNumber}.`,
+    href: lien,
+  });
+}

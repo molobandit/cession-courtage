@@ -9,7 +9,9 @@ DELETE FROM Portfolio WHERE id LIKE 'pf_catalog_%';
 DELETE FROM Firm WHERE id = 'firm_catalog';
 PRAGMA foreign_keys = ON;
 
-INSERT INTO Firm (id, legalName, siren, legalForm, address, postalCode, city, department, region, foundedAt, headcount, annualRevenue, distributionMode, complianceScore, createdAt) VALUES ('firm_catalog', 'Catalogue demonstration Le Bon Portefeuille', '890190080', 'SAS', '1 rue de la Bourse', '75002', 'Paris', '75', 'Île-de-France', '2024-01-15T00:00:00.000Z', 2, '0.00', 'REMOTE', 100, '2024-01-15T00:00:00.000Z');
+INSERT INTO Firm (id, legalName, siren, legalForm, address, postalCode, city, department, region, foundedAt, headcount, annualRevenue, distributionMode, complianceScore, createdAt) VALUES ('firm_catalog', 'Catalogue de demonstration', '890190080', 'SAS', '1 rue de la Bourse', '75002', 'Paris', '75', 'Île-de-France', '2024-01-15T00:00:00.000Z', 2, '0.00', 'REMOTE', 100, '2024-01-15T00:00:00.000Z');
+
+INSERT OR IGNORE INTO User (id, email, passwordHash, role, oriasNumber, oriasVerifiedAt, firmId, kycStatus, publicAlias, fullName, jobTitle, createdAt, updatedAt, financialCapacityStatus) SELECT 'usr_catalog_seller', 'cedant.catalogue@cession-courtage.demo', (SELECT passwordHash FROM User WHERE email = 'marie.lefort@parisienne-courtage.demo'), 'SELLER', '17001090', '2024-01-15T00:00:00.000Z', 'firm_catalog', 'VERIFIED', 'C90', 'Cédant Catalogue', 'Gérant', '2024-01-15T00:00:00.000Z', '2024-01-15T00:00:00.000Z', 'NONE';
 
 INSERT INTO Portfolio (id, firmId, label, contractCount, clientCount, annualCommissions, averageAgeMonths, churnRate12m, importedAt) VALUES ('pf_catalog_01', 'firm_catalog', 'Catalogue Paris 01', 65, 40, '14830.00', 19, '0.0440', '2026-09-08T10:00:00.000Z');
 INSERT INTO ContractLine (id, portfolioId, carrier, riskType, premium, commissionRate, annualCommission, effectiveDate, renewalDate, clientSegment, postalCode, commissionType, clientKey, department) VALUES ('cl_catalog_01_a', 'pf_catalog_01', 'AXA', 'HEALTH_INDIVIDUAL', '70727.69', '0.1300', '9194.60', '2025-08-04T10:00:00.000Z', '2026-09-30T10:00:00.000Z', 'PROFESSIONAL', '75002', 'LINEAR', 'ck_catalog_01_a', '75');

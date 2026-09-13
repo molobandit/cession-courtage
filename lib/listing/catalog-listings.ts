@@ -4,6 +4,15 @@
  */
 
 export const CATALOG_FIRM_ID = "firm_catalog";
+
+/** Compte cédant du catalogue : celui qui retient les offres et mène les dossiers. */
+export const CATALOG_SELLER = {
+  id: "usr_catalog_seller",
+  email: "cedant.catalogue@cession-courtage.demo",
+  oriasNumber: "17001090",
+  publicAlias: "C90",
+  fullName: "Cédant Catalogue",
+} as const;
 export const CATALOG_COUNT = 80;
 export const CATALOG_PUBLIC_NUMBER_START = 10_101;
 

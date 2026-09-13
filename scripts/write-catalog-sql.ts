@@ -1,7 +1,7 @@
 import { writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { buildCatalogListings, CATALOG_FIRM } from "../lib/listing/catalog-listings";
+import { buildCatalogListings, CATALOG_FIRM, CATALOG_SELLER } from "../lib/listing/catalog-listings";
 
 function sql(value: string | number | boolean): string {
   if (typeof value === "boolean") return value ? "1" : "0";
@@ -39,6 +39,30 @@ const lines: string[] = [
     CATALOG_FIRM.complianceScore,
     CATALOG_FIRM.foundedAt,
   ].map(sql).join(", ")});`,
+  "",
+  /*
+   * Un cédant pour le catalogue. Sans lui, une offre déposée sur l'une des 80
+   * fiches n'avait personne pour la retenir : le parcours d'achat s'arrêtait
+   * après l'offre. Le mot de passe est celui des autres comptes de
+   * démonstration, recopié depuis l'un d'eux sans jamais apparaître ici. Jamais
+   * supprimé par ce script : il porte des dossiers une fois utilisé.
+   */
+  `INSERT OR IGNORE INTO User (id, email, passwordHash, role, oriasNumber, oriasVerifiedAt, firmId, kycStatus, publicAlias, fullName, jobTitle, createdAt, updatedAt, financialCapacityStatus) SELECT ${[
+    CATALOG_SELLER.id,
+    CATALOG_SELLER.email,
+  ].map(sql).join(", ")}, (SELECT passwordHash FROM User WHERE email = 'marie.lefort@parisienne-courtage.demo'), ${[
+    "SELLER",
+    CATALOG_SELLER.oriasNumber,
+    CATALOG_FIRM.foundedAt,
+    CATALOG_FIRM.id,
+    "VERIFIED",
+    CATALOG_SELLER.publicAlias,
+    CATALOG_SELLER.fullName,
+    "Gérant",
+    CATALOG_FIRM.foundedAt,
+    CATALOG_FIRM.foundedAt,
+    "NONE",
+  ].map(sql).join(", ")};`,
   "",
 ];
 
