@@ -14,7 +14,7 @@ import { putObject, StorageUnavailableError } from "@/lib/storage/objects";
 export type CompanyDocFormState = { error?: string; ok?: boolean };
 
 const MAX_BYTES = 10 * 1024 * 1024;
-const ALLOWED = new Set(["application/pdf"]);
+const ALLOWED = new Set(["application/pdf", "image/jpeg", "image/png"]);
 const KINDS: ReadonlySet<string> = new Set(COMPANY_DOC_KINDS.map((k) => k.kind));
 
 /**
@@ -46,8 +46,8 @@ export async function uploadCompanyDocumentAction(
     return { error: "Choisissez un fichier PDF." };
   }
   if (file.size > MAX_BYTES) return { error: "Fichier trop volumineux (10 Mo maximum)." };
-  if (!ALLOWED.has(file.type) && !file.name.toLowerCase().endsWith(".pdf")) {
-    return { error: "Format accepté : PDF." };
+  if (!ALLOWED.has(file.type) && !/\.(pdf|jpe?g|png)$/i.test(file.name)) {
+    return { error: "Formats acceptés : PDF, JPG ou PNG." };
   }
 
   const buffer = new Uint8Array(await file.arrayBuffer());
@@ -71,6 +71,9 @@ export async function uploadCompanyDocumentAction(
     return { error: "Dépôt impossible pour le moment." };
   }
 
+  // Une pièce déposée peut compléter la vérification d'un dossier ouvert sur cette annonce.
+  const { advanceDealsOf } = await import("@/lib/deal/process-load");
+  await advanceDealsOf({ listingId: listing.id }, actor.id).catch((e: unknown) => console.error("advanceDealsOf", e));
   revalidatePath(`/app/annonces/${listing.id}`);
   revalidatePath(`/annonces/${listing.publicNumber}`);
   return { ok: true };

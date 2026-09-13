@@ -2,18 +2,15 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { DeskPageHeader } from "@/components/app/desk";
 import { OfferChat } from "@/components/chat/offer-chat";
-import { DealJournal, DealProcessPanel } from "@/components/deal/deal-process-panel";
-import { DueDiligencePanel } from "@/components/deal/due-diligence-panel";
+import { DealJournal, DealProcessPanel, RoomDocsList } from "@/components/deal/deal-process-panel";
 import { PieceUpload, RemovePiece } from "@/components/deal/process-forms";
 import { SalePipeline } from "@/components/deal/sale-pipeline";
 import { PartnerStrip } from "@/components/partners/partner-grid";
 import { SectionTab, SectionTabs } from "@/components/ui/section-tabs";
 import { counterpartyDisplayName, findMyDeal, getActor, isOriasVerified } from "@/lib/authz";
-import { isStageAtLeast } from "@/lib/authz/policies";
-import { buildChecklist, type DueDiligenceCategory } from "@/lib/deal/due-diligence";
 import { dealPieces } from "@/lib/deal/pieces";
 import { pipelineProgressPercent } from "@/lib/deal/pipeline";
-import { KYC_PIECES, kycSlot, stageTasks, tasksFor, transferSlot, type Side } from "@/lib/deal/process";
+import { stageTasks, tasksFor, type Side } from "@/lib/deal/process";
 import { loadDealProcess } from "@/lib/deal/process-load";
 import { formatDate, formatDateTime, formatEuro } from "@/lib/format/fr";
 import { DEAL_STAGE_LABELS, ESCROW_STAGE_LABELS } from "@/lib/labels";
@@ -37,7 +34,6 @@ export default async function DealPage({ params }: { params: Promise<{ id: strin
   const side: Side = isSeller ? "seller" : "buyer";
   const counterparty = isSeller ? deal.buyer : deal.seller;
   const counterpartyLabel = counterpartyDisplayName(counterparty);
-  const roomOpen = isStageAtLeast(deal.stage, "DATA_ROOM");
   const agreed = Number(p.deal.agreedPrice);
   const upfront = Number(p.deal.upfrontAmount);
   const deferred = Number(p.deal.deferredAmount);
@@ -53,11 +49,10 @@ export default async function DealPage({ params }: { params: Promise<{ id: strin
           ? `En attente ${suivi.waiting.every((t) => t.owner === "seller") ? "du cédant" : suivi.waiting.every((t) => t.owner === "buyer") ? "de l’acquéreur" : "des deux parties"}`
           : DEAL_STAGE_LABELS[deal.stage];
 
-  const details = new Map(buildChecklist(p.carriers.map((c) => c.name), true).map((e) => [e.label, e.detail]));
-  const pieces = dealPieces({ stage: deal.stage, loiProposed: Boolean(p.deal.loiProposedAt), carriers: p.carriers });
+  const pieces = dealPieces({ stage: deal.stage, carriers: p.carriers });
   const autres = p.deal.documents.filter((d) => d.slot === "other");
-  const views = p.deal.documents.length ? deal.dataRoomViews : [];
-  const nomDoc = new Map(p.deal.documents.map((d) => [d.id, d.fileName]));
+  const views = deal.dataRoomViews;
+  const nomDoc = new Map([...p.deal.documents, ...p.deal.listing.companyDocuments].map((d) => [d.id, d.fileName]));
 
   const parcours = (
     <div className="grid gap-6">
@@ -116,13 +111,13 @@ export default async function DealPage({ params }: { params: Promise<{ id: strin
     </section>
   );
 
-  const canUploadRoom = isSeller && roomOpen && deal.stage !== "CLOSED";
+  const canUpload = deal.stage !== "CLOSED";
 
   const documents = (
     <div className="grid gap-6">
       <section className="rounded-3xl border border-line bg-paper p-5 sm:p-6">
         <h2 className="text-lg font-semibold text-ink">Pièces du dossier</h2>
-        <p className="mt-1 text-[14px] text-muted">Rédigées à partir du dossier, à relire, imprimer et signer.</p>
+        <p className="mt-1 text-[14px] text-muted">Rédigées à partir du dossier, signées électroniquement, prêtes à imprimer.</p>
         <ul className="mt-3 divide-y divide-line">
           {pieces.map((piece) => (
             <li key={piece.key} className="flex flex-wrap items-center justify-between gap-2 py-3">
@@ -142,107 +137,42 @@ export default async function DealPage({ params }: { params: Promise<{ id: strin
         </ul>
       </section>
 
-      {roomOpen ? (
-        <DueDiligencePanel
-          dealId={deal.id}
-          actorId={actor.id}
-          canUpload={canUploadRoom}
-          items={p.deal.dueDiligence.map((item) => ({
-            id: item.id,
-            category: item.category as DueDiligenceCategory,
-            label: item.label,
-            detail: details.get(item.label),
-            required: item.required,
-          }))}
-          files={p.deal.documents}
-        />
-      ) : (
-        <p className="rounded-3xl border border-line bg-paper p-6 text-[15px] text-muted">
-          La salle de données s’ouvre quand les deux parties ont signé l’accord de confidentialité.
+      <section className="rounded-3xl border border-line bg-paper p-5 sm:p-6">
+        <h2 className="text-lg font-semibold text-ink">Pièces du cabinet cédant</h2>
+        <p className="mt-1 text-[14px] text-muted">
+          Déposées sur l’annonce, communes à tout acquéreur du portefeuille. Chaque ouverture par l’acquéreur est journalisée.
         </p>
-      )}
+        <div className="mt-3">
+          <RoomDocsList p={p} canUpload={isSeller && canUpload} />
+        </div>
+      </section>
 
-      {isStageAtLeast(deal.stage, "KYC") ? (
-        <section className="rounded-3xl border border-line bg-paper p-5 sm:p-6">
-          <h2 className="text-lg font-semibold text-ink">Pièces d’identification</h2>
-          <div className="mt-3 grid gap-4 sm:grid-cols-2">
-            {(["seller", "buyer"] as const).map((cote) => (
-              <div key={cote} className="rounded-2xl border border-line p-4">
-                <h3 className="text-[14px] font-semibold text-ink">{cote === "seller" ? "Cédant" : "Acquéreur"}</h3>
-                <ul className="mt-2 grid gap-2">
-                  {KYC_PIECES.map((k) => {
-                    const doc = [...p.deal.documents].reverse().find((d) => d.slot === kycSlot(cote, k.kind));
-                    return (
-                      <li key={k.kind} className="text-[13px]">
-                        <span className="text-muted">{k.label} : </span>
-                        {doc ? (
-                          <a href={`/api/dossiers/${deal.id}/${doc.id}`} target="_blank" rel="noreferrer" className={lien}>
-                            {doc.fileName}
-                          </a>
-                        ) : (
-                          <span className="text-ink/60">non déposée</span>
-                        )}
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-            ))}
-          </div>
-        </section>
-      ) : null}
-
-      {isStageAtLeast(deal.stage, "TRANSFER") ? (
-        <section className="rounded-3xl border border-line bg-paper p-5 sm:p-6">
-          <h2 className="text-lg font-semibold text-ink">Attestations de transfert signées</h2>
+      <section className="rounded-3xl border border-line bg-paper p-5 sm:p-6">
+        <h2 className="text-lg font-semibold text-ink">Pièces complémentaires</h2>
+        <p className="mt-1 text-[14px] text-muted">Tout document demandé en plus, par l’une ou l’autre partie.</p>
+        {autres.length ? (
           <ul className="mt-3 divide-y divide-line">
-            {p.carriers.map((c) => {
-              const doc = [...p.deal.documents].reverse().find((d) => d.slot === transferSlot(c.name));
-              return (
-                <li key={c.name} className="flex flex-wrap items-center justify-between gap-2 py-2.5 text-[14px]">
-                  <span className="text-ink">{c.name}</span>
-                  {doc ? (
-                    <a href={`/api/dossiers/${deal.id}/${doc.id}`} target="_blank" rel="noreferrer" className={lien}>
-                      {doc.fileName}
-                    </a>
-                  ) : (
-                    <span className="text-muted">En attente</span>
-                  )}
-                </li>
-              );
-            })}
+            {autres.map((doc) => (
+              <li key={doc.id} className="flex flex-wrap items-center justify-between gap-2 py-2.5 text-[14px]">
+                <a href={`/api/dossiers/${deal.id}/${doc.id}`} target="_blank" rel="noreferrer" className={lien}>
+                  {doc.fileName}
+                </a>
+                <span className="flex items-center gap-3 text-[13px] text-muted">
+                  {doc.uploadedById === deal.sellerId ? "Cédant" : "Acquéreur"} · {formatDate(doc.createdAt)}
+                  {canUpload && doc.uploadedById === actor.id ? <RemovePiece dealId={deal.id} documentId={doc.id} /> : null}
+                </span>
+              </li>
+            ))}
           </ul>
-        </section>
-      ) : null}
-
-      {roomOpen ? (
-        <section className="rounded-3xl border border-line bg-paper p-5 sm:p-6">
-          <h2 className="text-lg font-semibold text-ink">Pièces complémentaires</h2>
-          <p className="mt-1 text-[14px] text-muted">Tout ce que l’acquéreur demande en plus du bordereau.</p>
-          {autres.length ? (
-            <ul className="mt-3 divide-y divide-line">
-              {autres.map((doc) => (
-                <li key={doc.id} className="flex flex-wrap items-center justify-between gap-2 py-2.5 text-[14px]">
-                  <a href={`/api/dossiers/${deal.id}/${doc.id}`} target="_blank" rel="noreferrer" className={lien}>
-                    {doc.fileName}
-                  </a>
-                  <span className="flex items-center gap-3 text-[13px] text-muted">
-                    {formatDate(doc.createdAt)}
-                    {canUploadRoom && doc.uploadedById === actor.id ? <RemovePiece dealId={deal.id} documentId={doc.id} /> : null}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="mt-3 text-[14px] text-muted">Aucune pièce complémentaire.</p>
-          )}
-          {canUploadRoom ? (
-            <div className="mt-3">
-              <PieceUpload dealId={deal.id} slot="other" />
-            </div>
-          ) : null}
-        </section>
-      ) : null}
+        ) : (
+          <p className="mt-3 text-[14px] text-muted">Aucune pièce complémentaire.</p>
+        )}
+        {canUpload ? (
+          <div className="mt-3">
+            <PieceUpload dealId={deal.id} slot="other" />
+          </div>
+        ) : null}
+      </section>
 
       {views.length > 0 ? (
         <section className="rounded-3xl border border-line bg-paper p-5 sm:p-6">

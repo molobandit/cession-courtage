@@ -1,28 +1,28 @@
 import "server-only";
 import { DealStage, DocumentType, ListingStatus, type Prisma } from "@prisma/client";
 import { createHash } from "node:crypto";
-import { identitiesRevealedFor } from "@/lib/authz/policies";
 import { ESCROW_UPFRONT_SHARE } from "@/lib/deal/pipeline";
 import {
+  currentPrice,
   nextStage,
+  normalizeStage,
   stageComplete,
   type ProcessSnapshot,
 } from "@/lib/deal/process";
-import { ensureDealChecklist } from "@/lib/deal/seed-checklist";
 import {
   buildConfidentialityAgreement,
   buildLetterOfIntent,
   buildTransferDeed,
   missingPartyFields,
   type DocumentContext,
-  type DocumentParty,
   type GeneratedDocument,
 } from "@/lib/direct/documents";
 import { loadDocumentParty } from "@/lib/direct/parties";
 import { readTransferCarriers, type TransferCarrier } from "@/lib/direct/services";
+import { DATA_ROOM_KINDS } from "@/lib/listing/company-doc-kinds";
 import { listingLots, readCarriers } from "@/lib/listing/lot-availability";
 import { fullyCommitted } from "@/lib/listing/lots";
-import { holdEscrowFunds, releaseEscrowFunds, signDealDocument, verifyPartyIdentity } from "@/lib/partners/runtime";
+import { holdEscrowFunds, releaseEscrowFunds, signDealDocument } from "@/lib/partners/runtime";
 import { notifyDealStage } from "@/lib/position/events";
 import { prisma } from "@/lib/prisma";
 import { adjustedDeferredAmount } from "@/lib/retention/adjust";
@@ -47,12 +47,14 @@ const DEAL_INCLUDE = {
       publicNumber: true,
       status: true,
       portfolio: { select: { label: true } },
-      deposits: { select: { buyerId: true } },
+      deposits: { select: { buyerId: true, ndaAcceptedAt: true, placedAt: true } },
+      companyDocuments: { select: { id: true, kind: true, fileName: true, createdAt: true }, orderBy: { createdAt: "asc" } },
     },
   },
+  seller: { select: { kycStatus: true, kycReviewNote: true } },
+  buyer: { select: { kycStatus: true, kycReviewNote: true } },
   signoffs: { orderBy: { createdAt: "asc" } },
   documents: { orderBy: { createdAt: "asc" } },
-  dueDiligence: { orderBy: [{ category: "asc" }, { label: "asc" }] },
   retentionReports: { orderBy: { monthIndex: "asc" } },
 } satisfies Prisma.DealInclude;
 
@@ -73,24 +75,7 @@ export async function dealCarriers(deal: {
   if (saisis.length > 0) return saisis;
   let noms = readCarriers(deal.carriers);
   if (noms.length === 0) noms = (await listingLots(deal.listingId)).map((l) => l.carrier);
-  const codes = new Map(saisis.map((c) => [c.name, c.code]));
-  return [...new Set(noms)].sort((a, b) => a.localeCompare(b, "fr")).map((name) => ({ name, code: codes.get(name) ?? "" }));
-}
-
-function masked(alias: string): DocumentParty {
-  const plusTard = "communiqué à la levée de l’anonymat";
-  return {
-    legalName: alias,
-    legalForm: null,
-    siren: plusTard,
-    address: plusTard,
-    postalCode: null,
-    city: null,
-    oriasNumber: plusTard,
-    representative: plusTard,
-    jobTitle: null,
-    email: null,
-  };
+  return [...new Set(noms)].sort((a, b) => a.localeCompare(b, "fr")).map((name) => ({ name, code: "" }));
 }
 
 /** Empreinte d'une pièce générée : son contenu, sans les dates d'édition ni de signature. */
@@ -100,12 +85,14 @@ export function documentHash(doc: GeneratedDocument): string {
 }
 
 export async function loadDealProcess(dealId: string) {
-  let deal = await prisma.deal.findUnique({ where: { id: dealId }, include: DEAL_INCLUDE });
+  const deal = await prisma.deal.findUnique({ where: { id: dealId }, include: DEAL_INCLUDE });
   if (!deal) return null;
-  if (deal.dueDiligence.length === 0) {
-    // Dossier ouvert avant le bordereau : on le crée une fois, puis on relit.
-    await ensureDealChecklist(dealId);
-    deal = await prisma.deal.findUniqueOrThrow({ where: { id: dealId }, include: DEAL_INCLUDE });
+
+  // Un dossier resté sur une étape de l'ancien parcours rejoint celle qui la regroupe.
+  const etape = normalizeStage(deal.stage);
+  if (etape !== deal.stage) {
+    await prisma.deal.updateMany({ where: { id: deal.id, stage: deal.stage }, data: { stage: etape } });
+    deal.stage = etape;
   }
 
   const [sellerParty, buyerParty, carriers] = await Promise.all([
@@ -113,47 +100,47 @@ export async function loadDealProcess(dealId: string) {
     loadDocumentParty(deal.buyerId),
     dealCarriers(deal),
   ]);
-  const hasDeposit = deal.listing.deposits.some((d) => d.buyerId === deal.buyerId);
-  const revealed = identitiesRevealedFor({ stage: deal.stage, hasDeposit });
+  // Un dossier existe parce que le cédant a retenu l'offre : c'est la lettre
+  // d'intention, et les identités s'ouvrent.
+  const revealed = true;
 
-  const loiAccepted = deal.stage !== "NDA" && deal.stage !== "DATA_ROOM" && deal.stage !== "LOI";
-  const context = (viewerId: string | null): DocumentContext => {
-    const cacher = !revealed && viewerId !== null;
-    return {
-      dealId: deal.id,
-      reference: dealReferenceFor(deal),
-      portfolioLabel: deal.listing.portfolio.label,
-      salePrice: loiAccepted ? Number(deal.agreedPrice) : Number(deal.loiPrice ?? deal.agreedPrice),
-      upfrontPercent: UPFRONT_PERCENT,
-      escrow: true,
-      seller: cacher && viewerId !== deal.sellerId ? masked(deal.sellerAlias) : sellerParty,
-      buyer: cacher && viewerId !== deal.buyerId ? masked(deal.buyerAlias) : buyerParty,
-      carriers,
-      effectiveDate: deal.loiEffectiveDate,
-      deedSignedAt: null,
-      issuedAt: new Date(),
-      conditions: deal.loiConditions,
-    };
-  };
+  const revision =
+    deal.loiProposedAt && deal.loiPrice !== null ? { proposedAt: deal.loiProposedAt, price: Number(deal.loiPrice) } : null;
+  const prix = revision && etape === "DATA_ROOM" ? revision.price : Number(deal.agreedPrice);
 
-  const deed = buildTransferDeed(context(null));
+  const context = (): DocumentContext => ({
+    dealId: deal.id,
+    reference: dealReferenceFor(deal),
+    portfolioLabel: deal.listing.portfolio.label,
+    salePrice: prix,
+    upfrontPercent: UPFRONT_PERCENT,
+    escrow: true,
+    seller: sellerParty,
+    buyer: buyerParty,
+    carriers,
+    effectiveDate: deal.loiEffectiveDate,
+    deedSignedAt: null,
+    issuedAt: new Date(),
+    conditions: deal.loiConditions,
+  });
+
+  const deed = buildTransferDeed(context());
   const douzeMois = deal.retentionReports.find((r) => r.monthIndex === 12) ?? null;
 
   const snapshot: ProcessSnapshot = {
-    stage: deal.stage,
+    stage: etape,
     sellerId: deal.sellerId,
     buyerId: deal.buyerId,
     signoffs: deal.signoffs.map((s) => ({ kind: s.kind, userId: s.userId, createdAt: s.createdAt, contentHash: s.contentHash })),
-    pieces: deal.documents.map((d) => ({ slot: d.slot, uploadedById: d.uploadedById, createdAt: d.createdAt })),
-    checklist: deal.dueDiligence.map((i) => ({ id: i.id, label: i.label, required: i.required, providedAt: i.providedAt })),
-    loi: {
-      proposedAt: deal.loiProposedAt,
-      declinedAt: deal.loiDeclinedAt,
-      declineReason: deal.loiDeclineReason,
-      price: deal.loiPrice === null ? null : Number(deal.loiPrice),
-      effectiveDate: deal.loiEffectiveDate,
+    roomDocs: deal.listing.companyDocuments.map((d) => ({ kind: d.kind, createdAt: d.createdAt })),
+    roomKinds: DATA_ROOM_KINDS,
+    verification: {
+      seller: { status: deal.seller.kycStatus, missingIdentity: missingPartyFields(sellerParty), note: deal.seller.kycReviewNote },
+      buyer: { status: deal.buyer.kycStatus, missingIdentity: missingPartyFields(buyerParty), note: deal.buyer.kycReviewNote },
     },
-    missingIdentity: { seller: missingPartyFields(sellerParty), buyer: missingPartyFields(buyerParty) },
+    agreedPrice: Number(deal.agreedPrice),
+    revision,
+    declined: deal.loiDeclinedAt ? { at: deal.loiDeclinedAt, reason: deal.loiDeclineReason } : null,
     carriers,
     deedHash: documentHash(deed),
     escrowStage: deal.escrowStage,
@@ -194,12 +181,9 @@ async function archiveGenerated(dealId: string, doc: GeneratedDocument, type: Do
 async function onEnter(p: DealProcess, entered: DealStage) {
   const { deal } = p;
   switch (entered) {
-    case "DATA_ROOM":
-      await prisma.deal.update({ where: { id: deal.id }, data: { ndaAcceptedAt: new Date() } });
-      await archiveGenerated(deal.id, buildConfidentialityAgreement(p.context(null)), DocumentType.NDA, deal.sellerId);
-      return;
-    case "KYC": {
-      const prix = Number(deal.loiPrice ?? deal.agreedPrice);
+    case "SIGNATURE": {
+      // Le prix est figé : celui de l'offre, ou la révision acceptée.
+      const prix = currentPrice(p.snapshot);
       const comptant = Math.round(prix * ESCROW_UPFRONT_SHARE * 100) / 100;
       await prisma.deal.update({
         where: { id: deal.id },
@@ -207,25 +191,17 @@ async function onEnter(p: DealProcess, entered: DealStage) {
           agreedPrice: prix.toFixed(2),
           upfrontAmount: comptant.toFixed(2),
           deferredAmount: (Math.round((prix - comptant) * 100) / 100).toFixed(2),
+          loiPrice: prix.toFixed(2),
+          ndaAcceptedAt: deal.ndaAcceptedAt ?? new Date(),
         },
       });
-      await archiveGenerated(
-        deal.id,
-        buildLetterOfIntent({ ...p.context(null), salePrice: prix }),
-        DocumentType.LOI,
-        deal.buyerId,
-      );
-      await prisma.auditLog.create({
-        data: { actorId: deal.sellerId, action: "IDENTIFYING_DATA_VIEW", entityType: "Deal", entityId: deal.id, metadata: { reason: "loi_accepted" } },
-      });
+      const ctx = { ...p.context(), salePrice: prix };
+      await archiveGenerated(deal.id, buildConfidentialityAgreement(ctx), DocumentType.NDA, deal.sellerId);
+      await archiveGenerated(deal.id, buildLetterOfIntent(ctx), DocumentType.LOI, deal.buyerId);
       return;
     }
-    case "DEED":
-      await verifyPartyIdentity(deal.sellerId);
-      await verifyPartyIdentity(deal.buyerId);
-      return;
-    case "ESCROW": {
-      const doc = await archiveGenerated(deal.id, buildTransferDeed(p.context(null)), DocumentType.DEED, deal.sellerId);
+    case "TRANSFER": {
+      const doc = await archiveGenerated(deal.id, buildTransferDeed(p.context()), DocumentType.DEED, deal.sellerId);
       await signDealDocument(doc.id);
       return;
     }
@@ -301,6 +277,24 @@ export async function advanceDeal(dealId: string, actorId: string): Promise<Deal
   await onEnter(p, suivante);
   await notifyDealStage(dealId, actorId, { notifyActor: true }).catch((e) => console.error("notifyDealStage", e));
   return suivante;
+}
+
+/**
+ * Un fait extérieur au dossier peut compléter une étape : un compte vérifié par
+ * la plateforme, une pièce déposée sur l'annonce. Les dossiers concernés sont
+ * alors relus.
+ */
+export async function advanceDealsOf(where: { userId?: string; listingId?: string }, actorId: string) {
+  const deals = await prisma.deal.findMany({
+    where: {
+      stage: { in: ["NDA", "LOI", "KYC", "DATA_ROOM"] },
+      ...(where.listingId ? { listingId: where.listingId } : {}),
+      ...(where.userId ? { OR: [{ sellerId: where.userId }, { buyerId: where.userId }] } : {}),
+    },
+    select: { id: true },
+    take: 20,
+  });
+  for (const d of deals) await advanceDeal(d.id, actorId).catch((e) => console.error("advanceDeal", e));
 }
 
 /** Séquestre du comptant, déclenché par l'acquéreur. */

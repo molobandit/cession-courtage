@@ -61,15 +61,15 @@ export const LISTING_STATUS_LABELS: Record<ListingStatus, string> = {
 };
 
 export const DEAL_STAGE_LABELS: Record<DealStage, string> = {
-  NDA: "Confidentialité",
-  DATA_ROOM: "Salle de données",
-  LOI: "Lettre d'intention",
-  KYC: "Vérification KYC",
-  DEED: "Acte",
+  NDA: "Offre acceptée",
+  DATA_ROOM: "Vérifications",
+  LOI: "Vérifications",
+  KYC: "Vérifications",
+  DEED: "Signature",
   SIGNATURE: "Signature",
-  ESCROW: "Séquestre",
-  TRANSFER: "Transfert",
-  RETENTION: "Rétention",
+  ESCROW: "Paiement et transfert",
+  TRANSFER: "Paiement et transfert",
+  RETENTION: "Solde",
   CLOSED: "Clôturé",
 };
 

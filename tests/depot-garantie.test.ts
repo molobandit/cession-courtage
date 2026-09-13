@@ -81,6 +81,15 @@ describe("aucune offre sans engagement", () => {
     expect(offres).toBe(0);
   });
 
+  it("refuse l’offre sans l’engagement de confidentialité", async () => {
+    const resultat = await submitOfferAction(
+      {},
+      form({ listingId: LISTING, amount: "40000", engagement: "on" }),
+    );
+    expect(resultat.error).toContain("confidentialité");
+    expect(await prisma.interestDeposit.count({ where: { listingId: LISTING, buyerId: acheteur } })).toBe(0);
+  });
+
   it("accepte l’offre une fois le dépôt en place", async () => {
     await prisma.interestDeposit.create({
       data: { listingId: LISTING, buyerId: acheteur, amount: "1000.00", rate: "0.0250" },
@@ -96,6 +105,7 @@ describe("aucune offre sans engagement", () => {
           amount: "40000",
           upfrontPercent: "70",
           message: "Je souhaite me positionner sur ce dossier.",
+          nda: "on",
         }),
       ),
     ).rejects.toThrow(/NEXT_REDIRECT/);

@@ -3,7 +3,7 @@
 import { useActionState } from "react";
 import { uploadCompanyDocumentAction, type CompanyDocFormState } from "@/app/actions/company-docs";
 import { Button } from "@/components/ui/button";
-import { COMPANY_DOC_KINDS, companyDocLabel, type CompanyDocRow } from "@/lib/listing/company-doc-kinds";
+import { COMPANY_DOC_KINDS, DATA_ROOM_KINDS, companyDocLabel, type CompanyDocRow } from "@/lib/listing/company-doc-kinds";
 
 const initial: CompanyDocFormState = {};
 
@@ -19,6 +19,7 @@ export function CompanyDocumentsPanel({
   canDownload: boolean;
 }) {
   const byKind = new Map(docs.map((doc) => [doc.kind, doc]));
+  const pretes = DATA_ROOM_KINDS.filter((k) => byKind.has(k)).length;
 
   return (
     <section className="rounded-[1.75rem] border border-line bg-paper p-5 sm:p-6">
@@ -28,6 +29,22 @@ export function CompanyDocumentsPanel({
           ? "PDF du cabinet. Aucun nom d’assuré."
           : "Les pièces s’ouvrent après le dépôt de 2,5 % du prix. Le cédant reste sous alias jusque-là. Aucun nom d’assuré."}
       </p>
+      {canUpload ? (
+        <div
+          className={`mt-4 rounded-2xl border px-4 py-3 text-[14px] ${
+            pretes === DATA_ROOM_KINDS.length ? "border-ok/30 bg-ok/5 text-ink" : "border-indigo-line bg-indigo-soft text-ink"
+          }`}
+        >
+          <p className="font-semibold">
+            {pretes === DATA_ROOM_KINDS.length ? "✓ Dossier prêt à céder" : `Dossier prêt à céder : ${pretes} pièce${pretes > 1 ? "s" : ""} sur ${DATA_ROOM_KINDS.length}`}
+          </p>
+          <p className="mt-0.5 text-[13px] text-muted">
+            {pretes === DATA_ROOM_KINDS.length
+              ? "Dès qu’une offre est retenue, l’acquéreur examine les pièces sans vous attendre."
+              : `Déposez maintenant : ${DATA_ROOM_KINDS.filter((k) => !byKind.has(k)).map((k) => companyDocLabel(k)).join(", ")}. La vérification ne vous attendra pas.`}
+          </p>
+        </div>
+      ) : null}
       <ul className="mt-4 divide-y divide-line">
         {COMPANY_DOC_KINDS.map((item) => {
           const doc = byKind.get(item.kind);
@@ -103,7 +120,7 @@ function CompanyDocUpload({ listingId }: { listingId: string }) {
       <input
         type="file"
         name="file"
-        accept="application/pdf,.pdf"
+        accept="application/pdf,.pdf,image/jpeg,image/png,.jpg,.jpeg,.png"
         required
         className="text-sm"
       />

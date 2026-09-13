@@ -72,7 +72,7 @@ async function compte(where: { id?: string; email?: string }): Promise<Compte> {
 }
 
 /** Dépôt, offre, acceptation, puis tout le dossier jusqu'à la vente. */
-async function acheterJusquALaVente(listingId: string, acheteur: Compte) {
+async function acheterJusquALaVente(listingId: string, acheteur: Compte, enUnGeste = false) {
   const listing = await prisma.listing.findUniqueOrThrow({
     where: { id: listingId },
     select: { publicNumber: true, askingPrice: true },
@@ -98,14 +98,24 @@ async function acheterJusquALaVente(listingId: string, acheteur: Compte) {
   );
   expect(sansDepot.error).toContain("dépôt");
 
-  expect(await placeInterestDepositAction({}, form({ listingId }))).toEqual({ placed: true });
-
-  const versFiche = await destination(
-    submitOfferAction(
-      {},
-      form({ listingId, amount: String(Number(listing.askingPrice)), upfrontPercent: "80", message: "Reprise complète envisagée." }),
-    ),
-  );
+  let versFiche: string;
+  if (enUnGeste) {
+    // Engagement, confidentialité et offre, date d'effet comprise, en un seul formulaire.
+    const dateEffet = new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth() + 2, 1)).toISOString().slice(0, 10);
+    versFiche = await destination(
+      submitOfferAction({}, form({ listingId, amount: String(Number(listing.askingPrice)), effectiveDate: dateEffet, engagement: "on", nda: "on" })),
+    );
+  } else {
+    // Sans l'engagement de confidentialité, pas de dépôt.
+    expect((await placeInterestDepositAction({}, form({ listingId }))).error).toContain("confidentialité");
+    expect(await placeInterestDepositAction({}, form({ listingId, nda: "on" }))).toEqual({ placed: true });
+    versFiche = await destination(
+      submitOfferAction(
+        {},
+        form({ listingId, amount: String(Number(listing.askingPrice)), upfrontPercent: "80", message: "Reprise complète envisagée." }),
+      ),
+    );
+  }
   expect(versFiche).toBe(versPosition);
   expect((await loadPosition(positionId))?.state.key).toBe("OFFER");
 
@@ -128,7 +138,7 @@ async function acheterJusquALaVente(listingId: string, acheteur: Compte) {
     select: { title: true, href: true },
   });
   expect(avisAcheteur.some((n) => n.title.startsWith("Offre retenue") && n.href === versPosition)).toBe(true);
-  expect(avisAcheteur.some((n) => n.title.includes("Lettre d’intention acceptée"))).toBe(true);
+  expect(avisAcheteur.some((n) => n.title.endsWith("· Signature"))).toBe(true);
   expect(avisAcheteur.some((n) => n.title.startsWith("Cession close") && n.href === versDossier)).toBe(true);
   const suivi = await loadPosition(positionId);
   expect(suivi?.state.percent).toBe(100);
@@ -181,6 +191,8 @@ afterAll(async () => {
     where: { listingId: { in: annonces }, buyerId: { in: acheteurs } },
     select: { id: true },
   });
+  await prisma.listingCompanyDocument.deleteMany({ where: { listingId: { in: annonces }, createdAt: { gte: debut } } });
+  await prisma.accountDocument.deleteMany({ where: { createdAt: { gte: debut } } });
   for (const deal of deals) {
     await prisma.document.deleteMany({ where: { dealId: deal.id } });
     await prisma.dueDiligenceItem.deleteMany({ where: { dealId: deal.id } });
@@ -207,7 +219,7 @@ afterAll(async () => {
     await prisma.subscription.update({ where: { id: q.id }, data: { dealsUsed: q.dealsUsed } });
   }
   for (const u of [cedant, acheteurCatalogue, acheteurDemande]) {
-    await prisma.user.update({ where: { id: u.id }, data: { kycStatus: u.kycStatus as never } });
+    await prisma.user.update({ where: { id: u.id }, data: { kycStatus: u.kycStatus as never, kycReviewNote: null, kycReviewedAt: null } });
   }
   await disposePlatformProxy();
 });
@@ -280,6 +292,6 @@ describe("par une demande d’acquisition", () => {
     await prisma.outboundEmail.delete({ where: { dedupeKey: `proposal:${proposition.id}` } });
     await prisma.notification.deleteMany({ where: { userId: acheteurDemande.id, type: "MATCH", title: { contains: "proposé" } } });
 
-    await acheterJusquALaVente(ANNONCE_DEMANDE, acheteurDemande);
+    await acheterJusquALaVente(ANNONCE_DEMANDE, acheteurDemande, true);
   });
 });

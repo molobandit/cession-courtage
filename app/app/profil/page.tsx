@@ -5,7 +5,9 @@ import { DeuxFacteurs } from "@/components/app/deux-facteurs";
 import { EffacementForm } from "@/components/app/effacement-form";
 import { NotifyForm } from "@/components/app/notify-form";
 import { PasswordForm } from "@/components/app/password-form";
-import { KycSubmitForm } from "@/components/app/kyc-form";
+import { VerificationPanel } from "@/components/account/verification-panel";
+import { missingPartyFields } from "@/lib/direct/documents";
+import { loadDocumentParty } from "@/lib/direct/parties";
 import { SubscribeButton } from "@/components/billing/subscribe-button";
 import { confirmGrowthCheckout } from "@/app/actions/billing";
 import { codesDeSecoursRestants, secondFacteurActif } from "@/lib/auth/second-facteur";
@@ -35,6 +37,16 @@ export default async function ProfilPage({
   searchParams: Promise<{ session_id?: string; next?: string }>;
 }) {
   const actor = await getActor();
+  const verification = actor
+    ? await prisma.user.findUnique({
+        where: { id: actor.id },
+        select: {
+          kycReviewNote: true,
+          kycReviewedAt: true,
+          accountDocuments: { select: { id: true, kind: true, fileName: true, createdAt: true }, orderBy: { createdAt: "asc" } },
+        },
+      })
+    : null;
   if (!actor) redirect("/connexion?next=/app/profil");
   if (!isOriasVerified(actor)) redirect("/en-attente-orias");
   const { session_id: sessionId, next: nextRaw } = await searchParams;
@@ -243,13 +255,19 @@ export default async function ProfilPage({
       </section>
 
       <section id="identite" className={card}>
-        <h2 className="text-lg font-semibold text-ink">Identité professionnelle</h2>
+        <h2 className="text-lg font-semibold text-ink">Compte vérifié</h2>
         <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-muted">
-          Prépare l’entrée chez un prestataire de paiement agréé. Rien n’est
-          envoyé à un tiers aujourd’hui.
+          Une seule fois pour toutes vos cessions : ces pièces permettent de signer et de séquestrer les fonds en
+          règle avec la lutte contre le blanchiment. Seule la plateforme les consulte.
         </p>
         <div className="mt-5">
-          <KycSubmitForm status={actor.kycStatus} />
+          <VerificationPanel
+            status={actor.kycStatus}
+            note={verification?.kycReviewNote ?? null}
+            reviewedAt={verification?.kycReviewedAt ?? null}
+            documents={verification?.accountDocuments ?? []}
+            missingProfile={missingPartyFields(await loadDocumentParty(actor.id))}
+          />
         </div>
       </section>
 

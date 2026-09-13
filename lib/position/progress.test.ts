@@ -19,9 +19,9 @@ describe("avancement d’une prise de position", () => {
   });
 
   it("suit le dossier une fois l’offre retenue, jusqu’à 100 %", () => {
-    const retenue = positionState({ ...base, offerStatus: "ACCEPTED", dealStage: "NDA", listingStatus: "UNDER_NEGOTIATION" });
-    expect(retenue.title).toBe("Offre retenue");
-    expect(retenue.percent).toBe(15);
+    const retenue = positionState({ ...base, offerStatus: "ACCEPTED", dealStage: "DATA_ROOM", listingStatus: "UNDER_NEGOTIATION" });
+    expect(retenue.title).toBe("Vérifications");
+    expect(retenue.percent).toBeGreaterThan(15);
     const signature = positionState({ ...base, offerStatus: "ACCEPTED", dealStage: "SIGNATURE" });
     expect(signature.percent).toBeGreaterThan(retenue.percent);
     const close = positionState({ ...base, offerStatus: "ACCEPTED", dealStage: "CLOSED", listingStatus: "SOLD" });

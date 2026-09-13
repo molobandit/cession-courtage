@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { placeInterestDepositAction, type DepositFormState } from "@/app/actions/deposits";
 import { Button } from "@/components/ui/button";
 import { depositTerms } from "@/lib/billing/deposit-fate";
@@ -27,6 +27,7 @@ export function DepositForm({
   amountEur?: number;
 }) {
   const [state, action, pending] = useActionState(placeInterestDepositAction, initial);
+  const [nda, setNda] = useState(false);
 
   return (
     <form action={action} className="mt-5">
@@ -36,7 +37,17 @@ export function DepositForm({
           <li key={regle}>{regle}</li>
         ))}
       </ul>
-      <Button type="submit" variant="primary" disabled={pending}>
+      <label className="mb-4 flex items-start gap-3 text-[14px] leading-relaxed text-ink">
+        <input type="checkbox" name="nda" checked={nda} onChange={(e) => setNda(e.target.checked)} className="mt-1 h-4 w-4 shrink-0 accent-[#2563eb]" />
+        <span>
+          J’accepte l’engagement de confidentialité : les informations du cabinet ne servent qu’à cette acquisition et je ne
+          démarche aucun de ses clients.{" "}
+          <a href="/confidentialite-cession" target="_blank" className="text-indigo-dark underline-offset-2 hover:underline">
+            Lire l’engagement
+          </a>
+        </span>
+      </label>
+      <Button type="submit" variant="primary" disabled={pending || !nda}>
         {pending ? "Enregistrement…" : `Déposer mon engagement de ${amountLabel}`}
       </Button>
       {state.error ? (

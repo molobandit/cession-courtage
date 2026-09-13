@@ -70,7 +70,7 @@ async function factsFor(listingId: string, buyerId: string, listingStatus: Posit
   const [deposit, offer, deal] = await Promise.all([
     prisma.interestDeposit.findUnique({
       where: { listingId_buyerId: { listingId, buyerId } },
-      select: { id: true, amount: true, outcome: true },
+      select: { id: true, amount: true, outcome: true, ndaAcceptedAt: true },
     }),
     prisma.offer.findUnique({
       where: { listingId_buyerId: { listingId, buyerId } },

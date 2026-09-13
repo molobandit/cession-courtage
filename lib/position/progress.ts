@@ -1,5 +1,5 @@
 import type { DealStage, ListingStatus, OfferStatus } from "@prisma/client";
-import { SALE_PIPELINE, pipelineProgressPercent } from "@/lib/deal/pipeline";
+import { SALE_PIPELINE, pipelineIndex, pipelineProgressPercent } from "@/lib/deal/pipeline";
 
 /**
  * Où en est une prise de position, vue par l'acquéreur ou par le cédant.
@@ -49,7 +49,7 @@ export const POSITION_STEPS: PositionStep[] = [
   ...PRE_DEAL_STEPS,
   ...SALE_PIPELINE.filter((s) => s.key !== "POSITION").map((s) => ({
     key: s.key,
-    label: s.key === "NDA" ? "Offre retenue · confidentialité" : s.label,
+    label: s.label,
   })),
 ];
 
@@ -72,20 +72,21 @@ export function positionState(facts: PositionFacts): PositionState {
         sellerMessage: "La cession est close. Les fonds sont libérés et l’annonce est cédée.",
       };
     }
+    const libelleCourant = SALE_PIPELINE[pipelineIndex(stage)]?.label ?? libelle;
     return {
       key: stage,
-      title: stage === "NDA" ? "Offre retenue" : libelle,
+      title: libelleCourant,
       percent: dealPercent(stage),
       outcome: "active",
       waitingFor: "both",
       buyerMessage:
-        stage === "NDA"
-          ? "Le cédant a retenu votre offre. Signez l’accord de confidentialité pour ouvrir la salle de données."
-          : `Le dossier de cession avance : étape « ${libelle} ».`,
+        stage === "DATA_ROOM" || stage === "NDA"
+          ? "Le cédant a retenu votre offre. Examinez les pièces du cabinet et confirmez votre prix."
+          : `Le dossier de cession avance : étape « ${libelleCourant} ».`,
       sellerMessage:
-        stage === "NDA"
-          ? "Vous avez retenu cette offre. Signez l’accord de confidentialité : la salle de données s’ouvre quand les deux signatures sont là."
-          : `Le dossier de cession avance : étape « ${libelle} ».`,
+        stage === "DATA_ROOM" || stage === "NDA"
+          ? "Vous avez retenu cette offre. Complétez les pièces du cabinet et les codes courtier."
+          : `Le dossier de cession avance : étape « ${libelleCourant} ».`,
     };
   }
 

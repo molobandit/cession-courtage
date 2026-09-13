@@ -18,52 +18,32 @@ export const SALE_PIPELINE: PipelineStep[] = [
   {
     key: "POSITION",
     label: "Positionnement",
-    summary: "Candidature et échanges anonymes, jusqu’à ce que le cédant retienne une offre.",
+    summary: "Prise de position, engagement et offre, jusqu’à ce que le cédant la retienne.",
   },
   {
     key: "NDA",
-    label: "Confidentialité",
-    summary: "Les deux parties signent l’accord de confidentialité.",
+    label: "Offre acceptée",
+    summary: "Le cédant retient l’offre : elle vaut lettre d’intention, la confidentialité est acceptée des deux côtés.",
   },
   {
     key: "DATA_ROOM",
-    label: "Salle de données",
-    summary: "Le cédant dépose les pièces du bordereau, l’acquéreur les examine.",
-  },
-  {
-    key: "LOI",
-    label: "Lettre d’intention",
-    summary: "L’acquéreur propose un prix ferme et une date d’effet, le cédant accepte ou refuse.",
-  },
-  {
-    key: "KYC",
-    label: "Conformité",
-    summary: "Kbis, pièce d’identité et ORIAS de chaque cabinet, contrôlés par l’autre.",
-  },
-  {
-    key: "DEED",
-    label: "Protocole",
-    summary: "Protocole rédigé depuis le dossier, codes courtier, approbation des deux parties.",
+    label: "Vérifications",
+    summary: "Pièces du cabinet examinées, prix confirmé, comptes vérifiés, codes courtier renseignés.",
   },
   {
     key: "SIGNATURE",
     label: "Signature",
-    summary: "Signature électronique du protocole par les deux représentants.",
-  },
-  {
-    key: "ESCROW",
-    label: "Séquestre 80 %",
-    summary: "L’acquéreur verse le comptant sur le compte séquestre.",
+    summary: "Protocole et attestations de transfert signés électroniquement par les deux parties.",
   },
   {
     key: "TRANSFER",
-    label: "Transfert",
-    summary: "Attestations signées adressées à chaque compagnie, rattachement confirmé par l’acquéreur.",
+    label: "Paiement et transfert",
+    summary: "Comptant au séquestre, attestations envoyées aux compagnies, contrats rattachés.",
   },
   {
     key: "RETENTION",
-    label: "Conservation et solde",
-    summary: "Déclaration à douze mois validée par le cédant : séquestre et solde ajusté libérés.",
+    label: "Solde",
+    summary: "Conservation déclarée à douze mois et validée : séquestre et solde ajusté libérés.",
   },
   {
     key: "CLOSED",
@@ -72,9 +52,18 @@ export const SALE_PIPELINE: PipelineStep[] = [
   },
 ];
 
+/** Étapes de l'ancien parcours, affichées à l'étape qui les regroupe désormais. */
+const REGROUPEES: Partial<Record<DealStage, DealStage>> = {
+  LOI: "DATA_ROOM",
+  KYC: "DATA_ROOM",
+  DEED: "SIGNATURE",
+  ESCROW: "TRANSFER",
+};
+
 export function pipelineIndex(stage: DealStage | "POSITION"): number {
   if (stage === "POSITION") return 0;
-  return SALE_PIPELINE.findIndex((step) => step.key === stage);
+  const cle = REGROUPEES[stage] ?? stage;
+  return SALE_PIPELINE.findIndex((step) => step.key === cle);
 }
 
 /** Part du parcours franchie avant l'offre retenue : position, dépôt, offre. */
@@ -109,41 +98,23 @@ export function nextPipelineAction(
   const seller = role === "seller";
   switch (stage) {
     case "NDA":
-      return {
-        title: "Signer l’accord de confidentialité",
-        body: "Les deux parties signent ; la salle de données s’ouvre avec la seconde signature.",
-      };
+    case "LOI":
+    case "KYC":
     case "DATA_ROOM":
       return seller
-        ? { title: "Déposer les pièces du bordereau", body: "Un fichier par ligne obligatoire. L’acquéreur les examine ensuite." }
-        : { title: "Examiner la salle de données", body: "Consultez les pièces déposées, puis validez l’examen pour proposer votre lettre d’intention." };
-    case "LOI":
-      return seller
-        ? { title: "Répondre à la lettre d’intention", body: "Acceptez-la pour figer le prix, ou refusez-la avec un motif." }
-        : { title: "Proposer la lettre d’intention", body: "Prix ferme, date d’effet et conditions particulières." };
-    case "KYC":
-      return {
-        title: "Déposer et contrôler les pièces d’identification",
-        body: "Kbis, pièce d’identité du représentant et ORIAS ; chaque partie contrôle celles de l’autre.",
-      };
+        ? { title: "Préparer les vérifications", body: "Pièces du cabinet et codes courtier : l’acquéreur confirme ensuite son prix." }
+        : { title: "Examiner les pièces et confirmer le prix", body: "Un geste après examen. Votre compte doit être vérifié, une fois pour toutes." };
     case "DEED":
-      return {
-        title: seller ? "Compléter et approuver le protocole" : "Relire et approuver le protocole",
-        body: seller ? "Codes courtier par compagnie, puis approbation du texte." : "Le protocole est rédigé depuis le dossier : relisez-le et approuvez-le.",
-      };
     case "SIGNATURE":
       return {
         title: "Signer le protocole de cession",
-        body: "Signature électronique horodatée, liée à l’empreinte du texte approuvé.",
+        body: "Protocole et attestations de transfert, signés en un geste, horodatés.",
       };
     case "ESCROW":
-      return seller
-        ? { title: "En attente du séquestre", body: "L’acquéreur verse le comptant (80 %) sur le compte séquestre." }
-        : { title: "Verser le comptant au séquestre", body: "80 % du prix, bloqués jusqu’à la clôture." };
     case "TRANSFER":
       return seller
-        ? { title: "Déposer les attestations de transfert", body: "Une attestation signée par compagnie, adressée à la compagnie." }
-        : { title: "Confirmer le rattachement des contrats", body: "Quand les compagnies ont basculé les contrats sur votre code." };
+        ? { title: "Envoyer les attestations aux compagnies", body: "Dès que le comptant (80 %) est au séquestre." }
+        : { title: "Verser le comptant, puis confirmer le transfert", body: "80 % du prix au séquestre, puis confirmation du rattachement des contrats." };
     case "RETENTION":
       return seller
         ? { title: "Valider la déclaration de conservation", body: "Votre validation libère le séquestre et le solde ajusté." }

@@ -1,34 +1,33 @@
 import { describe, expect, it } from "vitest";
 import {
-  carrierKey,
-  dueDiligenceSlot,
-  kycSlot,
-  slotRule,
+  currentPrice,
+  nextStage,
+  normalizeStage,
+  revisionPending,
   stageComplete,
   stageTasks,
   tasksFor,
-  transferSlot,
   type ProcessSnapshot,
 } from "@/lib/deal/process";
 
 const T0 = new Date("2026-09-01T10:00:00Z");
 const plus = (minutes: number) => new Date(T0.getTime() + minutes * 60_000);
+const KINDS = ["STATUTS", "LIASSES", "COMMISSIONS", "CONVENTIONS"] as const;
+const verifie = { status: "VERIFIED", missingIdentity: [], note: null };
 
 function base(over: Partial<ProcessSnapshot> = {}): ProcessSnapshot {
   return {
-    stage: "NDA",
+    stage: "DATA_ROOM",
     sellerId: "s",
     buyerId: "b",
     signoffs: [],
-    pieces: [],
-    checklist: [
-      { id: "i1", label: "Statuts", required: true, providedAt: null },
-      { id: "i2", label: "Liasses", required: true, providedAt: null },
-      { id: "i3", label: "Sinistralité", required: false, providedAt: null },
-    ],
-    loi: { proposedAt: null, declinedAt: null, declineReason: null, price: null, effectiveDate: null },
-    missingIdentity: { seller: [], buyer: [] },
-    carriers: [{ name: "AXA", code: "" }, { name: "Générali Vie", code: "" }],
+    roomDocs: KINDS.map((kind) => ({ kind, createdAt: T0 })),
+    roomKinds: KINDS,
+    verification: { seller: verifie, buyer: verifie },
+    agreedPrice: 30000,
+    revision: null,
+    declined: null,
+    carriers: [{ name: "AXA", code: "123" }],
     deedHash: "h1",
     escrowStage: "NONE",
     retention: null,
@@ -36,80 +35,69 @@ function base(over: Partial<ProcessSnapshot> = {}): ProcessSnapshot {
   };
 }
 
-const signe = (kind: string, userId: string, at = T0, contentHash: string | null = null) => ({ kind, userId, createdAt: at, contentHash });
-const piece = (slot: string, uploadedById: string, at = T0) => ({ slot, uploadedById, createdAt: at });
+const signe = (kind: string, userId: string, at = plus(1), contentHash: string | null = null) => ({ kind, userId, createdAt: at, contentHash });
 
-describe("aucune étape ne se franchit sans ses tâches", () => {
-  it("la confidentialité exige les deux signatures", () => {
-    expect(stageComplete(base())).toBe(false);
-    expect(stageComplete(base({ signoffs: [signe("NDA_SIGNED", "b")] }))).toBe(false);
-    expect(stageComplete(base({ signoffs: [signe("NDA_SIGNED", "b"), signe("NDA_SIGNED", "s")] }))).toBe(true);
+describe("vérifications", () => {
+  it("se franchissent en un geste quand le cabinet et les comptes sont prêts", () => {
+    const s = base();
+    expect(stageComplete(s)).toBe(false);
+    expect(tasksFor(s, "buyer").mine.map((t) => t.key)).toEqual(["price-confirm"]);
+    expect(stageComplete({ ...s, signoffs: [signe("PRICE_CONFIRMED", "b")] })).toBe(true);
   });
 
-  it("la salle de données exige toutes les pièces obligatoires, puis l’examen de l’acquéreur", () => {
-    const s = base({ stage: "DATA_ROOM", pieces: [piece(dueDiligenceSlot("i1"), "s")] });
-    const review = stageTasks(s).find((t) => t.key === "dd-review")!;
-    expect(review.available).toBe(false);
-
-    const complet = base({
-      stage: "DATA_ROOM",
-      pieces: [piece(dueDiligenceSlot("i1"), "s"), piece(dueDiligenceSlot("i2"), "s")],
-    });
-    expect(stageComplete(complet)).toBe(false);
-    expect(stageComplete({ ...complet, signoffs: [signe("DATA_ROOM_REVIEWED", "b", plus(5))] })).toBe(true);
+  it("n’ouvre pas la confirmation du prix tant que des pièces du cabinet manquent", () => {
+    const s = base({ roomDocs: [{ kind: "STATUTS", createdAt: T0 }] });
+    const t = stageTasks(s).find((x) => x.key === "price-confirm")!;
+    expect(t.available).toBe(false);
+    expect(stageComplete({ ...s, signoffs: [signe("PRICE_CONFIRMED", "b")] })).toBe(false);
   });
 
-  it("une pièce remplacée après l’examen demande un nouvel examen", () => {
+  it("redemande la confirmation si une pièce arrive après", () => {
     const s = base({
-      stage: "DATA_ROOM",
-      pieces: [piece(dueDiligenceSlot("i1"), "s"), piece(dueDiligenceSlot("i2"), "s", plus(10))],
-      signoffs: [signe("DATA_ROOM_REVIEWED", "b", plus(5))],
+      roomDocs: [...KINDS.map((kind) => ({ kind, createdAt: T0 })), { kind: "LIASSES", createdAt: plus(10) }],
+      signoffs: [signe("PRICE_CONFIRMED", "b", plus(5))],
     });
     expect(stageComplete(s)).toBe(false);
   });
 
-  it("la lettre d’intention exige une proposition puis une acceptation postérieure", () => {
-    const proposee = base({ stage: "LOI", loi: { proposedAt: plus(10), declinedAt: null, declineReason: null, price: 30000, effectiveDate: plus(9000) } });
-    expect(stageComplete(proposee)).toBe(false);
-    // Une acceptation antérieure à la proposition en cours ne vaut rien.
-    expect(stageComplete({ ...proposee, signoffs: [signe("LOI_ACCEPTED", "s", plus(1))] })).toBe(false);
-    expect(stageComplete({ ...proposee, signoffs: [signe("LOI_ACCEPTED", "s", plus(20))] })).toBe(true);
+  it("attend des comptes vérifiés et des profils complets", () => {
+    const s = base({ signoffs: [signe("PRICE_CONFIRMED", "b")] });
+    expect(stageComplete({ ...s, verification: { seller: verifie, buyer: { status: "PENDING", missingIdentity: [], note: null } } })).toBe(false);
+    expect(stageComplete({ ...s, verification: { seller: { status: "VERIFIED", missingIdentity: ["SIREN"], note: null }, buyer: verifie } })).toBe(false);
   });
 
-  it("la conformité exige les pièces des deux cabinets et le contrôle croisé", () => {
-    const toutes = (["seller", "buyer"] as const).flatMap((side) =>
-      (["kbis", "identite", "orias"] as const).map((k) => piece(kycSlot(side, k), side === "seller" ? "s" : "b")),
-    );
-    const s = base({ stage: "KYC", pieces: toutes });
+  it("attend un code courtier par compagnie", () => {
+    const s = base({ carriers: [{ name: "AXA", code: "123" }, { name: "Generali", code: "" }], signoffs: [signe("PRICE_CONFIRMED", "b")] });
     expect(stageComplete(s)).toBe(false);
-    expect(stageComplete({ ...s, signoffs: [signe("KYC_REVIEWED", "b", plus(1))] })).toBe(false);
-    expect(stageComplete({ ...s, signoffs: [signe("KYC_REVIEWED", "b", plus(1)), signe("KYC_REVIEWED", "s", plus(1))] })).toBe(true);
   });
 
-  it("le protocole n’est approuvable que complet, et l’approbation suit le texte", () => {
-    const incomplet = base({ stage: "DEED", missingIdentity: { seller: ["SIREN"], buyer: [] } });
-    expect(stageTasks(incomplet).find((t) => t.key === "deed-approve-buyer")!.available).toBe(false);
-
-    const complet = base({ stage: "DEED", carriers: [{ name: "AXA", code: "123" }] });
-    const approuve = { ...complet, signoffs: [signe("DEED_APPROVED", "s", T0, "h1"), signe("DEED_APPROVED", "b", T0, "h1")] };
-    expect(stageComplete(approuve)).toBe(true);
-    // Le texte a changé depuis : les approbations tombent.
-    expect(stageComplete({ ...approuve, deedHash: "h2" })).toBe(false);
+  it("une révision du prix attend l’accord du cédant, et fixe le prix en vigueur", () => {
+    const revision = { proposedAt: plus(10), price: 27000 };
+    const s = base({ revision, signoffs: [signe("PRICE_CONFIRMED", "b", plus(10))] });
+    expect(revisionPending(s)).toBe(true);
+    expect(currentPrice(s)).toBe(27000);
+    expect(stageComplete(s)).toBe(false);
+    // Une acceptation antérieure à la révision ne vaut rien.
+    expect(stageComplete({ ...s, signoffs: [...s.signoffs, signe("LOI_ACCEPTED", "s", plus(2))] })).toBe(false);
+    expect(stageComplete({ ...s, signoffs: [...s.signoffs, signe("LOI_ACCEPTED", "s", plus(20))] })).toBe(true);
   });
+});
 
-  it("la signature couvre le texte approuvé", () => {
+describe("signature, paiement et transfert, solde", () => {
+  it("la signature couvre le texte signé, pour les deux parties", () => {
     const s = base({ stage: "SIGNATURE", signoffs: [signe("DEED_SIGNED", "s", T0, "h1"), signe("DEED_SIGNED", "b", T0, "h1")] });
     expect(stageComplete(s)).toBe(true);
     expect(stageComplete({ ...s, deedHash: "h2" })).toBe(false);
   });
 
-  it("le transfert exige une attestation par compagnie et la confirmation de l’acquéreur", () => {
-    const s = base({
-      stage: "TRANSFER",
-      pieces: [piece(transferSlot("AXA"), "s"), piece(transferSlot("Générali Vie"), "s")],
-    });
-    expect(stageComplete(s)).toBe(false);
-    expect(stageComplete({ ...s, signoffs: [signe("TRANSFER_CONFIRMED", "b", plus(1))] })).toBe(true);
+  it("le transfert suit l’ordre : séquestre, envoi des attestations, confirmation", () => {
+    const s = base({ stage: "TRANSFER" });
+    expect(stageTasks(s).find((t) => t.key === "attestations-sent")!.available).toBe(false);
+    const verse = { ...s, escrowStage: "FUNDS_HELD" };
+    expect(stageTasks(verse).find((t) => t.key === "transfer-confirm")!.available).toBe(false);
+    const envoye = { ...verse, signoffs: [signe("ATTESTATIONS_SENT", "s", plus(1))] };
+    expect(stageComplete(envoye)).toBe(false);
+    expect(stageComplete({ ...envoye, signoffs: [...envoye.signoffs, signe("TRANSFER_CONFIRMED", "b", plus(2))] })).toBe(true);
   });
 
   it("la clôture exige la déclaration à douze mois validée après sa dernière modification", () => {
@@ -119,32 +107,19 @@ describe("aucune étape ne se franchit sans ses tâches", () => {
   });
 });
 
-describe("chaque partie voit ce qui lui revient", () => {
-  it("sépare ce que j’ai à faire de ce que j’attends", () => {
-    const s = base({ signoffs: [signe("NDA_SIGNED", "b")] });
-    expect(tasksFor(s, "seller").mine.map((t) => t.key)).toEqual(["nda-seller"]);
-    expect(tasksFor(s, "buyer").mine).toEqual([]);
-    expect(tasksFor(s, "buyer").waiting.map((t) => t.key)).toEqual(["nda-seller"]);
-  });
-});
-
-describe("emplacements de pièces", () => {
-  const known = { dueDiligenceIds: ["i1"], carriers: ["Générali Vie"] };
-
-  it("refuse un emplacement fabriqué", () => {
-    expect(slotRule("dd:inconnu", known)).toBeNull();
-    expect(slotRule("transfer:axa", known)).toBeNull();
-    expect(slotRule("kyc:seller:passeport", known)).toBeNull();
-    expect(slotRule("n'importe quoi", known)).toBeNull();
+describe("cinq étapes", () => {
+  it("ramène les étapes de l’ancien parcours à celle qui les regroupe", () => {
+    expect(normalizeStage("NDA")).toBe("DATA_ROOM");
+    expect(normalizeStage("KYC")).toBe("DATA_ROOM");
+    expect(normalizeStage("DEED")).toBe("SIGNATURE");
+    expect(normalizeStage("ESCROW")).toBe("TRANSFER");
   });
 
-  it("attribue chaque emplacement à sa partie et à son étape", () => {
-    expect(slotRule("dd:i1", known)).toMatchObject({ owner: "seller" });
-    expect(slotRule("kyc:buyer:kbis", known)).toEqual({ owner: "buyer", stages: ["KYC"] });
-    expect(slotRule(transferSlot("Générali Vie"), known)).toEqual({ owner: "seller", stages: ["TRANSFER"] });
-  });
-
-  it("normalise le nom des compagnies", () => {
-    expect(carrierKey("Générali Vie")).toBe("generali-vie");
+  it("enchaîne vérifications, signature, paiement et transfert, solde, clôture", () => {
+    expect(nextStage("DATA_ROOM")).toBe("SIGNATURE");
+    expect(nextStage("SIGNATURE")).toBe("TRANSFER");
+    expect(nextStage("TRANSFER")).toBe("RETENTION");
+    expect(nextStage("RETENTION")).toBe("CLOSED");
+    expect(nextStage("CLOSED")).toBeNull();
   });
 });

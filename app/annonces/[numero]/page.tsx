@@ -42,6 +42,7 @@ import { findMyInvestorPosition } from "@/lib/investor/positions";
 import { InvestorDepositForm } from "@/components/investor/placement-forms";
 import { listCertificationStatuses } from "@/lib/listing/certification";
 import { DepositForm } from "@/components/listing/deposit-form";
+import { depositTerms } from "@/lib/billing/deposit-fate";
 import { breakdownBy, renewalYears, type AnalyticsLine } from "@/lib/portfolio/analytics";
 import { qualityFromPortfolio } from "@/lib/portfolio/quality";
 
@@ -440,19 +441,26 @@ export default async function PublicListingPage({
               </p>
             ) : !myDeposit ? (
               /*
-               * Le dépôt vient d'abord : l'action le refuserait sinon, et
-               * découvrir la règle après avoir rempli le formulaire décourage.
+               * Pas encore de dépôt : l'offre le pose en même temps, avec
+               * l'engagement de confidentialité. Un formulaire, un geste.
                */
-              <p className="text-[15px] leading-relaxed text-ink">
-                Étape 1 : versez le dépôt de garantie de {formatEuroWhole(deposit)} dans « Lever
-                l’anonymat » ci-dessus. Le formulaire d’offre s’ouvre juste après.
-              </p>
+              <SubmitOfferForm
+                listingId={listing.id}
+                asking={String(askingPrice)}
+                lots={lots}
+                availableCarriers={available}
+                needsDeposit
+                needsNda
+                depositLabel={formatEuroWhole(deposit)}
+                depositTermsLines={depositTerms(formatEuroWhole(deposit), deposit)}
+              />
             ) : (
               <SubmitOfferForm
                 listingId={listing.id}
                 asking={String(askingPrice)}
                 lots={lots}
                 availableCarriers={available}
+                needsNda={!myDeposit.ndaAcceptedAt}
               />
             )}
           </div>

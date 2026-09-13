@@ -2,13 +2,17 @@
 
 import { useActionState, useRef, useState } from "react";
 import {
-  answerLoiAction,
+  answerRevisionAction,
+  fundEscrowAction,
   removeDealPieceAction,
+  revisePriceAction,
   saveDealCarrierCodesAction,
   signDeedAction,
   uploadDealPieceAction,
+  uploadRoomDocumentAction,
   type DealProcessState,
 } from "@/app/actions/deal-process";
+import { FUNDS_ORIGINS } from "@/lib/deal/process";
 import { Button } from "@/components/ui/button";
 
 const initial: DealProcessState = {};
@@ -70,21 +74,26 @@ export function CommitForm({
 export function PieceUpload({
   dealId,
   slot,
+  kind,
   label = "Déposer",
   replace = false,
 }: {
   dealId: string;
-  slot: string;
+  /** Pièce complémentaire du dossier. */
+  slot?: string;
+  /** Pièce du cabinet, versée à l'annonce. */
+  kind?: string;
   label?: string;
   replace?: boolean;
 }) {
-  const [state, formAction, pending] = useActionState(uploadDealPieceAction, initial);
+  const [state, formAction, pending] = useActionState(kind ? uploadRoomDocumentAction : uploadDealPieceAction, initial);
   const [nom, setNom] = useState<string | null>(null);
   const ref = useRef<HTMLInputElement>(null);
   return (
     <form action={formAction} className="grid gap-1">
       <input type="hidden" name="dealId" value={dealId} />
-      <input type="hidden" name="slot" value={slot} />
+      {slot ? <input type="hidden" name="slot" value={slot} /> : null}
+      {kind ? <input type="hidden" name="kind" value={kind} /> : null}
       <div className="flex flex-wrap items-center gap-2">
         <input
           ref={ref}
@@ -129,50 +138,41 @@ export function RemovePiece({ dealId, documentId }: { dealId: string; documentId
   );
 }
 
-export function LoiProposalForm({
-  dealId,
-  action,
-  defaultPrice,
-  defaultDate,
-  defaultConditions,
-  minDate,
-}: {
-  dealId: string;
-  action: Action;
-  defaultPrice: string;
-  defaultDate: string;
-  defaultConditions: string;
-  minDate: string;
-}) {
-  const [state, formAction, pending] = useActionState(action, initial);
+export function RevisePriceForm({ dealId, defaultPrice }: { dealId: string; defaultPrice: string }) {
+  const [state, formAction, pending] = useActionState(revisePriceAction, initial);
+  const [ouvert, setOuvert] = useState(false);
+  if (!ouvert) {
+    return (
+      <button type="button" onClick={() => setOuvert(true)} className="w-fit text-[14px] font-medium text-indigo-dark underline-offset-2 hover:underline">
+        Les pièces justifient un autre prix ? Réviser mon prix
+      </button>
+    );
+  }
   return (
-    <form action={formAction} className="grid gap-4">
+    <form action={formAction} className="grid gap-3 rounded-2xl border border-line bg-paper p-4">
       <input type="hidden" name="dealId" value={dealId} />
-      <div className="grid gap-4 sm:grid-cols-2">
-        <label className="grid gap-1.5 text-[14px] font-medium text-ink">
-          Prix ferme (€)
-          <input name="price" inputMode="decimal" required defaultValue={defaultPrice} className={inputClass} />
-          <span className="text-[12px] font-normal text-muted">80 % comptant au séquestre, 20 % différé.</span>
-        </label>
-        <label className="grid gap-1.5 text-[14px] font-medium text-ink">
-          Date d’effet du transfert
-          <input name="effectiveDate" type="date" required min={minDate} defaultValue={defaultDate} className={inputClass} />
-        </label>
-      </div>
+      <label className="grid max-w-xs gap-1.5 text-[14px] font-medium text-ink">
+        Prix révisé (€)
+        <input name="price" inputMode="decimal" required defaultValue={defaultPrice} className={inputClass} />
+      </label>
       <label className="grid gap-1.5 text-[14px] font-medium text-ink">
-        Conditions particulières <span className="font-normal text-muted">(facultatif)</span>
+        Pourquoi ?
         <textarea
-          name="conditions"
-          rows={3}
-          maxLength={1500}
-          defaultValue={defaultConditions}
-          placeholder="Ex. : reprise de la collaboratrice en charge du portefeuille, accompagnement du cédant pendant trois mois…"
+          name="reason"
+          rows={2}
+          required
+          minLength={10}
+          maxLength={1000}
+          placeholder="Ex. : les bordereaux montrent 8 % de commissions en moins que l’annonce."
           className="w-full rounded-xl border border-line bg-paper px-3 py-2 text-[15px] text-ink focus:border-indigo focus:outline-none"
         />
       </label>
-      <div>
-        <Button type="submit" disabled={pending}>
-          {pending ? "Envoi…" : "Envoyer la lettre d’intention au cédant"}
+      <div className="flex flex-wrap gap-2.5">
+        <Button type="submit" variant="outline" disabled={pending}>
+          {pending ? "Envoi…" : "Envoyer la révision au cédant"}
+        </Button>
+        <Button type="button" variant="ghost" onClick={() => setOuvert(false)}>
+          Annuler
         </Button>
       </div>
       <Feedback state={state} />
@@ -180,8 +180,8 @@ export function LoiProposalForm({
   );
 }
 
-export function LoiAnswerForm({ dealId }: { dealId: string }) {
-  const [state, formAction, pending] = useActionState(answerLoiAction, initial);
+export function RevisionAnswerForm({ dealId }: { dealId: string }) {
+  const [state, formAction, pending] = useActionState(answerRevisionAction, initial);
   const [refus, setRefus] = useState(false);
   const [coche, setCoche] = useState(false);
   return (
@@ -198,11 +198,11 @@ export function LoiAnswerForm({ dealId }: { dealId: string }) {
               onChange={(e) => setCoche(e.target.checked)}
               className="mt-1 h-4 w-4 shrink-0 accent-[#2563eb]"
             />
-            <span>J’accepte la lettre d’intention : le prix est figé et je m’engage à l’exclusivité de soixante jours.</span>
+            <span>J’accepte le prix révisé : il remplace celui de l’offre dans le protocole.</span>
           </label>
           <div className="flex flex-wrap gap-2.5">
             <Button type="submit" disabled={pending || !coche}>
-              {pending ? "Enregistrement…" : "Accepter la lettre d’intention"}
+              {pending ? "Enregistrement…" : "Accepter la révision"}
             </Button>
             <Button type="button" variant="outline" onClick={() => setRefus(true)}>
               Refuser
@@ -217,17 +217,16 @@ export function LoiAnswerForm({ dealId }: { dealId: string }) {
             Motif du refus
             <textarea
               name="reason"
-              rows={3}
+              rows={2}
               required
               minLength={5}
               maxLength={500}
-              placeholder="Ex. : le prix ne tient pas compte des commissions précomptées de 2025…"
               className="w-full rounded-xl border border-line bg-paper px-3 py-2 text-[15px] text-ink focus:border-indigo focus:outline-none"
             />
           </label>
           <div className="flex flex-wrap gap-2.5">
             <Button type="submit" variant="outline" disabled={pending}>
-              {pending ? "Envoi…" : "Envoyer le refus"}
+              {pending ? "Envoi…" : "Maintenir le prix de l’offre"}
             </Button>
             <Button type="button" variant="ghost" onClick={() => setRefus(false)}>
               Annuler
@@ -237,6 +236,45 @@ export function LoiAnswerForm({ dealId }: { dealId: string }) {
       )}
       <Feedback state={state} />
     </div>
+  );
+}
+
+export function EscrowForm({ dealId, amountLabel, live }: { dealId: string; amountLabel: string; live: boolean }) {
+  const [state, formAction, pending] = useActionState(fundEscrowAction, initial);
+  const [coche, setCoche] = useState(false);
+  const [origine, setOrigine] = useState("");
+  return (
+    <form action={formAction} className="grid gap-3">
+      <input type="hidden" name="dealId" value={dealId} />
+      <label className="grid max-w-sm gap-1.5 text-[14px] font-medium text-ink">
+        Origine des fonds
+        <select name="fundsOrigin" required value={origine} onChange={(e) => setOrigine(e.target.value)} className={inputClass}>
+          <option value="">Choisir…</option>
+          {FUNDS_ORIGINS.map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
+          ))}
+        </select>
+        <span className="text-[12px] font-normal text-muted">Déclaration exigée au titre de la lutte contre le blanchiment.</span>
+      </label>
+      {!live ? (
+        <p className="rounded-xl border border-warn/30 bg-warn/5 px-3 py-2 text-[13px] text-ink">
+          Le compte séquestre Trustap n’est pas encore branché : le versement est enregistré dans le dossier, sans
+          mouvement d’argent.
+        </p>
+      ) : null}
+      <label className="flex items-start gap-3 text-[14px] leading-relaxed text-ink">
+        <input type="checkbox" name="consent" checked={coche} onChange={(e) => setCoche(e.target.checked)} className="mt-1 h-4 w-4 shrink-0 accent-[#2563eb]" />
+        <span>Je verse {amountLabel} sur le compte séquestre. Les fonds restent bloqués jusqu’à la clôture.</span>
+      </label>
+      <div>
+        <Button type="submit" disabled={pending || !coche || !origine}>
+          {pending ? "Versement…" : `Verser ${amountLabel}`}
+        </Button>
+      </div>
+      <Feedback state={state} />
+    </form>
   );
 }
 
@@ -283,13 +321,13 @@ export function SignDeedForm({ dealId, representative }: { dealId: string; repre
           className="mt-1 h-4 w-4 shrink-0 accent-[#2563eb]"
         />
         <span>
-          Je signe le protocole de cession au nom du cabinet que je représente. Ma signature est horodatée et liée à
-          l’empreinte du texte approuvé.
+          Je signe le protocole de cession et les attestations de transfert annexées, au nom du cabinet que je
+          représente. Ma signature est horodatée et liée à l’empreinte du texte.
         </span>
       </label>
       <div>
         <Button type="submit" disabled={pending || !coche}>
-          {pending ? "Signature…" : "Signer le protocole"}
+          {pending ? "Signature…" : "Signer"}
         </Button>
       </div>
       <Feedback state={state} />

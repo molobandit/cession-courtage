@@ -52,14 +52,28 @@ export const offerSchema = z.object({
     .refine((v) => v >= ASKING_MIN && v <= ASKING_MAX, {
       message: `Montant d’offre hors fourchette (${ASKING_MIN} à ${ASKING_MAX} €).`,
     }),
-  upfrontPercent: frenchAmount.refine((v) => v >= 0 && v <= 100, {
-    message: "Le comptant doit être compris entre 0 et 100 %.",
-  }),
-  message: z
-    .string()
-    .trim()
-    .min(10, "Précisez un message d’au moins 10 caractères.")
-    .max(2000, "Message trop long (2 000 caractères au maximum)."),
+  /** Le séquestre de la plateforme prend 80 % comptant : c'est la valeur par défaut. */
+  upfrontPercent: z.preprocess(
+    (v) => (v == null || v === "" ? 80 : v),
+    frenchAmount.refine((v) => v >= 0 && v <= 100, {
+      message: "Le comptant doit être compris entre 0 et 100 %.",
+    }),
+  ),
+  /** Facultatif : une offre se fait en un geste, le message vient s'il y a lieu. */
+  message: z.preprocess(
+    (v) => (typeof v === "string" ? v : ""),
+    z.string().trim().max(2000, "Message trop long (2 000 caractères au maximum)."),
+  ),
+  /** Date d'effet souhaitée : l'offre vaut lettre d'intention. */
+  effectiveDate: z.preprocess(
+    (v) => (typeof v === "string" && v.trim() ? v.trim() : null),
+    z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, "Date d’effet invalide.")
+      .nullable()
+      .transform((v) => (v ? new Date(`${v}T00:00:00.000Z`) : null))
+      .refine((d) => !d || d.getTime() >= Date.now() - 86_400_000, { message: "La date d’effet doit être à venir." }),
+  ),
 });
 
 export const offerIdSchema = z.object({ offerId: idSchema });

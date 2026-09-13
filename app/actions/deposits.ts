@@ -5,8 +5,7 @@ import { canBuy, getActor, isOriasVerified } from "@/lib/authz/actor";
 import { ForbiddenError, UnauthenticatedError } from "@/lib/authz/errors";
 import { isTradableListingStatus, ownsFirm } from "@/lib/authz/policies";
 import { hasContactSubscription } from "@/lib/billing/contact-access";
-import { INTEREST_DEPOSIT_LABEL, INTEREST_DEPOSIT_RATE, interestDepositFor } from "@/lib/billing/rates";
-import { ensurePosition } from "@/lib/position/load";
+import { placeDeposit } from "@/lib/listing/place-deposit";
 import { prisma } from "@/lib/prisma";
 import { idSchema } from "@/lib/validations/actions";
 
@@ -58,48 +57,10 @@ export async function placeInterestDepositAction(
       return { error: "Vous ne pouvez pas déposer sur votre propre annonce." };
     }
 
-    const amount = interestDepositFor(Number(listing.askingPrice));
-    if (amount <= 0) return { error: "Montant de dépôt invalide." };
-
-    // D1 n'a pas de transactions : l'unicite du couple annonce/acquereur et cet
-    // upsert rendent un rejeu inoffensif. Le montant du premier depot est
-    // conserve, un changement de prix demande ne le revalorise pas.
-    const deposit = await prisma.interestDeposit.upsert({
-      where: { listingId_buyerId: { listingId: listing.id, buyerId: actor.id } },
-      update: {},
-      create: {
-        listingId: listing.id,
-        buyerId: actor.id,
-        amount: amount.toFixed(2),
-        rate: INTEREST_DEPOSIT_RATE.toFixed(4),
-      },
-    });
-
-    // Le dépôt suppose une position : l'acquéreur qui verse sans l'avoir prise la prend.
-    const position = await ensurePosition({ listingId: listing.id, buyerId: actor.id });
-
-    const { findFirmSeller, notifyDepositPlaced } = await import("@/lib/notify/transactional");
-    const seller = await findFirmSeller(listing.portfolio.firmId);
-    if (seller) {
-      await notifyDepositPlaced({
-        depositKey: deposit.id,
-        publicNumber: listing.publicNumber ?? 0,
-        amountLabel: INTEREST_DEPOSIT_LABEL,
-        seller: { userId: seller.id, email: seller.email },
-        counterparty: { userId: actor.id, email: actor.email },
-        href: `/app/positions/${position.id}`,
-      }).catch(() => null);
+    if (formData.get("nda") !== "on") {
+      return { error: "Acceptez l’engagement de confidentialité : il protège les pièces que le cédant va vous ouvrir." };
     }
-
-    await prisma.auditLog.create({
-      data: {
-        actorId: actor.id,
-        action: "listing.deposit.placed",
-        entityType: "Listing",
-        entityId: listing.id,
-        metadata: { amount, rate: INTEREST_DEPOSIT_RATE },
-      },
-    });
+    const { position } = await placeDeposit(actor, listing, true);
 
     revalidatePath(`/annonces/${listing.publicNumber}`);
     revalidatePath(`/app/positions/${position.id}`);

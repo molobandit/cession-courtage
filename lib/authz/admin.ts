@@ -101,6 +101,7 @@ export async function listPendingKyc(actor: Actor) {
       role: true,
       kycSubmittedAt: true,
       firm: { select: { legalName: true, siren: true } },
+      accountDocuments: { select: { id: true, kind: true, fileName: true, createdAt: true }, orderBy: { createdAt: "asc" } },
     },
   });
 }
@@ -114,6 +115,8 @@ export async function decideKyc(userId: string, approved: boolean, reason?: stri
     data: {
       kycStatus: approved ? "VERIFIED" : "REJECTED",
       kycSubmittedAt: target.kycSubmittedAt,
+      kycReviewedAt: new Date(),
+      kycReviewNote: approved ? null : (reason ?? null),
     },
   });
   await prisma.auditLog.create({
@@ -125,6 +128,22 @@ export async function decideKyc(userId: string, approved: boolean, reason?: stri
       metadata: { reason: reason ?? null },
     },
   });
+  const [{ notifyPositionEvent }, { advanceDealsOf }] = await Promise.all([
+    import("@/lib/notify/transactional"),
+    import("@/lib/deal/process-load"),
+  ]);
+  await notifyPositionEvent({
+    key: `kyc-decision:${userId}:${Date.now()}`,
+    userId,
+    email: target.email,
+    title: approved ? "Compte vérifié" : "Vérification du compte refusée",
+    body: approved
+      ? "Vos pièces sont contrôlées : votre compte est vérifié pour toutes vos cessions."
+      : `Motif : ${reason ?? "non précisé"}. Remplacez la pièce concernée depuis votre profil.`,
+    href: "/app/profil#identite",
+  }).catch((e: unknown) => console.error("notifyKycDecision", e));
+  // Une vérification peut compléter l'étape de vérifications d'un dossier en cours.
+  if (approved) await advanceDealsOf({ userId }, admin.id);
 }
 
 export async function listInvestorInquiries(actor: Actor) {

@@ -74,7 +74,7 @@ export async function loadDesk(actor: Actor) {
       aFaire.push({ key: `t-${position.id}`, href, icon: "megaphone", title: `Déposer votre offre · N° ${l.publicNumber}`, detail: `Prix demandé ${formatEuroWhole(Number(l.askingPrice))} · ${multiple}`, cta: "Faire une offre", urgent: true });
     } else if (deal && deal.stage !== "CLOSED") {
       const suite = nextPipelineAction(deal.stage, "buyer");
-      aFaire.push({ key: `t-${position.id}`, href: `/app/dossiers/${deal.id}`, icon: "briefcase", title: `${suite.title} · N° ${l.publicNumber}`, detail: suite.body, cta: "Avancer", urgent: deal.stage === "NDA" });
+      aFaire.push({ key: `t-${position.id}`, href: `/app/dossiers/${deal.id}`, icon: "briefcase", title: `${suite.title} · N° ${l.publicNumber}`, detail: suite.body, cta: "Avancer", urgent: deal.stage === "DATA_ROOM" || deal.stage === "SIGNATURE" });
     }
   }
 

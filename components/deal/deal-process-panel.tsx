@@ -2,39 +2,31 @@ import Link from "next/link";
 import type { DealStage } from "@prisma/client";
 import {
   acceptRetentionAction,
-  approveDeedAction,
   confirmCarrierTransferAction,
-  fundEscrowAction,
-  proposeLoiAction,
-  reviewDataRoomAction,
-  reviewKycAction,
-  signNdaAction,
+  confirmPriceAction,
+  sendAttestationsAction,
 } from "@/app/actions/deal-process";
 import {
   CarrierCodesForm,
   CommitForm,
-  LoiAnswerForm,
-  LoiProposalForm,
+  EscrowForm,
   PieceUpload,
-  RemovePiece,
+  RevisePriceForm,
+  RevisionAnswerForm,
   SignDeedForm,
 } from "@/components/deal/process-forms";
-import { SectionTabLink } from "@/components/ui/section-tabs";
 import { certificateKey } from "@/lib/direct/documents";
 import { SALE_PIPELINE } from "@/lib/deal/pipeline";
 import {
-  KYC_PIECES,
   SIGNOFF_LABELS,
   STAGE_INTRO,
-  dueDiligenceDone,
-  kycSlot,
+  currentPrice,
   stageTasks,
-  transferSlot,
   type Side,
-  type SignoffKind,
   type Task,
 } from "@/lib/deal/process";
 import type { DealProcess } from "@/lib/deal/process-load";
+import { DATA_ROOM_KINDS, companyDocLabel } from "@/lib/listing/company-doc-kinds";
 import { adjustedDeferredAmount } from "@/lib/retention/adjust";
 import { formatDate, formatDateTime, formatEuro, formatPercent } from "@/lib/format/fr";
 import { cn } from "@/lib/utils";
@@ -43,8 +35,9 @@ import { cn } from "@/lib/utils";
  * L'étape en cours du dossier, tâche par tâche.
  *
  * Chaque ligne dit ce qu'il faut faire, qui doit le faire, et ce qui est déjà
- * fait. Quand la tâche revient au lecteur, l'action est sur la ligne même :
- * déposer, relire, signer. L'étape se franchit seule quand tout est coché.
+ * fait. Quand la tâche revient au lecteur, l'action est sur la ligne même.
+ * Les tâches déjà remplies ailleurs — compte vérifié, pièces déposées sur
+ * l'annonce — se cochent seules. L'étape se franchit quand tout est coché.
  */
 
 const OWNER: Record<Side, string> = { seller: "Cédant", buyer: "Acquéreur" };
@@ -59,17 +52,37 @@ function pieceLink(dealId: string, key: string) {
 
 const lien = "text-[14px] font-medium text-indigo-dark underline-offset-2 hover:underline";
 
-function FileLine({ p, slot, canManage }: { p: DealProcess; slot: string; canManage: boolean }) {
-  const doc = [...p.deal.documents].reverse().find((d) => d.slot === slot);
-  if (!doc) return null;
+/** Pièces du cabinet cédant, avec leur lien d'ouverture et, pour le cédant, le dépôt. */
+export function RoomDocsList({ p, canUpload }: { p: DealProcess; canUpload: boolean }) {
+  const docs = p.deal.listing.companyDocuments;
   return (
-    <span className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px]">
-      <a href={`/api/dossiers/${p.deal.id}/${doc.id}`} target="_blank" rel="noreferrer" className={lien}>
-        {doc.fileName}
-      </a>
-      <span className="text-muted">déposé le {formatDate(doc.createdAt)}</span>
-      {canManage ? <RemovePiece dealId={p.deal.id} documentId={doc.id} /> : null}
-    </span>
+    <ul className="grid gap-2">
+      {DATA_ROOM_KINDS.map((kind) => {
+        const doc = [...docs].reverse().find((d) => d.kind === kind);
+        return (
+          <li key={kind} className="rounded-xl border border-line bg-paper p-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="text-[14px] font-medium text-ink">
+                <span className={doc ? "text-ok" : "text-muted"}>{doc ? "✓ " : "○ "}</span>
+                {companyDocLabel(kind)}
+              </p>
+              {doc ? (
+                <a href={`/api/cabinet/${p.deal.listingId}/${doc.id}`} target="_blank" rel="noreferrer" className="text-[13px] font-medium text-indigo-dark hover:underline">
+                  Ouvrir
+                </a>
+              ) : (
+                <span className="text-[12px] text-muted">{canUpload ? "À déposer" : "En attente du cédant"}</span>
+              )}
+            </div>
+            {canUpload ? (
+              <div className="mt-2">
+                <PieceUpload dealId={p.deal.id} kind={kind} replace={Boolean(doc)} />
+              </div>
+            ) : null}
+          </li>
+        );
+      })}
+    </ul>
   );
 }
 
@@ -77,182 +90,72 @@ function TaskAction({ p, task, side, escrowLive }: { p: DealProcess; task: Task;
   const { deal } = p;
   const id = deal.id;
 
-  if (task.key.startsWith("nda-")) {
-    return (
-      <div className="grid gap-3">
-        <Link href={pieceLink(id, "confidentialite")} className={lien}>
-          Lire l’accord de confidentialité
-        </Link>
-        <CommitForm
-          dealId={id}
-          action={signNdaAction}
-          consentLabel="J’ai lu l’accord de confidentialité et je m’engage à en respecter les termes pendant trois ans."
-          submitLabel="Signer l’accord"
-        />
-      </div>
-    );
-  }
-
-  if (task.key === "dd-pieces") {
-    const manquantes = p.snapshot.checklist.filter(
-      (i) => i.required && !p.snapshot.pieces.some((d) => d.slot === `dd:${i.id}`),
-    );
+  if (task.key === "room-docs") {
     return (
       <div className="grid gap-2">
-        {manquantes.length ? (
-          <p className="text-[13px] text-muted">
-            Manquent encore : {manquantes.slice(0, 4).map((i) => i.label).join(", ")}
-            {manquantes.length > 4 ? ` et ${manquantes.length - 4} autre${manquantes.length - 4 > 1 ? "s" : ""}` : ""}.
-          </p>
-        ) : null}
-        <SectionTabLink href="#documents" className={lien}>
-          Ouvrir le bordereau et déposer les pièces
-        </SectionTabLink>
+        <p className="text-[13px] text-muted">
+          Déposées une fois sur l’annonce, elles servent à tout acquéreur de ce portefeuille. PDF, JPG ou PNG.
+        </p>
+        <RoomDocsList p={p} canUpload />
       </div>
     );
   }
 
-  if (task.key === "dd-review") {
-    const dd = dueDiligenceDone(p.snapshot);
+  if (task.key.startsWith("verify-")) {
     return (
-      <div className="grid gap-3">
-        <SectionTabLink href="#documents" className={lien}>
-          Consulter les {dd.done} pièces obligatoires
-        </SectionTabLink>
-        <CommitForm
-          dealId={id}
-          action={reviewDataRoomAction}
-          consentLabel="J’ai examiné les pièces de la salle de données. Je peux proposer une lettre d’intention en connaissance de cause."
-          submitLabel="Valider l’examen"
-        />
-      </div>
-    );
-  }
-
-  if (task.key === "loi-propose") {
-    const demain = new Date(Date.now() + 86_400_000).toISOString().slice(0, 10);
-    const premierDuMois = new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth() + 2, 1)).toISOString().slice(0, 10);
-    return (
-      <LoiProposalForm
-        dealId={id}
-        action={proposeLoiAction}
-        defaultPrice={String(Number(deal.loiPrice ?? deal.agreedPrice))}
-        defaultDate={deal.loiEffectiveDate ? deal.loiEffectiveDate.toISOString().slice(0, 10) : premierDuMois}
-        defaultConditions={deal.loiConditions ?? ""}
-        minDate={demain}
-      />
-    );
-  }
-
-  if (task.key === "loi-accept") {
-    const prix = Number(deal.loiPrice ?? 0);
-    const comptant = Math.round(prix * 0.8 * 100) / 100;
-    return (
-      <div className="grid gap-4">
-        <dl className="grid gap-3 rounded-2xl bg-surface-alt p-4 sm:grid-cols-3">
-          <div>
-            <dt className="text-[12px] uppercase tracking-wide text-muted">Prix proposé</dt>
-            <dd className="tabular text-[17px] font-bold text-ink">{formatEuro(prix)}</dd>
-            <dd className="text-[12px] text-muted">Offre initiale {formatEuro(Number(deal.agreedPrice))}</dd>
-          </div>
-          <div>
-            <dt className="text-[12px] uppercase tracking-wide text-muted">Comptant · différé</dt>
-            <dd className="tabular text-[15px] font-semibold text-ink">
-              {formatEuro(comptant)} · {formatEuro(prix - comptant)}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-[12px] uppercase tracking-wide text-muted">Date d’effet</dt>
-            <dd className="text-[15px] font-semibold text-ink">{deal.loiEffectiveDate ? formatDate(deal.loiEffectiveDate) : "—"}</dd>
-          </div>
-          {deal.loiConditions ? (
-            <div className="sm:col-span-3">
-              <dt className="text-[12px] uppercase tracking-wide text-muted">Conditions particulières</dt>
-              <dd className="whitespace-pre-line text-[14px] text-ink">{deal.loiConditions}</dd>
-            </div>
-          ) : null}
-        </dl>
-        <Link href={pieceLink(id, "lettre-intention")} className={lien}>
-          Lire la lettre d’intention
-        </Link>
-        <LoiAnswerForm dealId={id} />
-      </div>
-    );
-  }
-
-  const kycPieces = /^kyc-pieces-(seller|buyer)$/.exec(task.key);
-  if (kycPieces) {
-    const cote = kycPieces[1] as Side;
-    return (
-      <ul className="grid gap-3">
-        {KYC_PIECES.map((k) => {
-          const slot = kycSlot(cote, k.kind);
-          const depose = p.deal.documents.some((d) => d.slot === slot);
-          return (
-            <li key={k.kind} className="rounded-xl border border-line bg-paper p-3">
-              <p className="text-[14px] font-medium text-ink">
-                {depose ? "✓ " : ""}
-                {k.label}
-              </p>
-              <p className="text-[12px] text-muted">{k.detail}</p>
-              <div className="mt-2 grid gap-2">
-                <FileLine p={p} slot={slot} canManage />
-                <PieceUpload dealId={id} slot={slot} replace={depose} />
-              </div>
-            </li>
-          );
-        })}
-      </ul>
-    );
-  }
-
-  const kycReview = /^kyc-review-(seller|buyer)$/.exec(task.key);
-  if (kycReview) {
-    const cote = kycReview[1] as Side;
-    return (
-      <div className="grid gap-3">
-        <ul className="grid gap-1.5">
-          {KYC_PIECES.map((k) => (
-            <li key={k.kind} className="flex flex-wrap items-baseline gap-x-3">
-              <span className="text-[13px] text-muted">{k.label} :</span>
-              <FileLine p={p} slot={kycSlot(cote, k.kind)} canManage={false} />
-            </li>
-          ))}
-        </ul>
-        <CommitForm
-          dealId={id}
-          action={reviewKycAction}
-          consentLabel={`J’ai contrôlé les pièces ${cote === "seller" ? "du cédant" : "de l’acquéreur"} : raison sociale, SIREN, représentant et immatriculation ORIAS concordent.`}
-          submitLabel="Valider le contrôle"
-        />
-      </div>
-    );
-  }
-
-  if (task.key.startsWith("deed-identity-")) {
-    return (
-      <Link href="/app/profil" className={lien}>
-        Compléter le profil du cabinet
+      <Link href="/app/profil#identite" className={lien}>
+        Vérifier mon compte en quelques minutes
       </Link>
     );
   }
 
-  if (task.key === "deed-carriers") {
+  if (task.key === "carrier-codes") {
     return <CarrierCodesForm dealId={id} carriers={p.carriers} />;
   }
 
-  if (task.key.startsWith("deed-approve-")) {
+  if (task.key === "price-confirm") {
+    const prix = p.snapshot.agreedPrice;
     return (
-      <div className="grid gap-3">
-        <Link href={pieceLink(id, "protocole")} className={lien}>
-          Relire le protocole de cession
-        </Link>
+      <div className="grid gap-4">
+        <RoomDocsList p={p} canUpload={false} />
         <CommitForm
           dealId={id}
-          action={approveDeedAction}
-          consentLabel="J’ai relu le protocole de cession et j’en approuve les termes, annexe des compagnies comprise."
-          submitLabel="Approuver le protocole"
+          action={confirmPriceAction}
+          consentLabel={`J’ai examiné les pièces du cabinet et je confirme mon prix de ${formatEuro(prix)}.`}
+          submitLabel="Confirmer mon prix"
         />
+        <RevisePriceForm dealId={id} defaultPrice={String(prix)} />
+      </div>
+    );
+  }
+
+  if (task.key === "price-accept" && p.snapshot.revision) {
+    const r = p.snapshot.revision;
+    return (
+      <div className="grid gap-4">
+        <dl className="grid gap-3 rounded-2xl bg-surface-alt p-4 sm:grid-cols-3">
+          <div>
+            <dt className="text-[12px] uppercase tracking-wide text-muted">Prix révisé</dt>
+            <dd className="tabular text-[17px] font-bold text-ink">{formatEuro(r.price)}</dd>
+          </div>
+          <div>
+            <dt className="text-[12px] uppercase tracking-wide text-muted">Prix de l’offre</dt>
+            <dd className="tabular text-[15px] font-semibold text-ink">{formatEuro(p.snapshot.agreedPrice)}</dd>
+          </div>
+          <div>
+            <dt className="text-[12px] uppercase tracking-wide text-muted">Écart</dt>
+            <dd className="tabular text-[15px] font-semibold text-ink">
+              {formatPercent(((r.price - p.snapshot.agreedPrice) / p.snapshot.agreedPrice) * 100)}
+            </dd>
+          </div>
+          {deal.loiConditions ? (
+            <div className="sm:col-span-3">
+              <dt className="text-[12px] uppercase tracking-wide text-muted">Motif</dt>
+              <dd className="whitespace-pre-line text-[14px] text-ink">{deal.loiConditions}</dd>
+            </div>
+          ) : null}
+        </dl>
+        <RevisionAnswerForm dealId={id} />
       </div>
     );
   }
@@ -260,79 +163,60 @@ function TaskAction({ p, task, side, escrowLive }: { p: DealProcess; task: Task;
   if (task.key.startsWith("sign-")) {
     return (
       <div className="grid gap-3">
-        <Link href={pieceLink(id, "protocole")} className={lien}>
-          Relire le protocole avant de signer
-        </Link>
+        <div className="flex flex-wrap gap-x-5 gap-y-1">
+          <Link href={pieceLink(id, "protocole")} className={lien}>
+            Lire le protocole
+          </Link>
+          {p.carriers.length ? (
+            <Link href={pieceLink(id, certificateKey(0))} className={lien}>
+              Voir une attestation de transfert
+            </Link>
+          ) : null}
+        </div>
         <SignDeedForm dealId={id} representative={p.parties[side].representative} />
       </div>
     );
   }
 
   if (task.key === "escrow-fund") {
-    return (
-      <div className="grid gap-3">
-        <p className="text-[14px] text-ink">
-          Montant à séquestrer : <span className="tabular font-bold">{formatEuro(Number(deal.upfrontAmount))}</span>
-        </p>
-        {!escrowLive ? (
-          <p className="rounded-xl border border-warn/30 bg-warn/5 px-3 py-2 text-[13px] text-ink">
-            Le compte séquestre Trustap n’est pas encore branché : le versement est enregistré dans le dossier, sans
-            mouvement d’argent.
-          </p>
-        ) : null}
-        <CommitForm
-          dealId={id}
-          action={fundEscrowAction}
-          consentLabel={`Je verse ${formatEuro(Number(deal.upfrontAmount))} sur le compte séquestre. Les fonds restent bloqués jusqu’à la clôture.`}
-          submitLabel="Verser au séquestre"
-        />
-      </div>
-    );
+    return <EscrowForm dealId={id} amountLabel={formatEuro(Number(deal.upfrontAmount))} live={escrowLive} />;
   }
 
-  if (task.key === "transfer-attestations") {
+  if (task.key === "attestations-sent") {
     return (
-      <ul className="grid gap-3">
-        {p.carriers.map((c, i) => {
-          const slot = transferSlot(c.name);
-          const depose = p.deal.documents.some((d) => d.slot === slot);
-          return (
-            <li key={c.name} className="rounded-xl border border-line bg-paper p-3">
-              <div className="flex flex-wrap items-baseline justify-between gap-2">
-                <p className="text-[14px] font-medium text-ink">
-                  {depose ? "✓ " : ""}
-                  {c.name} <span className="text-[12px] font-normal text-muted">code {c.code || "—"}</span>
-                </p>
-                <Link href={pieceLink(id, certificateKey(i))} className="text-[13px] font-medium text-indigo-dark hover:underline">
-                  Imprimer l’attestation
-                </Link>
-              </div>
-              <div className="mt-2 grid gap-2">
-                <FileLine p={p} slot={slot} canManage />
-                <PieceUpload dealId={id} slot={slot} label="Déposer la version signée" replace={depose} />
-              </div>
+      <div className="grid gap-3">
+        <ul className="grid gap-1.5 sm:grid-cols-2">
+          {p.carriers.map((c, i) => (
+            <li key={c.name} className="flex items-center justify-between gap-2 rounded-xl border border-line px-3 py-2 text-[14px]">
+              <span className="text-ink">
+                {c.name} <span className="text-[12px] text-muted">code {c.code || "—"}</span>
+              </span>
+              <Link href={pieceLink(id, certificateKey(i))} className="text-[13px] font-medium text-indigo-dark hover:underline">
+                Télécharger
+              </Link>
             </li>
-          );
-        })}
-      </ul>
+          ))}
+        </ul>
+        <CommitForm
+          dealId={id}
+          action={sendAttestationsAction}
+          consentLabel={`J’ai adressé à chacune des ${p.carriers.length} compagnies son attestation signée électroniquement.`}
+          submitLabel="Attestations envoyées"
+        />
+      </div>
     );
   }
 
   if (task.key === "transfer-confirm") {
     return (
       <div className="grid gap-3">
-        <ul className="grid gap-1.5">
-          {p.carriers.map((c) => (
-            <li key={c.name} className="flex flex-wrap items-baseline gap-x-3">
-              <span className="text-[13px] text-muted">{c.name} :</span>
-              <FileLine p={p} slot={transferSlot(c.name)} canManage={false} />
-            </li>
-          ))}
-        </ul>
+        <Link href={pieceLink(id, "courrier-clients")} className={lien}>
+          Courrier d’information des clients, prêt à envoyer
+        </Link>
         <CommitForm
           dealId={id}
           action={confirmCarrierTransferAction}
-          consentLabel="Les compagnies ont rattaché les contrats et les commissions du portefeuille à mon code courtier."
+          consentLabel="Les compagnies ont rattaché les contrats et les commissions à mon code. J’informe les clients avec le courrier fourni."
           submitLabel="Confirmer le transfert"
         />
       </div>
@@ -388,6 +272,24 @@ function TaskAction({ p, task, side, escrowLive }: { p: DealProcess; task: Task;
   return null;
 }
 
+/** Rappels réglementaires de l'étape, sans case à cocher de plus. */
+function ComplianceNotes({ stage }: { stage: DealStage }) {
+  if (stage !== "TRANSFER" && stage !== "RETENTION") return null;
+  return (
+    <aside className="mt-4 rounded-2xl border border-line bg-surface-alt/60 p-4 text-[13px] leading-relaxed text-ink">
+      <p className="font-semibold">À ne pas oublier</p>
+      <ul className="mt-1.5 list-disc space-y-1 pl-5 text-muted">
+        <li>
+          La cession de clientèle se déclare au service des impôts dans le mois qui suit l’acte, avec le paiement des droits
+          d’enregistrement ; faites-la valider par votre expert-comptable.
+        </li>
+        <li>Les clients sont informés du changement d’intermédiaire : le courrier type est fourni dans les pièces du dossier.</li>
+        <li>Si des salariés sont attachés au portefeuille, leur contrat de travail suit la cession.</li>
+      </ul>
+    </aside>
+  );
+}
+
 export function DealProcessPanel({ p, side, escrowLive }: { p: DealProcess; side: Side; escrowLive: boolean }) {
   const { deal } = p;
   const tasks = stageTasks(p.snapshot);
@@ -412,7 +314,7 @@ export function DealProcessPanel({ p, side, escrowLive }: { p: DealProcess; side
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-[12px] font-semibold uppercase tracking-wide text-indigo-dark">Étape en cours · {stageLabel(deal.stage)}</p>
-          <p className="mt-1.5 max-w-2xl text-[15px] leading-relaxed text-muted">{STAGE_INTRO[deal.stage]}</p>
+          <p className="mt-1.5 max-w-2xl text-[15px] leading-relaxed text-muted">{STAGE_INTRO[deal.stage] ?? ""}</p>
         </div>
         <p className="tabular shrink-0 rounded-full bg-indigo-soft px-3 py-1 text-[13px] font-semibold text-indigo-dark">
           {faites} sur {tasks.length} fait{faites > 1 ? "es" : "e"}
@@ -484,13 +386,14 @@ export function DealProcessPanel({ p, side, escrowLive }: { p: DealProcess; side
           );
         })}
       </ol>
+      <ComplianceNotes stage={deal.stage} />
     </section>
   );
 }
 
 const ARCHIVES: Record<string, string> = {
   "generated:confidentialite": "accord de confidentialité signé",
-  "generated:lettre-intention": "lettre d’intention acceptée",
+  "generated:lettre-intention": "lettre d’intention (offre acceptée)",
   "generated:protocole": "protocole de cession signé",
 };
 
@@ -500,10 +403,10 @@ export function DealJournal({ p }: { p: DealProcess }) {
   const lignes = [
     ...deal.signoffs.map((s) => ({
       at: s.createdAt,
-      text: `${s.userId === deal.sellerId ? "Le cédant" : "L’acquéreur"} ${SIGNOFF_LABELS[s.kind as SignoffKind] ?? s.kind}${s.signatureName ? ` (${s.signatureName})` : ""}.`,
+      text: `${s.userId === deal.sellerId ? "Le cédant" : "L’acquéreur"} ${SIGNOFF_LABELS[s.kind] ?? s.kind}${s.signatureName ? ` (${s.signatureName})` : ""}.`,
     })),
-    ...(deal.loiProposedAt ? [{ at: deal.loiProposedAt, text: `L’acquéreur a proposé une lettre d’intention à ${formatEuro(Number(deal.loiPrice ?? 0))}.` }] : []),
-    ...(deal.loiDeclinedAt ? [{ at: deal.loiDeclinedAt, text: `Le cédant a refusé une lettre d’intention${deal.loiDeclineReason ? ` : « ${deal.loiDeclineReason} »` : ""}.` }] : []),
+    ...(deal.loiProposedAt ? [{ at: deal.loiProposedAt, text: `L’acquéreur a révisé son prix à ${formatEuro(Number(deal.loiPrice ?? 0))}.` }] : []),
+    ...(deal.loiDeclinedAt ? [{ at: deal.loiDeclinedAt, text: `Le cédant a refusé une révision du prix${deal.loiDeclineReason ? ` : « ${deal.loiDeclineReason} »` : ""}.` }] : []),
     ...deal.documents
       .filter((d) => d.slot?.startsWith("generated:"))
       .map((d) => ({ at: d.createdAt, text: `Pièce archivée : ${ARCHIVES[d.slot!] ?? d.fileName} (empreinte ${d.sha256.slice(0, 12)}…).` })),

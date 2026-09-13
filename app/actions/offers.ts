@@ -10,7 +10,6 @@ import { ForbiddenError, UnauthenticatedError } from "@/lib/authz/errors";
 import { hasContactSubscription } from "@/lib/billing/contact-access";
 import { offPlatformPhoneError } from "@/lib/chat/phone-block";
 import { prisma } from "@/lib/prisma";
-import { ensureDealChecklist } from "@/lib/deal/seed-checklist";
 import {
   checkOfferLot,
   conflictingOfferIds,
@@ -19,6 +18,7 @@ import {
 } from "@/lib/listing/lot-availability";
 import { fullyCommitted } from "@/lib/listing/lots";
 import { findMyDeposit } from "@/lib/listing/deposit";
+import { placeDeposit } from "@/lib/listing/place-deposit";
 import { listingAcceptsOffers } from "@/lib/offer/acceptance";
 import { notifyOfferDecision } from "@/lib/position/events";
 import { ensurePosition } from "@/lib/position/load";
@@ -52,10 +52,11 @@ export async function submitOfferAction(
       amount: formData.get("amount"),
       upfrontPercent: formData.get("upfrontPercent"),
       message: formData.get("message"),
+      effectiveDate: formData.get("effectiveDate"),
     });
     if (!parsed.success) return { error: firstIssue(parsed.error) };
-    const { listingId, amount, upfrontPercent: upfront, message } = parsed.data;
-    const blockedOffer = offPlatformPhoneError(message);
+    const { listingId, amount, upfrontPercent: upfront, message, effectiveDate } = parsed.data;
+    const blockedOffer = message ? offPlatformPhoneError(message) : null;
     if (blockedOffer) return { error: blockedOffer };
 
     const listing = await prisma.listing.findUnique({
@@ -78,10 +79,18 @@ export async function submitOfferAction(
      * Le refus arrive ici, avant l'écriture, avec le geste à faire.
      */
     const depot = await findMyDeposit(listingId, actor.id);
+    const nda = formData.get("nda") === "on";
     if (!depot) {
-      return {
-        error: `Versez le dépôt de garantie de ${INTEREST_DEPOSIT_LABEL} du prix demandé avant de déposer une offre. Il viendra en déduction du prix si la cession aboutit.`,
-      };
+      // Engagement, confidentialité et offre en un seul geste, si l'acquéreur coche les deux cases.
+      if (formData.get("engagement") !== "on" || !nda) {
+        return {
+          error: `Cochez le dépôt de garantie de ${INTEREST_DEPOSIT_LABEL} du prix demandé et l’engagement de confidentialité pour déposer votre offre. Le dépôt vient en déduction du prix si la cession aboutit.`,
+        };
+      }
+      await placeDeposit(actor, listing, true);
+    } else if (!depot.ndaAcceptedAt) {
+      if (!nda) return { error: "Acceptez l’engagement de confidentialité pour déposer votre offre." };
+      await prisma.interestDeposit.update({ where: { id: depot.id }, data: { ndaAcceptedAt: new Date() } });
     }
     /*
      * Lot visé. Vide = portefeuille entier, ce qui reste le cas courant.
@@ -102,6 +111,7 @@ export async function submitOfferAction(
         amount: amount.toFixed(2),
         upfrontPercent: upfront.toFixed(2),
         message,
+        effectiveDate,
         carriers: lot.carriers,
         status: OfferStatus.SUBMITTED,
         submittedAt: new Date(),
@@ -112,6 +122,7 @@ export async function submitOfferAction(
         amount: amount.toFixed(2),
         upfrontPercent: upfront.toFixed(2),
         message,
+        effectiveDate,
         carriers: lot.carriers,
       },
     });
@@ -237,7 +248,8 @@ export async function acceptOfferAction(
     }
 
     const amount = Number(offer.amount);
-    const upfront = amount * (Number(offer.upfrontPercent) / 100);
+    // Le séquestre prend 80 % comptant, quel que soit le comptant indiqué dans l'offre.
+    const upfront = Math.round(amount * 0.8 * 100) / 100;
     const seller = await prisma.user.findUnique({
       where: { id: actor.id },
       select: { publicAlias: true },
@@ -270,12 +282,33 @@ export async function acceptOfferAction(
         upfrontAmount: upfront.toFixed(2),
         deferredAmount: (amount - upfront).toFixed(2),
         carriers: lotRetenu,
-        stage: DealStage.NDA,
+        // L'offre retenue vaut lettre d'intention : le dossier commence aux vérifications.
+        stage: DealStage.DATA_ROOM,
+        loiEffectiveDate: offer.effectiveDate,
+        loiConditions: null,
         sellerAlias: `Cédant ${seller?.publicAlias ?? "C"}`,
         buyerAlias: `Acquéreur ${offer.buyer.publicAlias}`,
       },
     });
-    await ensureDealChecklist(deal.id);
+    // Confidentialité : acceptée par l'acquéreur à son dépôt, par le cédant en retenant l'offre.
+    if (formData.get("nda") !== "on" && formData.get("nda") !== null) {
+      // Case présente mais décochée : impossible par le formulaire, refusée par prudence.
+      return { error: "Acceptez l’engagement de confidentialité pour retenir l’offre." };
+    }
+    const depotAcheteur = await prisma.interestDeposit.findUnique({
+      where: { listingId_buyerId: dealKey },
+      select: { ndaAcceptedAt: true, placedAt: true },
+    });
+    for (const [userId, at] of [
+      [offer.buyerId, depotAcheteur?.ndaAcceptedAt ?? depotAcheteur?.placedAt ?? offer.submittedAt],
+      [actor.id, new Date()],
+    ] as const) {
+      await prisma.dealSignoff.upsert({
+        where: { dealId_kind_userId: { dealId: deal.id, kind: "NDA_SIGNED", userId } },
+        update: {},
+        create: { dealId: deal.id, kind: "NDA_SIGNED", userId, createdAt: at },
+      });
+    }
 
     // 3. Conséquences dérivables : rejouables sans dommage.
     /*

@@ -72,22 +72,11 @@ async function placeDeposit() {
 }
 
 describe("depot d'interet et levee d'anonymat", () => {
-  it("masque le cedant sous alias tant qu'aucun depot n'est pose", async () => {
+  it("revele les deux cabinets des l'ouverture du dossier, l'offre retenue valant lettre d'intention", async () => {
+    // Pas de depot : c'est le dossier lui-meme qui ouvre les identites.
     const deal = await findMyDeal("deal_nda", buyer);
     expect(deal).not.toBeNull();
-    expect(deal!.stage).toBe("NDA");
-    expect(deal!.identitiesRevealed).toBe(false);
-    expect(deal!.seller.kind).toBe("alias");
-    // Aucune donnee nominative du cedant ne doit transiter.
-    expect(JSON.stringify(deal!.seller)).not.toMatch(/@/);
-  });
-
-  it("revele le cedant des le depot, sans passer par la LOI", async () => {
-    await placeDeposit();
-    const deal = await findMyDeal("deal_nda", buyer);
-    expect(deal).not.toBeNull();
-    // L'etape n'a pas bouge : c'est bien le depot qui ouvre, pas le tunnel.
-    expect(deal!.stage).toBe("NDA");
+    expect(deal!.stage).toBe("DATA_ROOM");
     expect(deal!.identitiesRevealed).toBe(true);
     expect(deal!.seller.kind).toBe("identified");
     expect(JSON.stringify(deal!.seller)).toMatch(/@/);
@@ -118,29 +107,10 @@ describe("depot d'interet et levee d'anonymat", () => {
     expect(count).toBe(1);
   });
 
-  it("laisse un dossier a la LOI acceptee sans depot continuer de reveler les identites", async () => {
-    const loi = await prisma.deal.findUnique({
-      where: { id: "deal_loi" },
-      select: { buyerId: true },
-    });
-    const loiBuyer = await actorById(loi!.buyerId);
-    const deal = await findMyDeal("deal_loi", loiBuyer);
-    // Lettre acceptee : le dossier en est a la conformite.
-    expect(deal!.stage).toBe("KYC");
-    expect(deal!.identitiesRevealed).toBe(true);
-    expect(deal!.seller.kind).toBe("identified");
-  });
-
-  it("n'ouvre rien pour un acquereur concurrent qui n'a pas depose", async () => {
+  it("n'ouvre un dossier qu'a ses deux parties", async () => {
     await placeDeposit();
-    // Le depot d'un candidat ne doit pas reveler le cedant a un autre dossier.
-    const autre = await prisma.deal.findUnique({
-      where: { id: "deal_dataroom" },
-      select: { buyerId: true },
-    });
-    const autreBuyer = await actorById(autre!.buyerId);
-    const deal = await findMyDeal("deal_dataroom", autreBuyer);
-    expect(deal!.identitiesRevealed).toBe(false);
-    expect(deal!.seller.kind).toBe("alias");
+    // Le depot d'un candidat ne donne aucun acces au dossier d'un autre acquereur.
+    const autre = await findMyDeal("deal_dataroom", buyer);
+    expect(autre).toBeNull();
   });
 });

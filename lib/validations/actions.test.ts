@@ -45,13 +45,18 @@ describe("offerSchema", () => {
     expect(offerSchema.safeParse({ ...base, upfrontPercent: "-1" }).success).toBe(false);
   });
 
-  it("refuse un message de moins de dix caracteres", () => {
-    const parsed = offerSchema.safeParse({
-      listingId: "l1",
-      amount: "45 000",
-      upfrontPercent: "50",
-      message: "court",
-    });
+  it("accepte une offre sans message, au comptant du sequestre par defaut", () => {
+    const parsed = offerSchema.safeParse({ listingId: "l1", amount: "45 000" });
+    expect(parsed.success).toBe(true);
+    if (parsed.success) {
+      expect(parsed.data.message).toBe("");
+      expect(parsed.data.upfrontPercent).toBe(80);
+      expect(parsed.data.effectiveDate).toBeNull();
+    }
+  });
+
+  it("refuse une date d'effet passee", () => {
+    const parsed = offerSchema.safeParse({ listingId: "l1", amount: "45 000", effectiveDate: "2020-01-01" });
     expect(parsed.success).toBe(false);
   });
 });

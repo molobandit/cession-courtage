@@ -3,15 +3,17 @@ import type { DealStage } from "@prisma/client";
 /**
  * Ce qu'exige chaque étape du dossier de cession, et qui doit le faire.
  *
- * Le dossier avançait d'un clic, de n'importe quelle partie, sans la moindre
- * pièce. Ici, une étape est une liste de tâches concrètes — déposer, examiner,
- * proposer, accepter, signer — attribuées au cédant ou à l'acquéreur. L'étape
- * n'est franchie que lorsque toutes ses tâches sont faites : aucun bouton ne
- * « passe à la suite ».
+ * Cinq étapes, pas une de plus : offre acceptée, vérifications, signature,
+ * paiement et transfert, solde. La vitesse ne vient pas de contrôles en moins
+ * mais de contrôles faits une fois : la confidentialité est acceptée au dépôt,
+ * l'offre vaut lettre d'intention, le compte de chaque cabinet est vérifié une
+ * fois pour toutes, les pièces du cabinet cédant sont déposées sur l'annonce
+ * avant même la vente.
  *
- * Une validation couvre un contenu, pas un instant. L'acquéreur qui a examiné
- * la salle de données doit l'examiner de nouveau si le cédant remplace une
- * pièce ; une approbation du protocole ne vaut que pour le texte approuvé.
+ * Une étape n'est franchie que lorsque toutes ses tâches sont faites. Une
+ * validation couvre un contenu, pas un instant : une pièce ajoutée après la
+ * confirmation du prix la fait redemander, une signature ne vaut que pour le
+ * texte signé.
  *
  * Fonctions pures, testables sans base.
  */
@@ -20,116 +22,68 @@ export type Side = "seller" | "buyer";
 
 export type SignoffKind =
   | "NDA_SIGNED"
-  | "DATA_ROOM_REVIEWED"
+  | "PRICE_CONFIRMED"
   | "LOI_ACCEPTED"
-  | "KYC_REVIEWED"
-  | "DEED_APPROVED"
   | "DEED_SIGNED"
+  | "ATTESTATIONS_SENT"
   | "TRANSFER_CONFIRMED"
   | "RETENTION_ACCEPTED";
 
-export const SIGNOFF_LABELS: Record<SignoffKind, string> = {
-  NDA_SIGNED: "a signé l’accord de confidentialité",
-  DATA_ROOM_REVIEWED: "a validé l’examen de la salle de données",
-  LOI_ACCEPTED: "a accepté la lettre d’intention",
-  KYC_REVIEWED: "a contrôlé les pièces d’identification de la contrepartie",
-  DEED_APPROVED: "a approuvé le protocole de cession",
-  DEED_SIGNED: "a signé le protocole de cession",
+export const SIGNOFF_LABELS: Record<string, string> = {
+  NDA_SIGNED: "a accepté l’engagement de confidentialité",
+  PRICE_CONFIRMED: "a confirmé son prix après examen des pièces",
+  LOI_ACCEPTED: "a accepté la révision du prix",
+  DEED_SIGNED: "a signé le protocole et les attestations de transfert",
+  ATTESTATIONS_SENT: "a adressé les attestations aux compagnies",
   TRANSFER_CONFIRMED: "a confirmé le rattachement des contrats",
   RETENTION_ACCEPTED: "a validé la déclaration de conservation",
+  // Engagements de l'ancien parcours, encore lisibles dans les journaux.
+  DATA_ROOM_REVIEWED: "a validé l’examen de la salle de données",
+  KYC_REVIEWED: "a contrôlé les pièces de la contrepartie",
+  DEED_APPROVED: "a approuvé le protocole de cession",
 };
 
-export type KycPieceKind = "kbis" | "identite" | "orias";
-
-export const KYC_PIECES: { kind: KycPieceKind; label: string; detail: string }[] = [
-  { kind: "kbis", label: "Extrait Kbis", detail: "De moins de trois mois." },
-  { kind: "identite", label: "Pièce d’identité du représentant légal", detail: "Carte d’identité ou passeport en cours de validité." },
-  { kind: "orias", label: "Attestation d’immatriculation ORIAS", detail: "En cours de validité à la date de la signature." },
-];
+export const FUNDS_ORIGINS = [
+  { value: "FONDS_PROPRES", label: "Fonds propres du cabinet" },
+  { value: "EMPRUNT", label: "Emprunt bancaire" },
+  { value: "APPORT_ASSOCIES", label: "Apport des associés" },
+  { value: "MIXTE", label: "Plusieurs sources" },
+] as const;
 
 export const MAX_PIECE_BYTES = 10 * 1024 * 1024;
 export const ACCEPTED_PIECE_TYPES = ["application/pdf", "image/jpeg", "image/png"] as const;
 
-// ---------------------------------------------------------------------------
-// Emplacements de pièces
-// ---------------------------------------------------------------------------
+/** Étapes réellement parcourues, dans l'ordre. */
+export const ACTIVE_STAGES: DealStage[] = ["DATA_ROOM", "SIGNATURE", "TRANSFER", "RETENTION", "CLOSED"];
 
-export function dueDiligenceSlot(itemId: string): string {
-  return `dd:${itemId}`;
-}
-
-export function kycSlot(side: Side, kind: KycPieceKind): string {
-  return `kyc:${side}:${kind}`;
-}
-
-/** Une compagnie s'identifie par son nom, normalisé : l'ordre de la liste peut changer. */
-export function carrierKey(name: string): string {
-  return name
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "")
-    .slice(0, 60);
-}
-
-export function transferSlot(carrierName: string): string {
-  return `transfer:${carrierKey(carrierName)}`;
-}
-
-export type SlotRule = {
-  /** Qui dépose. */
-  owner: Side;
-  /** Étapes pendant lesquelles le dépôt est ouvert. */
-  stages: DealStage[];
-};
-
-const AFTER_ROOM: DealStage[] = ["DATA_ROOM", "LOI", "KYC", "DEED", "SIGNATURE", "ESCROW", "TRANSFER", "RETENTION"];
-
-/**
- * Qui peut déposer sur un emplacement, et quand. `null` : emplacement inconnu,
- * le dépôt est refusé — un identifiant fabriqué ne crée pas de pièce.
- */
-export function slotRule(
-  slot: string,
-  known: { dueDiligenceIds: string[]; carriers: string[] },
-): SlotRule | null {
-  if (slot === "other") return { owner: "seller", stages: AFTER_ROOM };
-  const dd = /^dd:(.+)$/.exec(slot);
-  if (dd) {
-    return known.dueDiligenceIds.includes(dd[1]!) ? { owner: "seller", stages: AFTER_ROOM } : null;
-  }
-  const kyc = /^kyc:(seller|buyer):(kbis|identite|orias)$/.exec(slot);
-  if (kyc) return { owner: kyc[1] as Side, stages: ["KYC"] };
-  const transfer = /^transfer:(.+)$/.exec(slot);
-  if (transfer) {
-    return known.carriers.some((c) => carrierKey(c) === transfer[1])
-      ? { owner: "seller", stages: ["TRANSFER"] }
-      : null;
-  }
-  return null;
+/** Étapes de l'ancien parcours, ramenées à l'étape qui les regroupe désormais. */
+export function normalizeStage(stage: DealStage): DealStage {
+  if (stage === "NDA" || stage === "LOI" || stage === "KYC") return "DATA_ROOM";
+  if (stage === "DEED") return "SIGNATURE";
+  if (stage === "ESCROW") return "TRANSFER";
+  return stage;
 }
 
 // ---------------------------------------------------------------------------
 // État du dossier
 // ---------------------------------------------------------------------------
 
+export type VerificationState = { status: string; missingIdentity: string[]; note: string | null };
+
 export type ProcessSnapshot = {
   stage: DealStage;
   sellerId: string;
   buyerId: string;
   signoffs: { kind: string; userId: string; createdAt: Date; contentHash: string | null }[];
-  pieces: { slot: string | null; uploadedById: string; createdAt: Date }[];
-  checklist: { id: string; label: string; required: boolean; providedAt: Date | null }[];
-  loi: {
-    proposedAt: Date | null;
-    declinedAt: Date | null;
-    declineReason: string | null;
-    price: number | null;
-    effectiveDate: Date | null;
-  };
-  /** Champs d'identification manquants pour rédiger le protocole. */
-  missingIdentity: { seller: string[]; buyer: string[] };
+  /** Pièces du cabinet déposées sur l'annonce, par type. */
+  roomDocs: { kind: string; createdAt: Date }[];
+  roomKinds: readonly string[];
+  verification: { seller: VerificationState; buyer: VerificationState };
+  /** Prix retenu à l'acceptation de l'offre. */
+  agreedPrice: number;
+  /** Révision du prix proposée par l'acquéreur après examen, si elle existe. */
+  revision: { proposedAt: Date; price: number } | null;
+  declined: { at: Date; reason: string | null } | null;
   carriers: { name: string; code: string }[];
   /** Empreinte du protocole tel qu'il serait signé aujourd'hui. */
   deedHash: string | null;
@@ -149,6 +103,8 @@ export type Task = {
   available: boolean;
   waitingReason?: string;
   progress?: { done: number; total: number };
+  /** Tâche qui se remplit d'elle-même (compte vérifié, pièces déjà déposées). */
+  automatic?: boolean;
 };
 
 function idOf(s: ProcessSnapshot, side: Side): string {
@@ -159,19 +115,14 @@ function signoff(s: ProcessSnapshot, kind: SignoffKind, side: Side) {
   return s.signoffs.find((x) => x.kind === kind && x.userId === idOf(s, side)) ?? null;
 }
 
-function latest(dates: Date[]): Date | null {
-  if (dates.length === 0) return null;
-  return new Date(Math.max(...dates.map((d) => d.getTime())));
+function latest(dates: (Date | null | undefined)[]): Date | null {
+  const valides = dates.filter((d): d is Date => d instanceof Date);
+  if (valides.length === 0) return null;
+  return new Date(Math.max(...valides.map((d) => d.getTime())));
 }
 
 /** Validation encore valable : donnée après la dernière modification de ce qu'elle couvre. */
-function freshSignoff(
-  s: ProcessSnapshot,
-  kind: SignoffKind,
-  side: Side,
-  since: Date | null,
-  hash?: string | null,
-) {
+function freshSignoff(s: ProcessSnapshot, kind: SignoffKind, side: Side, since: Date | null, hash?: string | null) {
   const x = signoff(s, kind, side);
   if (!x) return null;
   if (since && x.createdAt.getTime() < since.getTime()) return null;
@@ -179,185 +130,103 @@ function freshSignoff(
   return x;
 }
 
-function piecesOn(s: ProcessSnapshot, slot: string) {
-  return s.pieces.filter((p) => p.slot === slot);
-}
-
-export function kycPiecesDone(s: ProcessSnapshot, side: Side) {
-  const deposees = KYC_PIECES.map((k) => piecesOn(s, kycSlot(side, k.kind)));
+export function roomDocsDone(s: ProcessSnapshot) {
+  const presents = s.roomKinds.filter((k) => s.roomDocs.some((d) => d.kind === k));
   return {
-    done: deposees.filter((d) => d.length > 0).length,
-    total: KYC_PIECES.length,
-    lastAt: latest(deposees.flat().map((p) => p.createdAt)),
+    done: presents.length,
+    total: s.roomKinds.length,
+    missing: s.roomKinds.filter((k) => !presents.includes(k)),
+    lastAt: latest(s.roomDocs.filter((d) => s.roomKinds.includes(d.kind)).map((d) => d.createdAt)),
   };
 }
 
-export function dueDiligenceDone(s: ProcessSnapshot) {
-  const obligatoires = s.checklist.filter((i) => i.required);
-  const fournies = obligatoires.filter((i) => piecesOn(s, dueDiligenceSlot(i.id)).length > 0);
-  const pieces = s.checklist.flatMap((i) => piecesOn(s, dueDiligenceSlot(i.id)));
-  return {
-    done: fournies.length,
-    total: obligatoires.length,
-    lastAt: latest(pieces.map((p) => p.createdAt)),
-  };
+/** Prix en vigueur : la révision acceptée ou en attente, sinon le prix de l'offre. */
+export function currentPrice(s: ProcessSnapshot): number {
+  return s.revision ? s.revision.price : s.agreedPrice;
 }
 
-export function transferDone(s: ProcessSnapshot) {
-  const faites = s.carriers.filter((c) => piecesOn(s, transferSlot(c.name)).length > 0);
-  const pieces = s.carriers.flatMap((c) => piecesOn(s, transferSlot(c.name)));
-  return { done: faites.length, total: s.carriers.length, lastAt: latest(pieces.map((p) => p.createdAt)) };
+export function revisionPending(s: ProcessSnapshot): boolean {
+  return Boolean(s.revision) && !freshSignoff(s, "LOI_ACCEPTED", "seller", s.revision!.proposedAt);
 }
 
 function task(t: Omit<Task, "available" | "doneAt"> & { available?: boolean; doneAt?: Date | null }): Task {
   return { available: true, doneAt: null, ...t };
 }
 
-const DE_SIDE: Record<Side, string> = { seller: "du cédant", buyer: "de l’acquéreur" };
+function verificationTask(s: ProcessSnapshot, side: Side): Task {
+  const v = s.verification[side];
+  const complet = v.missingIdentity.length === 0;
+  const verifie = v.status === "VERIFIED" && complet;
+  const qui = side === "seller" ? "du cédant" : "de l’acquéreur";
+  let detail: string;
+  if (verifie) detail = "Pièces du cabinet contrôlées une fois, valables pour toutes les cessions.";
+  else if (!complet) detail = `Profil à compléter : ${v.missingIdentity.join(", ")}.`;
+  else if (v.status === "PENDING") detail = "Pièces transmises, contrôle en cours par la plateforme.";
+  else if (v.status === "REJECTED") detail = `Vérification refusée${v.note ? ` : « ${v.note} »` : ""}. Remplacez la pièce concernée.`;
+  else detail = "Kbis, pièce d’identité, RC professionnelle et bénéficiaires effectifs, à déposer une seule fois dans le profil.";
+  return task({
+    key: `verify-${side}`,
+    label: `Compte ${qui} vérifié`,
+    detail,
+    owner: side,
+    done: verifie,
+    automatic: true,
+  });
+}
 
 export function stageTasks(s: ProcessSnapshot): Task[] {
-  switch (s.stage) {
-    case "NDA":
-      return (["seller", "buyer"] as const).map((side) => {
-        const x = signoff(s, "NDA_SIGNED", side);
-        return task({
-          key: `nda-${side}`,
-          label: side === "seller" ? "Signature du cédant" : "Signature de l’acquéreur",
-          detail: "Accord de confidentialité lu et signé.",
-          owner: side,
-          done: Boolean(x),
-          doneAt: x?.createdAt ?? null,
-        });
-      });
-
+  switch (normalizeStage(s.stage)) {
     case "DATA_ROOM": {
-      const dd = dueDiligenceDone(s);
-      const review = freshSignoff(s, "DATA_ROOM_REVIEWED", "buyer", dd.lastAt);
-      const complet = dd.total > 0 && dd.done === dd.total;
-      return [
-        task({
-          key: "dd-pieces",
-          label: "Déposer les pièces obligatoires du bordereau",
-          detail: "Un fichier par ligne : statuts, ORIAS, liasses, conventions compagnies, liste des contrats…",
-          owner: "seller",
-          done: complet,
-          progress: { done: dd.done, total: dd.total },
-        }),
-        task({
-          key: "dd-review",
-          label: "Examiner les pièces et valider la salle de données",
-          detail: "L’acquéreur confirme avoir consulté les pièces. Un fichier remplacé ensuite demande un nouvel examen.",
-          owner: "buyer",
-          done: complet && Boolean(review),
-          doneAt: review?.createdAt ?? null,
-          available: complet,
-          waitingReason: complet ? undefined : "Toutes les pièces obligatoires doivent être déposées.",
-        }),
-      ];
-    }
-
-    case "LOI": {
-      const proposee = Boolean(s.loi.proposedAt);
-      const acceptee = proposee ? freshSignoff(s, "LOI_ACCEPTED", "seller", s.loi.proposedAt) : null;
-      return [
-        task({
-          key: "loi-propose",
-          label: "Proposer la lettre d’intention",
-          detail: s.loi.declinedAt && !proposee
-            ? `Le cédant a refusé la proposition précédente${s.loi.declineReason ? ` : « ${s.loi.declineReason} »` : ""}. Ajustez-la.`
-            : "Prix ferme après examen des pièces, date d’effet du transfert, conditions particulières.",
-          owner: "buyer",
-          done: proposee,
-          doneAt: s.loi.proposedAt,
-        }),
-        task({
-          key: "loi-accept",
-          label: "Accepter ou refuser la lettre d’intention",
-          detail: "L’acceptation fige le prix : 80 % comptant au séquestre, 20 % différé selon la conservation.",
-          owner: "seller",
-          done: Boolean(acceptee),
-          doneAt: acceptee?.createdAt ?? null,
-          available: proposee,
-          waitingReason: proposee ? undefined : "En attente de la proposition de l’acquéreur.",
-        }),
-      ];
-    }
-
-    case "KYC": {
-      const out: Task[] = [];
-      for (const side of ["seller", "buyer"] as const) {
-        const p = kycPiecesDone(s, side);
-        out.push(
-          task({
-            key: `kyc-pieces-${side}`,
-            label: side === "seller" ? "Pièces d’identification du cédant" : "Pièces d’identification de l’acquéreur",
-            detail: "Extrait Kbis, pièce d’identité du représentant légal, attestation ORIAS.",
-            owner: side,
-            done: p.done === p.total,
-            progress: { done: p.done, total: p.total },
-          }),
-        );
-      }
-      for (const side of ["seller", "buyer"] as const) {
-        const controle: Side = side === "seller" ? "buyer" : "seller";
-        const p = kycPiecesDone(s, side);
-        const complet = p.done === p.total;
-        const x = complet ? freshSignoff(s, "KYC_REVIEWED", controle, p.lastAt) : null;
-        out.push(
-          task({
-            key: `kyc-review-${side}`,
-            label: side === "seller" ? "Contrôler les pièces du cédant" : "Contrôler les pièces de l’acquéreur",
-            detail: "Raison sociale, SIREN, représentant et ORIAS concordent avec la lettre d’intention.",
-            owner: controle,
-            done: Boolean(x),
-            doneAt: x?.createdAt ?? null,
-            available: complet,
-            waitingReason: complet ? undefined : `En attente des pièces ${DE_SIDE[side]}.`,
-          }),
-        );
-      }
-      return out;
-    }
-
-    case "DEED": {
-      const out: Task[] = [];
-      for (const side of ["seller", "buyer"] as const) {
-        const manque = s.missingIdentity[side];
-        out.push(
-          task({
-            key: `deed-identity-${side}`,
-            label: side === "seller" ? "Identification complète du cabinet cédant" : "Identification complète du cabinet acquéreur",
-            detail: manque.length ? `À compléter dans le profil : ${manque.join(", ")}.` : "Raison sociale, forme, SIREN, siège, ORIAS et représentant renseignés.",
-            owner: side,
-            done: manque.length === 0,
-          }),
-        );
-      }
+      const docs = roomDocsDone(s);
+      const docsOk = docs.total > 0 && docs.done === docs.total;
       const codes = s.carriers.filter((c) => c.code.trim()).length;
       const codesOk = s.carriers.length > 0 && codes === s.carriers.length;
-      out.push(
+      const depuis = latest([docs.lastAt, s.revision?.proposedAt]);
+      const confirme = docsOk ? freshSignoff(s, "PRICE_CONFIRMED", "buyer", depuis) : null;
+
+      const out: Task[] = [
         task({
-          key: "deed-carriers",
-          label: "Codes courtier du cédant, compagnie par compagnie",
-          detail: "Ils figurent en annexe du protocole et sur chaque attestation de transfert.",
+          key: "room-docs",
+          label: "Pièces du cabinet cédant",
+          detail: "Statuts, liasses fiscales, bordereaux de commissions et conventions de courtage.",
+          owner: "seller",
+          done: docsOk,
+          progress: { done: docs.done, total: docs.total },
+          automatic: docsOk,
+        }),
+        verificationTask(s, "seller"),
+        verificationTask(s, "buyer"),
+        task({
+          key: "carrier-codes",
+          label: "Codes courtier par compagnie",
+          detail: "Ils figurent sur le protocole et sur chaque attestation de transfert.",
           owner: "seller",
           done: codesOk,
           progress: { done: codes, total: s.carriers.length },
         }),
-      );
-      const pret = codesOk && s.missingIdentity.seller.length === 0 && s.missingIdentity.buyer.length === 0;
-      for (const side of ["seller", "buyer"] as const) {
-        const x = pret ? freshSignoff(s, "DEED_APPROVED", side, null, s.deedHash) : null;
+        task({
+          key: "price-confirm",
+          label: "Confirmer le prix après examen des pièces",
+          detail: s.declined
+            ? `Le cédant a refusé la révision${s.declined.reason ? ` : « ${s.declined.reason} »` : ""}. Confirmez le prix de l’offre ou proposez-en un autre.`
+            : "Un geste : le prix de l’offre est confirmé, ou révisé si les pièces le justifient.",
+          owner: "buyer",
+          done: Boolean(confirme),
+          doneAt: confirme?.createdAt ?? null,
+          available: docsOk,
+          waitingReason: docsOk ? undefined : "Les pièces du cabinet cédant doivent être déposées.",
+        }),
+      ];
+      if (s.revision) {
+        const acceptee = freshSignoff(s, "LOI_ACCEPTED", "seller", s.revision.proposedAt);
         out.push(
           task({
-            key: `deed-approve-${side}`,
-            label: side === "seller" ? "Approbation du protocole par le cédant" : "Approbation du protocole par l’acquéreur",
-            detail: "Relecture du protocole généré. Toute modification ultérieure demande une nouvelle approbation.",
-            owner: side,
-            done: Boolean(x),
-            doneAt: x?.createdAt ?? null,
-            available: pret,
-            waitingReason: pret ? undefined : "Le protocole doit être complet : identifications et codes courtier.",
+            key: "price-accept",
+            label: "Accepter ou refuser la révision du prix",
+            detail: "L’acquéreur a révisé son prix après l’examen des pièces.",
+            owner: "seller",
+            done: Boolean(acceptee),
+            doneAt: acceptee?.createdAt ?? null,
           }),
         );
       }
@@ -369,47 +238,45 @@ export function stageTasks(s: ProcessSnapshot): Task[] {
         const x = freshSignoff(s, "DEED_SIGNED", side, null, s.deedHash);
         return task({
           key: `sign-${side}`,
-          label: side === "seller" ? "Signature du protocole par le cédant" : "Signature du protocole par l’acquéreur",
-          detail: "Signature électronique : nom du signataire, consentement, horodatage et empreinte du texte signé.",
+          label: side === "seller" ? "Signature du cédant" : "Signature de l’acquéreur",
+          detail: "Protocole de cession et attestations de transfert, signés en un geste. Horodatage et empreinte du texte.",
           owner: side,
           done: Boolean(x),
           doneAt: x?.createdAt ?? null,
         });
       });
 
-    case "ESCROW":
+    case "TRANSFER": {
+      const verse = s.escrowStage !== "NONE";
+      const envoyees = verse ? signoff(s, "ATTESTATIONS_SENT", "seller") : null;
+      const confirme = envoyees ? freshSignoff(s, "TRANSFER_CONFIRMED", "buyer", envoyees.createdAt) : null;
       return [
         task({
           key: "escrow-fund",
           label: "Verser le comptant au séquestre",
-          detail: "80 % du prix convenu, bloqués jusqu’à la vérification de conservation.",
+          detail: "80 % du prix, bloqués chez le tiers de séquestre jusqu’à la clôture. Origine des fonds déclarée.",
           owner: "buyer",
-          done: s.escrowStage !== "NONE",
+          done: verse,
         }),
-      ];
-
-    case "TRANSFER": {
-      const t = transferDone(s);
-      const complet = t.total > 0 && t.done === t.total;
-      const x = complet ? freshSignoff(s, "TRANSFER_CONFIRMED", "buyer", t.lastAt) : null;
-      return [
         task({
-          key: "transfer-attestations",
-          label: "Déposer les attestations de transfert signées",
-          detail: "Une par compagnie, signée par les deux parties et adressée à la compagnie.",
+          key: "attestations-sent",
+          label: "Adresser les attestations aux compagnies",
+          detail: "Elles sont déjà signées par les deux parties : il reste à les envoyer.",
           owner: "seller",
-          done: complet,
-          progress: { done: t.done, total: t.total },
+          done: Boolean(envoyees),
+          doneAt: envoyees?.createdAt ?? null,
+          available: verse,
+          waitingReason: verse ? undefined : "En attente du versement au séquestre.",
         }),
         task({
           key: "transfer-confirm",
-          label: "Confirmer le rattachement des contrats à votre code",
-          detail: "L’acquéreur confirme que les compagnies ont basculé les contrats et les commissions.",
+          label: "Confirmer le rattachement des contrats",
+          detail: "Quand les compagnies ont basculé les contrats et les commissions sur le code de l’acquéreur.",
           owner: "buyer",
-          done: Boolean(x),
-          doneAt: x?.createdAt ?? null,
-          available: complet,
-          waitingReason: complet ? undefined : "En attente des attestations du cédant.",
+          done: Boolean(confirme),
+          doneAt: confirme?.createdAt ?? null,
+          available: Boolean(envoyees),
+          waitingReason: envoyees ? undefined : "En attente de l’envoi des attestations.",
         }),
       ];
     }
@@ -439,54 +306,42 @@ export function stageTasks(s: ProcessSnapshot): Task[] {
       ];
     }
 
-    case "CLOSED":
+    default:
       return [];
   }
 }
 
 export function stageComplete(s: ProcessSnapshot): boolean {
-  if (s.stage === "CLOSED") return false;
   const tasks = stageTasks(s);
   return tasks.length > 0 && tasks.every((t) => t.done);
 }
 
-const NEXT: Record<DealStage, DealStage | null> = {
-  NDA: "DATA_ROOM",
-  DATA_ROOM: "LOI",
-  LOI: "KYC",
-  KYC: "DEED",
-  DEED: "SIGNATURE",
-  SIGNATURE: "ESCROW",
-  ESCROW: "TRANSFER",
+const NEXT: Partial<Record<DealStage, DealStage>> = {
+  DATA_ROOM: "SIGNATURE",
+  SIGNATURE: "TRANSFER",
   TRANSFER: "RETENTION",
   RETENTION: "CLOSED",
-  CLOSED: null,
 };
 
 export function nextStage(stage: DealStage): DealStage | null {
-  return NEXT[stage];
+  return NEXT[normalizeStage(stage)] ?? null;
 }
 
 /** Ce qu'une partie a à faire maintenant, et ce qu'elle attend de l'autre. */
 export function tasksFor(s: ProcessSnapshot, side: Side) {
   const tasks = stageTasks(s);
   return {
-    mine: tasks.filter((t) => t.owner === side && !t.done && t.available),
+    mine: tasks.filter((t) => t.owner === side && !t.done && t.available && !(t.automatic && t.key.startsWith("verify-") && s.verification[side].status === "PENDING")),
     waiting: tasks.filter((t) => t.owner !== side && !t.done),
     done: tasks.filter((t) => t.done).length,
     total: tasks.length,
   };
 }
 
-export const STAGE_INTRO: Record<DealStage, string> = {
-  NDA: "Chaque partie signe l’accord de confidentialité. La salle de données s’ouvre avec la seconde signature.",
-  DATA_ROOM: "Le cédant dépose les pièces du bordereau, l’acquéreur les examine. Rien ne se négocie sur pièces manquantes.",
-  LOI: "L’acquéreur propose un prix ferme et une date d’effet, le cédant accepte ou refuse avec un motif.",
-  KYC: "Chaque cabinet dépose ses pièces d’identification, l’autre les contrôle. Les fonds ne se séquestrent pas au profit d’un inconnu.",
-  DEED: "Le protocole est rédigé à partir du dossier. Les deux parties le relisent et l’approuvent.",
-  SIGNATURE: "Les deux représentants signent le protocole approuvé.",
-  ESCROW: "L’acquéreur verse le comptant sur le compte séquestre.",
-  TRANSFER: "Le cédant adresse une attestation signée à chaque compagnie, l’acquéreur confirme le rattachement des contrats.",
-  RETENTION: "À douze mois, l’acquéreur déclare la conservation, le cédant la valide : le séquestre et le solde se libèrent.",
+export const STAGE_INTRO: Partial<Record<DealStage, string>> = {
+  DATA_ROOM: "L’acquéreur examine les pièces du cabinet et confirme son prix. Les deux comptes sont vérifiés une fois pour toutes, le cédant renseigne ses codes courtier.",
+  SIGNATURE: "Les deux représentants signent le protocole et les attestations de transfert, en un geste chacun.",
+  TRANSFER: "L’acquéreur verse le comptant au séquestre, le cédant envoie les attestations, l’acquéreur confirme le rattachement des contrats.",
+  RETENTION: "À douze mois, l’acquéreur déclare la conservation, le cédant la valide : le séquestre et le solde ajusté se libèrent.",
   CLOSED: "La cession est close.",
 };

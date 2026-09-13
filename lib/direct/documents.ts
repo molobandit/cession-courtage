@@ -283,6 +283,51 @@ export function buildLetterOfIntent(ctx: DocumentContext): GeneratedDocument {
 }
 
 // ---------------------------------------------------------------------------
+// Courrier d'information des clients
+// ---------------------------------------------------------------------------
+
+/**
+ * Courrier type adressé aux clients du portefeuille après le transfert.
+ *
+ * Le client doit savoir qui le conseille désormais (devoir de conseil de la
+ * distribution d'assurance) et que ses données ont été transmises au nouveau
+ * cabinet (règlement général sur la protection des données).
+ */
+export function buildClientNotice(ctx: DocumentContext): GeneratedDocument {
+  return {
+    key: "courrier-clients",
+    title: "Information sur le changement de votre intermédiaire d’assurance",
+    subtitle: "Courrier type à adresser à chaque client du portefeuille",
+    reference: referenceOf(ctx),
+    addressee: ["[Nom et adresse du client]"],
+    sections: [
+      {
+        paragraphs: [
+          "Madame, Monsieur,",
+          `Nous vous informons que ${fill(ctx.seller.legalName)} a cédé son portefeuille de contrats d’assurance à ${describeFirm(ctx.buyer)}, à compter du ${formatLongDate(ctx.effectiveDate)}.`,
+          "Vos contrats, leurs garanties, leurs tarifs et la compagnie qui vous assure ne changent pas. Aucune démarche n’est nécessaire de votre part.",
+          `Votre nouvel interlocuteur est ${fill(ctx.buyer.legalName)}, représenté par ${fill(ctx.buyer.representative)}${ctx.buyer.email ? `, joignable à l’adresse ${ctx.buyer.email}` : ""}. Il assure désormais le suivi de vos contrats et le devoir de conseil qui s’y attache.`,
+        ],
+      },
+      {
+        heading: "Vos données personnelles",
+        paragraphs: [
+          `Les données nécessaires à la gestion de vos contrats ont été transmises à ${fill(ctx.buyer.legalName)}, qui en devient responsable de traitement pour la poursuite de ces contrats. Vous pouvez exercer vos droits d’accès, de rectification, d’opposition et d’effacement auprès de ce cabinet, et saisir la CNIL si vous l’estimez nécessaire.`,
+        ],
+      },
+      {
+        paragraphs: [
+          "Nous vous remercions de la confiance que vous nous avez accordée et vous prions d’agréer, Madame, Monsieur, l’expression de nos salutations distinguées.",
+        ],
+      },
+    ],
+    signatories: signatories(ctx),
+    notice: "Courrier type : adaptez l’en-tête et les coordonnées avant l’envoi.",
+    signedAt: null,
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Protocole de cession
 // ---------------------------------------------------------------------------
 

@@ -236,6 +236,9 @@ model User {
   /// Motif du refus, ou reference de la piece admise.
   financialCapacityNote   String?
   kycSubmittedAt  DateTime?
+  kycReviewedAt   DateTime?
+  /// Motif du refus de vérification, montré au titulaire du compte.
+  kycReviewNote   String?
   /// Consultation du registre ORIAS. Ne vaut pas validation : l'humain tranche.
   oriasLookupStatus String?
   oriasLookupAt     DateTime?
@@ -287,6 +290,7 @@ model User {
   mandateProposals        MandateProposal[]   @relation("MandateProposalSeller")
   buyerPositions          BuyerPosition[]     @relation("BuyerPositions")
   dealSignoffs            DealSignoff[]       @relation("DealSignoffs")
+  accountDocuments        AccountDocument[]
 
   @@index([firmId])
   @@index([role])
@@ -687,6 +691,8 @@ model Offer {
   message        String
   status         OfferStatus @default(SUBMITTED)
   submittedAt    DateTime    @default(now())
+  /// Date d'effet souhaitée : l'offre vaut lettre d'intention.
+  effectiveDate  DateTime?
 
   /// Fournisseurs visés par l'offre. Tableau JSON de noms ; "[]" = portefeuille entier.
   /// Le fournisseur est la maille du lot : c'est lui qui détient le code de
@@ -759,6 +765,8 @@ model InterestDeposit {
   /// le depot reste au cedant a titre indemnitaire).
   outcome   String   @default("PENDING")
   settledAt DateTime?
+  /// Engagement de confidentialité accepté au dépôt.
+  ndaAcceptedAt DateTime?
 
   listing Listing @relation(fields: [listingId], references: [id], onDelete: Restrict)
   buyer   User    @relation(fields: [buyerId], references: [id], onDelete: Restrict)
@@ -810,6 +818,8 @@ model Deal {
   loiDeclineReason String?
   /// Compagnies cédées et code courtier du cédant chez chacune : [{ name, code }].
   transferCarriers Json      @default("[]")
+  /// Origine des fonds déclarée par l'acquéreur au séquestre (lutte contre le blanchiment).
+  fundsOrigin      String?
 
   updatedAt DateTime @updatedAt
 
@@ -854,6 +864,24 @@ model Document {
   @@index([dealId])
   @@index([sha256])
   @@index([dealId, slot])
+}
+
+/// Pièce d'identification d'un compte, déposée une fois pour toutes les cessions.
+model AccountDocument {
+  id          String   @id @default(cuid())
+  userId      String
+  /// KBIS, IDENTITY, RC_PRO, BENEFICIAL_OWNERS.
+  kind        String
+  fileName    String
+  storageKey  String
+  sha256      String
+  contentType String?
+  sizeBytes   Int?
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 /// Engagement d'une partie sur une étape du dossier : signature, validation, acceptation.

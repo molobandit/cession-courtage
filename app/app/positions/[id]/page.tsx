@@ -9,6 +9,7 @@ import { AcceptOfferButton, SubmitOfferForm, WithdrawOfferButton } from "@/compo
 import { getActor, isOriasVerified, listListingMessages } from "@/lib/authz";
 import { isOfferWindowSealed, ownsFirm } from "@/lib/authz/policies";
 import { interestDepositFor } from "@/lib/billing/rates";
+import { depositTerms } from "@/lib/billing/deposit-fate";
 import { nextPipelineAction } from "@/lib/deal/pipeline";
 import { formatDateTime } from "@/lib/format/fr";
 import { formatEuroWhole } from "@/lib/format/number";
@@ -50,7 +51,7 @@ export default async function PositionPage({ params }: { params: Promise<{ id: s
   const message = estAcheteur ? state.buyerMessage : state.sellerMessage;
 
   const [lots, messagesBruts] = await Promise.all([
-    estAcheteur && state.key === "DEPOSIT" ? lotAvailability(listing.id) : Promise.resolve(null),
+    estAcheteur && (state.key === "DEPOSIT" || state.key === "POSITION") ? lotAvailability(listing.id) : Promise.resolve(null),
     listListingMessages(listing.id, actor),
   ]);
   // Le cédant lit ici le seul fil de ce candidat, pas celui des autres.
@@ -60,21 +61,30 @@ export default async function PositionPage({ params }: { params: Promise<{ id: s
 
   let action: React.ReactNode = null;
   if (estAcheteur) {
-    if (state.key === "POSITION") {
+    if ((state.key === "POSITION" || state.key === "DEPOSIT") && lots) {
+      const sansDepot = state.key === "POSITION";
       action = listingAcceptsOffers(listing.status) ? (
-        <DepositForm listingId={listing.id} amountLabel={formatEuroWhole(interestDepositFor(prix))} amountEur={interestDepositFor(prix)} />
-      ) : null;
-    } else if (state.key === "DEPOSIT" && lots) {
-      action = (
         <div className="mt-5">
           <SubmitOfferForm
             listingId={listing.id}
             asking={String(prix)}
             lots={lots.lots}
             availableCarriers={lots.available}
+            needsDeposit={sansDepot}
+            needsNda={sansDepot || !deposit?.ndaAcceptedAt}
+            depositLabel={formatEuroWhole(interestDepositFor(prix))}
+            depositTermsLines={depositTerms(formatEuroWhole(interestDepositFor(prix)), interestDepositFor(prix))}
           />
+          {sansDepot ? (
+            <details className="mt-4 rounded-xl border border-line bg-paper px-4 py-3">
+              <summary className="cursor-pointer text-[14px] font-medium text-ink">
+                Consulter d’abord les pièces du cabinet : déposer seulement l’engagement
+              </summary>
+              <DepositForm listingId={listing.id} amountLabel={formatEuroWhole(interestDepositFor(prix))} amountEur={interestDepositFor(prix)} />
+            </details>
+          ) : null}
         </div>
-      );
+      ) : null;
     } else if (state.key === "OFFER" && offer) {
       action = (
         <div className="mt-5 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-line bg-surface p-4">

@@ -31,12 +31,11 @@ export function isDealParticipant(
 }
 
 /**
- * L'étape « LOI » est celle où la lettre se négocie ; elle est acceptée quand
- * le dossier passe à la conformité. C'est donc à « KYC » que la lettre est
- * signée et que l'anonymat tombe.
+ * Un dossier n'existe que parce que le cédant a retenu l'offre, qui vaut
+ * lettre d'intention : dès ce moment, les deux cabinets se connaissent.
  */
 export function identitiesRevealed(stage: DealStage): boolean {
-  return isStageAtLeast(stage, "KYC");
+  return isStageAtLeast(stage, "DATA_ROOM");
 }
 
 /**

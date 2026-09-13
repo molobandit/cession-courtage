@@ -4,6 +4,7 @@ import { formatDate } from "@/lib/format/fr";
 import { OriasActions } from "@/components/admin/orias-actions";
 import { KycAdminActions } from "@/components/admin/kyc-actions";
 import { redirect } from "next/navigation";
+import { ACCOUNT_PIECES } from "@/lib/account/verification";
 
 export const metadata = { title: "Validation ORIAS" };
 
@@ -74,10 +75,10 @@ export default async function AdminOriasPage() {
         </table>
       </div>
 
-      <h2 className="mt-10 font-serif text-xl text-navy">Identité professionnelle</h2>
+      <h2 id="identite" className="mt-10 font-serif text-xl text-navy">Comptes à vérifier</h2>
       <p className="mt-1 text-sm text-muted">
-        Prépare le passage chez un prestataire de paiement agréé. Aucun prestataire n’est
-        branché : la confirmation reste humaine.
+        Kbis de moins de trois mois, pièce d’identité du représentant, RC professionnelle, bénéficiaires effectifs.
+        Contrôlez la concordance avec le SIREN, le représentant et la catégorie ORIAS avant de confirmer.
       </p>
       <div className="mt-4 overflow-x-auto border border-line bg-paper">
         <table className="w-full text-sm">
@@ -107,6 +108,16 @@ export default async function AdminOriasPage() {
                         {u.firm.legalName} · {u.firm.siren}
                       </div>
                     ) : null}
+                    <ul className="mt-1.5 grid gap-0.5 text-xs">
+                      {u.accountDocuments.length === 0 ? <li className="text-muted">Aucune pièce déposée</li> : null}
+                      {u.accountDocuments.map((d) => (
+                        <li key={d.id}>
+                          <a href={`/api/compte/documents/${d.id}`} target="_blank" rel="noreferrer" className="text-indigo-dark underline-offset-2 hover:underline">
+                            {ACCOUNT_PIECES.find((p) => p.kind === d.kind)?.label ?? d.kind}
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
                   </td>
                   <td className="px-2 py-2">{roleLabel[u.role] ?? u.role}</td>
                   <td className="px-2 py-2">
