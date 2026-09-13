@@ -254,7 +254,7 @@ export default async function ProfilPage({
         </div>
       </section>
 
-      <section id="identite" className={card}>
+      <section id="verification" className={card}>
         <h2 className="text-lg font-semibold text-ink">Compte vérifié</h2>
         <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-muted">
           Une seule fois pour toutes vos cessions : ces pièces permettent de signer et de séquestrer les fonds en

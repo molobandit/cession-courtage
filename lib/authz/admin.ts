@@ -140,7 +140,7 @@ export async function decideKyc(userId: string, approved: boolean, reason?: stri
     body: approved
       ? "Vos pièces sont contrôlées : votre compte est vérifié pour toutes vos cessions."
       : `Motif : ${reason ?? "non précisé"}. Remplacez la pièce concernée depuis votre profil.`,
-    href: "/app/profil#identite",
+    href: "/app/profil#verification",
   }).catch((e: unknown) => console.error("notifyKycDecision", e));
   // Une vérification peut compléter l'étape de vérifications d'un dossier en cours.
   if (approved) await advanceDealsOf({ userId }, admin.id);

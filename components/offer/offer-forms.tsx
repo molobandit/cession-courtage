@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 import { acceptOfferAction, submitOfferAction, withdrawOfferAction, type OfferFormState } from "@/app/actions/offers";
 import { Button } from "@/components/ui/button";
+import { keepFormSubmit } from "@/components/ui/keep-form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LotPicker } from "@/components/offer/lot-picker";
@@ -39,7 +40,7 @@ export function SubmitOfferForm({
   const dansDeuxMois = new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth() + 2, 1)).toISOString().slice(0, 10);
   const demain = new Date(Date.now() + 86_400_000).toISOString().slice(0, 10);
   return (
-    <form action={action} className="grid gap-4">
+    <form onSubmit={keepFormSubmit(action)} className="grid gap-4">
       <input type="hidden" name="listingId" value={listingId} />
       <LotPicker
         lots={lots}

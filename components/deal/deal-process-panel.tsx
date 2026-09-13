@@ -103,7 +103,7 @@ function TaskAction({ p, task, side, escrowLive }: { p: DealProcess; task: Task;
 
   if (task.key.startsWith("verify-")) {
     return (
-      <Link href="/app/profil#identite" className={lien}>
+      <Link href="/app/profil#verification" className={lien}>
         Vérifier mon compte en quelques minutes
       </Link>
     );

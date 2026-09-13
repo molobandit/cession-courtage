@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 import { placeInterestDepositAction, type DepositFormState } from "@/app/actions/deposits";
 import { Button } from "@/components/ui/button";
+import { keepFormSubmit } from "@/components/ui/keep-form";
 import { depositTerms } from "@/lib/billing/deposit-fate";
 
 const initial: DepositFormState = {};
@@ -30,7 +31,7 @@ export function DepositForm({
   const [nda, setNda] = useState(false);
 
   return (
-    <form action={action} className="mt-5">
+    <form onSubmit={keepFormSubmit(action)} className="mt-5">
       <input type="hidden" name="listingId" value={listingId} />
       <ul className="mb-4 grid gap-1.5 rounded-xl border border-line bg-surface-alt px-4 py-3 text-[13px] leading-relaxed text-ink">
         {depositTerms(amountLabel, amountEur).map((regle) => (

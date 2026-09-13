@@ -14,6 +14,7 @@ import {
 } from "@/app/actions/deal-process";
 import { FUNDS_ORIGINS } from "@/lib/deal/process";
 import { Button } from "@/components/ui/button";
+import { keepFormSubmit } from "@/components/ui/keep-form";
 
 const initial: DealProcessState = {};
 
@@ -49,7 +50,7 @@ export function CommitForm({
   const [state, formAction, pending] = useActionState(action, initial);
   const [coche, setCoche] = useState(false);
   return (
-    <form action={formAction} className="grid gap-3">
+    <form onSubmit={keepFormSubmit(formAction)} className="grid gap-3">
       <input type="hidden" name="dealId" value={dealId} />
       <label className="flex items-start gap-3 text-[14px] leading-relaxed text-ink">
         <input
@@ -149,7 +150,7 @@ export function RevisePriceForm({ dealId, defaultPrice }: { dealId: string; defa
     );
   }
   return (
-    <form action={formAction} className="grid gap-3 rounded-2xl border border-line bg-paper p-4">
+    <form onSubmit={keepFormSubmit(formAction)} className="grid gap-3 rounded-2xl border border-line bg-paper p-4">
       <input type="hidden" name="dealId" value={dealId} />
       <label className="grid max-w-xs gap-1.5 text-[14px] font-medium text-ink">
         Prix révisé (€)
@@ -187,7 +188,7 @@ export function RevisionAnswerForm({ dealId }: { dealId: string }) {
   return (
     <div className="grid gap-3">
       {!refus ? (
-        <form action={formAction} className="grid gap-3">
+        <form onSubmit={keepFormSubmit(formAction)} className="grid gap-3">
           <input type="hidden" name="dealId" value={dealId} />
           <input type="hidden" name="decision" value="accept" />
           <label className="flex items-start gap-3 text-[14px] leading-relaxed text-ink">
@@ -210,7 +211,7 @@ export function RevisionAnswerForm({ dealId }: { dealId: string }) {
           </div>
         </form>
       ) : (
-        <form action={formAction} className="grid gap-3">
+        <form onSubmit={keepFormSubmit(formAction)} className="grid gap-3">
           <input type="hidden" name="dealId" value={dealId} />
           <input type="hidden" name="decision" value="decline" />
           <label className="grid gap-1.5 text-[14px] font-medium text-ink">
@@ -244,7 +245,7 @@ export function EscrowForm({ dealId, amountLabel, live }: { dealId: string; amou
   const [coche, setCoche] = useState(false);
   const [origine, setOrigine] = useState("");
   return (
-    <form action={formAction} className="grid gap-3">
+    <form onSubmit={keepFormSubmit(formAction)} className="grid gap-3">
       <input type="hidden" name="dealId" value={dealId} />
       <label className="grid max-w-sm gap-1.5 text-[14px] font-medium text-ink">
         Origine des fonds
@@ -281,7 +282,7 @@ export function EscrowForm({ dealId, amountLabel, live }: { dealId: string; amou
 export function CarrierCodesForm({ dealId, carriers }: { dealId: string; carriers: { name: string; code: string }[] }) {
   const [state, formAction, pending] = useActionState(saveDealCarrierCodesAction, initial);
   return (
-    <form action={formAction} className="grid gap-3">
+    <form onSubmit={keepFormSubmit(formAction)} className="grid gap-3">
       <input type="hidden" name="dealId" value={dealId} />
       <div className="grid gap-2 sm:grid-cols-2">
         {carriers.map((c, i) => (
@@ -305,7 +306,7 @@ export function SignDeedForm({ dealId, representative }: { dealId: string; repre
   const [state, formAction, pending] = useActionState(signDeedAction, initial);
   const [coche, setCoche] = useState(false);
   return (
-    <form action={formAction} className="grid gap-3">
+    <form onSubmit={keepFormSubmit(formAction)} className="grid gap-3">
       <input type="hidden" name="dealId" value={dealId} />
       <label className="grid max-w-md gap-1.5 text-[14px] font-medium text-ink">
         Nom et prénom du signataire
