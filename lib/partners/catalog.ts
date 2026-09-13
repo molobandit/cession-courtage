@@ -14,6 +14,7 @@ export type PartnerCopy = {
   detail: string;
   termsUrl: string | null;
   envKey: string;
+  logoSrc: string;
 };
 
 /**
@@ -31,6 +32,7 @@ export const PARTNERS: PartnerCopy[] = [
     detail:
       "Stripe encaisse ce que La bourse du portefeuille facture pour l’accès au détail des offres et à la messagerie. Un dépôt d’intérêt sous 999 euros emprunte le même rail carte. Un plafond carte trop bas pourra passer par un prélèvement SEPA une fois ce moyen ouvert au contrat. La plateforme ne voit pas le numéro complet de la carte.",
     termsUrl: "https://stripe.com/fr/legal/ssa",
+    logoSrc: "/partners/stripe.svg",
   },
   {
     id: "trustap",
@@ -42,6 +44,7 @@ export const PARTNERS: PartnerCopy[] = [
     detail:
       "Trustap est prévu pour le séquestre, certifié PCI DSS de niveau 1, avec les contrôles d’identité et de lutte contre le blanchiment exigés pour ce métier. L’acquéreur verse d’abord la part comptant, soit quatre cinquièmes du prix convenu. La libération suit la signature, le transfert auprès des compagnies et de l’ORIAS, puis la période de vérification pour le cinquième restant. Un litige reste chez Trustap, pas chez l’éditeur. Si la cession s’arrête, le solde consigné revient à l’acquéreur.",
     termsUrl: "https://www.trustap.com/terms/",
+    logoSrc: "/partners/trustap.svg",
   },
   {
     id: "yousign",
@@ -53,6 +56,7 @@ export const PARTNERS: PartnerCopy[] = [
     detail:
       "Yousign porte le parcours de signature prévu pour la France, conforme au règlement européen sur l’identification électronique. Chaque partie reçoit un exemplaire numérique. Seul le représentant habilité signe. Tant que la clé n’est pas validée, l’étape est enregistrée sur le dossier sans valeur de signature qualifiée.",
     termsUrl: "https://yousign.com/fr-fr/conditions-generales",
+    logoSrc: "/partners/yousign.svg",
   },
   {
     id: "docusign",
@@ -64,6 +68,7 @@ export const PARTNERS: PartnerCopy[] = [
     detail:
       "DocuSign reste disponible comme prestataire alternatif, dans le même cadre eIDAS. Un seul rail de signature sera actif à la fois. Cela évite deux originaux contradictoires sur le même acte.",
     termsUrl: "https://www.docusign.com/fr-fr/company/terms-and-conditions",
+    logoSrc: "/partners/docusign.svg",
   },
   {
     id: "identity",
@@ -75,6 +80,7 @@ export const PARTNERS: PartnerCopy[] = [
     detail:
       "Ondorse est le prestataire de conformité visé pour l’identité du courtier et de sa société, y compris le filtrage contre le blanchiment. Jusqu’à la validation du contrat, le dossier enregistre l’étape sans transmettre de pièce à un tiers. Aucune donnée nominative de client final n’entre dans ce contrôle.",
     termsUrl: "https://www.ondorse.co/fr",
+    logoSrc: "/partners/ondorse.svg",
   },
   {
     id: "financing",
@@ -86,6 +92,7 @@ export const PARTNERS: PartnerCopy[] = [
     detail:
       "CrediPro est le courtier en financement professionnel visé. Deux usages : monter le prêt pour acheter, et le post-financement si l’acquéreur a déjà payé comptant et veut dégager de la trésorerie. L’étude de faisabilité sera gratuite dès validation du contrat. Le prêt, une fois obtenu, alimente Trustap. La bourse du portefeuille ne prête pas.",
     termsUrl: "https://www.credipro.com",
+    logoSrc: "/partners/credipro.svg",
   },
 ];
 

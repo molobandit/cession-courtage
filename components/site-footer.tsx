@@ -11,6 +11,7 @@ import {
   NAV_SELL,
 } from "@/lib/copy/market";
 import { BRAND_NAME, COMPANY_LEGAL_NAME } from "@/lib/site";
+import { PartnerFooterLogos } from "@/components/partners/partner-logos";
 
 const COLUMNS = [
   {
@@ -84,7 +85,11 @@ export function SiteFooter() {
           ))}
         </div>
 
-        <div className="mt-10 border-t border-white/15 pt-6">
+        <div className="mt-10 border-t border-white/15 pt-8">
+          <PartnerFooterLogos />
+        </div>
+
+        <div className="mt-8 border-t border-white/15 pt-6">
           <p className="text-[13px] leading-relaxed text-white/65">
             La plateforme met en relation des professionnels. Elle n’est partie à
             aucune transaction, n’exerce aucune activité d’intermédiation en

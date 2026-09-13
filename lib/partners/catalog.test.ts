@@ -57,6 +57,6 @@ describe("partner public copy", () => {
     expect(PARTNER_ADAPTERS.docusign).toBe(false);
     expect(PARTNER_ADAPTERS.identity).toBe(false);
     expect(PARTNER_ADAPTERS.financing).toBe(false);
-    expect(PAYMENT_FAQ_ANCHOR).toBe("paiement-et-signatures");
+    expect(PARTNERS.every((partner) => partner.logoSrc.startsWith("/partners/"))).toBe(true);
   });
 });

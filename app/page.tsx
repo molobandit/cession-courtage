@@ -40,6 +40,7 @@ import {
 } from "@/lib/copy/market";
 import { loadPublicListingCards } from "@/lib/listing/load-public-cards";
 import type { PublicListingCard } from "@/lib/listing/public-card";
+import { PartnerHomeMarquee } from "@/components/partners/partner-logos";
 
 export const metadata: Metadata = {
   title: HERO_TITLE,
@@ -206,6 +207,8 @@ export default async function HomePage() {
           </dl>
         </div>
       </section>
+
+      <PartnerHomeMarquee />
 
       <section className="bg-page">
         <div className="mx-auto max-w-6xl px-4 py-16">
