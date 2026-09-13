@@ -25,7 +25,7 @@ import { checklistProgress, type DueDiligenceCategory } from "@/lib/deal/due-dil
 import { nextPipelineAction } from "@/lib/deal/pipeline";
 import { ensureDealChecklist } from "@/lib/deal/seed-checklist";
 import { PartnerStrip } from "@/components/partners/partner-grid";
-import { escrowRailLive, presentPartners, signatureRailLive } from "@/lib/partners/status";
+import { escrowRailLive, presentPartners, signatureProvider, signatureRailLive } from "@/lib/partners/status";
 import { prisma } from "@/lib/prisma";
 
 export const metadata = { title: "Dossier" };
@@ -58,6 +58,7 @@ export default async function DealPage({ params }: { params: Promise<{ id: strin
   const partners = presentPartners();
   const escrowLive = escrowRailLive();
   const signLive = signatureRailLive();
+  const signName = signatureProvider() === "docusign" ? "DocuSign" : "Yousign";
 
   const parcours = (
     <div className="grid gap-6">
@@ -72,7 +73,7 @@ export default async function DealPage({ params }: { params: Promise<{ id: strin
         <p className="mt-3 text-[13px] text-muted">
           {escrowLive && signLive
             ? "Le séquestre et la signature passent par les prestataires du circuit."
-            : "Le circuit Trustap et Yousign est prêt. Tant que les contrats ne sont pas validés, l’étape est enregistrée sans mouvement d’argent et sans signature qualifiée."}
+            : `Trustap et ${signName} sont prévus. Tant que les contrats ne sont pas validés, l’étape est enregistrée sans mouvement d’argent et sans signature qualifiée.`}
         </p>
         <div className="mt-4">
           {deal.stage === "NDA" ? <NdaButton dealId={deal.id} /> : null}

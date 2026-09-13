@@ -6,6 +6,7 @@ import { PageIntro } from "@/components/page-intro";
 import { BUY_POINTS, CTA_BROWSE, MARKET_ACCESS, NAV_BUY } from "@/lib/copy/market";
 import { canBuy, getActor, isOriasVerified } from "@/lib/authz";
 import { GROWTH_PLAN_ANNUAL_EUR, INTEREST_DEPOSIT_LABEL } from "@/lib/billing/rates";
+import { CESSION_FUNDS_DISCLAIMER } from "@/lib/partners/catalog";
 import { OFFER_WINDOW_DAYS } from "@/lib/listing/constants";
 import { ACQUISITION_APP_PATH, acquisitionLoginHref } from "@/lib/nav/acquisition";
 
@@ -153,7 +154,7 @@ export default async function AcquerirPage() {
             {GROWTH_PLAN_ANNUAL_EUR.toLocaleString("fr-FR")} € HT par an est
             obligatoire pour accéder au contact et aux messages. L’identité du
             cédant n’apparaît qu’après un dépôt de {INTEREST_DEPOSIT_LABEL} du
-            prix. Aucun encaissement sur cette démo.
+            prix. {CESSION_FUNDS_DISCLAIMER}
           </p>
           <div className="mt-7 flex flex-wrap gap-3">
             <Button asChild variant="primary">

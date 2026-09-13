@@ -19,7 +19,7 @@ export const SUCCESS_FEE_RATE = VERIFIED_FEE_RATE_MIN;
 export const SIMPLE_FEE_LABEL = "0 %";
 export const VERIFIED_FEE_RANGE_LABEL = "12,5 à 15 % HT";
 
-/** Depot pour reveler l'identite du vendeur. Simule : aucun encaissement. */
+/** Depot pour reveler l'identite du vendeur. Rail Stripe sous 999 €, Trustap au-dela. Sans adaptateur actif : enregistrement sans debit. */
 export const INTEREST_DEPOSIT_RATE = 0.025;
 export const INTEREST_DEPOSIT_LABEL = "2,5 %";
 
@@ -76,7 +76,7 @@ export function growthPlanAnnualTtcCents(): number {
   return Math.round(growthPlanAnnualTtcEur() * 100);
 }
 
-/** Depot simule historique. Aucun encaissement. */
+/** Montant du depot d'interet. Sans rail actif : enregistrement sans debit. */
 export function interestDepositFor(askingPriceEur: number): number {
   if (!Number.isFinite(askingPriceEur) || askingPriceEur <= 0) return 0;
   return Math.round(askingPriceEur * INTEREST_DEPOSIT_RATE * 100) / 100;

@@ -10,7 +10,8 @@ import {
 } from "@/lib/billing/rates";
 import { ASKING_MAX, ASKING_MIN, OFFER_WINDOW_DAYS } from "@/lib/listing/constants";
 import { formatEuroWhole } from "@/lib/format/number";
-import { PAYMENT_FAQ } from "@/lib/partners/faq";
+import { PAYMENT_FAQ, PAYMENT_FAQ_ANCHOR } from "@/lib/partners/faq";
+import { CESSION_FUNDS_DISCLAIMER } from "@/lib/partners/catalog";
 
 export const metadata: Metadata = {
   title: "Questions fréquentes",
@@ -20,7 +21,7 @@ export const metadata: Metadata = {
 };
 
 type Question = { q: string; a: string };
-type Section = { title: string; intro: string; questions: Question[] };
+type Section = { id?: string; title: string; intro: string; questions: Question[] };
 
 const SECTIONS: Section[] = [
   {
@@ -133,15 +134,16 @@ const SECTIONS: Section[] = [
       },
       {
         q: "Un acquéreur doit-il payer ?",
-        a: `Consulter le catalogue est gratuit. Un abonnement de ${GROWTH_PLAN_ANNUAL_EUR.toLocaleString("fr-FR")} € HT par an est obligatoire pour accéder au détail de l’offre (contact, messages). Le vendeur reste anonyme jusqu’au dépôt de ${INTEREST_DEPOSIT_LABEL} du prix. Aucun encaissement sur cette démo.`,
+        a: `Consulter le catalogue est gratuit. Un abonnement de ${GROWTH_PLAN_ANNUAL_EUR.toLocaleString("fr-FR")} € HT par an est obligatoire pour accéder au détail de l’offre (contact, messages). Le vendeur reste anonyme jusqu’au dépôt de ${INTEREST_DEPOSIT_LABEL} du prix. L’abonnement passe par Stripe dès que ce rail est ouvert.`,
       },
       {
         q: "Quand l’argent est-il débloqué ?",
-        a: "Les fonds restent sous séquestre jusqu’à ce que l’acquéreur ait le portefeuille en sa possession. Si la vente n’aboutit pas, le dépôt et les fonds consignés sont restitués à l’acquéreur. Aucun paiement réel n’est traité sur cette démo.",
+        a: `Les fonds restent sous séquestre jusqu’à ce que l’acquéreur ait le portefeuille en sa possession. Si la vente n’aboutit pas, le solde consigné revient à l’acquéreur. ${CESSION_FUNDS_DISCLAIMER}`,
       },
     ],
   },
   {
+    id: PAYMENT_FAQ_ANCHOR,
     title: "Paiement et signatures",
     intro: "Où va l’argent, qui signe, qui vérifie. Sans copier une autre place de marché.",
     questions: PAYMENT_FAQ,
@@ -191,22 +193,25 @@ export default function FaqPage() {
         <nav aria-label="Sommaire" className="rounded-3xl border border-line bg-paper p-6">
           <p className="text-[15px] font-medium text-ink">Sommaire</p>
           <ul className="mt-3 flex flex-wrap gap-2">
-            {SECTIONS.map((section) => (
-              <li key={section.title}>
-                <a
-                  href={`#${encodeURIComponent(section.title)}`}
-                  className="inline-block rounded-full border border-line bg-surface-alt px-4 py-2 text-[15px] text-ink hover:border-indigo"
-                >
-                  {section.title}
-                </a>
-              </li>
-            ))}
+            {SECTIONS.map((section) => {
+              const id = section.id ?? encodeURIComponent(section.title);
+              return (
+                <li key={section.title}>
+                  <a
+                    href={`#${id}`}
+                    className="inline-block rounded-full border border-line bg-surface-alt px-4 py-2 text-[15px] text-ink hover:border-indigo"
+                  >
+                    {section.title}
+                  </a>
+                </li>
+              );
+            })}
           </ul>
         </nav>
 
         <div className="mt-10 space-y-12">
           {SECTIONS.map((section) => (
-            <section key={section.title} id={encodeURIComponent(section.title)}>
+            <section key={section.title} id={section.id ?? encodeURIComponent(section.title)}>
               <h2 className="font-serif text-2xl font-semibold text-ink">{section.title}</h2>
               <p className="mt-2 text-[15px] text-muted">{section.intro}</p>
               <div className="mt-5 space-y-3">

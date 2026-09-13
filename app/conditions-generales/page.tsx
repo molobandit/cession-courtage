@@ -97,8 +97,8 @@ export default function ConditionsGeneralesPage() {
           messages), l’acquéreur souscrit un abonnement de{" "}
           {GROWTH_PLAN_ANNUAL_EUR} € hors taxes par an. Le cédant demeure
           anonyme jusqu’au versement d’un dépôt de {INTEREST_DEPOSIT_LABEL} du
-          prix demandé. Aucun paiement n’est traité sur la plateforme en
-          l’état actuel du service.
+          prix demandé. L’éditeur n’encaisse pas le prix de cession. Les
+          modalités de paiement et de signature figurent à l’article 10.
         </p>
         <p>
           Deux options de cession coexistent. L’option annonce simple n’emporte
@@ -113,8 +113,8 @@ export default function ConditionsGeneralesPage() {
           de séquestre supplémentaires. Les fonds sont libérés lorsque
           l’acquéreur a le portefeuille en sa possession. Si la cession
           n’aboutit pas, les fonds consignés sont restitués à l’acquéreur.
-          Aucun paiement n’est traité sur la plateforme en l’état actuel du
-          service.
+          Tant que le contrat du séquestre n’est pas validé, l’étape est
+          enregistrée sans mouvement de fonds, conformément à l’article 10.
         </p>
       </LegalSection>
 
@@ -159,10 +159,12 @@ export default function ConditionsGeneralesPage() {
         <p>
           L’éditeur ne détient, ne reçoit ni ne conserve le prix de cession. Les
           opérations financières et les signatures électroniques sont conçues pour
-          être réalisées par des prestataires indépendants, notamment Stripe pour
-          l’abonnement d’accès, Trustap pour le séquestre du prix, Yousign ou
-          DocuSign pour la signature électronique, et un prestataire de conformité
-          pour la vérification d’identité professionnelle.
+          être réalisées par des prestataires indépendants. Stripe encaisse
+          l’abonnement d’accès et les dépôts d’intérêt inférieurs à 999 euros.
+          Trustap conserve le prix de cession et les versements à partir de 999
+          euros. Yousign, ou DocuSign, porte la signature électronique. Ondorse
+          porte la vérification d’identité professionnelle. CrediPro porte le
+          financement de l’acquisition, sans se substituer au séquestre.
         </p>
         <p>
           Tant que le contrat d’un prestataire n’est pas validé, l’étape

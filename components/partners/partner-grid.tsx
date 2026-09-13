@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { PAYMENT_FAQ_ANCHOR } from "@/lib/partners/faq";
 import type { PresentedPartner } from "@/lib/partners/status";
 
 export function PartnerGrid({ partners }: { partners: PresentedPartner[] }) {
@@ -39,7 +40,7 @@ export function PartnerGrid({ partners }: { partners: PresentedPartner[] }) {
       ))}
       <li className="sm:col-span-2">
         <Link
-          href="/faq"
+          href={`/faq#${PAYMENT_FAQ_ANCHOR}`}
           className="block rounded-3xl border border-indigo-line bg-indigo-soft px-6 py-5 text-[15px] font-medium text-ink hover:bg-indigo-soft/80"
         >
           Questions sur le dépôt, le séquestre et la signature

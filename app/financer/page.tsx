@@ -41,11 +41,12 @@ export default function FinancerPage() {
         <article className="rounded-3xl border border-line bg-paper p-7">
           <h2 className="text-xl font-semibold text-ink">À quoi ça sert</h2>
           <p className="mt-3 text-[15px] leading-relaxed text-muted">
-            Un courtier en financement professionnel monte le dossier de prêt,
-            met les banques en concurrence et suit le déblocage. C’est le même
-            métier que pour l’achat d’un fonds, adapté au courtage. Rien de cela
-            ne remplace Trustap : l’argent du prêt, une fois obtenu, rejoint le
-            séquestre comme le ferait un paiement comptant.
+            Un courtier en financement professionnel, CrediPro dès validation du
+            contrat, monte le dossier de prêt, met les banques en concurrence et
+            suit le déblocage. Deux cas : acheter avec un prêt, ou refinancer un
+            achat déjà payé comptant pour dégager de la trésorerie. Rien de cela
+            ne remplace Trustap : l’argent du prêt rejoint le séquestre comme le
+            ferait un paiement comptant.
           </p>
         </article>
         <article className="mt-6 rounded-3xl border border-line bg-paper p-7">

@@ -15,8 +15,8 @@ export type DepositFormState = { error?: string; placed?: boolean };
  * Pose le depot d'interet de 2,5 % sur une annonce.
  *
  * C'est ce depot qui leve l'anonymat entre le cedant et l'acquereur, sans
- * attendre la LOI. Aucun encaissement reel : l'enregistrement vaut engagement,
- * conformement a la regle du projet.
+ * attendre la LOI. Sans adaptateur Stripe ou Trustap actif, l'enregistrement
+ * vaut engagement, sans debit.
  *
  * L'appartenance et les droits sont verifies au niveau de la requete, jamais a
  * l'affichage : un identifiant devine ne permet rien.

@@ -1,6 +1,7 @@
 import "server-only";
 import { stripeConfigured } from "@/lib/billing/stripe";
 import { runtimeEnv } from "@/lib/runtime-env";
+import { PARTNER_ADAPTERS } from "@/lib/partners/adapters";
 import {
   LIVE_BADGE,
   PARTNERS,
@@ -17,17 +18,23 @@ export type PresentedPartner = PartnerCopy & {
 export function partnerIsLive(id: PartnerId): boolean {
   switch (id) {
     case "stripe":
-      return stripeConfigured();
+      return PARTNER_ADAPTERS.stripe && stripeConfigured();
     case "trustap":
-      return Boolean(runtimeEnv("TRUSTAP_API_KEY"));
+      return PARTNER_ADAPTERS.trustap && Boolean(runtimeEnv("TRUSTAP_API_KEY"));
     case "yousign":
-      return Boolean(runtimeEnv("YOUSIGN_API_KEY"));
+      return PARTNER_ADAPTERS.yousign && Boolean(runtimeEnv("YOUSIGN_API_KEY"));
     case "docusign":
-      return Boolean(runtimeEnv("DOCUSIGN_API_KEY"));
+      return PARTNER_ADAPTERS.docusign && Boolean(runtimeEnv("DOCUSIGN_API_KEY"));
     case "identity":
-      return Boolean(runtimeEnv("IDENTITY_API_KEY"));
+      return (
+        PARTNER_ADAPTERS.identity &&
+        Boolean(runtimeEnv("ONDORSE_API_KEY") ?? runtimeEnv("IDENTITY_API_KEY"))
+      );
     case "financing":
-      return runtimeEnv("FINANCING_PARTNER_LIVE") === "true";
+      return (
+        PARTNER_ADAPTERS.financing &&
+        (runtimeEnv("CREDIPRO_LIVE") === "true" || runtimeEnv("FINANCING_PARTNER_LIVE") === "true")
+      );
     default: {
       const _never: never = id;
       return Boolean(_never);

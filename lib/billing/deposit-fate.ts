@@ -1,3 +1,5 @@
+import { depositPaymentRail } from "@/lib/partners/catalog";
+
 /**
  * Sort du dépôt de garantie.
  *
@@ -65,11 +67,22 @@ export function depositOutcomeLabel(outcome: DepositOutcome): string {
  * Écrites au futur et à la deuxième personne : celui qui les lit s'apprête à
  * s'engager, il n'est pas en train de consulter un règlement.
  */
-export function depositTerms(amountLabel: string): string[] {
+export function depositTerms(amountLabel: string, amountEur?: number): string[] {
+  const rail =
+    typeof amountEur === "number" && Number.isFinite(amountEur)
+      ? depositPaymentRail(amountEur)
+      : null;
+  const railLine =
+    rail === "stripe"
+      ? "Sous 999 euros, ce dépôt est conçu pour Stripe. Tant que ce rail n’est pas actif, l’engagement est enregistré sans débit."
+      : rail === "trustap"
+        ? "À partir de 999 euros, ce dépôt rejoint Trustap. Tant que le séquestre n’est pas actif, l’engagement est enregistré sans débit."
+        : "Tant que Stripe ou Trustap n’est pas actif, cet engagement est enregistré sans débit.";
   return [
     `Vous versez ${amountLabel} pour vous positionner sur ce dossier.`,
     "Si la cession aboutit, ce montant vient en déduction du prix : il n’est pas remboursé à part.",
     "Si vous vous retirez, il reste acquis au cédant à titre indemnitaire.",
     "Tant que le dossier suit son cours, il n’est ni acquis ni rendu.",
+    railLine,
   ];
 }

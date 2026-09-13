@@ -3,13 +3,14 @@ import { mockEscrowHold, mockEscrowRelease, mockSignDocument, mockVerifyKyc } fr
 import { identityRailLive, partnerIsLive, signatureProvider, signatureRailLive } from "@/lib/partners/status";
 
 /**
- * Point unique à brancher quand les contrats seront validés.
- * Sans clé, le dossier avance en démonstration, sans mouvement d’argent.
+ * Point unique à brancher quand les contrats seront validés et l’adaptateur
+ * livré. Tant que partnerIsLive reste faux, le dossier avance sans mouvement
+ * d’argent et sans envoi de pièce à un tiers.
  */
 
 export async function holdEscrowFunds(dealId: string) {
   if (partnerIsLive("trustap")) {
-    // TRUSTAP_API_KEY posée : appeler ici l’API Trustap (création de transaction).
+    // Brancher ici l’API Trustap (création de transaction).
     return mockEscrowHold(dealId);
   }
   return mockEscrowHold(dealId);
@@ -24,8 +25,7 @@ export async function releaseEscrowFunds(dealId: string) {
 
 export async function signDealDocument(documentId: string) {
   if (signatureRailLive()) {
-    const rail = signatureProvider();
-    void rail;
+    void signatureProvider();
     return mockSignDocument(documentId);
   }
   return mockSignDocument(documentId);

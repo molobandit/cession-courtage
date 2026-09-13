@@ -59,7 +59,8 @@ describe("imputation sur le séquestre", () => {
 
 describe("ce qui est dit avant le versement", () => {
   it("annonce les deux issues, pas seulement la bonne", () => {
-    const regles = depositTerms("2 500 €");
+    const regles = depositTerms("2 500 €", 2500);
+    expect(regles.join(" ")).toContain("Trustap");
     expect(regles.join(" ")).toContain("déduction du prix");
     expect(regles.join(" ")).toContain("indemnitaire");
   });

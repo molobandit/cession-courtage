@@ -11,8 +11,7 @@ const initial: DepositFormState = {};
  * Pose le depot d'interet de 2,5 %.
  *
  * Le droit est verifie par l'action serveur, ce bouton n'est qu'un declencheur.
- * Le libelle annonce explicitement l'absence d'encaissement, pour que personne
- * ne croie payer.
+ * Les règles disent où part l'argent et que, sans rail actif, rien n'est débité.
  *
  * Les regles du depot sont affichees au-dessus du bouton, pas ailleurs : un
  * engagement dont on decouvre les conditions apres coup n'en est pas un. Les
@@ -21,9 +20,11 @@ const initial: DepositFormState = {};
 export function DepositForm({
   listingId,
   amountLabel,
+  amountEur,
 }: {
   listingId: string;
   amountLabel: string;
+  amountEur?: number;
 }) {
   const [state, action, pending] = useActionState(placeInterestDepositAction, initial);
 
@@ -31,7 +32,7 @@ export function DepositForm({
     <form action={action} className="mt-5">
       <input type="hidden" name="listingId" value={listingId} />
       <ul className="mb-4 grid gap-1.5 rounded-xl border border-line bg-surface-alt px-4 py-3 text-[13px] leading-relaxed text-ink">
-        {depositTerms(amountLabel).map((regle) => (
+        {depositTerms(amountLabel, amountEur).map((regle) => (
           <li key={regle}>{regle}</li>
         ))}
       </ul>

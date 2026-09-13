@@ -1,5 +1,7 @@
 import { INTEREST_DEPOSIT_LABEL } from "@/lib/billing/rates";
 
+export const PAYMENT_FAQ_ANCHOR = "paiement-et-signatures";
+
 export const PAYMENT_FAQ: { q: string; a: string }[] = [
   {
     q: "Pourquoi un dépôt avant de voir qui vend ?",
@@ -23,10 +25,14 @@ export const PAYMENT_FAQ: { q: string; a: string }[] = [
   },
   {
     q: "Qui vérifie que j’existe vraiment ?",
-    a: "L’ORIAS à l’inscription. Puis, avant l’acte, une vérification d’identité du cabinet et du représentant. Le prestataire de conformité sera branché à la validation du contrat. Les noms d’assurés n’entrent jamais dans ce contrôle.",
+    a: "L’ORIAS à l’inscription. Puis Ondorse, dès validation du contrat, pour l’identité du cabinet et du représentant. Les noms d’assurés n’entrent jamais dans ce contrôle.",
+  },
+  {
+    q: "Mon plafond carte ne passe pas. Que faire ?",
+    a: "Sous 999 euros, le dépôt d’intérêt est conçu pour Stripe, par carte, puis par prélèvement SEPA si ce moyen est ouvert au contrat. À partir de 999 euros, le versement rejoint Trustap. Le prix de cession, lui, va toujours au séquestre, jamais sur l’abonnement.",
   },
   {
     q: "Puis-je emprunter pour acheter ?",
-    a: "Oui, via un courtier en financement professionnel, dès que ce partenaire sera validé. En attendant, un entretien avec un conseiller aide à cadrer l’apport. Le prêt, une fois obtenu, alimente le séquestre. Il ne le remplace pas.",
+    a: "Oui, via CrediPro dès que ce contrat sera validé : prêt d’acquisition ou refinancement d’un achat déjà payé comptant. En attendant, un entretien avec un conseiller aide à cadrer l’apport. Le prêt alimente le séquestre. Il ne le remplace pas.",
   },
 ];

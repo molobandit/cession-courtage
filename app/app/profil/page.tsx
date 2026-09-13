@@ -17,6 +17,7 @@ import { parseNotifyPrefs } from "@/lib/account/notify-prefs";
 import { parseSearchPrefs } from "@/lib/account/search-prefs";
 import { hasContactSubscription } from "@/lib/billing/contact-access";
 import { GROWTH_PLAN_ANNUAL_EUR, INTEREST_DEPOSIT_LABEL } from "@/lib/billing/rates";
+import { CESSION_FUNDS_DISCLAIMER } from "@/lib/partners/catalog";
 import { formatDate, formatEuroPrecise } from "@/lib/format/fr";
 import { formatEuroWhole } from "@/lib/format/number";
 import { DOCUMENT_TYPE_LABELS, KYC_STATUS_LABELS, ROLE_LABELS } from "@/lib/labels";
@@ -277,8 +278,7 @@ export default async function ProfilPage({
         <h2 className="text-lg font-semibold text-ink">Factures et engagements</h2>
         <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-muted">
           Abonnement annuel {formatEuroWhole(GROWTH_PLAN_ANNUAL_EUR)} HT, réglé par carte via Stripe.
-          Les dépôts de {INTEREST_DEPOSIT_LABEL} restent un engagement de démo, sans
-          encaissement.
+          {CESSION_FUNDS_DISCLAIMER}
         </p>
         {invoices.length > 0 ? (
           <ul className="mt-5 divide-y divide-line">

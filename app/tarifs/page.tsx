@@ -19,6 +19,7 @@ import { formatEuroWhole } from "@/lib/format/number";
 import { safeInternalPath } from "@/lib/nav/safe-next";
 import { CERTIFIED_BADGE, CERTIFIED_LABEL } from "@/lib/site";
 import { presentPartners } from "@/lib/partners/status";
+import { CESSION_FUNDS_DISCLAIMER } from "@/lib/partners/catalog";
 import { PartnerStrip } from "@/components/partners/partner-grid";
 import {
   ACCESS_MARKET_POINTS,
@@ -201,7 +202,7 @@ export default async function TarifsPage({
       <section className="bg-page px-4 pb-2 pt-2">
         <div className="mx-auto max-w-5xl rounded-3xl border border-line bg-paper px-5 py-5">
           <p className="text-center text-[13px] font-medium text-ink">
-            Stripe, Trustap, Yousign, DocuSign. La bourse ne reçoit pas le prix de cession.
+            Stripe, Trustap, Yousign, DocuSign, Ondorse, CrediPro. La bourse ne reçoit pas le prix de cession.
           </p>
           <div className="mt-3 flex justify-center">
             <PartnerStrip partners={partners} />
@@ -538,7 +539,7 @@ export default async function TarifsPage({
           </h2>
           <p className="mt-3 text-[15px] leading-relaxed text-muted">
             Déposez une annonce sans frais, ou ouvrez l’accès au détail de
-            l’offre. Aucun paiement réel en démo.
+            l’offre. {CESSION_FUNDS_DISCLAIMER}
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             <Button asChild variant="primary" size="lg">

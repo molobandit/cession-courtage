@@ -7,6 +7,7 @@ import { RankedBars } from "@/components/charts/ranked-bars";
 import { ConcentrationMeter } from "@/components/charts/concentration-meter";
 import { UNCERTIFIED_LABEL } from "@/lib/copy/market";
 import { GROWTH_PLAN_ANNUAL_EUR, INTEREST_DEPOSIT_LABEL } from "@/lib/billing/rates";
+import { CESSION_FUNDS_DISCLAIMER } from "@/lib/partners/catalog";
 import { formatCount, formatEuroWhole } from "@/lib/format/number";
 import { groupMaturityByYear, type MaturityBucket, type Share } from "@/lib/portfolio/analytics";
 import { hasQualityFigures, qualityFactRows, type PortfolioQuality } from "@/lib/portfolio/quality";
@@ -363,7 +364,7 @@ export function PublicListingDetail({
             <p className="mt-3 text-[12px] leading-relaxed text-muted">
               Abonnement {GROWTH_PLAN_ANNUAL_EUR.toLocaleString("fr-FR")} € HT / an
               pour le contact. Anonymat jusqu’au dépôt de {INTEREST_DEPOSIT_LABEL} (
-              {formatEuroWhole(deposit)}). Aucun débit en démo.{" "}
+              {formatEuroWhole(deposit)}). {CESSION_FUNDS_DISCLAIMER}{" "}
               <Link href="/partenaires" className="font-medium text-indigo-dark underline-offset-2 hover:underline">
                 Paiement sécurisé
               </Link>

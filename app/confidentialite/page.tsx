@@ -127,12 +127,12 @@ export default function ConfidentialitePage() {
           qu’à la signature de la lettre d’intention, et jamais avant.
         </p>
         <p>
-          Les prestataires prévus (Stripe, Trustap, Yousign ou DocuSign, et le
-          partenaire de conformité) ne reçoivent des données que lorsque leur
-          contrat est validé et que le rail correspondant est actif. Avant cela,
-          aucune pièce d’identité ni aucun fonds de cession ne leur est transmis.
-          Stripe, lorsqu’il est configuré, traite le règlement de l’abonnement.
-          Aucune coordonnée bancaire complète n’est stockée par l’éditeur.
+          Les prestataires prévus (Stripe, Trustap, Yousign ou DocuSign, Ondorse,
+          CrediPro) ne reçoivent des données que lorsque leur contrat est validé
+          et que le rail correspondant est actif. Avant cela, aucune pièce
+          d’identité ni aucun fonds de cession ne leur est transmis. Stripe,
+          lorsqu’il est configuré, traite le règlement de l’abonnement. Aucune
+          coordonnée bancaire complète n’est stockée par l’éditeur.
         </p>
       </LegalSection>
 

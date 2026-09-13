@@ -21,6 +21,7 @@ import {
 import { isOfferWindowSealed, ownsFirm } from "@/lib/authz/policies";
 import { hasContactSubscription } from "@/lib/billing/contact-access";
 import { GROWTH_PLAN_ANNUAL_EUR, INTEREST_DEPOSIT_LABEL, interestDepositFor } from "@/lib/billing/rates";
+import { CESSION_FUNDS_DISCLAIMER } from "@/lib/partners/catalog";
 import { EMPTY_CELL, formatDateTime } from "@/lib/format/fr";
 import { formatEuroWhole } from "@/lib/format/number";
 import { LISTING_STATUS_LABELS, RISK_TYPE_LABELS, SEGMENT_LABELS } from "@/lib/labels";
@@ -306,7 +307,7 @@ export default async function PublicListingPage({
               <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-muted">
                 Un compte investisseur, sans ORIAS, permet de déposer {INTEREST_DEPOSIT_LABEL} du
                 prix demandé ({formatEuroWhole(deposit)}) pour ouvrir les coordonnées du cabinet
-                cédant. Les assurés restent anonymes. Aucun encaissement en démo.
+                cédant. Les assurés restent anonymes. {CESSION_FUNDS_DISCLAIMER}
               </p>
               <div className="mt-5 flex flex-wrap gap-3">
                 <Button asChild variant="primary">
@@ -338,10 +339,10 @@ export default async function PublicListingPage({
               <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-muted">
                 Le cabinet reste sous alias tant que rien ne vous engage. Un dépôt de{" "}
                 {INTEREST_DEPOSIT_LABEL} du prix demandé, soit {formatEuroWhole(deposit)}, ouvre
-                ses coordonnées. Les assurés du portefeuille ne sont jamais nominatifs. Aucun
-                encaissement sur cette démonstration.
+                ses coordonnées. Les assurés du portefeuille ne sont jamais nominatifs.{" "}
+                {CESSION_FUNDS_DISCLAIMER}
               </p>
-              <InvestorDepositForm listingId={listing.id} amountLabel={formatEuroWhole(deposit)} />
+              <InvestorDepositForm listingId={listing.id} amountLabel={formatEuroWhole(deposit)} amountEur={deposit} />
             </>
           )}
         </section>
@@ -355,7 +356,7 @@ export default async function PublicListingPage({
             {GROWTH_PLAN_ANNUAL_EUR.toLocaleString("fr-FR")} € HT par an ouvre le
             détail de l’offre (contact, messages). Le vendeur reste anonyme
             jusqu’au dépôt de {INTEREST_DEPOSIT_LABEL} (
-            {formatEuroWhole(deposit)}). Aucun encaissement sur cette démo.
+            {formatEuroWhole(deposit)}). {CESSION_FUNDS_DISCLAIMER}
           </p>
           <div className="mt-5 flex flex-wrap gap-3">
             {!actor ? (
@@ -400,11 +401,9 @@ export default async function PublicListingPage({
                 <span className="tabular font-medium text-ink">
                   {formatEuroWhole(deposit)}
                 </span>
-                , ouvre l’échange des coordonnées entre vous et lui. Aucun
-                encaissement sur cette démonstration : l’enregistrement vaut
-                engagement.
+                , ouvre l’échange des coordonnées entre vous et lui. {CESSION_FUNDS_DISCLAIMER}
               </p>
-              <DepositForm listingId={listing.id} amountLabel={formatEuroWhole(deposit)} />
+              <DepositForm listingId={listing.id} amountLabel={formatEuroWhole(deposit)} amountEur={deposit} />
             </>
           )}
         </section>
