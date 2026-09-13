@@ -1,10 +1,23 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { getActor, isOriasVerified } from "@/lib/authz/actor";
+import { stripeConfigured, stripeCreatePaymentCheckout } from "@/lib/billing/stripe";
 import { prisma } from "@/lib/prisma";
-import { hasAnyService, type DirectServices } from "@/lib/direct/fees";
-import { canAdvance, type DirectStage } from "@/lib/direct/stages";
+import { feeLines, feesTotal, hasAnyService, type DirectServices } from "@/lib/direct/fees";
+import { DIRECT_FEES_KIND } from "@/lib/direct/fees-payment";
+import {
+  carriersEditable,
+  feesTtcCents,
+  parseCarrierLines,
+  readTransferCarriers,
+  transferBlockers,
+} from "@/lib/direct/services";
+import { canAdvance, stepByKey, type DirectStage } from "@/lib/direct/stages";
+import { formatEuroWhole } from "@/lib/format/number";
+import { notifyDirectDealAdvanced, notifyDirectDealInvited } from "@/lib/notify/transactional";
+import { siteUrl } from "@/lib/site";
 import { directDealSchema, firstIssue } from "@/lib/validations/actions";
 import {
   holdDirectEscrow,
@@ -88,7 +101,23 @@ export async function openDirectDealAction(
     },
   });
 
+  /*
+   * L'invitation part vraiment. Sans elle, la contrepartie n'apprend l'existence
+   * du dossier que si l'on pense à la prévenir soi-même — et le dossier reste
+   * bloqué à l'étape que seule elle peut franchir.
+   */
+  await notifyDirectDealInvited({
+    dealId: dossier.id,
+    to: counterpartyEmail.toLowerCase(),
+    inviterAlias: actor.publicAlias,
+    portfolioLabel: parsed.data.portfolioLabel,
+    priceLabel: formatEuroWhole(parsed.data.salePrice),
+    services: feeLines({ services, salePrice: parsed.data.salePrice, escrowedAmount: 0 }).map((l) => l.label),
+    hasAccount: Boolean(contrepartie && !contrepartie.erasedAt),
+  });
+
   revalidatePath("/app/formaliser");
+  revalidatePath("/app");
   return { id: dossier.id };
 }
 
@@ -133,6 +162,33 @@ export async function advanceDirectDealAction(
       return { error: "Cette étape n’est pas celle qui vient." };
     }
 
+    const estOuvreur = deal.openedById === actor.id;
+
+    // Un accord ne se donne pas à soi-même : c'est l'autre partie qui confirme.
+    if (cible === "ACCEPTED" && estOuvreur) {
+      return { error: "L’accord doit venir de la contrepartie. Elle a reçu l’invitation par e-mail." };
+    }
+
+    /*
+     * Les honoraires sont réglés avant qu'un prestataire ne travaille : la
+     * vérification, l'acte, le séquestre et les attestations ont un coût dès
+     * qu'on les déclenche. Tant que le paiement en ligne est fermé, rien n'est
+     * exigé — on ne bloque pas un dossier sur un guichet qui n'existe pas.
+     */
+    if (cible !== "ACCEPTED" && !deal.feesPaidAt && stripeConfigured()) {
+      return { error: "Réglez les honoraires pour poursuivre." };
+    }
+
+    if (cible === "TRANSFER") {
+      const manques = transferBlockers({
+        carriers: readTransferCarriers(deal.carriers),
+        effectiveDate: deal.transferEffectiveDate,
+      });
+      if (manques.length > 0) {
+        return { error: `Avant les attestations, renseignez ${manques.join(" et ")}.` };
+      }
+    }
+
     /*
      * L'étape est exécutée avant d'être enregistrée.
      *
@@ -156,9 +212,7 @@ export async function advanceDirectDealAction(
 
     // La contrepartie qui confirme se rattache au dossier par la même occasion.
     const rattachement =
-      cible === "ACCEPTED" && !deal.counterpartyUserId && deal.openedById !== actor.id
-        ? { counterpartyUserId: actor.id }
-        : {};
+      cible === "ACCEPTED" && !deal.counterpartyUserId ? { counterpartyUserId: actor.id } : {};
 
     await prisma.directDeal.update({
       where: { id: deal.id },
@@ -179,10 +233,138 @@ export async function advanceDirectDealAction(
       },
     });
 
+    // L'autre partie est prévenue ; celle qui vient d'agir le sait déjà.
+    const ouvreur = await prisma.user.findUnique({
+      where: { id: deal.openedById },
+      select: { id: true, email: true },
+    });
+    const parties = [
+      ouvreur ? { userId: ouvreur.id, email: ouvreur.email } : null,
+      { userId: deal.counterpartyUserId ?? (estOuvreur ? null : actor.id), email: deal.counterpartyEmail },
+    ].filter((p): p is { userId: string | null; email: string } => p !== null);
+    await notifyDirectDealAdvanced({
+      dealId: deal.id,
+      stage: cible,
+      stageLabel: stepByKey(cible).label,
+      portfolioLabel: deal.portfolioLabel,
+      recipients: parties.filter((p) => p.email.toLowerCase() !== actor.email.toLowerCase()),
+    });
+
     revalidatePath(`/app/formaliser/${deal.id}`);
     revalidatePath("/app/formaliser");
+    revalidatePath("/app");
     return {};
   } catch (error) {
     return { error: error instanceof Error ? error.message : "Étape impossible." };
   }
+}
+
+/**
+ * Compagnies et date d'effet, pour les attestations.
+ *
+ * Les deux parties peuvent les tenir à jour — c'est souvent l'acquéreur qui a
+ * les codes sous les yeux — mais seulement jusqu'à l'étape des attestations.
+ */
+export async function saveDirectCarriersAction(
+  _prev: DirectDealState,
+  formData: FormData,
+): Promise<DirectDealState> {
+  try {
+    const { actor, deal } = await loadDirectDeal(String(formData.get("dealId") ?? ""));
+    const services: DirectServices = {
+      kit: deal.kit,
+      escrow: deal.escrow,
+      attestations: deal.attestations,
+    };
+    if (!carriersEditable(deal.stage as DirectStage, services)) {
+      return { error: "Les attestations sont émises : la liste des compagnies est figée." };
+    }
+
+    const carriers = parseCarrierLines(String(formData.get("carriers") ?? ""));
+    const brute = String(formData.get("effectiveDate") ?? "").trim();
+    let effectiveDate: Date | null = null;
+    if (brute) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(brute)) return { error: "Date d’effet invalide." };
+      effectiveDate = new Date(`${brute}T12:00:00Z`);
+      const an = 365 * 24 * 60 * 60 * 1000;
+      if (
+        Number.isNaN(effectiveDate.getTime()) ||
+        effectiveDate.getTime() < Date.now() - an ||
+        effectiveDate.getTime() > Date.now() + 2 * an
+      ) {
+        return { error: "La date d’effet doit se situer entre l’an dernier et les deux ans à venir." };
+      }
+    }
+
+    await prisma.directDeal.update({
+      where: { id: deal.id },
+      data: { carriers, transferEffectiveDate: effectiveDate },
+    });
+    await prisma.auditLog.create({
+      data: {
+        actorId: actor.id,
+        action: "direct.carriers_saved",
+        entityType: "DirectDeal",
+        entityId: deal.id,
+        metadata: { count: carriers.length },
+      },
+    });
+
+    revalidatePath(`/app/formaliser/${deal.id}`);
+    return { id: deal.id };
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "Enregistrement impossible." };
+  }
+}
+
+/**
+ * Règlement des honoraires par carte.
+ *
+ * L'une ou l'autre partie peut payer : qui prend en charge les frais se
+ * convient entre elles, la plateforme n'a pas à trancher. Le montant est
+ * recalculé ici, jamais lu dans le formulaire.
+ */
+export async function startDirectFeesCheckoutAction(
+  _prev: DirectDealState,
+  formData: FormData,
+): Promise<DirectDealState> {
+  let destination: string | null = null;
+  try {
+    const { actor, deal } = await loadDirectDeal(String(formData.get("dealId") ?? ""));
+    if (deal.feesPaidAt) return { error: "Les honoraires sont déjà réglés." };
+    // Rien n'est encaissé sur un dossier que la contrepartie n'a pas accepté.
+    if (deal.stage === "INVITED") {
+      return { error: "Les honoraires se règlent une fois les conditions confirmées par la contrepartie." };
+    }
+    if (!stripeConfigured()) return { error: "Le paiement en ligne n’est pas encore ouvert." };
+
+    const services: DirectServices = {
+      kit: deal.kit,
+      escrow: deal.escrow,
+      attestations: deal.attestations,
+    };
+    const prix = Number(deal.salePrice);
+    const sequestre = Math.round(prix * (Number(deal.upfrontPercent) / 100) * 100) / 100;
+    const lignes = feeLines({ services, salePrice: prix, escrowedAmount: sequestre });
+    const montant = feesTtcCents(feesTotal(lignes));
+    if (montant <= 0) return { error: "Aucun honoraire à régler sur ce dossier." };
+
+    const origine = siteUrl();
+    const session = await stripeCreatePaymentCheckout({
+      userId: actor.id,
+      email: actor.email,
+      amountCents: montant,
+      name: `Services à la carte — ${lignes.map((l) => l.label).join(", ")}`,
+      description: `${deal.portfolioLabel} · ${formatEuroWhole(feesTotal(lignes))} HT + TVA`,
+      metadata: { kind: DIRECT_FEES_KIND, directDealId: deal.id },
+      successUrl: `${origine}/app/formaliser/${deal.id}?session_id={CHECKOUT_SESSION_ID}`,
+      cancelUrl: `${origine}/app/formaliser/${deal.id}`,
+    });
+    if (!session.url) return { error: "Session de paiement incomplète." };
+    destination = session.url;
+  } catch (error) {
+    console.error("startDirectFeesCheckoutAction", error);
+    return { error: error instanceof Error ? error.message : "Paiement impossible pour le moment." };
+  }
+  redirect(destination);
 }

@@ -13,7 +13,12 @@ import { prisma } from "@/lib/prisma";
 // Importés directement : l'alias de vitest ne vaut pas pour tsc.
 import { disposePlatformProxy } from "./setup/prisma-test";
 import { connecterUtilisateur } from "./setup/auth-stub";
-import { advanceDirectDealAction, openDirectDealAction } from "@/app/actions/direct-deals";
+import {
+  advanceDirectDealAction,
+  openDirectDealAction,
+  saveDirectCarriersAction,
+} from "@/app/actions/direct-deals";
+import { handleStripeEvent } from "@/lib/billing/handle-stripe-event";
 
 let cedant: { id: string; email: string; kycStatus: string };
 let acquereur: { id: string; email: string; kycStatus: string };
@@ -62,6 +67,8 @@ afterAll(async () => {
   }
   for (const id of crees) {
     await prisma.auditLog.deleteMany({ where: { entityType: "DirectDeal", entityId: id } });
+    await prisma.outboundEmail.deleteMany({ where: { dedupeKey: { startsWith: `direct:${id}:` } } });
+    await prisma.notification.deleteMany({ where: { href: `/app/formaliser/${id}` } });
     await prisma.directDeal.delete({ where: { id } }).catch(() => undefined);
   }
   await disposePlatformProxy();
@@ -124,6 +131,127 @@ describe("le dossier n’appartient qu’à ses deux parties", () => {
   });
 });
 
+/** Étape franchie par la bonne partie : l'accord vient de la contrepartie. */
+async function avancer(id: string, etape: string) {
+  connecterUtilisateur(etape === "ACCEPTED" ? acquereur.id : cedant.id);
+  const resultat = await advanceDirectDealAction({}, form({ dealId: id, stage: etape }));
+  connecterUtilisateur(cedant.id);
+  return resultat;
+}
+
+async function renseignerCompagnies(id: string) {
+  return saveDirectCarriersAction(
+    {},
+    form({ dealId: id, carriers: "AXA ; 123456\nAlptis", effectiveDate: new Date().toISOString().slice(0, 10) }),
+  );
+}
+
+describe("invitation et accord", () => {
+  it("envoie l’invitation à la contrepartie", async () => {
+    const resultat = await ouvrir({ attestations: "on" });
+    const mail = await prisma.outboundEmail.findUnique({
+      where: { dedupeKey: `direct:${resultat.id}:invited` },
+      select: { to: true },
+    });
+    expect(mail?.to).toBe(acquereur.email.toLowerCase());
+  });
+
+  it("refuse que l’ouvreur donne l’accord à la place de la contrepartie", async () => {
+    const resultat = await ouvrir({ kit: "on" });
+    const refus = await advanceDirectDealAction({}, form({ dealId: resultat.id!, stage: "ACCEPTED" }));
+    expect(refus.error).toContain("contrepartie");
+
+    const ok = await avancer(resultat.id!, "ACCEPTED");
+    expect(ok.error).toBeUndefined();
+  });
+
+  it("prévient l’autre partie quand une étape est franchie", async () => {
+    const resultat = await ouvrir({ kit: "on" });
+    await avancer(resultat.id!, "ACCEPTED");
+    const mail = await prisma.outboundEmail.findFirst({
+      where: { dedupeKey: { startsWith: `direct:${resultat.id}:ACCEPTED:` } },
+      select: { to: true },
+    });
+    expect(mail?.to).toBe(cedant.email);
+  });
+});
+
+describe("attestations de transfert", () => {
+  it("n’émet rien sans compagnie ni date d’effet", async () => {
+    const resultat = await ouvrir({ attestations: "on" });
+    const id = resultat.id!;
+    await avancer(id, "ACCEPTED");
+
+    const refus = await avancer(id, "TRANSFER");
+    expect(refus.error).toContain("compagnie");
+
+    const enregistre = await renseignerCompagnies(id);
+    expect(enregistre.error).toBeUndefined();
+    const deal = await prisma.directDeal.findUnique({ where: { id }, select: { carriers: true } });
+    expect(deal?.carriers).toEqual([
+      { name: "AXA", code: "123456" },
+      { name: "Alptis", code: "" },
+    ]);
+
+    const ok = await avancer(id, "TRANSFER");
+    expect(ok.error).toBeUndefined();
+  });
+
+  it("fige la liste une fois les attestations émises", async () => {
+    const resultat = await ouvrir({ attestations: "on" });
+    const id = resultat.id!;
+    await avancer(id, "ACCEPTED");
+    await renseignerCompagnies(id);
+    await avancer(id, "TRANSFER");
+
+    const refus = await renseignerCompagnies(id);
+    expect(refus.error).toContain("figée");
+  });
+
+  it("refuse une date d’effet fantaisiste", async () => {
+    const resultat = await ouvrir({ attestations: "on" });
+    const refus = await saveDirectCarriersAction(
+      {},
+      form({ dealId: resultat.id!, carriers: "AXA", effectiveDate: "2099-01-01" }),
+    );
+    expect(refus.error).toContain("date d’effet");
+  });
+});
+
+describe("règlement des honoraires", () => {
+  const session = (dealId: string, payment_status: string, id: string) => ({
+    type: "checkout.session.completed",
+    data: {
+      object: {
+        id,
+        payment_status,
+        amount_total: 10_680,
+        metadata: { kind: "direct_fees", directDealId: dealId, userId: cedant.id },
+      },
+    },
+  });
+
+  it("enregistre le paiement reçu par webhook, une seule fois", async () => {
+    const resultat = await ouvrir({ attestations: "on" });
+    const id = resultat.id!;
+
+    await handleStripeEvent(session(id, "unpaid", "cs_test_impaye"));
+    let deal = await prisma.directDeal.findUnique({ where: { id }, select: { feesPaidAt: true } });
+    expect(deal?.feesPaidAt).toBeNull();
+
+    await handleStripeEvent(session(id, "paid", "cs_test_premier"));
+    await handleStripeEvent(session(id, "paid", "cs_test_rejeu"));
+    const paye = await prisma.directDeal.findUnique({
+      where: { id },
+      select: { feesPaidAt: true, feesAmountCents: true, feesCheckoutSessionId: true },
+    });
+    expect(paye?.feesPaidAt).not.toBeNull();
+    expect(paye?.feesAmountCents).toBe(10_680);
+    // Le rejeu du webhook ne réécrit pas la trace du premier règlement.
+    expect(paye?.feesCheckoutSessionId).toBe("cs_test_premier");
+  });
+});
+
 describe("on avance d’un cran, jamais plus", () => {
   it("refuse de sauter une étape", async () => {
     const resultat = await ouvrir({ kit: "on" });
@@ -144,9 +272,10 @@ describe("on avance d’un cran, jamais plus", () => {
     const resultat = await ouvrir({ kit: "on", escrow: "on" });
     const id = resultat.id!;
     const etapes = ["ACCEPTED", "KYC", "DEED", "SIGNATURE", "ESCROW", "TRANSFER", "CLOSED"];
+    await renseignerCompagnies(id);
 
     for (const etape of etapes) {
-      const avance = await advanceDirectDealAction({}, form({ dealId: id, stage: etape }));
+      const avance = await avancer(id, etape);
       expect(avance.error).toBeUndefined();
     }
 
@@ -176,14 +305,15 @@ describe("on avance d’un cran, jamais plus", () => {
     // Sans séquestre acheté, on passe de la signature aux attestations.
     const resultat = await ouvrir({ kit: "on" });
     const id = resultat.id!;
+    await renseignerCompagnies(id);
     for (const etape of ["ACCEPTED", "KYC", "DEED", "SIGNATURE"]) {
-      await advanceDirectDealAction({}, form({ dealId: id, stage: etape }));
+      await avancer(id, etape);
     }
 
-    const refus = await advanceDirectDealAction({}, form({ dealId: id, stage: "ESCROW" }));
+    const refus = await avancer(id, "ESCROW");
     expect(refus.error).toContain("celle qui vient");
 
-    const ok = await advanceDirectDealAction({}, form({ dealId: id, stage: "TRANSFER" }));
+    const ok = await avancer(id, "TRANSFER");
     expect(ok.error).toBeUndefined();
 
     // Sans séquestre acheté, aucun fonds n'a jamais été bloqué.

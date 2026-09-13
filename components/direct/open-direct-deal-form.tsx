@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState, useState } from "react";
 import { openDirectDealAction, type DirectDealState } from "@/app/actions/direct-deals";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,7 @@ import {
   KIT_LABEL,
   feeLines,
   feesTotal,
+  type DirectServices,
 } from "@/lib/direct/fees";
 import { formatEuroWhole } from "@/lib/format/number";
 
@@ -25,11 +27,15 @@ const CHAMP = "mt-2 h-11 w-full rounded-md border border-line bg-surface-alt px-
  * doit pouvoir décocher une ligne et voir immédiatement ce qu'il économise.
  * Un total qui n'apparaît qu'à la fin se subit, il ne se choisit pas.
  */
-export function OpenDirectDealForm() {
+export function OpenDirectDealForm({
+  initialServices = { kit: true, escrow: false, attestations: false },
+}: {
+  initialServices?: DirectServices;
+}) {
   const [state, action, pending] = useActionState(openDirectDealAction, initial);
   const [prix, setPrix] = useState(0);
   const [comptant, setComptant] = useState(100);
-  const [services, setServices] = useState({ kit: true, escrow: false, attestations: false });
+  const [services, setServices] = useState<DirectServices>(initialServices);
 
   const sequestre = Math.round(prix * (comptant / 100) * 100) / 100;
   const lignes = feeLines({ services, salePrice: prix, escrowedAmount: sequestre });
@@ -37,9 +43,19 @@ export function OpenDirectDealForm() {
 
   if (state.id) {
     return (
-      <p className="rounded-2xl border border-indigo bg-indigo-soft/50 p-6 text-[15px] text-ink">
-        Dossier ouvert. La contrepartie est invitée à confirmer les conditions.
-      </p>
+      <div className="rounded-2xl border border-indigo bg-indigo-soft/50 p-6 text-[15px] text-ink">
+        <p className="font-semibold">Dossier ouvert.</p>
+        <p className="mt-1 text-muted">
+          La contrepartie vient de recevoir l’invitation par e-mail. Vous suivez tout depuis le
+          dossier.
+        </p>
+        <Link
+          href={`/app/formaliser/${state.id}`}
+          className="mt-4 inline-flex min-h-11 items-center rounded-full bg-indigo px-5 font-medium !text-white hover:bg-indigo-dark"
+        >
+          Ouvrir le dossier
+        </Link>
+      </div>
     );
   }
 
@@ -111,9 +127,9 @@ export function OpenDirectDealForm() {
         <ul className="grid gap-2">
           {(
             [
-              { cle: "kit" as const, titre: "Kit contractuel", detail: KIT_LABEL, aide: "Acte de cession, attestations, vérification des parties, signature électronique." },
-              { cle: "escrow" as const, titre: "Transaction sécurisée", detail: ESCROW_LABEL, aide: "Compte séquestre, fonds libérés en deux temps." },
-              { cle: "attestations" as const, titre: "Attestations de transfert", detail: ATTESTATIONS_LABEL, aide: "Générées et transmises à chaque fournisseur. Comprises dans le kit." },
+              { cle: "kit" as const, titre: "Kit contractuel", detail: KIT_LABEL, aide: "Accord de confidentialité, protocole de cession, attestations, vérification des parties, signature électronique." },
+              { cle: "escrow" as const, titre: "Transaction sécurisée", detail: ESCROW_LABEL, aide: "Le comptant est bloqué sur un compte séquestre, puis libéré à la clôture." },
+              { cle: "attestations" as const, titre: "Attestations de transfert", detail: ATTESTATIONS_LABEL, aide: "Une attestation par compagnie, prête à signer et à envoyer. Comprises dans le kit." },
             ]
           ).map((s) => (
             <li key={s.cle}>

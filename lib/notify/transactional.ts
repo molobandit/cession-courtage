@@ -276,3 +276,78 @@ export async function findFirmSeller(firmId: string): Promise<{ id: string; emai
     orderBy: { createdAt: "asc" },
   });
 }
+
+/**
+ * Dossier à la carte ouvert : la contrepartie est prévenue.
+ *
+ * Elle n'a pas forcément de compte : le courriel dit comment retrouver le
+ * dossier, et qu'il suffit de s'inscrire avec cette adresse.
+ */
+export async function notifyDirectDealInvited(input: {
+  dealId: string;
+  to: string;
+  inviterAlias: string;
+  portfolioLabel: string;
+  priceLabel: string;
+  services: string[];
+  hasAccount: boolean;
+}): Promise<void> {
+  await sendMail({
+    to: input.to,
+    purpose: "DIRECT_INVITED",
+    dedupeKey: `direct:${input.dealId}:invited`,
+    subject: `Un confrère vous invite à formaliser une cession — ${BRAND_NAME}`,
+    bodyText: [
+      "Bonjour,",
+      "",
+      `Le cabinet ${input.inviterAlias} a ouvert un dossier de cession avec vous sur ${BRAND_NAME}.`,
+      "",
+      `Portefeuille : ${input.portfolioLabel}`,
+      `Prix convenu : ${input.priceLabel}`,
+      `Services retenus : ${input.services.join(", ")}`,
+      "",
+      input.hasAccount
+        ? "Connectez-vous puis ouvrez « Services à la carte » pour confirmer les conditions."
+        : "Inscrivez-vous avec cette adresse : le dossier vous attendra dans « Services à la carte ».",
+      `Lien direct : /app/formaliser/${input.dealId}`,
+      "",
+      "Rien n’est engagé tant que vous n’avez pas confirmé.",
+      "",
+      `— ${BRAND_NAME}`,
+    ].join("\n"),
+  });
+}
+
+/** Étape franchie par une partie : l'autre l'apprend sans devoir surveiller l'écran. */
+export async function notifyDirectDealAdvanced(input: {
+  dealId: string;
+  stage: string;
+  stageLabel: string;
+  portfolioLabel: string;
+  recipients: { userId: string | null; email: string }[];
+}): Promise<void> {
+  for (const destinataire of input.recipients) {
+    await sendMail({
+      to: destinataire.email,
+      purpose: "DIRECT_STAGE",
+      dedupeKey: `direct:${input.dealId}:${input.stage}:${destinataire.email}`,
+      subject: `${input.stageLabel} — ${input.portfolioLabel}`,
+      bodyText: [
+        `Le dossier « ${input.portfolioLabel} » vient de franchir l’étape : ${input.stageLabel}.`,
+        "",
+        `Suivre le dossier : /app/formaliser/${input.dealId}`,
+        "",
+        `— ${BRAND_NAME}`,
+      ].join("\n"),
+    });
+    if (destinataire.userId) {
+      await notifyInApp({
+        userId: destinataire.userId,
+        type: NotificationType.DEAL_STAGE_CHANGED,
+        title: input.stageLabel,
+        body: input.portfolioLabel,
+        href: `/app/formaliser/${input.dealId}`,
+      });
+    }
+  }
+}

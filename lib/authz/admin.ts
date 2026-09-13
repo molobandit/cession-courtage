@@ -286,6 +286,7 @@ export async function listDirectDealsForOversight(actor: Actor) {
       escrow: true,
       attestations: true,
       counterpartyEmail: true,
+      feesPaidAt: true,
       createdAt: true,
       updatedAt: true,
       openedBy: { select: { publicAlias: true, email: true } },

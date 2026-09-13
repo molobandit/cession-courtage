@@ -26,6 +26,7 @@ export async function listMyDirectDeals(userId: string, email: string) {
       kit: true,
       escrow: true,
       attestations: true,
+      feesPaidAt: true,
       createdAt: true,
     },
   });

@@ -52,9 +52,9 @@ export function memberWorkspaceLinks(
       { href: "/annonces/demandes", label: "Demandes" },
     );
   }
-  // Le gré à gré s'adresse aux deux rôles : les parties se sont trouvées seules.
+  // Les services à la carte s'adressent aux deux rôles : les parties se sont trouvées seules.
   links.push(
-    { href: "/app/formaliser", label: "Gré à gré" },
+    { href: "/app/formaliser", label: "Services à la carte" },
     { href: "/app/outils", label: "Outils" },
     { href: "/app/profil", label: "Compte" },
   );

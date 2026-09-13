@@ -148,7 +148,7 @@ export default async function AdminDossiersPage() {
       </section>
 
       <section className="mt-10">
-        <h2 className="text-lg font-semibold text-ink">Gré à gré</h2>
+        <h2 className="text-lg font-semibold text-ink">Services à la carte</h2>
         <div className="mt-3 overflow-x-auto rounded-xl border border-line bg-surface">
           <table className="w-full min-w-[56rem] text-sm">
             <thead className="bg-surface-alt text-left text-xs uppercase tracking-wide text-muted">
@@ -199,6 +199,9 @@ export default async function AdminDossiersPage() {
                       <td className="px-3 py-3 text-right tabular">{formatEuroWhole(prix)}</td>
                       <td className="px-3 py-3 text-right tabular">
                         {formatEuroWhole(feesTotal(lignes))} HT
+                        <span className={`block text-[12px] ${d.feesPaidAt ? "text-ok" : "text-muted"}`}>
+                          {d.feesPaidAt ? `réglés le ${formatDate(d.feesPaidAt)}` : "non réglés"}
+                        </span>
                       </td>
                       <td className="px-3 py-3 text-[13px]">
                         {directStep(d.stage as DirectStage).label}

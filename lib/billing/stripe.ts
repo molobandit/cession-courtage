@@ -83,6 +83,7 @@ export type StripeCheckoutSession = {
   subscription: string | { id: string } | null;
   metadata: Record<string, string> | null;
   client_reference_id: string | null;
+  amount_total?: number | null;
 };
 export type StripeSubscription = {
   id: string;
@@ -137,6 +138,45 @@ export async function stripeCreateCheckoutSession(input: {
     "line_items[0][price_data][product_data][description]",
     `${GROWTH_PLAN_ANNUAL_EUR.toLocaleString("fr-FR")} € HT + TVA ${(VAT_RATE * 100).toLocaleString("fr-FR")} %`,
   );
+  return stripeRequest("POST", "/checkout/sessions", body);
+}
+
+/**
+ * Paiement unique par carte, sans abonnement.
+ *
+ * Aucun client Stripe n'est créé : l'adresse suffit au reçu, et un client par
+ * règlement ponctuel encombrerait le tableau de bord Stripe sans rien apporter.
+ * Les métadonnées disent ce que le paiement règle ; le webhook s'y fie.
+ */
+export async function stripeCreatePaymentCheckout(input: {
+  userId: string;
+  email: string;
+  amountCents: number;
+  name: string;
+  description: string;
+  metadata: Record<string, string>;
+  successUrl: string;
+  cancelUrl: string;
+}): Promise<StripeCheckoutSession> {
+  const body = new URLSearchParams();
+  body.set("mode", "payment");
+  body.set("customer_email", input.email);
+  body.set("client_reference_id", input.userId);
+  body.set("success_url", input.successUrl);
+  body.set("cancel_url", input.cancelUrl);
+  body.set("locale", "fr");
+  body.set("payment_method_types[0]", "card");
+  body.set("billing_address_collection", "required");
+  body.set("line_items[0][quantity]", "1");
+  body.set("line_items[0][price_data][currency]", "eur");
+  body.set("line_items[0][price_data][unit_amount]", String(input.amountCents));
+  body.set("line_items[0][price_data][product_data][name]", input.name);
+  body.set("line_items[0][price_data][product_data][description]", input.description);
+  body.set("metadata[userId]", input.userId);
+  for (const [cle, valeur] of Object.entries(input.metadata)) {
+    body.set(`metadata[${cle}]`, valeur);
+    body.set(`payment_intent_data[metadata][${cle}]`, valeur);
+  }
   return stripeRequest("POST", "/checkout/sessions", body);
 }
 

@@ -6,6 +6,7 @@ import {
   type StripeCheckoutSession,
   type StripeSubscription,
 } from "@/lib/billing/stripe";
+import { DIRECT_FEES_KIND, settleDirectFeesFromSession } from "@/lib/direct/fees-payment";
 
 type StripeEvent = {
   type: string;
@@ -15,6 +16,11 @@ type StripeEvent = {
 export async function handleStripeEvent(event: StripeEvent): Promise<void> {
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as unknown as StripeCheckoutSession;
+    // Honoraires d'un service à la carte : paiement unique, pas d'abonnement.
+    if (session.metadata?.kind === DIRECT_FEES_KIND) {
+      await settleDirectFeesFromSession(session);
+      return;
+    }
     const userId = session.metadata?.userId ?? session.client_reference_id;
     const customerId = stripeId(session.customer);
     const subscriptionId = stripeId(session.subscription);

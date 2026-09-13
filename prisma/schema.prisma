@@ -1041,6 +1041,14 @@ model DirectDeal {
   deedSignedAt         DateTime?
   signatureProviderRef String?
 
+  /// JSON [{ name, code }] : une attestation de transfert par compagnie.
+  carriers              Json      @default("[]")
+  transferEffectiveDate DateTime?
+  /// Honoraires réglés par carte, TTC, et la session Stripe qui en fait foi.
+  feesPaidAt            DateTime?
+  feesAmountCents       Int?
+  feesCheckoutSessionId String?
+
   openedBy           User      @relation("DirectDealOpened", fields: [openedById], references: [id], onDelete: Restrict)
   counterparty       User?     @relation("DirectDealCounterparty", fields: [counterpartyUserId], references: [id], onDelete: SetNull)
 
