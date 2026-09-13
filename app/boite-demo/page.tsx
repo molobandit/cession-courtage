@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma";
 export const metadata = { title: "Boîte démo" };
 
 export default async function DemoInboxPage() {
-  if (!isDemoInboxEnabled()) notFound();
+  if (!(await isDemoInboxEnabled())) notFound();
 
   const rows = await prisma.outboundEmail.findMany({
     orderBy: { createdAt: "desc" },

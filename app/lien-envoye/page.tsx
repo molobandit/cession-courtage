@@ -33,11 +33,13 @@ export default async function LinkSentPage({
           </a>
         </div>
       ) : null}
-      <p className="mt-6 text-sm">
-        <Link href="/boite-demo" className="underline-offset-2 hover:underline">
-          Ouvrir la boîte démo
-        </Link>
-      </p>
+      {demoLink ? (
+        <p className="mt-6 text-sm">
+          <Link href="/boite-demo" className="underline-offset-2 hover:underline">
+            Ouvrir la boîte démo
+          </Link>
+        </p>
+      ) : null}
     </main>
   );
 }
