@@ -165,7 +165,12 @@ export function MixDonut({
         </div>
       )}
 
-      {tete ? (
+      {tete && tete.share >= 0.995 ? (
+        <p className="mt-auto border-t border-line pt-4 text-[13px] leading-relaxed text-muted">
+          <span className="font-medium text-ink">{tete.label}</span> porte la totalité des commissions
+          ({formatEuroWhole(tete.value)} / an).
+        </p>
+      ) : tete ? (
         <p className="mt-auto border-t border-line pt-4 text-[13px] leading-relaxed text-muted">
           <span className="font-medium text-ink">{tete.label}</span> arrive en tête avec{" "}
           {pourcent(tete.share)} des commissions ({formatEuroWhole(tete.value)} / an)
