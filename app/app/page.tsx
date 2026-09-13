@@ -14,6 +14,7 @@ import {
   ActionGroup,
   ActionTile,
   GlanceCounter,
+  DossierCard,
   RecentPanel,
   SectionHeading,
 } from "@/components/app/toolbox";
@@ -260,32 +261,62 @@ export default async function MemberHomePage() {
         </ul>
       </section>
 
-      {directs.length > 0 ? (
-        <section className="mt-10" aria-labelledby="services-en-cours">
-          <SectionHeading icon="doc" title="Services à la carte en cours" id="services-en-cours" />
-          <div className="mt-5 grid gap-5">
-            {SERVICE_ENTRIES.map((entry) => {
-              const liste = directs.filter((d) => matchesFilter(d, entry.filter));
-              if (liste.length === 0) return null;
-              return (
-                <RecentPanel
-                  key={entry.key}
-                  icon={ICON_SERVICE[entry.key]}
-                  tone={TONE_SERVICE[entry.key]}
-                  title={entry.listTitle}
-                  count={liste.length}
-                  href={serviceListHref(entry)}
-                  emptyText={entry.emptyShort}
-                >
-                  {liste.slice(0, 3).map((d) => (
-                    <DirectDealCard key={d.id} deal={d} viewerId={actor.id} tone={TONE_SERVICE[entry.key]} />
-                  ))}
-                </RecentPanel>
-              );
-            })}
-          </div>
-        </section>
-      ) : null}
+      {/*
+       * Dossiers récents, présentés comme sur les plateformes que les courtiers
+       * connaissent : un bloc par famille, les trois derniers dossiers en cartes,
+       * et « Voir tout » pour la liste complète.
+       */}
+      <section className="mt-10" aria-labelledby="dossiers-recents">
+        <SectionHeading icon="doc" title="Dossiers récents" id="dossiers-recents" />
+        <div className="mt-5 grid gap-5">
+          <RecentPanel
+            icon="bag"
+            tone="sell"
+            title="Mes cessions"
+            count={cessions.length}
+            href="/app/cessions"
+            emptyText="Pas encore de cessions"
+          >
+            {cessions.length > 0
+              ? cessions.slice(0, 3).map(({ key, active: _active, ...item }) => <DossierCard key={key} {...item} />)
+              : null}
+          </RecentPanel>
+
+          <RecentPanel
+            icon="search"
+            tone="buy"
+            title="Mes achats"
+            count={achats.length}
+            href="/app/achats"
+            emptyText="Pas encore d’achats"
+          >
+            {achats.length > 0
+              ? achats.slice(0, 3).map(({ key, active: _active, ...item }) => <DossierCard key={key} {...item} />)
+              : null}
+          </RecentPanel>
+
+          {SERVICE_ENTRIES.map((entry) => {
+            const liste = directs.filter((d) => matchesFilter(d, entry.filter));
+            return (
+              <RecentPanel
+                key={entry.key}
+                icon={ICON_SERVICE[entry.key]}
+                tone={TONE_SERVICE[entry.key]}
+                title={entry.listTitle}
+                count={liste.length}
+                href={serviceListHref(entry)}
+                emptyText={entry.emptyShort}
+              >
+                {liste.length > 0
+                  ? liste.slice(0, 3).map((d) => (
+                      <DirectDealCard key={d.id} deal={d} viewerId={actor.id} tone={TONE_SERVICE[entry.key]} />
+                    ))
+                  : null}
+              </RecentPanel>
+            );
+          })}
+        </div>
+      </section>
 
     </main>
   );
