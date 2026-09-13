@@ -83,8 +83,10 @@ function fill(value: string | null | undefined): string {
   return v ? v : MISSING;
 }
 
+/** « 1er octobre 2026 » : le premier du mois s'écrit en ordinal dans un acte. */
 export function formatLongDate(value: Date | null): string {
-  return value ? dateLongue.format(value) : MISSING;
+  if (!value) return MISSING;
+  return dateLongue.format(value).replace(/^1 /, "1er ");
 }
 
 export function dealReference(dealId: string): string {
@@ -130,12 +132,12 @@ function signatories(ctx: DocumentContext) {
     {
       label: "Le cédant",
       name: fill(ctx.seller.legalName),
-      capacity: `Représenté par ${fill(ctx.seller.representative)}`,
+      capacity: `Représentée par ${fill(ctx.seller.representative)}`,
     },
     {
       label: "Le cessionnaire",
       name: fill(ctx.buyer.legalName),
-      capacity: `Représenté par ${fill(ctx.buyer.representative)}`,
+      capacity: `Représentée par ${fill(ctx.buyer.representative)}`,
     },
   ];
 }
@@ -326,7 +328,7 @@ export function buildTransferCertificate(
     sections: [
       {
         paragraphs: [
-          `Je soussigné(e) ${fill(vendeur.representative)}, agissant en qualité de ${fill(vendeur.jobTitle)} de ${describeFirm(vendeur)}, titulaire du code courtier ${fill(carrier.code)} auprès de ${carrier.name},`,
+          `Je soussigné(e) ${fill(vendeur.representative)}, agissant en qualité de ${vendeur.jobTitle?.trim() || "représentant légal"} de ${describeFirm(vendeur)}, titulaire du code courtier ${fill(carrier.code)} auprès de ${carrier.name},`,
           `atteste avoir cédé à ${describeFirm(acheteur)} le portefeuille des contrats souscrits par mon intermédiaire auprès de votre compagnie.`,
           `En conséquence, je vous demande de rattacher l’ensemble des contrats en cours enregistrés sous le code ${fill(carrier.code)}, ainsi que les commissions afférentes, au code du cessionnaire à compter du ${formatLongDate(ctx.effectiveDate)}.`,
           "Les commissions échues avant cette date restent dues au cédant.",

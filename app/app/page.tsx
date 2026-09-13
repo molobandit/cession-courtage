@@ -351,7 +351,7 @@ export default async function MemberHomePage() {
           <p className="mt-1 text-[14px] leading-relaxed text-muted">
             Nous menons la cession de bout en bout : aucun service à ajouter, tout est inclus.
           </p>
-          <ul className="mt-4 grid gap-3 sm:grid-cols-2">
+          <ul className={`mt-4 grid gap-3 ${seller && buyer ? "sm:grid-cols-2" : ""}`}>
             {[
               ...(seller
                 ? [
@@ -404,7 +404,9 @@ export default async function MemberHomePage() {
           <p className="mt-1 text-[14px] leading-relaxed text-muted">
             Prenez seulement ce qui vous manque : vous économisez, sans rien céder sur la sécurité.
           </p>
-          <ul className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+          <ul
+            className={`mt-4 grid gap-3 sm:grid-cols-2 ${serviceTiles.length > 4 ? "lg:grid-cols-5" : "lg:grid-cols-4"}`}
+          >
             {serviceTiles.map((t) => (
               <li key={t.title}>
                 <Link

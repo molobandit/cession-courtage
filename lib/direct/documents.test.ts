@@ -66,7 +66,7 @@ describe("protocole de cession", () => {
     expect(corps).toContain("40 000,00");
     expect(corps).toContain("24 000,00");
     expect(corps).toContain("16 000,00");
-    expect(corps).toContain("1 octobre 2026");
+    expect(corps).toContain("1er octobre 2026");
   });
 
   it("ne parle de séquestre que s’il a été pris", () => {
