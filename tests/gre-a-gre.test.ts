@@ -95,6 +95,13 @@ describe("ouverture d’un dossier", () => {
     expect(resultat.error).toContain("vous-même");
   });
 
+  it("accepte des attestations seules sans prix, mais pas un kit", async () => {
+    const attestations = await ouvrir({ attestations: "on" }, "0");
+    expect(attestations.id).toBeTruthy();
+    const kit = await ouvrir({ kit: "on" }, "0");
+    expect(kit.error).toContain("supérieur à zéro");
+  });
+
   it("ouvre le dossier et rattache une contrepartie déjà inscrite", async () => {
     const resultat = await ouvrir({ kit: "on", escrow: "on" });
     expect(resultat.id).toBeTruthy();

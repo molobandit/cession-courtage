@@ -15,6 +15,8 @@ import {
   carriersToLines,
   feesTtcCents,
   readTransferCarriers,
+  serviceByKey,
+  serviceListHref,
   transferBlockers,
 } from "@/lib/direct/services";
 import {
@@ -134,8 +136,8 @@ export default async function DirectDealPage({
   return (
     <main className="mx-auto max-w-3xl px-4 py-10">
       <p className="text-sm text-muted">
-        <Link href="/app/formaliser" className="underline-offset-2 hover:underline">
-          Services à la carte
+        <Link href={serviceListHref(serviceByKey(deal.kit ? "kit" : deal.escrow ? "escrow" : "attestations")!)} className="underline-offset-2 hover:underline">
+          {serviceByKey(deal.kit ? "kit" : deal.escrow ? "escrow" : "attestations")!.listTitle}
         </Link>
       </p>
       <h1 className="mt-2 text-3xl font-bold tracking-tight text-ink">

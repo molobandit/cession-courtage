@@ -11,6 +11,7 @@ import {
   carriersEditable,
   feesTtcCents,
   parseCarrierLines,
+  priceRequired,
   readTransferCarriers,
   transferBlockers,
 } from "@/lib/direct/services";
@@ -62,6 +63,9 @@ export async function openDirectDealAction(
   };
   if (!hasAnyService(services)) {
     return { error: "Choisissez au moins un service à formaliser." };
+  }
+  if (priceRequired(services) && parsed.data.salePrice <= 0) {
+    return { error: "Le prix doit être supérieur à zéro." };
   }
 
   const { counterpartyEmail } = parsed.data;

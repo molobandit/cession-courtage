@@ -4,6 +4,9 @@ import {
   carriersToLines,
   countByFilter,
   feesTtcCents,
+  listParams,
+  priceRequired,
+  serviceBySlug,
   matchesFilter,
   parseCarrierLines,
   presetServices,
@@ -87,5 +90,34 @@ describe("compagnies à transférer", () => {
   it("dit ce qui manque avant d’émettre", () => {
     expect(transferBlockers({ carriers: [], effectiveDate: null })).toHaveLength(2);
     expect(transferBlockers({ carriers: [{ name: "AXA", code: "" }], effectiveDate: new Date() })).toEqual([]);
+  });
+});
+
+describe("listes par service", () => {
+  it("retrouve le service depuis l’adresse", () => {
+    expect(serviceBySlug("transactions-securisees")?.key).toBe("escrow");
+    expect(serviceBySlug("inconnu")).toBeNull();
+  });
+
+  it("borne le tri et la pagination", () => {
+    expect(listParams({})).toEqual({ tri: "createdAt", ordre: "desc", parPage: 12, page: 1 });
+    expect(listParams({ tri: "updatedAt", ordre: "asc", parPage: "48", page: "3" })).toEqual({
+      tri: "updatedAt",
+      ordre: "asc",
+      parPage: 48,
+      page: 3,
+    });
+    expect(listParams({ tri: "x", parPage: "7", page: "-2" })).toEqual({
+      tri: "createdAt",
+      ordre: "desc",
+      parPage: 12,
+      page: 1,
+    });
+  });
+
+  it("n’exige un prix que du kit et du séquestre", () => {
+    expect(priceRequired(ATTESTATIONS)).toBe(false);
+    expect(priceRequired(KIT)).toBe(true);
+    expect(priceRequired(SEQUESTRE)).toBe(true);
   });
 });

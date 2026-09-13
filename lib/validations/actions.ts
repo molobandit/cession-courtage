@@ -360,9 +360,11 @@ export const directDealSchema = z.object({
     .trim()
     .min(3, "Décrivez le portefeuille en quelques mots.")
     .max(160, "Description trop longue."),
+  // Nul accepté : des attestations seules ne dépendent d'aucun prix. Le kit et
+  // le séquestre l'exigent, et l'action le vérifie service par service.
   salePrice: z.coerce
     .number()
-    .positive("Le prix doit être supérieur à zéro.")
+    .min(0, "Le prix ne peut pas être négatif.")
     .max(100_000_000, "Montant hors limites."),
   upfrontPercent: z.coerce
     .number()

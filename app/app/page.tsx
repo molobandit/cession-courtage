@@ -1,64 +1,55 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import {
   canBuy,
   canSell,
-  counterpartyDisplayName,
   getActor,
   isOriasVerified,
   listMyDeals,
   listMyListings,
   listMyMandates,
-  listMyOffers,
   listMyPortfolios,
   listPublicMandates,
 } from "@/lib/authz";
 import {
-  ActivityCard,
   CompactListingCard,
   CompactMandateCard,
   EmptyHint,
-  GlanceTiles,
   MarketplaceHero,
   Panel,
   PublishBanner,
   ToolTeaser,
 } from "@/components/app/dashboard-cards";
-import { ServiceIcon, type ServiceIconName } from "@/components/direct/service-icon";
+import {
+  ActionGroup,
+  ActionTile,
+  DossierCard,
+  GlanceCounter,
+  RecentPanel,
+  SectionHeading,
+} from "@/components/app/toolbox";
+import { DirectDealCard } from "@/components/direct/direct-deal-card";
 import { NextActionBanner } from "@/components/dashboard/next-action-banner";
 import { ReadinessPanel } from "@/components/dashboard/readiness-panel";
 import { nextAction } from "@/lib/dashboard/next-action";
-import { pipelineProgressPercent } from "@/lib/deal/pipeline";
-import { ATTESTATIONS_LABEL, ESCROW_LABEL, KIT_LABEL } from "@/lib/direct/fees";
+import { loadMemberDossiers } from "@/lib/dashboard/member-dossiers";
 import { listMyDirectDeals } from "@/lib/direct/load";
-import { SERVICE_ENTRIES, countByFilter, matchesFilter } from "@/lib/direct/services";
 import {
-  progressPercent as directProgress,
-  stepByKey as directStep,
-  type DirectStage,
-} from "@/lib/direct/stages";
+  SERVICE_ENTRIES,
+  countByFilter,
+  matchesFilter,
+  serviceCreateHref,
+  serviceListHref,
+} from "@/lib/direct/services";
 import { readinessAxes, readinessScore } from "@/lib/dashboard/readiness";
-import { formatCount, formatEuroWhole } from "@/lib/format/number";
+import { formatEuroWhole } from "@/lib/format/number";
 import { asStringArray } from "@/lib/json-array";
-import {
-  DEAL_STAGE_LABELS,
-  LISTING_STATUS_LABELS,
-  OFFER_STATUS_LABELS,
-  RISK_TYPE_LABELS,
-} from "@/lib/labels";
+import { RISK_TYPE_LABELS } from "@/lib/labels";
 import { loadPublicListingCards } from "@/lib/listing/load-public-cards";
 import { prisma } from "@/lib/prisma";
 
 export const metadata = { title: "Tableau de bord" };
 
 const DAY_MS = 24 * 60 * 60 * 1000;
-
-function listingTone(status: string): "indigo" | "ok" | "warn" | "mute" {
-  if (status === "UNDER_NEGOTIATION" || status === "SOLD") return "ok";
-  if (status === "DRAFT" || status === "OFFERS_CLOSED") return "warn";
-  if (status === "WITHDRAWN") return "mute";
-  return "indigo";
-}
 
 export default async function MemberHomePage() {
   const actor = await getActor();
@@ -69,12 +60,11 @@ export default async function MemberHomePage() {
   const seller = canSell(actor);
   const buyer = canBuy(actor);
 
-  const [portfolios, listings, mandates, offers, deals, publicListings, publicMandates, directs] =
+  const [portfolios, listings, mandates, deals, publicListings, publicMandates, directs] =
     await Promise.all([
       seller ? listMyPortfolios(actor) : Promise.resolve([]),
       seller ? listMyListings(actor) : Promise.resolve([]),
       buyer ? listMyMandates(actor) : Promise.resolve([]),
-      buyer ? listMyOffers(actor) : Promise.resolve([]),
       listMyDeals(actor),
       loadPublicListingCards(),
       listPublicMandates(),
@@ -146,86 +136,12 @@ export default async function MemberHomePage() {
 
   const recentListings = publicListings.slice(0, 3);
   const recentMandates = publicMandates.slice(0, 3);
-  const recentDeals = activeDeals.slice(0, 4);
-  const myListings = listings.slice(0, 4);
-  const myPortfolios = portfolios.slice(0, 3);
-  const myOffers = offers.slice(0, 3);
-  const myMandates = mandates.slice(0, 3);
 
-  /*
-   * Vos dossiers en un coup d'œil : les deux parcours côte à côte. Le parcours
-   * intermédié se compte en annonces et en offres, les services à la carte en
-   * dossiers — un kit pris avec un séquestre compte dans les deux listes, parce
-   * qu'on le cherchera dans l'une comme dans l'autre.
-   */
+  const { cessions, achats } = await loadMemberDossiers(actor);
   const directCounts = countByFilter(directs);
-  const glance = [
-    {
-      href: "#mes-cessions",
-      label: "Mes cessions",
-      value: formatCount(seller ? listings.length : deals.filter((d) => d.sellerId === actor.id).length),
-    },
-    {
-      href: "#mes-achats",
-      label: "Mes achats",
-      value: formatCount(buyer ? offers.length : deals.filter((d) => d.buyerId === actor.id).length),
-    },
-    ...SERVICE_ENTRIES.map((entry) => ({
-      href: `/app/formaliser?dossiers=${entry.filter}#dossiers`,
-      label: entry.listTitle,
-      value: formatCount(directCounts[entry.filter]),
-    })),
-  ];
-
-  const serviceTiles: {
-    icon: ServiceIconName;
-    title: string;
-    detail: string;
-    price?: string;
-    href: string;
-  }[] = [
-    {
-      icon: "kit",
-      title: "Kit contractuel",
-      detail: "Confidentialité, protocole et attestations, prêts à signer.",
-      price: KIT_LABEL,
-      href: "/app/formaliser?service=kit#nouveau",
-    },
-    {
-      icon: "escrow",
-      title: "Transaction sécurisée",
-      detail: "Le prix bloqué sur un séquestre, libéré à la clôture.",
-      price: ESCROW_LABEL,
-      href: "/app/formaliser?service=escrow#nouveau",
-    },
-    {
-      icon: "attestations",
-      title: "Attestations de transfert",
-      detail: "Une par compagnie, prête à envoyer.",
-      price: ATTESTATIONS_LABEL,
-      href: "/app/formaliser?service=attestations#nouveau",
-    },
-    ...(seller
-      ? [
-          {
-            icon: "listing" as const,
-            title: "Créer une annonce",
-            detail: "Mettre en vente sous alias, sans frais de dépôt.",
-            href: portfolios.length > 0 ? "/app/annonces/nouvelle" : "/app/import",
-          },
-        ]
-      : []),
-    ...(buyer
-      ? [
-          {
-            icon: "wanted" as const,
-            title: "Annonce d’achat",
-            detail: "Décrivez le portefeuille que vous cherchez.",
-            href: "/app/mandats",
-          },
-        ]
-      : []),
-  ];
+  const annonceHref = portfolios.length > 0 ? "/app/annonces/nouvelle" : "/app/import";
+  const TONE_SERVICE = { kit: "kit", escrow: "escrow", attestations: "attestations" } as const;
+  const ICON_SERVICE = { kit: "clipboard", escrow: "shield", attestations: "file-check" } as const;
 
   const tools = [
     ...(seller
@@ -336,293 +252,145 @@ export default async function MemberHomePage() {
         </Panel>
       </div>
 
-      <section className="mt-8" aria-labelledby="actions-rapides">
-        <h2 id="actions-rapides" className="text-xl font-bold tracking-tight text-ink">
-          Actions rapides
-        </h2>
-
-        <div className="mt-4 rounded-[1.75rem] border border-line bg-paper p-5 shadow-sm sm:p-6">
-          <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-            <h3 className="text-[17px] font-semibold text-ink">Parcours intermédié, tout compris</h3>
-            <span className="rounded-full bg-indigo-soft px-2.5 py-1 text-[12px] font-medium text-indigo-dark">
-              Accompagnement de A à Z
-            </span>
-          </div>
-          <p className="mt-1 text-[14px] leading-relaxed text-muted">
-            Nous menons la cession de bout en bout : aucun service à ajouter, tout est inclus.
-          </p>
-          <ul className={`mt-4 grid gap-3 ${seller && buyer ? "sm:grid-cols-2" : ""}`}>
-            {[
-              ...(seller
-                ? [
-                    {
-                      icon: "sell" as const,
-                      title: "Vendre",
-                      detail: "Mettre votre portefeuille en vente",
-                      href: portfolios.length > 0 ? "/app/annonces/nouvelle" : "/app/import",
-                    },
-                  ]
-                : []),
-              ...(buyer
-                ? [
-                    {
-                      icon: "buy" as const,
-                      title: "Acheter",
-                      detail: "Trouver un portefeuille",
-                      href: "/annonces",
-                    },
-                  ]
-                : []),
-            ].map((t) => (
-              <li key={t.title}>
-                <Link
-                  href={t.href}
-                  className="lift flex items-center gap-4 rounded-2xl border border-line bg-surface p-4 hover:border-indigo"
-                >
-                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-indigo text-white">
-                    <ServiceIcon name={t.icon} className="h-5 w-5" />
-                  </span>
-                  <span className="min-w-0">
-                    <span className="block text-[16px] font-semibold text-ink">{t.title}</span>
-                    <span className="block text-[14px] text-muted">{t.detail}</span>
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <div className="mt-4 rounded-[1.75rem] border border-line bg-paper p-5 shadow-sm sm:p-6">
-          <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-            <h3 className="text-[17px] font-semibold text-ink">
-              Boîte à malice : services à la carte, en toute autonomie
-            </h3>
-            <Link href="/app/formaliser" className="text-[14px] font-medium text-indigo-dark">
-              Tous les services
-            </Link>
-          </div>
-          <p className="mt-1 text-[14px] leading-relaxed text-muted">
-            Prenez seulement ce qui vous manque : vous économisez, sans rien céder sur la sécurité.
-          </p>
-          <ul
-            className={`mt-4 grid gap-3 sm:grid-cols-2 ${serviceTiles.length > 4 ? "lg:grid-cols-5" : "lg:grid-cols-4"}`}
+      {/*
+       * Actions rapides, dossiers en un coup d'œil, dossiers récents : la
+       * disposition que les courtiers connaissent déjà. Le parcours tout compris
+       * et les services à la carte côte à côte, pour que le choix se fasse d'un
+       * regard.
+       */}
+      <section className="mt-10 scroll-mt-24" id="actions-rapides" aria-labelledby="titre-actions-rapides">
+        <SectionHeading icon="bolt" title="Actions rapides" id="titre-actions-rapides" />
+        <div className="mt-5 grid items-start gap-5 lg:grid-cols-2">
+          <ActionGroup
+            icon="briefcase"
+            iconColor="#6d5dd3"
+            title="Parcours intermédié toutes options, avec assistance bout en bout"
+            lede="En choisissant ce parcours, vous n’avez pas besoin d’ajouter d’autres services car tout est compris."
           >
-            {serviceTiles.map((t) => (
-              <li key={t.title}>
-                <Link
-                  href={t.href}
-                  className="lift flex h-full flex-col rounded-2xl border border-line bg-surface p-4 hover:border-indigo"
-                >
-                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-soft text-indigo-dark">
-                    <ServiceIcon name={t.icon} className="h-5 w-5" />
-                  </span>
-                  <span className="mt-3 text-[15px] font-semibold leading-snug text-ink">{t.title}</span>
-                  <span className="mt-1 flex-1 text-[13px] leading-relaxed text-muted">{t.detail}</span>
-                  {t.price ? (
-                    <span className="mt-3 text-[12px] font-medium text-indigo-dark">{t.price}</span>
-                  ) : null}
-                </Link>
-              </li>
+            {seller ? (
+              <ActionTile href={annonceHref} icon="bag" tone="sell" title="Vendre" subtitle="Listez votre portefeuille" />
+            ) : null}
+            {buyer ? (
+              <ActionTile href="/annonces" icon="search" tone="buy" title="Acheter" subtitle="Trouvez un portefeuille" />
+            ) : null}
+          </ActionGroup>
+
+          <ActionGroup
+            icon="tools"
+            iconColor="#3f8c61"
+            title="Boîte à malice des services à la carte en toute autonomie"
+            lede="En choisissant l’un ou l’autre de ces services, vous réalisez des économies, tout en conservant un haut niveau de sécurité."
+          >
+            {SERVICE_ENTRIES.map((entry) => (
+              <ActionTile
+                key={entry.key}
+                href={serviceCreateHref(entry)}
+                icon={ICON_SERVICE[entry.key]}
+                tone={TONE_SERVICE[entry.key]}
+                title={entry.title}
+                subtitle={entry.tagline}
+              />
             ))}
-          </ul>
+            {seller ? (
+              <ActionTile href={annonceHref} icon="megaphone" tone="listing" title="Créer une annonce" subtitle="Mettre en vente" />
+            ) : null}
+            {buyer ? (
+              <ActionTile
+                href="/app/mandats"
+                icon="cart"
+                tone="wanted"
+                title="Annonce d’achat"
+                subtitle="Trouvez un portefeuille à acheter"
+              />
+            ) : null}
+          </ActionGroup>
         </div>
       </section>
 
-      <div className="mt-8">
-        <GlanceTiles items={glance} />
-      </div>
-
-      <div className="mt-8 grid gap-4 lg:grid-cols-2">
-        <div className="space-y-4">
-        {seller ? (
-          <div id="mes-cessions" className="scroll-mt-24">
-          <Panel title="Mes cessions" href="/app/annonces/nouvelle" action="Nouvelle annonce" count={listings.length}>
-            {myListings.length === 0 ? (
-              myPortfolios.length > 0 ? (
-                <ul className="grid gap-3">
-                  {myPortfolios.map((p) => (
-                    <ActivityCard
-                      key={p.id}
-                      href={`/app/portefeuilles/${p.id}`}
-                      kicker={p.valuations[0] ? "Valorisé" : "À valoriser"}
-                      kickerTone={p.valuations[0] ? "ok" : "warn"}
-                      title={p.label}
-                      facts={[
-                        { label: "Commissions", value: formatEuroWhole(Number(p.annualCommissions)) },
-                        {
-                          label: "Valorisation",
-                          value: p.valuations[0]
-                            ? formatEuroWhole(Number(p.valuations[0].midValue))
-                            : "Non calculée",
-                        },
-                      ]}
-                    />
-                  ))}
-                </ul>
-              ) : (
-                <EmptyHint
-                  text="Déposez un bordereau pour valoriser, puis publier sous alias."
-                  href="/app/import"
-                  label="Importer un bordereau"
-                />
-              )
-            ) : (
-              <ul className="grid gap-3">
-                {myListings.map((l) => (
-                  <ActivityCard
-                    key={l.id}
-                    href={`/app/annonces/${l.id}`}
-                    kicker={LISTING_STATUS_LABELS[l.status]}
-                    kickerTone={listingTone(l.status)}
-                    title={`Dossier n° ${l.publicNumber}`}
-                    facts={[
-                      { label: "Prix demandé", value: formatEuroWhole(Number(l.askingPrice)) },
-                      { label: "Zone", value: l.displayedZone },
-                    ]}
-                  />
-                ))}
-              </ul>
-            )}
-          </Panel>
-          </div>
-        ) : null}
-
-        {buyer ? (
-          <div id="mes-achats" className="scroll-mt-24">
-          <Panel title="Mes achats" href="/app/mandats" action="Mandats" count={offers.length + mandates.length}>
-            {myOffers.length === 0 && myMandates.length === 0 ? (
-              <EmptyHint
-                text="Décrivez une fois ce que vous cherchez. Les dossiers correspondants suivent."
-                href="/app/mandats"
-                label="Déposer un mandat"
-              />
-            ) : (
-              <ul className="grid gap-3">
-                {myOffers.map((o) => (
-                  <ActivityCard
-                    key={o.id}
-                    href={`/annonces/${o.listing.publicNumber}`}
-                    kicker={OFFER_STATUS_LABELS[o.status]}
-                    title={`Offre sur #${o.listing.publicNumber}`}
-                    facts={[
-                      { label: "Montant", value: formatEuroWhole(Number(o.amount)) },
-                      { label: "Zone", value: o.listing.displayedZone },
-                    ]}
-                  />
-                ))}
-                {myMandates.map((m) => (
-                  <ActivityCard
-                    key={m.id}
-                    href="/app/mandats"
-                    kicker="Mandat"
-                    kickerTone="mute"
-                    title={`Jusqu’à ${formatEuroWhole(Number(m.maxBudget))}`}
-                    facts={[
-                      {
-                        label: "Commissions",
-                        value: `${formatEuroWhole(Number(m.minCommissions))} à ${formatEuroWhole(Number(m.maxCommissions))}`,
-                      },
-                      { label: "Correspondances", value: formatCount(m._count.matches) },
-                    ]}
-                  />
-                ))}
-              </ul>
-            )}
-          </Panel>
-          </div>
-        ) : null}
-        </div>
-
-        <Panel
-          title="Projets en cours"
-          href={recentDeals[0] ? `/app/dossiers/${recentDeals[0].id}` : "/annonces"}
-          action={recentDeals.length > 0 ? "Ouvrir" : "Salle de marché"}
-          count={activeDeals.length}
-        >
-          {recentDeals.length === 0 ? (
-            <EmptyHint
-              text="Un projet s’ouvre lorsque vous retenez une offre, ou lorsqu’un cédant retient la vôtre."
-              href="/annonces"
-              label="Voir les annonces"
-            />
-          ) : (
-            <ul className="grid gap-3">
-              {recentDeals.map((d) => {
-                const isSeller = d.sellerId === actor.id;
-                const counterparty = isSeller ? d.buyer : d.seller;
-                return (
-                  <ActivityCard
-                    key={d.id}
-                    href={`/app/dossiers/${d.id}`}
-                    kicker={`${isSeller ? "Cession" : "Acquisition"} · ${DEAL_STAGE_LABELS[d.stage]}`}
-                    title={`Dossier n° ${d.listing.publicNumber}`}
-                    facts={[
-                      { label: "Prix convenu", value: formatEuroWhole(Number(d.agreedPrice)) },
-                      { label: "Contrepartie", value: counterpartyDisplayName(counterparty) },
-                      /*
-                       * L'avancement dans la liste, pas seulement dans la fiche :
-                       * la question que l'on se pose devant plusieurs dossiers est
-                       * « où en est celui-ci », et y répondre exige sinon d'ouvrir
-                       * chacun.
-                       */
-                      {
-                        label: "Avancement",
-                        value: `${pipelineProgressPercent(d.stage)} %`,
-                      },
-                    ]}
-                    cta="Ouvrir le projet"
-                  />
-                );
-              })}
-            </ul>
-          )}
-        </Panel>
-      </div>
-
-      <div className="mt-8 grid gap-4 lg:grid-cols-3">
-        {SERVICE_ENTRIES.map((entry) => {
-          const liste = directs.filter((d) => matchesFilter(d, entry.filter));
-          return (
-            <Panel
+      <section className="mt-10" aria-labelledby="vos-dossiers">
+        <SectionHeading icon="chart" title="Vos dossiers en un coup d’œil" id="vos-dossiers" />
+        <ul className="mt-5 grid grid-cols-1 gap-3 min-[420px]:grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
+          <GlanceCounter
+            href="/app/cessions"
+            icon="bag"
+            tone="sell"
+            value={cessions.length}
+            badge={cessions.filter((c) => c.active).length}
+            label="Mes cessions"
+          />
+          <GlanceCounter
+            href="/app/achats"
+            icon="search"
+            tone="buy"
+            value={achats.length}
+            badge={achats.filter((c) => c.active).length}
+            label="Mes achats"
+          />
+          {SERVICE_ENTRIES.map((entry) => (
+            <GlanceCounter
               key={entry.key}
-              title={entry.listTitle}
-              href={`/app/formaliser?dossiers=${entry.filter}#dossiers`}
-              action="Voir tout"
-              count={liste.length}
-            >
-              {liste.length === 0 ? (
-                <EmptyHint
-                  text={`Pas encore de dossier « ${entry.title.toLowerCase()} ».`}
-                  href={`/app/formaliser?service=${entry.key}#nouveau`}
-                  label={entry.heading}
-                />
-              ) : (
-                <ul className="grid gap-3">
-                  {liste.slice(0, 3).map((d) => {
-                    const services = { kit: d.kit, escrow: d.escrow, attestations: d.attestations };
-                    return (
-                      <ActivityCard
-                        key={d.id}
-                        href={`/app/formaliser/${d.id}`}
-                        kicker={directStep(d.stage as DirectStage).label}
-                        kickerTone={d.stage === "CLOSED" ? "ok" : "indigo"}
-                        title={d.portfolioLabel}
-                        facts={[
-                          { label: "Prix convenu", value: formatEuroWhole(Number(d.salePrice)) },
-                          {
-                            label: "Avancement",
-                            value: `${directProgress(d.stage as DirectStage, services)} %`,
-                          },
-                        ]}
-                      />
-                    );
-                  })}
-                </ul>
-              )}
-            </Panel>
-          );
-        })}
-      </div>
+              href={serviceListHref(entry)}
+              icon={ICON_SERVICE[entry.key]}
+              tone={TONE_SERVICE[entry.key]}
+              value={directCounts[entry.filter]}
+              label={entry.listTitle}
+            />
+          ))}
+        </ul>
+      </section>
+
+      <section className="mt-10" aria-labelledby="dossiers-recents">
+        <SectionHeading icon="doc" title="Dossiers récents" id="dossiers-recents" />
+        <div className="mt-5 grid gap-5">
+          <RecentPanel
+            icon="bag"
+            tone="sell"
+            title="Mes cessions"
+            count={cessions.length}
+            href="/app/cessions"
+            emptyText="Pas encore de cessions"
+          >
+            {cessions.length > 0
+              ? cessions.slice(0, 3).map(({ key, active: _active, ...item }) => <DossierCard key={key} {...item} />)
+              : null}
+          </RecentPanel>
+
+          <RecentPanel
+            icon="search"
+            tone="buy"
+            title="Mes achats"
+            count={achats.length}
+            href="/app/achats"
+            emptyText="Pas encore d’achats"
+          >
+            {achats.length > 0
+              ? achats.slice(0, 3).map(({ key, active: _active, ...item }) => <DossierCard key={key} {...item} />)
+              : null}
+          </RecentPanel>
+
+          {SERVICE_ENTRIES.map((entry) => {
+            const liste = directs.filter((d) => matchesFilter(d, entry.filter));
+            return (
+              <RecentPanel
+                key={entry.key}
+                icon={ICON_SERVICE[entry.key]}
+                tone={TONE_SERVICE[entry.key]}
+                title={entry.listTitle}
+                href={serviceListHref(entry)}
+                emptyText={entry.emptyShort}
+              >
+                {liste.length > 0
+                  ? liste
+                      .slice(0, 3)
+                      .map((d) => (
+                        <DirectDealCard key={d.id} deal={d} viewerId={actor.id} tone={TONE_SERVICE[entry.key]} />
+                      ))
+                  : null}
+              </RecentPanel>
+            );
+          })}
+        </div>
+      </section>
 
       {seller ? (
         <div className="mt-8">
