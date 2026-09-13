@@ -18,6 +18,7 @@ import {
   listListingMessages,
   listOffersForListing,
 } from "@/lib/authz";
+import { listingAcceptsOffers } from "@/lib/offer/acceptance";
 import { isOfferWindowSealed, ownsFirm } from "@/lib/authz/policies";
 import { hasContactSubscription } from "@/lib/billing/contact-access";
 import { GROWTH_PLAN_ANNUAL_EUR, INTEREST_DEPOSIT_LABEL, interestDepositFor } from "@/lib/billing/rates";
@@ -130,8 +131,7 @@ export default async function PublicListingPage({
       actor &&
       canBuy(actor) &&
       subscribed &&
-      listing.status === "OFFERS_OPEN" &&
-      sealed &&
+      listingAcceptsOffers(listing.status) &&
       !isSeller,
   );
 
@@ -413,9 +413,11 @@ export default async function PublicListingPage({
         <section id="offre" className="rounded-3xl border border-indigo-line bg-indigo-soft p-7">
           <h2 className="text-2xl font-semibold text-ink">Déposer une offre</h2>
           <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-muted">
-            Le cédant ne verra ni votre montant ni le nombre de propositions avant la
-            clôture. Aucun autre candidat ne verra votre offre.
-            {daysLeft !== null && daysLeft >= 0
+            {sealed
+              ? "Le cédant ne verra ni votre montant ni le nombre de propositions avant la clôture."
+              : "La fenêtre de 21 jours est close : votre offre est transmise tout de suite au cédant, qui peut la retenir sans attendre."}{" "}
+            Aucun autre candidat ne verra votre offre.
+            {sealed && daysLeft !== null && daysLeft >= 0
               ? ` Il reste ${daysLeft} jour${daysLeft > 1 ? "s" : ""}.`
               : ""}
           </p>
@@ -428,6 +430,15 @@ export default async function PublicListingPage({
                 </span>{" "}
                 est enregistrée. Posez vos questions au cédant dans l’échange ci-dessous.
                 Vous pouvez la retirer tant qu’elle n’a pas été retenue.
+              </p>
+            ) : !myDeposit ? (
+              /*
+               * Le dépôt vient d'abord : l'action le refuserait sinon, et
+               * découvrir la règle après avoir rempli le formulaire décourage.
+               */
+              <p className="text-[15px] leading-relaxed text-ink">
+                Étape 1 : versez le dépôt de garantie de {formatEuroWhole(deposit)} dans « Lever
+                l’anonymat » ci-dessus. Le formulaire d’offre s’ouvre juste après.
               </p>
             ) : (
               <SubmitOfferForm

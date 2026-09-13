@@ -36,7 +36,7 @@ export function ListingRecordCard({ item }: { item: PublicListingCard }) {
       </dl>
       <div className="mt-auto pt-6">
         <Link
-          href={`/annonces/${item.publicNumber}`}
+          href={`/annonces/${item.publicNumber}#position`}
           className="flex h-11 w-full items-center justify-center rounded-full bg-indigo text-center text-[14px] font-semibold leading-none !text-white hover:bg-indigo-dark"
         >
           Prendre position

@@ -243,7 +243,7 @@ describe("règlement des honoraires", () => {
     const id = resultat.id!;
 
     await handleStripeEvent(session(id, "unpaid", "cs_test_impaye"));
-    let deal = await prisma.directDeal.findUnique({ where: { id }, select: { feesPaidAt: true } });
+    const deal = await prisma.directDeal.findUnique({ where: { id }, select: { feesPaidAt: true } });
     expect(deal?.feesPaidAt).toBeNull();
 
     await handleStripeEvent(session(id, "paid", "cs_test_premier"));

@@ -19,6 +19,7 @@ import {
 } from "@/lib/listing/lot-availability";
 import { fullyCommitted } from "@/lib/listing/lots";
 import { findMyDeposit } from "@/lib/listing/deposit";
+import { listingAcceptsOffers } from "@/lib/offer/acceptance";
 import { INTEREST_DEPOSIT_LABEL } from "@/lib/billing/rates";
 import { firstIssue, offerIdSchema, offerSchema } from "@/lib/validations/actions";
 
@@ -63,8 +64,8 @@ export async function submitOfferAction(
     if (ownsFirm(actor, listing.portfolio.firmId)) {
       return { error: "Vous ne pouvez pas enchérir sur votre propre annonce." };
     }
-    if (listing.status !== ListingStatus.OFFERS_OPEN || !isOfferWindowSealed(listing)) {
-      return { error: "La fenêtre d'offres n'est pas ouverte." };
+    if (!listingAcceptsOffers(listing.status)) {
+      return { error: "Cette annonce ne reçoit plus d’offres." };
     }
 
     /*

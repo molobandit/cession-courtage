@@ -15,6 +15,8 @@ import { holdEscrowFunds, releaseEscrowFunds, signDealDocument, verifyPartyIdent
 import { prisma } from "@/lib/prisma";
 import { offPlatformPhoneError } from "@/lib/chat/phone-block";
 import { putObject } from "@/lib/storage/objects";
+import { listingLots, readCarriers } from "@/lib/listing/lot-availability";
+import { fullyCommitted } from "@/lib/listing/lots";
 
 export type DealFormState = { error?: string };
 
@@ -265,10 +267,28 @@ export async function closeDealAction(
     }
     await releaseEscrowFunds(deal.id);
     await prisma.deal.update({ where: { id: deal.id }, data: { stage: DealStage.CLOSED } });
-    await prisma.listing.update({
-      where: { id: deal.listingId },
-      data: { status: ListingStatus.SOLD },
+
+    /*
+     * L'annonce n'est vendue que lorsque tous ses fournisseurs le sont. Clore
+     * la reprise du seul lot AXA ne doit pas retirer du marché le Generali qui
+     * attend encore preneur.
+     */
+    const lots = await listingLots(deal.listingId);
+    const clos = await prisma.deal.findMany({
+      where: { listingId: deal.listingId, stage: DealStage.CLOSED },
+      select: { carriers: true },
     });
+    const tous = lots.map((l) => l.carrier);
+    const cedes = clos.map((d) => {
+      const c = readCarriers(d.carriers);
+      return c.length > 0 ? c : tous;
+    });
+    if (lots.length === 0 || fullyCommitted(lots, cedes)) {
+      await prisma.listing.update({
+        where: { id: deal.listingId },
+        data: { status: ListingStatus.SOLD },
+      });
+    }
 
     // Le dépôt a joué son rôle : il vient en déduction du prix, il n'est pas
     // remboursé à part — ce serait un mouvement d'argent dans les deux sens.

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { SectionTab, SectionTabs } from "@/components/ui/section-tabs";
+import { SectionTab, SectionTabLink, SectionTabs } from "@/components/ui/section-tabs";
 import { MarketStamp } from "@/components/listing/market-stamp";
 import { MixDonut } from "@/components/charts/mix-donut";
 import { RankedBars } from "@/components/charts/ranked-bars";
@@ -346,12 +346,12 @@ export function PublicListingDetail({
                 Continuer le dossier
               </Link>
             ) : (
-              <Link
+              <SectionTabLink
                 href={interestHref}
-                className="flex h-12 items-center justify-center rounded-full bg-indigo text-[15px] font-semibold !text-white"
+                className="flex h-12 items-center justify-center rounded-full bg-indigo text-[15px] font-semibold !text-white hover:bg-indigo-dark"
               >
                 Prendre position
-              </Link>
+              </SectionTabLink>
             )}
             {followHref ? (
               <Link
@@ -420,7 +420,11 @@ export function PublicListingDetail({
         </section>
 
         <div id="interesse" className="mt-8">
-          <SectionTabs defaultId={defaultTab ?? "informations"}>
+          {/*
+           * La clé suit l'onglet par défaut : après un dépôt ou une offre, la
+           * fiche revient sur « Position » au lieu de rester sur l'onglet d'avant.
+           */}
+          <SectionTabs key={defaultTab ?? "informations"} defaultId={defaultTab ?? "informations"}>
             <SectionTab id="informations" label="Informations">
               {information}
               {carriers ? <div className="mt-6">{carriers}</div> : null}
