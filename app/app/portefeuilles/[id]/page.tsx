@@ -4,10 +4,7 @@ import { Button } from "@/components/ui/button";
 import { RankedBars } from "@/components/charts/ranked-bars";
 import { MaturityColumns } from "@/components/charts/maturity-columns";
 import { CarrierCodesPanel } from "@/components/portfolio/carrier-codes-panel";
-import {
-  ConcentrationMeter,
-  MarketPositionCard,
-} from "@/components/charts/concentration-meter";
+import { MarketPositionCard } from "@/components/charts/concentration-meter";
 import { RecalculateValuationButton } from "@/components/valuation/recalculate-button";
 import {
   canSell,
@@ -27,15 +24,14 @@ import {
 import {
   breakdownBy,
   dominantSegment,
-  herfindahl,
   marketPosition,
   maturitySchedule,
-  topClientShare,
   type AnalyticsLine,
 } from "@/lib/portfolio/analytics";
 import { buildCarrierCodes, carrierRisk } from "@/lib/portfolio/carrier-codes";
 import { qualityFactRows, qualityFromPortfolio } from "@/lib/portfolio/quality";
 import { valuePortfolio } from "@/lib/valuation/run";
+import { ALGORITHM_VERSION } from "@/lib/valuation/types";
 import { parseValuationBreakdown } from "@/lib/valuation/parse";
 import { prisma } from "@/lib/prisma";
 
@@ -50,7 +46,8 @@ export default async function PortfolioPage({ params }: { params: Promise<{ id: 
   let portfolio = await findMyPortfolio(id, actor);
   if (!portfolio) redirect("/app");
 
-  if (portfolio.valuations.length === 0) {
+  // Une valorisation calculée avec une méthode retirée est recalculée à l'ouverture.
+  if (portfolio.valuations.length === 0 || portfolio.valuations[0].algorithmVersion !== ALGORITHM_VERSION) {
     await valuePortfolio(portfolio.id).catch(() => null);
     portfolio = (await findMyPortfolio(id, actor)) ?? portfolio;
   }
@@ -79,8 +76,6 @@ export default async function PortfolioPage({ params }: { params: Promise<{ id: 
   );
   const byDepartment = breakdownBy(lines, (l) => `Département ${l.department}`, 6);
 
-  const carrierHhi = herfindahl(byCarrier);
-  const top10 = topClientShare(lines);
   const schedule = maturitySchedule(lines, new Date());
   const position = valuation
     ? marketPosition(
@@ -100,8 +95,6 @@ export default async function PortfolioPage({ params }: { params: Promise<{ id: 
   );
   const codesRisk = carrierRisk(carrierCodes);
 
-  const carrierStatus = carrierHhi > 0.6 ? "penalisant" : carrierHhi >= 0.3 ? "surveiller" : "bon";
-  const clientStatus = top10 > 0.4 ? "penalisant" : top10 > 0.25 ? "surveiller" : "bon";
 
   const KPIS = [
     { label: "Commissions annuelles", value: formatEuroWhole(Number(portfolio.annualCommissions)) },
@@ -260,35 +253,6 @@ export default async function PortfolioPage({ params }: { params: Promise<{ id: 
           Ce sont les chiffres qu’un acquéreur demande systématiquement en
           vérification préalable. Les avoir prêts raccourcit la négociation.
         </p>
-
-        <div className="mt-5 grid gap-5 lg:grid-cols-2">
-          <ConcentrationMeter
-            title="Concentration des compagnies"
-            value={carrierHhi}
-            status={carrierStatus}
-            scaleLabels={["Diversifié", "Compagnie unique"]}
-            detail={
-              carrierStatus === "bon"
-                ? "Votre panel est suffisamment large pour qu’aucune compagnie ne fasse basculer la valeur à elle seule."
-                : carrierStatus === "surveiller"
-                  ? "Votre dépendance à un nombre restreint de compagnies applique un coefficient de 0,92 à la valorisation. Élargir le panel la relèverait."
-                  : "Une compagnie domine votre portefeuille. Le coefficient tombe à 0,80, et un refus de transfert de code menacerait une part importante des commissions."
-            }
-          />
-          <ConcentrationMeter
-            title="Poids des dix premiers clients"
-            value={top10}
-            status={clientStatus}
-            scaleLabels={["Réparti", "Concentré"]}
-            detail={
-              clientStatus === "bon"
-                ? "Le départ d’un client ne se verrait pas dans les comptes de l’acquéreur."
-                : clientStatus === "surveiller"
-                  ? "Au delà de 25 %, un acquéreur applique une décote. Étaler le risque relèverait la valeur."
-                  : "Au delà de 40 %, le départ d’un seul client se voit immédiatement. C’est le premier point qu’un acquéreur soulèvera."
-            }
-          />
-        </div>
 
         <div className="mt-5 grid gap-5 lg:grid-cols-2">
           <RankedBars

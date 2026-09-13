@@ -7,12 +7,11 @@ import { TakePositionButton } from "@/components/listing/take-position-button";
 import { MarketStamp } from "@/components/listing/market-stamp";
 import { MixDonut } from "@/components/charts/mix-donut";
 import { RankedBars } from "@/components/charts/ranked-bars";
-import { ConcentrationMeter } from "@/components/charts/concentration-meter";
 import { UNCERTIFIED_LABEL } from "@/lib/copy/market";
 import { GROWTH_PLAN_ANNUAL_EUR, INTEREST_DEPOSIT_LABEL } from "@/lib/billing/rates";
 import { CESSION_FUNDS_DISCLAIMER } from "@/lib/partners/catalog";
 import { formatCount, formatEuroWhole } from "@/lib/format/number";
-import { groupMaturityByYear, type MaturityBucket, type Share } from "@/lib/portfolio/analytics";
+import type { RenewalYear, Share } from "@/lib/portfolio/analytics";
 import { hasQualityFigures, qualityFactRows, type PortfolioQuality } from "@/lib/portfolio/quality";
 
 export type ListingFact = { label: string; value: string };
@@ -43,12 +42,9 @@ export type PublicListingDetailModel = {
   presentation: string;
   facts: ListingFact[];
   byRisk: Share[];
-  byCarrier: Share[];
   bySegment: Share[];
   byDepartment: Share[];
-  schedule: MaturityBucket[];
-  top10: number;
-  carrierHhi: number;
+  renewals: RenewalYear[];
   quality: PortfolioQuality;
   interestHref: string;
   /** Dossier déjà ouvert par cet acquéreur : le bouton y mène au lieu d'en ouvrir un. */
@@ -124,12 +120,9 @@ export function PublicListingDetail({
     presentation,
     facts,
     byRisk,
-    byCarrier,
     bySegment,
     byDepartment,
-    schedule,
-    top10,
-    carrierHhi,
+    renewals,
     quality,
     interestHref,
     positionHref,
@@ -147,8 +140,6 @@ export function PublicListingDetail({
     defaultTab,
   } = model;
 
-  const carrierStatus = carrierHhi > 0.6 ? "penalisant" : carrierHhi >= 0.3 ? "surveiller" : "bon";
-  const clientStatus = top10 > 0.4 ? "penalisant" : top10 > 0.25 ? "surveiller" : "bon";
 
   const information = (
         <div className="grid gap-6">
@@ -217,43 +208,22 @@ export function PublicListingDetail({
           />
         </div>
 
+        {/* La répartition par compagnie est déjà en tête de fiche, avec les lots : pas de doublon ici. */}
         <div className="mt-6 grid gap-6 lg:grid-cols-2">
-          <RankedBars
-            title="Compagnies"
-            subtitle="Commissions annuelles par porteur."
-            shares={byCarrier}
-          />
           <RankedBars
             title="Clientèles"
             subtitle="Commissions annuelles par profil : particuliers, professionnels, entreprises."
             shares={bySegment}
           />
-        </div>
-
-        <div className="mt-6 grid gap-6 lg:grid-cols-2">
           <RankedBars
             title="Zones"
             subtitle="Départements du portefeuille, grain maximal autorisé. Commissions annuelles."
             shares={byDepartment}
           />
-          <YearlyRenewals buckets={schedule} />
         </div>
 
-        <div className="mt-6 grid gap-6 lg:grid-cols-2">
-          <ConcentrationMeter
-            title="Poids des dix premiers clients"
-            value={top10}
-            status={clientStatus}
-            scaleLabels={["Diversifié", "Concentré"]}
-            detail="Part des commissions portée par les dix plus gros clients, sans aucun nom."
-          />
-          <ConcentrationMeter
-            title="Concentration compagnies"
-            value={carrierHhi}
-            status={carrierStatus}
-            scaleLabels={["Réparti", "Dépendant"]}
-            detail="Indice de Herfindahl sur les compagnies. Au-delà de 0,30, la dépendance pèse."
-          />
+        <div className="mt-6">
+          <YearlyRenewals years={renewals} />
         </div>
 
         <p className="rounded-2xl border border-line bg-paper px-5 py-4 text-[13px] leading-relaxed text-muted">
@@ -518,64 +488,53 @@ function AnnualProfileTable({ title, shares }: { title: string; shares: Share[] 
   );
 }
 
-function YearlyRenewals({ buckets }: { buckets: MaturityBucket[] }) {
-  const years = groupMaturityByYear(buckets);
-  const total = years.reduce((sum, year) => sum + year.commissions, 0);
+function YearlyRenewals({ years }: { years: RenewalYear[] }) {
   const hasData = years.some((year) => year.commissions > 0);
+  const passees = years.filter((y) => y.kind === "past");
+  const aVenir = years.filter((y) => y.kind === "upcoming");
+
+  const bloc = (titre: string, lignes: RenewalYear[]) => (
+    <tbody>
+      <tr>
+        <th colSpan={3} scope="colgroup" className="pt-4 pb-1 text-[12px] font-semibold uppercase tracking-wide text-indigo-dark">
+          {titre}
+        </th>
+      </tr>
+      {lignes.map((year) => (
+        <tr key={`${year.kind}-${year.year}`} className="border-b border-line">
+          <th scope="row" className="py-2.5 pr-3 text-[15px] font-medium text-ink">
+            {year.year}
+          </th>
+          <td className="tabular py-2.5 pr-3 text-right text-[15px] text-ink">{formatEuroWhole(year.commissions)}</td>
+          <td className="tabular py-2.5 text-right text-[15px] text-ink">{formatCount(year.contracts)}</td>
+        </tr>
+      ))}
+    </tbody>
+  );
 
   return (
     <article className="rounded-3xl border border-line bg-paper p-7 shadow-sm">
       <h3 className="text-lg font-semibold text-ink">Renouvellements par année</h3>
       <p className="mt-1 text-sm text-muted">
-        Commissions annuelles dont l’échéance tombe dans les douze prochains
-        mois, regroupées par année civile. Pas de détail mensuel.
+        Les quatre dernières années, puis les échéances des douze prochains mois. L’historique est
+        reconstitué sur les contrats encore en portefeuille, d’après leur date d’effet.
       </p>
       {!hasData ? (
-        <p className="mt-4 text-[15px] text-muted">Aucune échéance renseignée sur la période.</p>
+        <p className="mt-4 text-[15px] text-muted">Aucune date d’effet ni échéance renseignée.</p>
       ) : (
-        <table className="mt-5 w-full border-collapse text-left">
-          <thead>
-            <tr className="border-b border-line text-[12px] text-muted">
-              <th scope="col" className="py-2 pr-3 font-medium">
-                Année
-              </th>
-              <th scope="col" className="py-2 pr-3 text-right font-medium">
-                Commissions / an
-              </th>
-              <th scope="col" className="py-2 text-right font-medium">
-                Contrats
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {years.map((year) => (
-              <tr key={year.year} className="border-b border-line">
-                <th scope="row" className="py-2.5 pr-3 text-[15px] font-medium text-ink">
-                  {year.year}
-                </th>
-                <td className="tabular py-2.5 pr-3 text-right text-[15px] text-ink">
-                  {formatEuroWhole(year.commissions)}
-                </td>
-                <td className="tabular py-2.5 text-right text-[15px] text-ink">
-                  {formatCount(year.contracts)}
-                </td>
+        <div className="overflow-x-auto">
+          <table className="mt-3 w-full min-w-[20rem] border-collapse text-left">
+            <thead>
+              <tr className="border-b border-line text-[12px] text-muted">
+                <th scope="col" className="py-2 pr-3 font-medium">Année</th>
+                <th scope="col" className="py-2 pr-3 text-right font-medium">Commissions / an</th>
+                <th scope="col" className="py-2 text-right font-medium">Contrats</th>
               </tr>
-            ))}
-          </tbody>
-          <tfoot>
-            <tr>
-              <th scope="row" className="pt-3 pr-3 text-[15px] font-semibold text-ink">
-                Total
-              </th>
-              <td className="tabular pt-3 pr-3 text-right text-[15px] font-semibold text-ink">
-                {formatEuroWhole(total)}
-              </td>
-              <td className="tabular pt-3 text-right text-[15px] font-semibold text-ink">
-                {formatCount(years.reduce((sum, year) => sum + year.contracts, 0))}
-              </td>
-            </tr>
-          </tfoot>
-        </table>
+            </thead>
+            {passees.length ? bloc("Renouvelés", passees) : null}
+            {aVenir.length ? bloc("À venir", aVenir) : null}
+          </table>
+        </div>
       )}
     </article>
   );

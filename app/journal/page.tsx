@@ -24,7 +24,7 @@ const ARTICLES = [
   {
     title: "Pourquoi un multiple unique ne veut rien dire",
     lede: `Le marché annonce couramment « deux à trois fois les commissions ». Sur ${formatEuroWhole(EXAMPLE_COMMISSIONS)} de commissions annuelles en clientèle de particuliers, cet intervalle ouvre un écart de ${formatEuroWhole(EXAMPLE_COMMISSIONS)} entre la borne basse et la borne haute. Autant dire qu’il ne dit rien.`,
-    body: `Ce qui déplace réellement la valeur tient en quelques postes mesurables : la concentration de vos compagnies, le poids de vos dix premiers clients, l’ancienneté moyenne des contrats, votre taux de résiliation sur douze mois, et la durée pendant laquelle vous acceptez d’accompagner l’acquéreur. Chacun se chiffre. Un portefeuille à ${formatEuroWhole(EXAMPLE_COMMISSIONS)} de commissions ressort ici entre ${formatEuroWhole(example.low)} et ${formatEuroWhole(example.high)}, avec un point médian à ${formatEuroWhole(example.mid)}, sur un multiple public de ${PUBLIC_SEGMENT_MULTIPLES.INDIVIDUAL.toLocaleString("fr-FR")}. La valorisation complète affine ensuite chaque poste et affiche son impact en euros.`,
+    body: `Ce qui déplace réellement la valeur tient en quelques postes mesurables : l’ancienneté moyenne des contrats, votre taux de résiliation sur douze mois, et la durée pendant laquelle vous acceptez d’accompagner l’acquéreur. Chacun se chiffre. Un portefeuille à ${formatEuroWhole(EXAMPLE_COMMISSIONS)} de commissions ressort ici entre ${formatEuroWhole(example.low)} et ${formatEuroWhole(example.high)}, avec un point médian à ${formatEuroWhole(example.mid)}, sur un multiple public de ${PUBLIC_SEGMENT_MULTIPLES.INDIVIDUAL.toLocaleString("fr-FR")}. La valorisation complète affine ensuite chaque poste et affiche son impact en euros.`,
   },
   {
     title: "Le taux de résiliation pèse plus lourd que tout le reste",
@@ -49,7 +49,7 @@ const ARTICLES = [
   {
     title: "Ce qui ne doit jamais entrer dans un bordereau de cession",
     lede: "Aucune donnée nominative de client final n’a sa place dans un dossier de cession.",
-    body: "Nom, prénom, courriel, téléphone, adresse, identifiant bancaire : ces colonnes sont refusées à l’import, en analysant les en-têtes et le contenu des cellules. Ce qui reste suffit largement à valoriser : code postal, branche, type de contrat, prime, commission, dates et sinistres agrégés. Les clients sont regroupés par une clé irréversible, ce qui permet de mesurer la concentration sans jamais identifier quiconque. C’est une exigence réglementaire, et c’est aussi votre protection : un bordereau nominatif qui circule pendant une négociation qui échoue devient un incident.",
+    body: "Nom, prénom, courriel, téléphone, adresse, identifiant bancaire : ces colonnes sont refusées à l’import, en analysant les en-têtes et le contenu des cellules. Ce qui reste suffit largement à valoriser : code postal, branche, type de contrat, prime, commission, dates et sinistres agrégés. Les clients sont regroupés par une clé irréversible, ce qui permet de les compter sans jamais identifier quiconque. C’est une exigence réglementaire, et c’est aussi votre protection : un bordereau nominatif qui circule pendant une négociation qui échoue devient un incident.",
   },
 ];
 

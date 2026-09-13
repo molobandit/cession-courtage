@@ -154,7 +154,7 @@ export function applyMapping(
 
   if (missingClientKey > 0) {
     warnings.push(
-      `${missingClientKey} ligne(s) sans référence client : la concentration top 10 ne sera pas fiable.`,
+      `${missingClientKey} ligne(s) sans référence client : le nombre de clients ne sera pas fiable.`,
     );
   }
 

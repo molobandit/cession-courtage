@@ -2,7 +2,6 @@ import { CommissionType, DistributionMode, RiskType } from "@prisma/client";
 import { describe, expect, it } from "vitest";
 import { computeValuation } from "@/lib/valuation/compute";
 import { DEFAULT_MULTIPLES } from "@/lib/valuation/defaults";
-import { hhi } from "@/lib/valuation/metrics";
 import {
   ADVANCED_COMMISSION_FACTOR,
   RANGE_HIGH_FACTOR,
@@ -88,40 +87,25 @@ describe("computeValuation — cascade", () => {
       averageAgeMonths: 24,
       complianceScore: 80,
     });
-    // gross 3100 → HHI 0.8 → top10 0.85 → age 1 → churn 1 → dist 1 → support 0.9 → compliance 1
+    // gross 3100 → age 1 → churn 1 → dist 1 → support 0.9 → compliance 1
     expect(result.grossValue).toBe(3100);
     expect(result.adjustments.map((a) => a.key)).toEqual([
-      "carrier_hhi",
-      "client_conc",
       "age",
       "churn",
       "distribution",
       "support",
       "compliance",
     ]);
-    expect(result.adjustments[0]?.factor).toBe(0.8);
-    expect(result.adjustments[1]?.factor).toBe(0.85);
-    expect(result.adjustments[5]?.factor).toBe(0.9);
-    expect(result.midValue).toBe(1897.2);
-    expect(result.lowValue).toBeCloseTo(1897.2 * RANGE_LOW_FACTOR, 5);
-    expect(result.highValue).toBeCloseTo(1897.2 * RANGE_HIGH_FACTOR, 5);
-    expect(result.qualityScore).toBe(51);
+    expect(result.adjustments[3]?.factor).toBe(0.9);
+    expect(result.midValue).toBe(2790);
+    expect(result.lowValue).toBeCloseTo(2790 * RANGE_LOW_FACTOR, 5);
+    expect(result.highValue).toBeCloseTo(2790 * RANGE_HIGH_FACTOR, 5);
+    expect(result.qualityScore).toBe(76);
   });
 
-  it("HHI < 0,30 → facteur 1 ; 0,30–0,60 → 0,92 ; > 0,60 → 0,80", () => {
-    const diversified = value({
-      lines: [
-        line({ carrier: "A", clientKey: "1", annualCommission: 40 }),
-        line({ carrier: "B", clientKey: "2", annualCommission: 30 }),
-        line({ carrier: "C", clientKey: "3", annualCommission: 20 }),
-        line({ carrier: "D", clientKey: "4", annualCommission: 10 }),
-      ],
-    });
-    expect(hhi([0.4, 0.3, 0.2, 0.1])).toBeCloseTo(0.3, 10);
-    // 0.4²+0.3²+0.2²+0.1² = 0.16+0.09+0.04+0.01 = 0.30 → palier 0,92
-    expect(diversified.adjustments.find((a) => a.key === "carrier_hhi")?.factor).toBe(0.92);
-
-    const split = value({
+  it("ne pénalise plus ni la concentration des compagnies ni celle des clients", () => {
+    const concentre = value({ lines: [line({ carrier: "A", clientKey: "1", annualCommission: 100 })] });
+    const reparti = value({
       lines: [
         line({ carrier: "A", clientKey: "1", annualCommission: 25 }),
         line({ carrier: "B", clientKey: "2", annualCommission: 25 }),
@@ -129,34 +113,9 @@ describe("computeValuation — cascade", () => {
         line({ carrier: "D", clientKey: "4", annualCommission: 25 }),
       ],
     });
-    expect(split.adjustments.find((a) => a.key === "carrier_hhi")?.factor).toBe(1);
-
-    const concentrated = value({
-      lines: [line({ carrier: "A", clientKey: "1", annualCommission: 100 })],
-    });
-    expect(concentrated.adjustments.find((a) => a.key === "carrier_hhi")?.factor).toBe(0.8);
-  });
-
-  it("concentration top 10 : ≤25 % → 1 ; >25 % → 0,93 ; >40 % → 0,85", () => {
-    const many = Array.from({ length: 40 }, (_, i) =>
-      line({
-        carrier: `C${i % 8}`,
-        clientKey: `k${i}`,
-        annualCommission: 10,
-      }),
-    );
-    expect(value({ lines: many }).adjustments.find((a) => a.key === "client_conc")?.factor).toBe(1);
-
-    const justOver25 = [
-      line({ clientKey: "big", annualCommission: 30, carrier: "A" }),
-      ...Array.from({ length: 70 }, (_, i) =>
-        line({ clientKey: `s${i}`, annualCommission: 1, carrier: `C${i % 8}` }),
-      ),
-    ];
-    const over25 = value({ lines: justOver25 });
-    expect(over25.metrics.top10Share).toBeGreaterThan(0.25);
-    expect(over25.metrics.top10Share).toBeLessThanOrEqual(0.4);
-    expect(over25.adjustments.find((a) => a.key === "client_conc")?.factor).toBe(0.93);
+    expect(concentre.adjustments.some((a) => a.key === "carrier_hhi" || a.key === "client_conc")).toBe(false);
+    expect(concentre.midValue).toBe(reparti.midValue);
+    expect(concentre.actions.some((a) => /compagnies|concentration client/i.test(a.title))).toBe(false);
   });
 
   it("seuils d'ancienneté 12 / 36 / 72 mois", () => {
@@ -261,8 +220,6 @@ describe("computeValuation — qualité, leviers, bords", () => {
       churnRate12m: 0.16,
     });
     const titles = result.actions.map((a) => a.title);
-    expect(titles).toContain("Diversifier les compagnies");
-    expect(titles).toContain("Réduire la concentration client");
     expect(titles).toContain("Maîtriser la résiliation");
     expect(titles).toContain("Proposer un accompagnement");
   });
@@ -304,6 +261,5 @@ describe("computeValuation — qualité, leviers, bords", () => {
       ],
     });
     expect(sameKey.metrics.top10Share).toBe(1);
-    expect(sameKey.adjustments.find((a) => a.key === "client_conc")?.factor).toBe(0.85);
   });
 });

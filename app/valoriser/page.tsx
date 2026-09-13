@@ -11,16 +11,6 @@ export const metadata: Metadata = {
 
 const CASCADE_STAGES = [
   {
-    title: "Concentration des compagnies",
-    body: "Un portefeuille réparti sur deux compagnies seulement est plus fragile qu’un portefeuille diversifié. L’indice de concentration est calculé sur la part de commissions de chaque compagnie.",
-    range: "0,80 à 1,00",
-  },
-  {
-    title: "Concentration de la clientèle",
-    body: "Si vos dix premiers clients pèsent plus de 40 % des commissions, le départ de l’un d’eux se voit immédiatement dans les comptes de l’acquéreur.",
-    range: "0,85 à 1,00",
-  },
-  {
     title: "Ancienneté moyenne",
     body: "Un contrat ancien se renouvelle mieux qu’un contrat récent. Au delà de six ans de moyenne, la valorisation est majorée.",
     range: "0,88 à 1,15",
@@ -76,7 +66,7 @@ export default function ValoriserPage() {
           </h2>
           <p className="mt-3 max-w-3xl text-[15px] leading-relaxed text-muted">
             Après import de votre portefeuille, la valeur brute issue des multiples
-            par branche est corrigée par sept coefficients successifs. Chacun est
+            par branche est corrigée par cinq coefficients successifs. Chacun est
             affiché avec son impact en euros, ce qui vous permet de voir combien
             vous coûte un point faible, et combien vous rapporterait de le corriger.
           </p>
@@ -139,8 +129,8 @@ export default function ValoriserPage() {
             en-têtes et sur le contenu des cellules. Ce qui entre en base se limite
             au code postal, à la branche, au type de contrat, à la prime, à la
             commission et aux dates. Les clients sont regroupés par une clé
-            irréversible qui permet de mesurer la concentration sans jamais
-            identifier personne.
+            irréversible qui permet de les compter sans jamais identifier
+            personne.
           </p>
           <div className="mt-7 flex flex-wrap gap-3">
             <Button asChild variant="primary">

@@ -43,13 +43,7 @@ import { findMyInvestorPosition } from "@/lib/investor/positions";
 import { InvestorDepositForm } from "@/components/investor/placement-forms";
 import { listCertificationStatuses } from "@/lib/listing/certification";
 import { DepositForm } from "@/components/listing/deposit-form";
-import {
-  breakdownBy,
-  herfindahl,
-  maturitySchedule,
-  topClientShare,
-  type AnalyticsLine,
-} from "@/lib/portfolio/analytics";
+import { breakdownBy, renewalYears, type AnalyticsLine } from "@/lib/portfolio/analytics";
 import { qualityFromPortfolio } from "@/lib/portfolio/quality";
 
 export async function generateMetadata({
@@ -101,7 +95,6 @@ export default async function PublicListingPage({
   const clientCount = listing.portfolio.clientCount;
   const multiple = annualCommissions > 0 ? askingPrice / annualCommissions : null;
 
-  const byCarrier = breakdownBy(lines, (l) => l.carrier);
   const byRisk = breakdownBy(
     lines,
     (l) => RISK_TYPE_LABELS[l.riskType as keyof typeof RISK_TYPE_LABELS] ?? l.riskType,
@@ -116,9 +109,7 @@ export default async function PublicListingPage({
     (l) => (listing.isNationwide ? "France entière" : `Département ${l.department}`),
     6,
   );
-  const carrierHhi = herfindahl(byCarrier);
-  const top10 = topClientShare(lines);
-  const schedule = maturitySchedule(lines, new Date());
+  const renewals = renewalYears(lines, new Date());
 
   const verified = actor ? isOriasVerified(actor) : false;
   const investorMode = Boolean(voie === "investir" || (actor && isInvestor(actor)));
@@ -255,12 +246,9 @@ export default async function PublicListingPage({
         presentation,
         facts,
         byRisk,
-        byCarrier,
         bySegment,
         byDepartment,
-        schedule,
-        top10,
-        carrierHhi,
+        renewals,
         quality: qualityFromPortfolio(listing.portfolio),
         interestHref,
         positionHref: isSeller

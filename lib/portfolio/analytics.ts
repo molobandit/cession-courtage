@@ -160,6 +160,41 @@ export function groupMaturityByYear(buckets: MaturityBucket[]): YearBucket[] {
   return [...map.values()].sort((a, b) => a.year - b.year);
 }
 
+export type RenewalYear = YearBucket & {
+  /** « past » : renouvellements déjà passés ; « upcoming » : échéances à venir. */
+  kind: "past" | "upcoming";
+};
+
+/**
+ * Renouvellements par année : les années passées, puis les échéances à venir.
+ *
+ * Les années passées sont reconstituées à partir des contrats encore en
+ * portefeuille : un contrat souscrit avant l'année Y et toujours présent a été
+ * renouvelé à son anniversaire de l'année Y. Ce sont donc les renouvellements
+ * de la clientèle actuelle — les contrats résiliés entre-temps n'apparaissent
+ * pas, faute d'historique, et le libellé doit le dire.
+ */
+export function renewalYears(lines: AnalyticsLine[], from: Date, pastYears = 4): RenewalYear[] {
+  const annee = from.getUTCFullYear();
+  const passees: RenewalYear[] = [];
+  for (let y = annee - pastYears; y < annee; y += 1) {
+    let contracts = 0;
+    let commissions = 0;
+    for (const line of lines) {
+      if (line.effectiveDate.getUTCFullYear() < y) {
+        contracts += 1;
+        commissions += line.annualCommission;
+      }
+    }
+    passees.push({ year: y, contracts, commissions: round2(commissions), kind: "past" });
+  }
+  const aVenir = groupMaturityByYear(maturitySchedule(lines, from)).map((b) => ({
+    ...b,
+    kind: "upcoming" as const,
+  }));
+  return [...passees, ...aVenir];
+}
+
 /**
  * Fourchettes de multiples constatees sur le marche francais, par clientele
  * dominante. Sert a situer le multiple effectif du portefeuille.

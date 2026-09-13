@@ -6,6 +6,7 @@ import {
   herfindahl,
   marketPosition,
   maturitySchedule,
+  renewalYears,
   topClientShare,
   type AnalyticsLine,
 } from "@/lib/portfolio/analytics";
@@ -171,5 +172,31 @@ describe("dominantSegment", () => {
       line({ clientSegment: "PROFESSIONAL", annualCommission: 400 }),
     ];
     expect(dominantSegment(lines)).toBe("PROFESSIONAL");
+  });
+});
+
+describe("renouvellements par année", () => {
+  const ligne = (effet: string, echeance: string, commission: number) => ({
+    carrier: "A",
+    riskType: "AUTO",
+    clientSegment: "INDIVIDUAL",
+    department: "75",
+    clientKey: effet,
+    annualCommission: commission,
+    effectiveDate: new Date(effet),
+    renewalDate: new Date(echeance),
+  });
+
+  it("donne les quatre années passées puis les échéances à venir", () => {
+    const from = new Date("2026-09-13T00:00:00Z");
+    const annees = renewalYears(
+      [ligne("2020-03-01", "2027-03-01", 100), ligne("2024-06-01", "2026-12-01", 50)],
+      from,
+    );
+    expect(annees.filter((a) => a.kind === "past").map((a) => a.year)).toEqual([2022, 2023, 2024, 2025]);
+    // Souscrit en 2020 : renouvelé chaque année ; souscrit en 2024 : renouvelé à partir de 2025.
+    expect(annees.find((a) => a.year === 2024)?.contracts).toBe(1);
+    expect(annees.find((a) => a.year === 2025)?.commissions).toBe(150);
+    expect(annees.filter((a) => a.kind === "upcoming").map((a) => a.year)).toEqual([2026, 2027]);
   });
 });

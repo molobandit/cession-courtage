@@ -52,7 +52,7 @@ const SECTIONS: Section[] = [
     questions: [
       {
         q: "Sur quoi repose la valorisation ?",
-        a: "Sur une valeur brute calculée à partir des multiples par branche appliqués à vos commissions, puis corrigée par sept coefficients successifs : concentration des compagnies, concentration de la clientèle, ancienneté moyenne, taux de résiliation, mode de distribution, accompagnement du cédant et score de conformité.",
+        a: "Sur une valeur brute calculée à partir des multiples par branche appliqués à vos commissions, puis corrigée par cinq coefficients successifs : ancienneté moyenne, taux de résiliation, mode de distribution, accompagnement du cédant et score de conformité.",
       },
       {
         q: "Pourquoi une fourchette et non un prix ?",
@@ -161,7 +161,7 @@ const SECTIONS: Section[] = [
         a: "L’import le refuse et vous indique la colonne en cause. La détection porte sur les en-têtes et sur le contenu des cellules. Aucune donnée nominative de client final n’entre en base, quelle que soit la manœuvre.",
       },
       {
-        q: "Comment mesurez-vous la concentration sans identifier les clients ?",
+        q: "Comment comptez-vous les clients sans les identifier ?",
         a: "Les contrats d’un même client sont regroupés par une clé calculée de manière irréversible. Elle permet de compter et de comparer, jamais de remonter à une personne.",
       },
       {

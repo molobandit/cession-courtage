@@ -40,8 +40,8 @@ export default function ConfidentialitePage() {
         <p>
           Le grain géographique maximal conservé est le code postal. Les contrats
           d’un même client sont regroupés par une clé calculée de manière
-          irréversible, qui permet de mesurer la concentration sans jamais
-          identifier une personne.
+          irréversible, qui permet de les compter sans jamais identifier une
+          personne.
         </p>
       </LegalSection>
 

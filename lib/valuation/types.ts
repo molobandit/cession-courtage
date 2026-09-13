@@ -1,6 +1,6 @@
 import type { CommissionType, DistributionMode, RiskType } from "@prisma/client";
 
-export const ALGORITHM_VERSION = "cascade-1.0";
+export const ALGORITHM_VERSION = "cascade-2.0";
 
 export const RANGE_LOW_FACTOR = 0.85;
 export const RANGE_HIGH_FACTOR = 1.15;

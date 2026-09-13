@@ -107,7 +107,7 @@ export function PublicEstimator() {
             <p className="mt-5 text-[15px] leading-relaxed text-muted">
               Cette estimation applique un multiple moyen de marché à votre segment
               principal. Elle ne tient compte ni de votre taux de résiliation, ni de
-              votre concentration compagnies, ni de l’ancienneté de vos contrats.
+              l’ancienneté de vos contrats, ni de l’accompagnement que vous proposez.
               La valorisation complète, qui détaille l’impact en euros de chacun de
               ces postes, se calcule après import de votre portefeuille.
             </p>
