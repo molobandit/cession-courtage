@@ -108,27 +108,27 @@ export default async function MemberHomePage() {
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-3">
                 <LivePill />
-                <span className="text-[13px] text-white/60">Séance du {seance.format(new Date())}</span>
+                <span className="text-[13px] text-white/75">Séance du {seance.format(new Date())}</span>
               </div>
               <h1 className="mt-4 text-[1.9rem] font-bold leading-tight tracking-tight sm:text-4xl">
                 {prenom ? `Bonjour ${prenom}.` : "Bonjour."}{" "}
-                <span className="text-indigo-line">Prenez position.</span>
+                <span className="text-sky-100">Prenez position.</span>
               </h1>
-              <p className="mt-2 max-w-xl text-[15px] leading-relaxed text-white/70">
+              <p className="mt-2 max-w-xl text-[15px] leading-relaxed text-white/85">
                 Le marché du jour, ce qui vous attend et l’avancement de chacune de vos positions.
               </p>
             </div>
             <div className="flex flex-wrap gap-2.5">
               <Link
                 href="/annonces"
-                className="inline-flex h-11 items-center rounded-full bg-white px-5 text-[15px] font-semibold !text-ink hover:bg-indigo-soft"
+                className="inline-flex h-11 items-center rounded-full bg-white px-5 text-[15px] font-semibold !text-indigo-dark hover:bg-indigo-soft"
               >
                 Acheter
               </Link>
               {vendeur ? (
                 <Link
                   href={annonceHref}
-                  className="inline-flex h-11 items-center rounded-full border border-white/25 px-5 text-[15px] font-semibold !text-white hover:bg-white/10"
+                  className="inline-flex h-11 items-center rounded-full border border-white/40 px-5 text-[15px] font-semibold !text-white hover:bg-white/15"
                 >
                   Vendre
                 </Link>
@@ -136,7 +136,7 @@ export default async function MemberHomePage() {
             </div>
           </div>
 
-          <p className="mt-7 text-[11px] font-semibold uppercase tracking-[0.24em] text-white/50">Le marché</p>
+          <p className="mt-7 text-[11px] font-semibold uppercase tracking-[0.24em] text-white/70">Le marché</p>
           <div className="mt-3 grid grid-cols-2 gap-3 lg:grid-cols-4">
             <DeskKpi
               label="En séance"
@@ -154,7 +154,7 @@ export default async function MemberHomePage() {
             />
           </div>
 
-          <p className="mt-6 text-[11px] font-semibold uppercase tracking-[0.24em] text-white/50">Votre activité</p>
+          <p className="mt-6 text-[11px] font-semibold uppercase tracking-[0.24em] text-white/70">Votre activité</p>
           <div className="mt-3 grid grid-cols-2 gap-3 lg:grid-cols-4">
             <DeskKpi label="Positions ouvertes" value={formatCount(compteurs.positionsOuvertes)} href="#positions" />
             <DeskKpi

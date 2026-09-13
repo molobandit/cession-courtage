@@ -93,7 +93,7 @@ export function MemberRail({
 
   return (
     <nav
-      className="flex h-full w-[5rem] shrink-0 flex-col items-center border-r border-white/10 bg-ink py-3"
+      className="flex h-full w-[5rem] shrink-0 flex-col items-center border-r border-indigo/25 bg-[#93c5fd] py-3"
       aria-label="Espace membre"
     >
       <div className="flex min-h-0 flex-1 flex-col items-center gap-1 overflow-y-auto px-1.5">
@@ -106,11 +106,11 @@ export function MemberRail({
               title={item.label}
               aria-current={active ? "page" : undefined}
               className={cn(
-                "relative flex w-full flex-col items-center gap-1 rounded-xl px-1 py-2 text-white/60 transition-colors hover:bg-white/[0.07] hover:text-white",
-                active && "bg-white/[0.1] text-white",
+                "relative flex w-full flex-col items-center gap-1 rounded-xl px-1 py-2 text-ink transition-colors hover:bg-white/80",
+                active && "bg-white text-indigo-dark shadow-sm",
               )}
             >
-              {active ? <span className="absolute left-0 top-2 bottom-2 w-0.5 rounded-full bg-indigo-line" /> : null}
+              {active ? <span className="absolute left-0 top-2 bottom-2 w-0.5 rounded-full bg-indigo" /> : null}
               <ToolIcon name={item.icon} className="h-5 w-5" />
               <span className="max-w-full truncate text-center text-[10px] font-medium leading-tight">{item.short}</span>
             </Link>
@@ -121,7 +121,7 @@ export function MemberRail({
         <button
           type="submit"
           title="Déconnexion"
-          className="flex w-full flex-col items-center gap-1 rounded-xl px-1 py-2 text-white/60 hover:bg-white/[0.07] hover:text-white"
+          className="flex w-full flex-col items-center gap-1 rounded-xl px-1 py-2 text-ink hover:bg-white/80"
         >
           <ToolIcon name="arrow-left" className="h-5 w-5" />
           <span className="text-[10px] font-medium leading-tight">Sortir</span>
