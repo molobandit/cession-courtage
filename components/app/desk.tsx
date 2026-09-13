@@ -14,16 +14,15 @@ import { cn } from "@/lib/utils";
  */
 
 /**
- * Bandeau d'en-tête, bleu franc et texte noir.
+ * Bandeau d'en-tête : le dégradé bleu de la marque, texte noir.
  *
- * Trois essais écartés : le fond sombre, le bleu vif écrit en blanc, qui
- * éblouissait, puis un bleu si pâle qu'il ne se voyait plus. Le bandeau garde
- * le bleu du menu latéral, assez clair pour que le noir se lise sans fatigue.
+ * C'est le bleu d'origine, redemandé tel quel. Le texte reste noir et en gras,
+ * les chiffres sur des cartes claires pour se lire sans fatigue.
  */
 export function DeskBand({ children }: { children: React.ReactNode }) {
   return (
-    <section className="relative overflow-hidden rounded-[1.75rem] border border-[#60a5fa] bg-gradient-to-br from-[#93c5fd] via-[#7cb6fc] to-[#60a5fa] text-ink shadow-sm">
-      <div className="pointer-events-none absolute -right-20 -top-24 h-64 w-64 rounded-full bg-white/25 blur-3xl" />
+    <section className="relative overflow-hidden rounded-[1.75rem] bg-gradient-to-br from-indigo via-indigo-mid to-indigo-dark text-ink shadow-[0_24px_60px_-30px_rgba(37,99,235,0.7)]">
+      <div className="pointer-events-none absolute -right-20 -top-24 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
       <div className="relative">{children}</div>
     </section>
   );
@@ -64,7 +63,7 @@ export function DeskKpi({
       {note ? <p className="mt-2 text-[12px] leading-snug text-muted">{note}</p> : null}
     </>
   );
-  const classe = "block h-full rounded-2xl border border-white/70 bg-white/60 p-4 transition";
+  const classe = "block h-full rounded-2xl border border-white/70 bg-white/80 p-4 transition";
   return href ? (
     <Link href={href} className={cn(classe, "hover:border-indigo hover:bg-paper")}>
       {contenu}
@@ -102,7 +101,7 @@ export function MarketTicker({ items }: { items: PublicListingCard[] }) {
       </Link>
     ));
   return (
-    <div className="relative overflow-hidden border-t border-white/60 bg-white/70 py-2.5" aria-label="Titres en séance">
+    <div className="relative overflow-hidden border-t border-white/60 bg-white/85 py-2.5" aria-label="Titres en séance">
       <div className="market-ticker-track flex w-max">
         {ligne("a")}
         <span aria-hidden="true" className="flex">
@@ -371,12 +370,12 @@ export function DeskPageHeader({
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2.5">
                 {kicker ? (
-                  <span className="text-[12px] font-semibold uppercase tracking-[0.18em] text-ink/75">{kicker}</span>
+                  <span className="text-[12px] font-bold uppercase tracking-[0.18em] text-ink">{kicker}</span>
                 ) : null}
                 {badge}
               </div>
               <h1 className="mt-2 text-[1.7rem] font-bold leading-tight tracking-tight text-ink sm:text-[2.1rem]">{title}</h1>
-              {subtitle ? <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-ink/80">{subtitle}</p> : null}
+              {subtitle ? <p className="mt-2 max-w-2xl text-[15px] font-medium leading-relaxed text-ink">{subtitle}</p> : null}
             </div>
             {actions ? <div className="flex flex-wrap gap-2.5">{actions}</div> : null}
           </div>
