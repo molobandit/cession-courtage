@@ -44,6 +44,7 @@ export type PublicListingDetailModel = {
   byRisk: Share[];
   bySegment: Share[];
   byDepartment: Share[];
+  byCarrier: Share[];
   renewals: RenewalYear[];
   quality: PortfolioQuality;
   interestHref: string;
@@ -89,13 +90,10 @@ export function PublicListingDetail({
   model,
   documents,
   position,
-  carriers,
 }: {
   model: PublicListingDetailModel;
   documents: ReactNode;
   position: ReactNode;
-  /** Répartition par fournisseur, sous les informations du portefeuille. */
-  carriers?: ReactNode;
 }) {
   const {
     publicNumber,
@@ -122,6 +120,7 @@ export function PublicListingDetail({
     byRisk,
     bySegment,
     byDepartment,
+    byCarrier,
     renewals,
     quality,
     interestHref,
@@ -208,21 +207,25 @@ export function PublicListingDetail({
           />
         </div>
 
-        {/* La répartition par compagnie est déjà en tête de fiche, avec les lots : pas de doublon ici. */}
         <div className="mt-6 grid gap-6 lg:grid-cols-2">
+          <RankedBars
+            title="Compagnies"
+            subtitle="Commissions annuelles par porteur."
+            shares={byCarrier}
+          />
           <RankedBars
             title="Clientèles"
             subtitle="Commissions annuelles par profil : particuliers, professionnels, entreprises."
             shares={bySegment}
           />
+        </div>
+
+        <div className="mt-6 grid gap-6 lg:grid-cols-2">
           <RankedBars
             title="Zones"
             subtitle="Départements du portefeuille, grain maximal autorisé. Commissions annuelles."
             shares={byDepartment}
           />
-        </div>
-
-        <div className="mt-6">
           <YearlyRenewals years={renewals} />
         </div>
 
@@ -419,7 +422,7 @@ export function PublicListingDetail({
           <SectionTabs key={defaultTab ?? "informations"} defaultId={defaultTab ?? "informations"}>
             <SectionTab id="informations" label="Informations">
               {information}
-              {carriers ? <div className="mt-6">{carriers}</div> : null}
+
             </SectionTab>
             <SectionTab id="documents" label="Documents">
               {documents}

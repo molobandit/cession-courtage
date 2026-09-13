@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { OfferChat } from "@/components/chat/offer-chat";
 import { PublicListingDetail } from "@/components/listing/public-listing-detail";
 import { SubmitOfferForm } from "@/components/offer/offer-forms";
-import { CarrierLots } from "@/components/listing/carrier-lots";
 import { lotAvailability } from "@/lib/listing/lot-availability";
 import {
   canBuy,
@@ -109,6 +108,7 @@ export default async function PublicListingPage({
     (l) => (listing.isNationwide ? "France entière" : `Département ${l.department}`),
     6,
   );
+  const byCarrier = breakdownBy(lines, (l) => l.carrier);
   const renewals = renewalYears(lines, new Date());
 
   const verified = actor ? isOriasVerified(actor) : false;
@@ -248,6 +248,7 @@ export default async function PublicListingPage({
         byRisk,
         bySegment,
         byDepartment,
+        byCarrier,
         renewals,
         quality: qualityFromPortfolio(listing.portfolio),
         interestHref,
@@ -278,7 +279,6 @@ export default async function PublicListingPage({
         defaultTab: ownOffer || myDeal || myDeposit ? "position" : "informations",
       }}
       /* Ce que l'acquéreur regarde en premier : où sont les commissions. */
-      carriers={<CarrierLots lots={lots} available={available} />}
       documents={
         <div className="grid gap-6">
           {cedantIdentity ? <CedantIdentityCard identity={cedantIdentity} /> : null}
