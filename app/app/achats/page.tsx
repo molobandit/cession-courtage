@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { DossierCard, EmptyState, ToolIcon } from "@/components/app/toolbox";
+import { DeskPanel, PositionsTable } from "@/components/app/desk";
 import { getActor, isOriasVerified } from "@/lib/authz";
-import { loadMemberDossiers } from "@/lib/dashboard/member-dossiers";
+import { loadDesk } from "@/lib/dashboard/desk";
 
 export const metadata = { title: "Mes achats" };
 
@@ -11,41 +11,32 @@ export default async function Page() {
   if (!actor) redirect("/connexion?next=/app/achats");
   if (!isOriasVerified(actor)) redirect("/en-attente-orias");
 
-  const { achats: items } = await loadMemberDossiers(actor);
+  const { lignes } = await loadDesk(actor);
+  const rows = lignes.filter((row) => row.side === "Achat" || row.side === "Demande");
+  const actives = rows.filter((row) => (row.issue ?? "active") === "active").length;
 
   return (
-    <main className="w-full">
-      <header className="border-b border-line bg-paper">
-        <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-4 px-4 py-5 sm:px-6">
-          <div className="flex items-center gap-4">
-            <Link href="/app" aria-label="Retour au tableau de bord" className="text-muted hover:text-ink">
-              <ToolIcon name="arrow-left" className="h-5 w-5" />
-            </Link>
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight text-ink sm:text-[28px]">Mes achats</h1>
-              <p className="mt-0.5 text-[15px] text-muted">Voir et suivre toutes vos positions d’acheteur</p>
-            </div>
-          </div>
+    <main className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-indigo">Poste de marché</p>
+          <h1 className="mt-1 text-2xl font-bold tracking-tight text-ink sm:text-[28px]">Mes achats</h1>
+          <p className="mt-1 max-w-2xl text-[15px] text-muted">Vos prises de position, vos offres et vos demandes, étape par étape jusqu’à la clôture.</p>
         </div>
-      </header>
-      <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
-        {items.length === 0 ? (
-          <div className="rounded-2xl border border-line bg-paper shadow-sm">
-            <EmptyState
-              icon="search"
-              title="Pas encore d’achats"
-              text="Vos offres, vos annonces d’achat et vos acquisitions en cours apparaîtront ici."
-              action={{ href: "/annonces", label: "Trouver un portefeuille" }}
-            />
-          </div>
-        ) : (
-          <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {items.map(({ key, active: _active, ...item }) => (
-              <DossierCard key={key} {...item} />
-            ))}
-          </ul>
-        )}
+        <Link
+          href="/annonces"
+          className="inline-flex h-11 items-center rounded-full bg-indigo px-5 text-[15px] font-semibold !text-white hover:bg-indigo-dark"
+        >
+          Aller en salle de marché
+        </Link>
       </div>
+      <DeskPanel
+        className="mt-6"
+        title={`${rows.length} dossier${rows.length > 1 ? "s" : ""}`}
+        subtitle={`${actives} en cours`}
+      >
+        <PositionsTable rows={rows} empty="Aucune position d’achat. Prenez position sur un portefeuille en salle de marché." />
+      </DeskPanel>
     </main>
   );
 }

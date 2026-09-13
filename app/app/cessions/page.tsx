@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { DossierCard, EmptyState, ToolIcon } from "@/components/app/toolbox";
-import { canSell, getActor, isOriasVerified } from "@/lib/authz";
-import { loadMemberDossiers } from "@/lib/dashboard/member-dossiers";
+import { DeskPanel, PositionsTable } from "@/components/app/desk";
+import { getActor, isOriasVerified } from "@/lib/authz";
+import { loadDesk } from "@/lib/dashboard/desk";
 
 export const metadata = { title: "Mes cessions" };
 
@@ -11,41 +11,32 @@ export default async function Page() {
   if (!actor) redirect("/connexion?next=/app/cessions");
   if (!isOriasVerified(actor)) redirect("/en-attente-orias");
 
-  const { cessions: items } = await loadMemberDossiers(actor);
+  const { lignes } = await loadDesk(actor);
+  const rows = lignes.filter((row) => row.side === "Vente");
+  const actives = rows.filter((row) => (row.issue ?? "active") === "active").length;
 
   return (
-    <main className="w-full">
-      <header className="border-b border-line bg-paper">
-        <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-4 px-4 py-5 sm:px-6">
-          <div className="flex items-center gap-4">
-            <Link href="/app" aria-label="Retour au tableau de bord" className="text-muted hover:text-ink">
-              <ToolIcon name="arrow-left" className="h-5 w-5" />
-            </Link>
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight text-ink sm:text-[28px]">Mes cessions</h1>
-              <p className="mt-0.5 text-[15px] text-muted">Voir et suivre toutes vos cessions</p>
-            </div>
-          </div>
+    <main className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-indigo">Poste de marché</p>
+          <h1 className="mt-1 text-2xl font-bold tracking-tight text-ink sm:text-[28px]">Mes cessions</h1>
+          <p className="mt-1 max-w-2xl text-[15px] text-muted">Vos portefeuilles en séance, leurs candidats et vos dossiers de vente.</p>
         </div>
-      </header>
-      <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
-        {items.length === 0 ? (
-          <div className="rounded-2xl border border-line bg-paper shadow-sm">
-            <EmptyState
-              icon="bag"
-              title="Pas encore de cessions"
-              text="Mettez un portefeuille en vente : il apparaîtra ici avec son avancement."
-              action={{ href: actor && canSell(actor) ? "/app/annonces/nouvelle" : "/annonces", label: "Créer une annonce" }}
-            />
-          </div>
-        ) : (
-          <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {items.map(({ key, active: _active, ...item }) => (
-              <DossierCard key={key} {...item} />
-            ))}
-          </ul>
-        )}
+        <Link
+          href="/app/annonces/nouvelle"
+          className="inline-flex h-11 items-center rounded-full bg-indigo px-5 text-[15px] font-semibold !text-white hover:bg-indigo-dark"
+        >
+          Vendre un portefeuille
+        </Link>
       </div>
+      <DeskPanel
+        className="mt-6"
+        title={`${rows.length} dossier${rows.length > 1 ? "s" : ""}`}
+        subtitle={`${actives} en cours`}
+      >
+        <PositionsTable rows={rows} empty="Aucun portefeuille en vente. Mettez le vôtre en séance : la mise en vente est sans frais." />
+      </DeskPanel>
     </main>
   );
 }

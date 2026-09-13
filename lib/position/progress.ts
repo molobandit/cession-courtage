@@ -1,5 +1,5 @@
 import type { DealStage, ListingStatus, OfferStatus } from "@prisma/client";
-import { SALE_PIPELINE, pipelineIndex } from "@/lib/deal/pipeline";
+import { SALE_PIPELINE, pipelineProgressPercent } from "@/lib/deal/pipeline";
 
 /**
  * Où en est une prise de position, vue par l'acquéreur ou par le cédant.
@@ -53,14 +53,8 @@ export const POSITION_STEPS: PositionStep[] = [
   })),
 ];
 
-const PRE_DEAL_SHARE = 15;
-
 function dealPercent(stage: DealStage): number {
-  // La frise du tunnel commence par « Positionnement » : le dossier part de NDA.
-  const index = pipelineIndex(stage) - 1;
-  const last = SALE_PIPELINE.length - 2;
-  if (index <= 0) return PRE_DEAL_SHARE;
-  return Math.round(PRE_DEAL_SHARE + (index / last) * (100 - PRE_DEAL_SHARE));
+  return pipelineProgressPercent(stage);
 }
 
 export function positionState(facts: PositionFacts): PositionState {

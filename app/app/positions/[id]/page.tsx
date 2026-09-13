@@ -186,7 +186,11 @@ export default async function PositionPage({ params }: { params: Promise<{ id: s
               className={`h-full rounded-full ${state.outcome === "lost" ? "bg-muted/40" : "bg-indigo-dark"}`}
               style={{ width: `${Math.max(state.percent, 6)}%` }}
             />
-            <span className="tabular absolute inset-0 flex items-center justify-center text-[12px] font-bold text-ink mix-blend-luminosity">
+            <span
+              className={`tabular absolute inset-0 flex items-center justify-center text-[12px] font-bold ${
+                state.percent >= 55 && state.outcome !== "lost" ? "text-white" : "text-ink"
+              }`}
+            >
               {state.percent}%
             </span>
           </div>

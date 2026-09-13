@@ -26,8 +26,8 @@ export default async function NewListingPage({
   if (!selected) {
     return (
       <main className="mx-auto max-w-3xl px-4 py-6 sm:px-6 sm:py-8">
-        <MemberPageHeader title="Nouvelle annonce">
-          Importez d’abord un portefeuille pour publier sous alias.
+        <MemberPageHeader title="Mettre un portefeuille en séance">
+          Commencez par importer votre bordereau : la valorisation se calcule, puis l’annonce part en séance sous alias, sans frais.
         </MemberPageHeader>
         <Link
           href="/app/import"
@@ -43,7 +43,7 @@ export default async function NewListingPage({
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-6 sm:px-6 sm:py-8">
-      <MemberPageHeader title="Nouvelle annonce">
+      <MemberPageHeader title="Mettre un portefeuille en séance">
         {selected.label} · commissions {formatEuro(selected.annualCommissions)} / an
         {selected.valuations[0] ? ` · médiane ${formatEuro(selected.valuations[0].midValue)}` : ""}
         . Renseignez le cadre juridique, l’organisation et la conformité. Les PDF

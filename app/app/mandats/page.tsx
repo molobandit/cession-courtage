@@ -18,9 +18,10 @@ export default async function MandatesPage() {
 
   return (
     <main className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 sm:py-8">
-      <MemberPageHeader title="Mandats de recherche">
-        Décrivez une fois budget, zones et branches. Publier un mandat le montre
-        au catalogue sous votre alias, votre cabinet reste anonyme.{" "}
+      <MemberPageHeader title="Ma recherche">
+        Décrivez une fois ce que vous cherchez : budget, zones, branches. Chaque
+        portefeuille en séance y est confronté. Publiée, votre demande apparaît en
+        salle de marché sous alias, et les cédants peuvent vous proposer le leur.{" "}
         <Link href="/app/opportunites" className="font-medium text-indigo-dark">
           Voir les correspondances
         </Link>

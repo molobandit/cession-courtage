@@ -77,11 +77,24 @@ export function pipelineIndex(stage: DealStage | "POSITION"): number {
   return SALE_PIPELINE.findIndex((step) => step.key === stage);
 }
 
+/** Part du parcours franchie avant l'offre retenue : position, dépôt, offre. */
+export const PRE_DEAL_SHARE = 15;
+
+/**
+ * Avancement d'un dossier, sur la même échelle que la prise de position.
+ *
+ * Deux échelles coexistaient : le dossier de cession affichait 10 % à la
+ * confidentialité quand la page de suivi du même dossier affichait 15 %. Une
+ * seule règle désormais — la position vaut 3 %, l'offre retenue 15 %, la
+ * clôture 100 % — pour que le chiffre soit le même partout.
+ */
 export function pipelineProgressPercent(stage: DealStage | "POSITION"): number {
-  const index = pipelineIndex(stage);
+  if (stage === "POSITION") return 3;
+  const index = pipelineIndex(stage) - 1;
+  const last = SALE_PIPELINE.length - 2;
   if (index < 0) return 0;
-  const last = SALE_PIPELINE.length - 1;
-  return Math.round((index / last) * 100);
+  if (index === 0) return PRE_DEAL_SHARE;
+  return Math.round(PRE_DEAL_SHARE + (index / last) * (100 - PRE_DEAL_SHARE));
 }
 
 export type NextPipelineAction = {

@@ -17,9 +17,9 @@ export default async function OpportunitiesPage() {
   return (
     <main className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 sm:py-8">
       <MemberPageHeader title="Correspondances">
-        Annonces alignées sur vos mandats.{" "}
+        Les portefeuilles en séance qui répondent à votre recherche, du meilleur score au moins bon.{" "}
         <Link href="/app/mandats" className="font-medium text-indigo-dark">
-          Gérer les mandats
+          Modifier ma recherche
         </Link>
       </MemberPageHeader>
 

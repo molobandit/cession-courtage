@@ -2,27 +2,34 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { ToolIcon, type ToolIconName } from "@/components/app/toolbox";
 import { cn } from "@/lib/utils";
-import {
-  IconBoard,
-  IconClipboard,
-  IconFolder,
-  IconLinks,
-  IconLogout,
-  IconPerson,
-  IconPlusDoc,
-  IconRows,
-  IconSliders,
-  IconUpload,
-} from "@/components/app/member-icons";
 
-type NavLink = { href: string; label: string; exact?: boolean };
+type NavLink = {
+  href: string;
+  label: string;
+  /** Libellé du rail étroit, en un mot. */
+  short: string;
+  icon: ToolIconName;
+  exact?: boolean;
+  /** Autres chemins qui rendent l'entrée active. */
+  also?: string[];
+};
 
 function linkActive(path: string, item: NavLink) {
   if (item.exact) return path === item.href;
-  return path === item.href || path.startsWith(`${item.href}/`);
+  const chemins = [item.href, ...(item.also ?? [])];
+  return chemins.some((c) => path === c || path.startsWith(`${c}/`));
 }
 
+/**
+ * Navigation de l'espace membre, dans l'ordre d'une journée de marché :
+ * le poste, la salle, ses positions d'achat et de vente, puis les outils.
+ *
+ * Dix entrées aux noms flous (« Pistes », « Import », « Mandats ») disaient la
+ * structure du code plutôt que ce que l'on vient faire. Chaque libellé dit
+ * maintenant une intention.
+ */
 export function memberWorkspaceLinks(
   canSell: boolean,
   canBuy: boolean,
@@ -30,50 +37,47 @@ export function memberWorkspaceLinks(
 ): NavLink[] {
   if (isInvestor) {
     return [
-      { href: "/app/mes-dossiers", label: "Mes dossiers", exact: true },
-      { href: "/investisseurs/opportunites", label: "Opportunités" },
-      { href: "/app/profil", label: "Compte" },
+      { href: "/app/mes-dossiers", label: "Mes dossiers", short: "Dossiers", icon: "folder", exact: true },
+      { href: "/investisseurs/opportunites", label: "Opportunités", short: "Marché", icon: "chart" },
+      { href: "/app/notifications", label: "Notifications", short: "Alertes", icon: "info" },
+      { href: "/app/profil", label: "Mon compte", short: "Compte", icon: "user" },
     ];
   }
   const links: NavLink[] = [
-    { href: "/app", label: "Accueil", exact: true },
-    { href: "/annonces", label: "Salle de marché" },
+    { href: "/app", label: "Poste de marché", short: "Poste", icon: "chart", exact: true },
+    { href: "/annonces", label: "Salle de marché", short: "Salle", icon: "bolt", also: [] },
   ];
+  if (canBuy) {
+    links.push({ href: "/app/achats", label: "Mes achats", short: "Achats", icon: "cart", also: ["/app/positions"] });
+  }
   if (canSell) {
     links.push(
-      { href: "/app/annonces/nouvelle", label: "Publier" },
-      { href: "/app/import", label: "Import" },
+      { href: "/app/cessions", label: "Mes cessions", short: "Cessions", icon: "bag", also: ["/app/dossiers"] },
+      { href: "/app/annonces/nouvelle", label: "Vendre un portefeuille", short: "Vendre", icon: "plus", also: ["/app/import"] },
     );
   }
+  links.push({ href: "/annonces/demandes", label: "Demandes d’acquisition", short: "Demandes", icon: "doc" });
   if (canBuy) {
     links.push(
-      { href: "/app/mandats", label: "Mandats" },
-      { href: "/app/opportunites", label: "Pistes" },
-      { href: "/annonces/demandes", label: "Demandes" },
+      { href: "/app/mandats", label: "Ma recherche", short: "Recherche", icon: "search" },
+      { href: "/app/opportunites", label: "Correspondances", short: "Matchs", icon: "file-check" },
     );
   }
   // Les services à la carte s'adressent aux deux rôles : les parties se sont trouvées seules.
   links.push(
-    { href: "/app/formaliser", label: "Services à la carte" },
-    { href: "/app/outils", label: "Outils" },
-    { href: "/app/profil", label: "Compte" },
+    {
+      href: "/app/services/kits-contractuels",
+      label: "Services à la carte",
+      short: "Services",
+      icon: "clipboard",
+      also: ["/app/services", "/app/formaliser"],
+    },
+    { href: "/app/notifications", label: "Notifications", short: "Alertes", icon: "info" },
+    { href: "/app/outils", label: "Outils", short: "Outils", icon: "tools" },
+    { href: "/app/profil", label: "Mon compte", short: "Compte", icon: "user" },
   );
   return links;
 }
-
-const ICONS: Record<string, typeof IconBoard> = {
-  "/app": IconBoard,
-  "/annonces": IconFolder,
-  "/app/annonces/nouvelle": IconPlusDoc,
-  "/app/import": IconUpload,
-  "/app/mandats": IconClipboard,
-  "/app/opportunites": IconLinks,
-  "/annonces/demandes": IconRows,
-  "/app/outils": IconSliders,
-  "/app/profil": IconPerson,
-  "/app/mes-dossiers": IconBoard,
-  "/investisseurs/opportunites": IconLinks,
-};
 
 export function MemberRail({
   canSell,
@@ -89,12 +93,11 @@ export function MemberRail({
 
   return (
     <nav
-      className="flex h-full w-[4.75rem] shrink-0 flex-col items-center border-r border-indigo/25 bg-[#93c5fd] py-3"
+      className="flex h-full w-[5rem] shrink-0 flex-col items-center border-r border-white/10 bg-ink py-3"
       aria-label="Espace membre"
     >
-      <div className="flex min-h-0 flex-1 flex-col items-center gap-1 overflow-y-auto px-1">
+      <div className="flex min-h-0 flex-1 flex-col items-center gap-1 overflow-y-auto px-1.5">
         {links.map((item) => {
-          const Icon = ICONS[item.href] ?? IconFolder;
           const active = linkActive(path, item);
           return (
             <Link
@@ -103,25 +106,24 @@ export function MemberRail({
               title={item.label}
               aria-current={active ? "page" : undefined}
               className={cn(
-                "flex w-full flex-col items-center gap-0.5 rounded-xl px-1 py-2 text-ink transition-colors hover:bg-white/80",
-                active && "bg-white text-ink shadow-sm",
+                "relative flex w-full flex-col items-center gap-1 rounded-xl px-1 py-2 text-white/60 transition-colors hover:bg-white/[0.07] hover:text-white",
+                active && "bg-white/[0.1] text-white",
               )}
             >
-              <Icon className="h-5 w-5" />
-              <span className="max-w-full truncate text-center text-[10px] font-medium leading-tight">
-                {item.label}
-              </span>
+              {active ? <span className="absolute left-0 top-2 bottom-2 w-0.5 rounded-full bg-indigo-line" /> : null}
+              <ToolIcon name={item.icon} className="h-5 w-5" />
+              <span className="max-w-full truncate text-center text-[10px] font-medium leading-tight">{item.short}</span>
             </Link>
           );
         })}
       </div>
-      <form action="/api/deconnexion" method="post" className="mt-2 px-1">
+      <form action="/api/deconnexion" method="post" className="mt-2 w-full px-1.5">
         <button
           type="submit"
           title="Déconnexion"
-          className="flex w-full flex-col items-center gap-0.5 rounded-xl px-1 py-2 text-ink hover:bg-white/80"
+          className="flex w-full flex-col items-center gap-1 rounded-xl px-1 py-2 text-white/60 hover:bg-white/[0.07] hover:text-white"
         >
-          <IconLogout className="h-5 w-5" />
+          <ToolIcon name="arrow-left" className="h-5 w-5" />
           <span className="text-[10px] font-medium leading-tight">Sortir</span>
         </button>
       </form>
@@ -151,13 +153,14 @@ export function MemberNav({
               href={item.href}
               onClick={onNavigate}
               className={cn(
-                "block rounded-lg px-3 py-2.5 text-[15px]",
+                "flex items-center gap-3 rounded-lg px-3 py-2.5 text-[15px]",
                 linkActive(path, item)
                   ? "bg-indigo-soft font-medium text-indigo-dark"
                   : "text-ink/80 hover:bg-surface-alt hover:text-ink",
               )}
             >
-              {item.label === "Accueil" ? "Tableau de bord" : item.label}
+              <ToolIcon name={item.icon} className="h-5 w-5" />
+              {item.label}
             </Link>
           </li>
         ))}

@@ -12,8 +12,9 @@ describe("sale pipeline", () => {
     expect(SALE_PIPELINE.at(-1)?.key).toBe("CLOSED");
   });
 
-  it("donne 0 % au positionnement et 100 % à la clôture", () => {
-    expect(pipelineProgressPercent("POSITION")).toBe(0);
+  it("suit l’échelle de la prise de position, jusqu’à 100 % à la clôture", () => {
+    expect(pipelineProgressPercent("POSITION")).toBe(3);
+    expect(pipelineProgressPercent("NDA")).toBe(15);
     expect(pipelineProgressPercent("CLOSED")).toBe(100);
   });
 
