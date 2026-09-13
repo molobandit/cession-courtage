@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { SectionTab, SectionTabLink, SectionTabs } from "@/components/ui/section-tabs";
+import { TakePositionButton } from "@/components/listing/take-position-button";
 import { MarketStamp } from "@/components/listing/market-stamp";
 import { MixDonut } from "@/components/charts/mix-donut";
 import { RankedBars } from "@/components/charts/ranked-bars";
@@ -46,6 +47,11 @@ export type PublicListingDetailModel = {
   carrierHhi: number;
   quality: PortfolioQuality;
   interestHref: string;
+  /** Dossier déjà ouvert par cet acquéreur : le bouton y mène au lieu d'en ouvrir un. */
+  positionHref?: string | null;
+  positionLabel?: string;
+  /** Annonce sur laquelle « Prendre position » crée le dossier. Absente : simple lien. */
+  positionListingId?: string | null;
   followHref?: string | null;
   manageHref: string | null;
   supplierCount: number;
@@ -128,6 +134,9 @@ export function PublicListingDetail({
     carrierHhi,
     quality,
     interestHref,
+    positionHref,
+    positionLabel,
+    positionListingId,
     followHref,
     manageHref,
     supplierCount,
@@ -346,12 +355,26 @@ export function PublicListingDetail({
                 Continuer le dossier
               </Link>
             ) : (
-              <SectionTabLink
-                href={interestHref}
-                className="flex h-12 items-center justify-center rounded-full bg-indigo text-[15px] font-semibold !text-white hover:bg-indigo-dark"
-              >
-                Prendre position
-              </SectionTabLink>
+              positionHref ? (
+                <Link
+                  href={positionHref}
+                  className="flex h-12 items-center justify-center rounded-full bg-indigo text-[15px] font-semibold !text-white hover:bg-indigo-dark"
+                >
+                  {positionLabel ?? "Suivre mon dossier"}
+                </Link>
+              ) : positionListingId ? (
+                <TakePositionButton
+                  listingId={positionListingId}
+                  className="flex h-12 w-full items-center justify-center rounded-full bg-indigo text-[15px] font-semibold !text-white hover:bg-indigo-dark disabled:opacity-60"
+                />
+              ) : (
+                <SectionTabLink
+                  href={interestHref}
+                  className="flex h-12 items-center justify-center rounded-full bg-indigo text-[15px] font-semibold !text-white hover:bg-indigo-dark"
+                >
+                  Prendre position
+                </SectionTabLink>
+              )
             )}
             {followHref ? (
               <Link

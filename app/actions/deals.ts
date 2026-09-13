@@ -13,6 +13,7 @@ import {
 } from "@/lib/authz/messages";
 import { holdEscrowFunds, releaseEscrowFunds, signDealDocument, verifyPartyIdentity } from "@/lib/partners/runtime";
 import { prisma } from "@/lib/prisma";
+import { notifyDealStage, notifyListingMessage } from "@/lib/position/events";
 import { offPlatformPhoneError } from "@/lib/chat/phone-block";
 import { putObject } from "@/lib/storage/objects";
 import { listingLots, readCarriers } from "@/lib/listing/lot-availability";
@@ -36,7 +37,7 @@ async function loadDeal(dealId: string) {
 
 export async function acceptNdaAction(_prev: DealFormState, formData: FormData): Promise<DealFormState> {
   try {
-    const { deal } = await loadDeal(String(formData.get("dealId") ?? ""));
+    const { actor, deal } = await loadDeal(String(formData.get("dealId") ?? ""));
     if (deal.stage !== DealStage.NDA) return { error: "L'accord de confidentialité n'est plus à cette étape." };
     await prisma.deal.update({
       where: { id: deal.id },
@@ -53,6 +54,7 @@ export async function acceptNdaAction(_prev: DealFormState, formData: FormData):
         signedAt: new Date(),
       },
     });
+    await notifyDealStage(deal.id, actor.id).catch((e) => console.error("notifyDealStage", e));
     revalidatePath(`/app/dossiers/${deal.id}`);
     return {};
   } catch (error) {
@@ -134,6 +136,7 @@ export async function mockKycAction(_prev: DealFormState, formData: FormData): P
     const suivante =
       deal.stage === DealStage.LOI ? DealStage.KYC : DealStage.DEED;
     await prisma.deal.update({ where: { id: deal.id }, data: { stage: suivante } });
+    await notifyDealStage(deal.id, actor.id).catch((e) => console.error("notifyDealStage", e));
     revalidatePath(`/app/dossiers/${deal.id}`);
     return {};
   } catch (error) {
@@ -143,13 +146,14 @@ export async function mockKycAction(_prev: DealFormState, formData: FormData): P
 
 export async function mockSignDealDocAction(_prev: DealFormState, formData: FormData): Promise<DealFormState> {
   try {
-    const { deal } = await loadDeal(String(formData.get("dealId") ?? ""));
+    const { actor, deal } = await loadDeal(String(formData.get("dealId") ?? ""));
     const documentId = String(formData.get("documentId") ?? "");
     await signDealDocument(documentId);
     if (deal.stage === DealStage.SIGNATURE || deal.stage === DealStage.DEED) {
       const next = deal.stage === DealStage.DEED ? DealStage.SIGNATURE : DealStage.ESCROW;
       await prisma.deal.update({ where: { id: deal.id }, data: { stage: next } });
     }
+    await notifyDealStage(deal.id, actor.id).catch((e) => console.error("notifyDealStage", e));
     revalidatePath(`/app/dossiers/${deal.id}`);
     return {};
   } catch (error) {
@@ -159,7 +163,7 @@ export async function mockSignDealDocAction(_prev: DealFormState, formData: Form
 
 export async function mockEscrowAction(_prev: DealFormState, formData: FormData): Promise<DealFormState> {
   try {
-    const { deal } = await loadDeal(String(formData.get("dealId") ?? ""));
+    const { actor, deal } = await loadDeal(String(formData.get("dealId") ?? ""));
     /*
      * Le séquestre ne se déclenche qu'à son étape, une seule fois. Les fonds se
      * libèrent à la clôture (closeDealAction), jamais par ce bouton : l'accepter
@@ -171,6 +175,7 @@ export async function mockEscrowAction(_prev: DealFormState, formData: FormData)
     }
     await holdEscrowFunds(deal.id);
     await prisma.deal.update({ where: { id: deal.id }, data: { stage: DealStage.TRANSFER } });
+    await notifyDealStage(deal.id, actor.id).catch((e) => console.error("notifyDealStage", e));
     revalidatePath(`/app/dossiers/${deal.id}`);
     return {};
   } catch (error) {
@@ -209,6 +214,7 @@ export async function signLoiAction(
         metadata: { reason: "stage_loi" },
       },
     });
+    await notifyDealStage(deal.id, actor.id).catch((e) => console.error("notifyDealStage", e));
     revalidatePath(`/app/dossiers/${deal.id}`);
     return {};
   } catch (error) {
@@ -221,9 +227,10 @@ export async function validateDeedAction(
   formData: FormData,
 ): Promise<DealFormState> {
   try {
-    const { deal } = await loadDeal(String(formData.get("dealId") ?? ""));
+    const { actor, deal } = await loadDeal(String(formData.get("dealId") ?? ""));
     if (deal.stage !== DealStage.DEED) return { error: "Le protocole n'est pas à cette étape." };
     await prisma.deal.update({ where: { id: deal.id }, data: { stage: DealStage.SIGNATURE } });
+    await notifyDealStage(deal.id, actor.id).catch((e) => console.error("notifyDealStage", e));
     revalidatePath(`/app/dossiers/${deal.id}`);
     return {};
   } catch (error) {
@@ -236,9 +243,10 @@ export async function confirmSignatureAction(
   formData: FormData,
 ): Promise<DealFormState> {
   try {
-    const { deal } = await loadDeal(String(formData.get("dealId") ?? ""));
+    const { actor, deal } = await loadDeal(String(formData.get("dealId") ?? ""));
     if (deal.stage !== DealStage.SIGNATURE) return { error: "La signature n'est pas à cette étape." };
     await prisma.deal.update({ where: { id: deal.id }, data: { stage: DealStage.ESCROW } });
+    await notifyDealStage(deal.id, actor.id).catch((e) => console.error("notifyDealStage", e));
     revalidatePath(`/app/dossiers/${deal.id}`);
     return {};
   } catch (error) {
@@ -251,9 +259,10 @@ export async function confirmTransferAction(
   formData: FormData,
 ): Promise<DealFormState> {
   try {
-    const { deal } = await loadDeal(String(formData.get("dealId") ?? ""));
+    const { actor, deal } = await loadDeal(String(formData.get("dealId") ?? ""));
     if (deal.stage !== DealStage.TRANSFER) return { error: "Le transfert ORIAS n'est pas à cette étape." };
     await prisma.deal.update({ where: { id: deal.id }, data: { stage: DealStage.RETENTION } });
+    await notifyDealStage(deal.id, actor.id).catch((e) => console.error("notifyDealStage", e));
     revalidatePath(`/app/dossiers/${deal.id}`);
     return {};
   } catch (error) {
@@ -266,7 +275,7 @@ export async function closeDealAction(
   formData: FormData,
 ): Promise<DealFormState> {
   try {
-    const { deal } = await loadDeal(String(formData.get("dealId") ?? ""));
+    const { actor, deal } = await loadDeal(String(formData.get("dealId") ?? ""));
     if (deal.stage !== DealStage.RETENTION) {
       return { error: "La clôture n’est possible qu’après le transfert et la période de vérification." };
     }
@@ -302,6 +311,7 @@ export async function closeDealAction(
       data: { outcome: "DEDUCTED", settledAt: new Date() },
     });
 
+    await notifyDealStage(deal.id, actor.id).catch((e) => console.error("notifyDealStage", e));
     revalidatePath(`/app/dossiers/${deal.id}`);
     revalidatePath("/app");
     revalidatePath("/annonces");
@@ -350,18 +360,25 @@ export async function sendListingMessageAction(
     });
     if (!listing) return { error: "Annonce introuvable." };
     if (!(await isListingMailboxParty(actor, listingId))) {
-      return { error: "Messagerie réservée au cédant et aux acquéreurs ayant déposé une offre." };
+      return { error: "Messagerie réservée au cédant et aux acquéreurs qui ont pris position." };
     }
 
     const seller = ownsFirm(actor, listing.portfolio.firmId);
     let recipientId: string | null = String(formData.get("recipientId") ?? "").trim() || null;
     if (seller) {
       if (!recipientId) return { error: "Choisissez l’acquéreur à qui répondre." };
-      const entitled = await prisma.offer.findUnique({
-        where: { listingId_buyerId: { listingId, buyerId: recipientId } },
-        select: { id: true },
-      });
-      if (!entitled) return { error: "Destinataire hors ayants droit." };
+      // Ont droit à une réponse les acquéreurs qui ont pris position ou fait une offre.
+      const [offre, position] = await Promise.all([
+        prisma.offer.findUnique({
+          where: { listingId_buyerId: { listingId, buyerId: recipientId } },
+          select: { id: true },
+        }),
+        prisma.buyerPosition.findUnique({
+          where: { listingId_buyerId: { listingId, buyerId: recipientId } },
+          select: { id: true },
+        }),
+      ]);
+      if (!offre && !position) return { error: "Destinataire hors ayants droit." };
     } else {
       const sellerId = await listingSellerUserId(listing.portfolio.firmId);
       if (!sellerId) return { error: "Cédant introuvable." };
@@ -371,7 +388,15 @@ export async function sendListingMessageAction(
     await prisma.message.create({
       data: { listingId, senderId: actor.id, recipientId, body: body.slice(0, 4000) },
     });
+    if (recipientId) {
+      await notifyListingMessage({
+        listingId,
+        buyerId: seller ? recipientId : actor.id,
+        recipientId,
+      }).catch((e) => console.error("notifyListingMessage", e));
+    }
     revalidatePath(`/annonces/${listing.publicNumber}`);
+    revalidatePath("/app/positions/[id]", "page");
     revalidatePath(`/app/annonces/${listing.id}`);
     return {};
   } catch (error) {

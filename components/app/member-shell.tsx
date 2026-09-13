@@ -16,6 +16,8 @@ export type MemberShellProps = {
   canBuy: boolean;
   isInvestor?: boolean;
   subscribed: boolean;
+  /** Notifications non lues : prises de position, offres, étapes de dossier, messages. */
+  unread?: number;
   children: React.ReactNode;
 };
 
@@ -27,6 +29,7 @@ export function MemberShell({
   canBuy,
   isInvestor = false,
   subscribed,
+  unread = 0,
   children,
 }: MemberShellProps) {
   const path = usePathname();
@@ -60,6 +63,21 @@ export function MemberShell({
               </span>
             </Link>
             <MemberSearch />
+            <Link
+              href="/app/notifications"
+              className="relative inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-ink/80 hover:bg-surface-alt hover:text-ink"
+              aria-label={unread > 0 ? `${unread} notification${unread > 1 ? "s" : ""} non lue${unread > 1 ? "s" : ""}` : "Notifications"}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5" aria-hidden="true">
+                <path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+                <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+              </svg>
+              {unread > 0 ? (
+                <span className="tabular absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-danger px-1 text-[11px] font-bold text-white">
+                  {unread > 99 ? "99+" : unread}
+                </span>
+              ) : null}
+            </Link>
             <Link
               href="/app/profil"
               className="hidden shrink-0 items-center gap-2 rounded-full py-1 pr-1 pl-3 hover:bg-surface-alt lg:flex"

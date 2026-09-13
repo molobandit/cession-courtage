@@ -285,6 +285,7 @@ model User {
   companyDocuments        ListingCompanyDocument[]
   investorPositions       InvestorPosition[]
   mandateProposals        MandateProposal[]   @relation("MandateProposalSeller")
+  buyerPositions          BuyerPosition[]     @relation("BuyerPositions")
 
   @@index([firmId])
   @@index([role])
@@ -495,6 +496,7 @@ model Listing {
   valuations           Valuation[]
   matches              Match[]
   proposals            MandateProposal[]
+  positions            BuyerPosition[]
   offers               Offer[]
   deals                Deal[]
   messages             Message[]
@@ -621,6 +623,23 @@ model BuyerMandate {
   @@index([buyerId])
 }
 
+/// Prise de position d'un acquéreur : le dossier suivi jusqu'à la clôture.
+model BuyerPosition {
+  id         String   @id @default(cuid())
+  listingId  String
+  buyerId    String
+  proposalId String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  listing  Listing          @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  buyer    User             @relation("BuyerPositions", fields: [buyerId], references: [id], onDelete: Cascade)
+  proposal MandateProposal? @relation(fields: [proposalId], references: [id], onDelete: SetNull)
+
+  @@unique([listingId, buyerId])
+  @@index([buyerId])
+}
+
 /// Un cédant propose l'une de ses annonces en réponse à une demande d'acquisition.
 model MandateProposal {
   id        String   @id @default(cuid())
@@ -633,6 +652,7 @@ model MandateProposal {
   mandate BuyerMandate @relation(fields: [mandateId], references: [id], onDelete: Cascade)
   listing Listing      @relation(fields: [listingId], references: [id], onDelete: Cascade)
   seller  User         @relation("MandateProposalSeller", fields: [sellerId], references: [id], onDelete: Cascade)
+  positions BuyerPosition[]
 
   @@unique([mandateId, listingId])
   @@index([sellerId])

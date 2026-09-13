@@ -4,6 +4,7 @@ import { MemberShell } from "@/components/app/member-shell";
 import { PendingShell } from "@/components/app/pending-shell";
 import { canBuy, canSell, getActor, isAdmin, isInvestor, isOriasVerified } from "@/lib/authz";
 import { hasContactSubscription } from "@/lib/billing/contact-access";
+import { prisma } from "@/lib/prisma";
 
 export async function MemberChrome({ children }: { children: React.ReactNode }) {
   const actor = await getActor();
@@ -23,7 +24,10 @@ export async function MemberChrome({ children }: { children: React.ReactNode }) 
     return <PendingShell firstName={firstName}>{children}</PendingShell>;
   }
 
-  const subscribed = await hasContactSubscription(actor);
+  const [subscribed, unread] = await Promise.all([
+    hasContactSubscription(actor),
+    prisma.notification.count({ where: { userId: actor.id, readAt: null } }),
+  ]);
   const firstName = actor.fullName?.split(" ")[0] ?? (isInvestor(actor) ? "Investisseur" : "Courtier");
 
   return (
@@ -35,6 +39,7 @@ export async function MemberChrome({ children }: { children: React.ReactNode }) 
       canBuy={canBuy(actor)}
       isInvestor={isInvestor(actor)}
       subscribed={subscribed}
+      unread={unread}
     >
       {children}
     </MemberShell>

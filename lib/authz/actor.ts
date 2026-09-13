@@ -87,12 +87,24 @@ export function isInvestor(actor: Actor): boolean {
   return actor.role === UserRole.INVESTOR;
 }
 
+/**
+ * Un courtier cède et acquiert.
+ *
+ * Le rôle choisi à l'inscription dit par où il entre, pas ce qu'il a le droit
+ * de faire : un cabinet qui vend un portefeuille en rachète souvent un autre.
+ * Le cloisonner laissait un cédant devant un bouton « Prendre position » sans
+ * effet. Seul l'investisseur, qui n'a pas d'ORIAS, reste hors de ces deux voies.
+ */
+function isBroker(actor: Actor): boolean {
+  return actor.role === UserRole.SELLER || actor.role === UserRole.BUYER || actor.role === UserRole.BOTH;
+}
+
 export function canSell(actor: Actor): boolean {
-  return actor.role === UserRole.SELLER || actor.role === UserRole.BOTH || isAdmin(actor);
+  return isBroker(actor) || isAdmin(actor);
 }
 
 export function canBuy(actor: Actor): boolean {
-  return actor.role === UserRole.BUYER || actor.role === UserRole.BOTH || isAdmin(actor);
+  return isBroker(actor) || isAdmin(actor);
 }
 
 export async function requireOriasVerified(): Promise<Actor> {

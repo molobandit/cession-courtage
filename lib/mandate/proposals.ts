@@ -54,9 +54,10 @@ export async function listMyProposalsAsSeller(sellerId: string) {
     select: {
       id: true,
       createdAt: true,
-      listing: { select: { publicNumber: true, status: true } },
+      listing: { select: { id: true, publicNumber: true, status: true } },
       mandate: {
         select: {
+          buyerId: true,
           publicNumber: true,
           maxBudget: true,
           riskTypes: true,

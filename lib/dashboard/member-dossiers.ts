@@ -7,17 +7,17 @@ import {
   listMyDeals,
   listMyListings,
   listMyMandates,
-  listMyOffers,
 } from "@/lib/authz";
 import type { Actor } from "@/lib/authz/actor";
 import { pipelineProgressPercent } from "@/lib/deal/pipeline";
 import { formatEuroWhole } from "@/lib/format/number";
 import { asStringArray } from "@/lib/json-array";
 import { listMyProposalsAsSeller } from "@/lib/mandate/proposals";
+import { listMyPositions, positionSnapshot } from "@/lib/position/load";
+import { prisma } from "@/lib/prisma";
 import {
   DEAL_STAGE_LABELS,
   LISTING_STATUS_LABELS,
-  OFFER_STATUS_LABELS,
   RISK_TYPE_LABELS,
 } from "@/lib/labels";
 
@@ -44,10 +44,10 @@ export type DossierItem = {
 export async function loadMemberDossiers(actor: Actor) {
   const seller = canSell(actor);
   const buyer = canBuy(actor);
-  const [deals, listings, offers, mandates, propositions] = await Promise.all([
+  const [deals, listings, positions, mandates, propositions] = await Promise.all([
     listMyDeals(actor),
     seller ? listMyListings(actor) : Promise.resolve([]),
-    buyer ? listMyOffers(actor) : Promise.resolve([]),
+    buyer ? listMyPositions(actor.id) : Promise.resolve([]),
     buyer ? listMyMandates(actor) : Promise.resolve([]),
     seller ? listMyProposalsAsSeller(actor.id) : Promise.resolve([]),
   ]);
@@ -55,7 +55,19 @@ export async function loadMemberDossiers(actor: Actor) {
   const dealsVendeur = deals.filter((d) => d.sellerId === actor.id);
   const dealsAcheteur = deals.filter((d) => d.buyerId === actor.id);
   const numerosVendus = new Set(dealsVendeur.map((d) => d.listing.publicNumber));
-  const numerosAchetes = new Set(dealsAcheteur.map((d) => d.listing.publicNumber));
+  const suivis = await Promise.all(
+    propositions.map((p) => positionSnapshot(p.listing.id, p.mandate.buyerId)),
+  );
+  // Nombre de candidats par annonce : c'est ce qu'un cédant veut voir d'abord.
+  const candidatures = listings.length
+    ? await prisma.buyerPosition.findMany({
+        where: { listingId: { in: listings.map((l) => l.id) } },
+        select: { listingId: true },
+      })
+    : [];
+  const candidatsPar = new Map<string, number>();
+  for (const c of candidatures) candidatsPar.set(c.listingId, (candidatsPar.get(c.listingId) ?? 0) + 1);
+  const numerosSuivis = new Set(positions.map((p) => p.position.listing.publicNumber));
 
   const cessions: DossierItem[] = [
     ...dealsVendeur.map((d) => ({
@@ -74,30 +86,39 @@ export async function loadMemberDossiers(actor: Actor) {
       .filter((l) => !numerosVendus.has(l.publicNumber))
       .map((l) => ({
         key: `listing-${l.id}`,
-        href: `/app/annonces/${l.id}`,
+        href: candidatsPar.get(l.id) ? `/app/annonces/${l.id}/offres` : `/app/annonces/${l.id}`,
         ribbon: { label: LISTING_STATUS_LABELS[l.status], icon: "megaphone" as const },
         tone: "escrow" as const,
         title: `Dossier N° ${l.publicNumber}`,
         subtitle: l.portfolio.label,
         bullets: [
           { text: l.displayedZone },
-          { text: `Commissions : ${formatEuroWhole(Number(l.portfolio.annualCommissions))} / an` },
+          candidatsPar.get(l.id)
+            ? { text: `${candidatsPar.get(l.id)} candidat${(candidatsPar.get(l.id) ?? 0) > 1 ? "s" : ""} en cours` }
+            : { text: "Aucun candidat pour le moment", muted: true },
         ],
         amount: formatEuroWhole(Number(l.askingPrice)),
         active: l.status !== "WITHDRAWN" && l.status !== "SOLD",
       })),
     // Réponses du cédant aux demandes d'acquisition : ses positions vendeur.
-    ...propositions.map((p) => {
+    ...propositions.map((p, i) => {
+      const suivi = suivis[i];
       const branches = asStringArray(p.mandate.riskTypes)
         .map((r) => RISK_TYPE_LABELS[r as keyof typeof RISK_TYPE_LABELS] ?? r)
         .join(", ");
       return {
         key: `proposal-${p.id}`,
-        href: p.mandate.publicNumber ? `/annonces/demandes/${p.mandate.publicNumber}` : "/annonces/demandes",
+        // Dès que l'acquéreur a pris position, la carte mène à son dossier et en suit l'avancement.
+        href: suivi
+          ? `/app/positions/${suivi.id}`
+          : p.mandate.publicNumber
+            ? `/annonces/demandes/${p.mandate.publicNumber}`
+            : "/annonces/demandes",
         ribbon: { label: "Position Vendeur", icon: "user" as const },
         tone: "escrow" as const,
         title: `Demande N° ${p.mandate.publicNumber ?? "—"}`,
-        subtitle: `Acquéreur : ${p.mandate.buyer.publicAlias}`,
+        subtitle: `Acquéreur : ${p.mandate.buyer.publicAlias} · ${suivi ? suivi.state.title : "proposition envoyée"}`,
+        percent: suivi ? suivi.state.percent : 1,
         bullets: [
           branches ? { text: branches } : { text: "Toutes branches", muted: true },
           { text: `Portefeuille n° ${p.listing.publicNumber} proposé` },
@@ -108,31 +129,41 @@ export async function loadMemberDossiers(actor: Actor) {
     }),
   ];
 
+  /*
+   * Côté achat, un dossier par prise de position, de la position à la clôture :
+   * c'est la même carte qui avance, au lieu d'une offre qui disparaît au profit
+   * d'un dossier de cession.
+   */
   const achats: DossierItem[] = [
-    ...dealsAcheteur.map((d) => ({
-      key: `deal-${d.id}`,
-      href: `/app/dossiers/${d.id}`,
+    ...positions.map(({ position, state, deal }) => ({
+      key: `position-${position.id}`,
+      href: `/app/positions/${position.id}`,
       ribbon: { label: "Position Acheteur", icon: "user" as const },
       tone: "listing" as const,
-      title: `Dossier N° ${d.listing.publicNumber}`,
-      subtitle: `Cédant : ${counterpartyDisplayName(d.seller)}`,
-      percent: pipelineProgressPercent(d.stage),
-      bullets: [{ text: d.listing.displayedZone }, { text: DEAL_STAGE_LABELS[d.stage] }],
-      amount: formatEuroWhole(Number(d.agreedPrice)),
-      active: d.stage !== "CLOSED",
+      title: `Dossier N° ${position.listing.publicNumber}`,
+      subtitle: state.title,
+      percent: state.percent,
+      bullets: [
+        { text: position.listing.displayedZone },
+        { text: `Commissions : ${formatEuroWhole(Number(position.listing.portfolio.annualCommissions))} / an` },
+      ],
+      amount: formatEuroWhole(Number(deal ? deal.agreedPrice : position.listing.askingPrice)),
+      active: state.outcome === "active",
     })),
-    ...offers
-      .filter((o) => !numerosAchetes.has(o.listing.publicNumber))
-      .map((o) => ({
-        key: `offer-${o.id}`,
-        href: `/annonces/${o.listing.publicNumber}`,
+    // Filet de sécurité : un dossier ouvert avant l'existence des positions.
+    ...dealsAcheteur
+      .filter((d) => !numerosSuivis.has(d.listing.publicNumber))
+      .map((d) => ({
+        key: `deal-${d.id}`,
+        href: `/app/dossiers/${d.id}`,
         ribbon: { label: "Position Acheteur", icon: "user" as const },
         tone: "listing" as const,
-        title: `Dossier N° ${o.listing.publicNumber}`,
-        subtitle: `Offre : ${OFFER_STATUS_LABELS[o.status].toLowerCase()}`,
-        bullets: [{ text: o.listing.displayedZone }, { text: `Prix demandé : ${formatEuroWhole(Number(o.listing.askingPrice))}` }],
-        amount: formatEuroWhole(Number(o.amount)),
-        active: o.status !== "DECLINED" && o.status !== "WITHDRAWN",
+        title: `Dossier N° ${d.listing.publicNumber}`,
+        subtitle: `Cédant : ${counterpartyDisplayName(d.seller)}`,
+        percent: pipelineProgressPercent(d.stage),
+        bullets: [{ text: d.listing.displayedZone }, { text: DEAL_STAGE_LABELS[d.stage] }],
+        amount: formatEuroWhole(Number(d.agreedPrice)),
+        active: d.stage !== "CLOSED",
       })),
     ...mandates.map((m) => {
       const zones = asStringArray(m.zones);

@@ -20,7 +20,7 @@ export async function isListingMailboxParty(actor: Actor, listingId: string): Pr
   if (!listing) return false;
   if (!canBuy(actor) && !ownsFirm(actor, listing.portfolio.firmId)) return false;
 
-  const [offer, deal] = await Promise.all([
+  const [offer, deal, position] = await Promise.all([
     prisma.offer.findUnique({
       where: { listingId_buyerId: { listingId, buyerId: actor.id } },
       select: { id: true },
@@ -29,11 +29,15 @@ export async function isListingMailboxParty(actor: Actor, listingId: string): Pr
       where: { listingId, OR: [{ buyerId: actor.id }, { sellerId: actor.id }] },
       select: { id: true },
     }),
+    prisma.buyerPosition.findUnique({
+      where: { listingId_buyerId: { listingId, buyerId: actor.id } },
+      select: { id: true },
+    }),
   ]);
   return isListingMessageParty({
     actorFirmId: actor.firmId,
     listingFirmId: listing.portfolio.firmId,
-    hasOffer: Boolean(offer),
+    hasOffer: Boolean(offer) || Boolean(position),
     hasDeal: Boolean(deal),
   });
 }
@@ -44,12 +48,20 @@ export async function listListingMailboxRecipients(listingId: string, actor: Act
     select: { portfolio: { select: { firmId: true } } },
   });
   if (!listing || !ownsFirm(actor, listing.portfolio.firmId)) return [];
-  const offers = await prisma.offer.findMany({
-    where: { listingId },
-    select: { buyer: { select: { id: true, publicAlias: true } } },
-    distinct: ["buyerId"],
-  });
-  return offers.map((o) => o.buyer);
+  const [offers, positions] = await Promise.all([
+    prisma.offer.findMany({
+      where: { listingId },
+      select: { buyer: { select: { id: true, publicAlias: true } } },
+      distinct: ["buyerId"],
+    }),
+    prisma.buyerPosition.findMany({
+      where: { listingId },
+      select: { buyer: { select: { id: true, publicAlias: true } } },
+    }),
+  ]);
+  const vus = new Map<string, { id: string; publicAlias: string }>();
+  for (const b of [...offers.map((o) => o.buyer), ...positions.map((p) => p.buyer)]) vus.set(b.id, b);
+  return [...vus.values()];
 }
 
 export async function listListingMessages(listingId: string, actor: Actor) {

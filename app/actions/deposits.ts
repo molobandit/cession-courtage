@@ -6,6 +6,7 @@ import { ForbiddenError, UnauthenticatedError } from "@/lib/authz/errors";
 import { isTradableListingStatus, ownsFirm } from "@/lib/authz/policies";
 import { hasContactSubscription } from "@/lib/billing/contact-access";
 import { INTEREST_DEPOSIT_LABEL, INTEREST_DEPOSIT_RATE, interestDepositFor } from "@/lib/billing/rates";
+import { ensurePosition } from "@/lib/position/load";
 import { prisma } from "@/lib/prisma";
 import { idSchema } from "@/lib/validations/actions";
 
@@ -74,6 +75,9 @@ export async function placeInterestDepositAction(
       },
     });
 
+    // Le dépôt suppose une position : l'acquéreur qui verse sans l'avoir prise la prend.
+    const position = await ensurePosition({ listingId: listing.id, buyerId: actor.id });
+
     const { findFirmSeller, notifyDepositPlaced } = await import("@/lib/notify/transactional");
     const seller = await findFirmSeller(listing.portfolio.firmId);
     if (seller) {
@@ -83,6 +87,7 @@ export async function placeInterestDepositAction(
         amountLabel: INTEREST_DEPOSIT_LABEL,
         seller: { userId: seller.id, email: seller.email },
         counterparty: { userId: actor.id, email: actor.email },
+        href: `/app/positions/${position.id}`,
       }).catch(() => null);
     }
 
@@ -97,6 +102,7 @@ export async function placeInterestDepositAction(
     });
 
     revalidatePath(`/annonces/${listing.publicNumber}`);
+    revalidatePath(`/app/positions/${position.id}`);
     revalidatePath("/app");
     return { placed: true };
   } catch (error) {

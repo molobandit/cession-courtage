@@ -26,6 +26,8 @@ import { placeInterestDepositAction } from "@/app/actions/deposits";
 import { createMandateAction } from "@/app/actions/mandates";
 import { proposeListingAction } from "@/app/actions/mandate-proposals";
 import { acceptOfferAction, submitOfferAction } from "@/app/actions/offers";
+import { takePositionAction } from "@/app/actions/positions";
+import { loadPosition } from "@/lib/position/load";
 import {
   acceptNdaAction,
   closeDealAction,
@@ -49,6 +51,7 @@ let acheteurDemande: Compte;
 const etatsAnnonces = new Map<string, ListingStatus>();
 let quotas: { id: string; dealsUsed: number }[] = [];
 const mandatsCrees: string[] = [];
+const debut = new Date();
 
 function form(champs: Record<string, string | string[]>): FormData {
   const data = new FormData();
@@ -83,7 +86,20 @@ async function acheterJusquALaVente(listingId: string, acheteur: Compte) {
     select: { publicNumber: true, askingPrice: true },
   });
 
+  // « Prendre position » ouvre le dossier et prévient le cédant.
   connecterUtilisateur(acheteur.id);
+  const versPosition = await destination(takePositionAction({}, form({ listingId })));
+  expect(versPosition).toMatch(/^\/app\/positions\//);
+  const positionId = versPosition.split("/").pop()!;
+  expect((await loadPosition(positionId))?.state.key).toBe("POSITION");
+  const avisCedant = await prisma.notification.findFirst({
+    where: { userId: cedant.id, href: versPosition },
+    select: { title: true },
+  });
+  expect(avisCedant?.title).toContain("prise de position");
+  // Reprendre position ne crée pas un second dossier.
+  expect(await destination(takePositionAction({}, form({ listingId })))).toBe(versPosition);
+
   const sansDepot = await submitOfferAction(
     {},
     form({ listingId, amount: String(Number(listing.askingPrice)), upfrontPercent: "80", message: "Reprise complète envisagée." }),
@@ -98,7 +114,8 @@ async function acheterJusquALaVente(listingId: string, acheteur: Compte) {
       form({ listingId, amount: String(Number(listing.askingPrice)), upfrontPercent: "80", message: "Reprise complète envisagée." }),
     ),
   );
-  expect(versFiche).toBe(`/annonces/${listing.publicNumber}#echanges`);
+  expect(versFiche).toBe(versPosition);
+  expect((await loadPosition(positionId))?.state.key).toBe("OFFER");
 
   const offre = await prisma.offer.findUniqueOrThrow({
     where: { listingId_buyerId: { listingId, buyerId: acheteur.id } },
@@ -124,6 +141,16 @@ async function acheterJusquALaVente(listingId: string, acheteur: Compte) {
   connecterUtilisateur(cedant.id);
   expect(await confirmTransferAction({}, form({ dealId }))).toEqual({});
   expect(await closeDealAction({}, form({ dealId }))).toEqual({});
+
+  // L'acquéreur a été prévenu de l'offre retenue et de chaque étape franchie par le cédant.
+  const avisAcheteur = await prisma.notification.findMany({
+    where: { userId: acheteur.id, href: versPosition },
+    select: { title: true },
+  });
+  expect(avisAcheteur.some((n) => n.title.startsWith("Offre retenue"))).toBe(true);
+  expect(avisAcheteur.some((n) => n.title.startsWith("Cession close"))).toBe(true);
+  const suivi = await loadPosition(positionId);
+  expect(suivi?.state.percent).toBe(100);
 
   const fin = await prisma.deal.findUniqueOrThrow({
     where: { id: dealId },
@@ -179,6 +206,12 @@ afterAll(async () => {
     await prisma.deal.delete({ where: { id: deal.id } });
   }
   await prisma.offer.deleteMany({ where: { listingId: { in: annonces }, buyerId: { in: acheteurs } } });
+  await prisma.buyerPosition.deleteMany({ where: { listingId: { in: annonces }, buyerId: { in: acheteurs } } });
+  await prisma.message.deleteMany({ where: { listingId: { in: annonces } , senderId: { in: acheteurs } } });
+  await prisma.notification.deleteMany({
+    where: { userId: { in: [...acheteurs, cedant.id] }, createdAt: { gte: debut } },
+  });
+  await prisma.outboundEmail.deleteMany({ where: { createdAt: { gte: debut } } });
   await prisma.interestDeposit.deleteMany({ where: { listingId: { in: annonces }, buyerId: { in: acheteurs } } });
   for (const id of mandatsCrees) {
     await prisma.auditLog.deleteMany({ where: { entityId: id } });

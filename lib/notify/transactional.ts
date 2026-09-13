@@ -140,6 +140,8 @@ export async function notifyOfferReceived(input: {
   sellerEmail: string;
   publicNumber: number;
   sealed: boolean;
+  /** Dossier du candidat, pour que la notification y mène directement. */
+  href?: string;
 }): Promise<void> {
   const copy = offerReceivedCopy(input);
   await sendMail({
@@ -156,7 +158,7 @@ export async function notifyOfferReceived(input: {
     body: input.sealed
       ? `Dossier n° ${input.publicNumber}. Le montant reste masqué jusqu’à la clôture.`
       : `Dossier n° ${input.publicNumber}. Vous pouvez comparer les offres.`,
-    href: `/app/annonces`,
+    href: input.href ?? `/app/annonces`,
   });
 }
 
@@ -166,6 +168,7 @@ export async function notifyDepositPlaced(input: {
   amountLabel: string;
   seller: { userId: string; email: string };
   counterparty: { userId: string; email: string };
+  href?: string;
 }): Promise<void> {
   const body = [
     `Un dépôt de ${input.amountLabel} a été posé sur le dossier n° ${input.publicNumber}.`,
@@ -193,14 +196,14 @@ export async function notifyDepositPlaced(input: {
     type: NotificationType.DEPOSIT_PLACED,
     title: "Dépôt de 2,5 % posé",
     body: `Dossier n° ${input.publicNumber}. Les coordonnées du cabinet sont ouvertes.`,
-    href: `/annonces/${input.publicNumber}`,
+    href: input.href ?? `/annonces/${input.publicNumber}`,
   });
   await notifyInApp({
     userId: input.counterparty.userId,
     type: NotificationType.DEPOSIT_PLACED,
     title: "Dépôt de 2,5 % posé",
     body: `Dossier n° ${input.publicNumber}. Les coordonnées du cabinet sont ouvertes.`,
-    href: `/annonces/${input.publicNumber}`,
+    href: input.href ?? `/annonces/${input.publicNumber}`,
   });
 }
 
@@ -381,5 +384,41 @@ export async function notifyMandateProposal(input: {
     title: `Portefeuille n° ${input.listingNumber} proposé`,
     body: `En réponse à votre demande n° ${input.mandateNumber}.`,
     href: lien,
+  });
+}
+
+/**
+ * Avis générique d'avancement d'une prise de position ou d'un dossier.
+ *
+ * Courriel et notification dans l'application, avec une clef d'idempotence :
+ * une action rejouée ne prévient pas deux fois.
+ */
+export async function notifyPositionEvent(input: {
+  key: string;
+  userId: string;
+  email: string;
+  title: string;
+  body: string;
+  href: string;
+  type?: NotificationType;
+}): Promise<void> {
+  const deja = await prisma.outboundEmail.findUnique({
+    where: { dedupeKey: `position:${input.key}:${input.userId}` },
+    select: { id: true },
+  });
+  if (deja) return;
+  await sendMail({
+    to: input.email,
+    purpose: "POSITION_EVENT",
+    dedupeKey: `position:${input.key}:${input.userId}`,
+    subject: `${input.title} — ${BRAND_NAME}`,
+    bodyText: [input.body, "", `Suivre le dossier : ${input.href}`, "", `— ${BRAND_NAME}`].join("\n"),
+  });
+  await notifyInApp({
+    userId: input.userId,
+    type: input.type ?? NotificationType.DEAL_STAGE_CHANGED,
+    title: input.title,
+    body: input.body,
+    href: input.href,
   });
 }

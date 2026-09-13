@@ -20,6 +20,8 @@ import {
 import { fullyCommitted } from "@/lib/listing/lots";
 import { findMyDeposit } from "@/lib/listing/deposit";
 import { listingAcceptsOffers } from "@/lib/offer/acceptance";
+import { notifyOfferDecision } from "@/lib/position/events";
+import { ensurePosition } from "@/lib/position/load";
 import { INTEREST_DEPOSIT_LABEL } from "@/lib/billing/rates";
 import { firstIssue, offerIdSchema, offerSchema } from "@/lib/validations/actions";
 
@@ -117,6 +119,7 @@ export async function submitOfferAction(
       where: { listingId_buyerId: { listingId, buyerId: actor.id } },
       select: { id: true },
     });
+    const position = await ensurePosition({ listingId, buyerId: actor.id });
     const { findFirmSeller, notifyOfferReceived } = await import("@/lib/notify/transactional");
     const seller = await findFirmSeller(listing.portfolio.firmId);
     if (offer && seller && listing.publicNumber) {
@@ -126,11 +129,13 @@ export async function submitOfferAction(
         sellerEmail: seller.email,
         publicNumber: listing.publicNumber,
         sealed: isOfferWindowSealed(listing),
+        href: `/app/positions/${position.id}`,
       }).catch(() => null);
     }
     revalidatePath(`/annonces/${listing.publicNumber}`);
     revalidatePath("/app");
-    redirect(`/annonces/${listing.publicNumber}#echanges`);
+    // L'offre faite, l'acquéreur retrouve son dossier : c'est là qu'il suit la réponse.
+    redirect(`/app/positions/${position.id}`);
   } catch (error) {
     if (
       typeof error === "object" &&
@@ -281,11 +286,26 @@ export async function acceptOfferAction(
     const lots = await listingLots(offer.listingId);
     const aEcarter = await conflictingOfferIds(offer.listingId, offer.id, lotRetenu, lots);
     if (aEcarter.length > 0) {
+      const ecartees = await prisma.offer.findMany({
+        where: { id: { in: aEcarter } },
+        select: { buyerId: true },
+      });
       await prisma.offer.updateMany({
         where: { id: { in: aEcarter } },
         data: { status: OfferStatus.DECLINED },
       });
+      for (const e of ecartees) {
+        await notifyOfferDecision({ listingId: offer.listingId, buyerId: e.buyerId, accepted: false }).catch(
+          (err) => console.error("notifyOfferDecision", err),
+        );
+      }
     }
+    await notifyOfferDecision({
+      listingId: offer.listingId,
+      buyerId: offer.buyerId,
+      accepted: true,
+      dealId: deal.id,
+    }).catch((err) => console.error("notifyOfferDecision", err));
 
     /*
      * L'annonce ne quitte le marché que lorsque plus aucun fournisseur n'est

@@ -19,6 +19,7 @@ import {
   listOffersForListing,
 } from "@/lib/authz";
 import { listingAcceptsOffers } from "@/lib/offer/acceptance";
+import { findPositionId } from "@/lib/position/load";
 import { isOfferWindowSealed, ownsFirm } from "@/lib/authz/policies";
 import { hasContactSubscription } from "@/lib/billing/contact-access";
 import { GROWTH_PLAN_ANNUAL_EUR, INTEREST_DEPOSIT_LABEL, interestDepositFor } from "@/lib/billing/rates";
@@ -211,11 +212,18 @@ export default async function PublicListingPage({
     : subscribed
       ? "#position"
       : `/tarifs?next=${encodeURIComponent(listingPath)}#abonnements`;
+  // Suivre en investisseur n'a de sens que pour un visiteur ou un investisseur :
+  // pour un courtier, suivre un dossier, c'est prendre position.
   const followHref = !actor
     ? `/connexion?next=${encodeURIComponent(`/annonces/${listing.publicNumber}?voie=investir`)}`
     : isInvestor(actor)
       ? "#suivi"
-      : `/inscription?voie=investir`;
+      : null;
+  const monDossier =
+    actor && verified && !isSeller && !isInvestor(actor) ? await findPositionId(listing.id, actor.id) : null;
+  const peutPrendrePosition = Boolean(
+    actor && verified && subscribed && canBuy(actor) && !isSeller && listingAcceptsOffers(listing.status),
+  );
 
   return (
     <PublicListingDetail
@@ -251,6 +259,13 @@ export default async function PublicListingPage({
         carrierHhi,
         quality: qualityFromPortfolio(listing.portfolio),
         interestHref,
+        positionHref: isSeller
+          ? `/app/annonces/${listing.id}/offres`
+          : monDossier
+            ? `/app/positions/${monDossier}`
+            : null,
+        positionLabel: isSeller ? "Voir les candidats et les offres" : undefined,
+        positionListingId: peutPrendrePosition ? listing.id : null,
         followHref,
         manageHref: isSeller ? `/app/annonces/${listing.id}` : null,
         /*
