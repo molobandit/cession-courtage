@@ -62,6 +62,43 @@ function CheckIcon() {
   );
 }
 
+/** Pictogramme d'une carte du bandeau. Trait, pas aplat : il accompagne le chiffre sans lui voler la vedette. */
+function FigureIcon({ name }: { name: "tag" | "clock" | "shield" }) {
+  const trace =
+    name === "tag" ? (
+      <>
+        <path d="M3 12V4a1 1 0 0 1 1-1h8l9 9-9 9-9-9Z" />
+        <circle cx="7.5" cy="7.5" r="1.5" />
+      </>
+    ) : name === "clock" ? (
+      <>
+        <circle cx="12" cy="12" r="9" />
+        <path d="M12 7v5l3 2" />
+      </>
+    ) : (
+      <>
+        <path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6l-8-3Z" />
+        <path d="m8.5 12 2.5 2.5 4.5-5" />
+      </>
+    );
+  return (
+    <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-indigo/20 text-indigo-line">
+      <svg
+        viewBox="0 0 24 24"
+        className="h-5 w-5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        {trace}
+      </svg>
+    </span>
+  );
+}
+
 function featuredSpotlight(listings: PublicListingCard[]): PublicListingCard[] {
   const sold = listings.find((item) => item.sold);
   const others = listings.filter((item) => item.id !== sold?.id);
@@ -137,29 +174,33 @@ export default async function HomePage() {
         Bandeau sombre, seule rupture de valeur de la page : c'est elle qui
         donne envie de continuer a descendre.
 
-        Resserre a max-w-3xl et centre. Etale sur toute la largeur, chaque
-        colonne tramait un vide a sa droite et les trois chiffres flottaient
-        sans se repondre ; groupes, ils se lisent comme une seule affirmation.
-        A cette largeur les filets verticaux redeviennent utiles, ce qui
-        n'etait pas le cas quand les colonnes etaient larges.
+        Trois cartes, chacune avec sa place. Etales sur toute la largeur, les
+        chiffres flottaient sans se repondre ; serres au centre, ils se
+        marchaient dessus. Une carte par chiffre regle les deux : l'espace est
+        genereux, mais chaque chiffre a un cadre qui le tient, et l'icone dit
+        de quoi il parle avant meme qu'on lise le libelle.
       */}
       <section className="relative overflow-hidden bg-ink">
         <div className="pointer-events-none absolute -left-24 -top-28 h-72 w-72 rounded-full bg-indigo/25 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-28 right-0 h-64 w-64 rounded-full bg-indigo/20 blur-3xl" />
-        <div className="relative mx-auto max-w-3xl px-4 py-14 text-center sm:py-16">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-indigo-line">
+        <div className="relative mx-auto max-w-5xl px-4 py-14 sm:py-16">
+          <p className="text-center text-[11px] font-semibold uppercase tracking-[0.24em] text-indigo-line">
             {MARKET_FIGURES_KICKER}
           </p>
-          <dl className="mt-9 grid gap-9 sm:grid-cols-3 sm:gap-0 sm:divide-x sm:divide-white/12">
+          <dl className="mt-9 grid gap-4 sm:grid-cols-3 sm:gap-5">
             {MARKET_FIGURES.map((row) => (
-              <div key={row.figure} className="sm:px-5">
-                <dd className="text-[2.75rem] font-bold leading-none tracking-tight text-white sm:text-[3rem]">
+              <div
+                key={row.figure}
+                className="rounded-2xl border border-white/10 bg-white/[0.05] p-6 sm:p-7"
+              >
+                <FigureIcon name={row.icon} />
+                <dd className="mt-5 text-[2.75rem] font-bold leading-none tracking-tight text-white sm:text-[3.25rem]">
                   {row.figure}
                 </dd>
-                <dt className="mt-4 text-[13px] font-semibold uppercase tracking-[0.12em] text-white">
+                <dt className="mt-4 text-[13px] font-semibold uppercase tracking-[0.12em] text-indigo-line">
                   {row.label}
                 </dt>
-                <p className="mt-1.5 text-[13px] leading-snug text-white/60">{row.note}</p>
+                <p className="mt-1.5 text-[14px] leading-snug text-white/65">{row.note}</p>
               </div>
             ))}
           </dl>

@@ -85,21 +85,29 @@ export const SALE_SPEED_CLAIM = "Nos portefeuilles sont vendus en moyenne en moi
  */
 export const MARKET_FIGURES_KICKER = "Le marché en trois chiffres";
 
+/*
+ * « Pour mettre en vente » et non « pour déposer » : depuis que l'acquéreur
+ * verse un dépôt de garantie avant toute offre, « 0 € pour déposer » se lisait
+ * aussi comme « pas de dépôt » — l'exact contraire de ce qu'il allait trouver.
+ */
 export const MARKET_FIGURES = [
   {
+    icon: "tag",
     figure: "0 €",
-    label: "Pour déposer",
+    label: "Pour mettre en vente",
     note: "Vous ne payez qu’une fois la vente conclue.",
   },
   {
+    icon: "clock",
     figure: "< 1 sem.",
-    label: "Pour vendre*",
+    label: "Délai moyen*",
     note: "Constaté, jamais garanti.",
   },
   {
+    icon: "shield",
     figure: `${CERTIFICATION_POINTS}+`,
-    label: "Pour certifier",
-    note: "Kbis, ORIAS, commissions, contrats.",
+    label: "Points de contrôle",
+    note: "Vérifiés avant chaque certification.",
   },
 ] as const;
 

@@ -29,8 +29,18 @@ export function HomeHeroVisual({ listings }: { listings: PublicListingCard[] }) 
                       {item.riskTypes[0] ? ` · ${item.riskTypes[0]}` : ""}
                     </p>
                     <p className="mt-0.5 truncate text-[12px] text-muted">
-                      {item.certified ? "Certifié" : "À certifier"}
-                      {item.sold ? " · Vendu" : ""}
+                      {/*
+                        Un dossier vendu ne se certifie plus : lui accoler
+                        « À certifier » proposait une démarche sur un
+                        portefeuille déjà cédé.
+                      */}
+                      {item.sold
+                        ? item.certified
+                          ? "Certifié · Vendu"
+                          : "Vendu"
+                        : item.certified
+                          ? "Certifié"
+                          : "À certifier"}
                     </p>
                   </div>
                   <div className="flex shrink-0 items-center gap-2">
