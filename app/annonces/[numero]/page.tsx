@@ -285,6 +285,7 @@ export default async function PublicListingPage({
           {cedantIdentity ? <CedantIdentityCard identity={cedantIdentity} /> : null}
           <CompanyDocumentsPanel
             listingId={listing.id}
+            publicNumber={listing.publicNumber}
             docs={canReadCompanyDocs || isSeller ? companyDocs : []}
             canUpload={isSeller}
             canDownload={canReadCompanyDocs || isSeller}

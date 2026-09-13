@@ -9,11 +9,14 @@ const initial: CompanyDocFormState = {};
 
 export function CompanyDocumentsPanel({
   listingId,
+  publicNumber,
   docs,
   canUpload,
   canDownload,
 }: {
   listingId: string;
+  /** Numéro public : il sert d'adresse à la présentation détaillée du cabinet. */
+  publicNumber?: number;
   docs: CompanyDocRow[];
   canUpload: boolean;
   canDownload: boolean;
@@ -44,6 +47,34 @@ export function CompanyDocumentsPanel({
               : `Déposez maintenant : ${DATA_ROOM_KINDS.filter((k) => !byKind.has(k)).map((k) => companyDocLabel(k)).join(", ")}. La vérification ne vous attendra pas.`}
           </p>
         </div>
+      ) : null}
+      {publicNumber ? (
+        canDownload ? (
+          <a
+            href={`/annonces/${publicNumber}/presentation-cabinet`}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-4 flex items-center gap-4 rounded-2xl border border-indigo-line bg-indigo-soft px-4 py-3 transition hover:border-indigo"
+          >
+            <span className="flex h-11 w-9 shrink-0 items-center justify-center rounded-md bg-indigo text-[10px] font-bold tracking-wide text-white">PDF</span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-[15px] font-semibold text-ink">Présentation détaillée du cabinet</span>
+              <span className="block text-[13px] text-muted">
+                Identité de la société, chiffres clés, répartition des commissions, conformité et pièces disponibles.
+              </span>
+            </span>
+            <span className="shrink-0 text-[14px] font-semibold text-indigo-dark">Ouvrir le PDF</span>
+          </a>
+        ) : (
+          <div className="mt-4 flex items-center gap-4 rounded-2xl border border-line bg-surface-alt px-4 py-3">
+            <span className="flex h-11 w-9 shrink-0 items-center justify-center rounded-md bg-muted/40 text-[10px] font-bold tracking-wide text-white">PDF</span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-[15px] font-semibold text-ink">Présentation détaillée du cabinet</span>
+              <span className="block text-[13px] text-muted">S’ouvre avec votre engagement de 2,5 % et l’acceptation de la confidentialité.</span>
+            </span>
+            <span className="shrink-0 text-[12px] font-medium text-muted">Verrouillé</span>
+          </div>
+        )
       ) : null}
       <ul className="mt-4 divide-y divide-line">
         {COMPANY_DOC_KINDS.map((item) => {

@@ -82,7 +82,7 @@ export default async function SellerListingPage({ params }: { params: Promise<{ 
       </div>
 
       <div className="mt-6">
-        <CompanyDocumentsPanel listingId={listing.id} docs={companyDocs} canUpload canDownload />
+        <CompanyDocumentsPanel listingId={listing.id} publicNumber={listing.publicNumber} docs={companyDocs} canUpload canDownload />
       </div>
 
       <section id="echanges" className="mt-6">
