@@ -127,7 +127,7 @@ const SECTIONS: Section[] = [
       },
       {
         q: "Que contrôlez-vous concrètement ?",
-        a: `Trois niveaux distincts. L’inscription contrôle le numéro ORIAS. Le dépôt de ${INTEREST_DEPOSIT_LABEL} révèle qui est le cédant, sans valider ses pièces. L’option Certifié relit le Kbis, la pièce d’identité, le justificatif ORIAS du dossier et les documents du portefeuille. Ces pièces ne sont jamais publiées au catalogue.`,
+        a: `Trois niveaux distincts. L’inscription contrôle le numéro ORIAS. Le dépôt de ${INTEREST_DEPOSIT_LABEL} révèle qui est le cédant, sans valider ses pièces. L’option certifié relit le Kbis, la pièce d’identité, le justificatif ORIAS du dossier et les documents du portefeuille. Ces pièces ne sont jamais publiées au catalogue.`,
       },
       {
         q: "Un acquéreur doit-il payer ?",
