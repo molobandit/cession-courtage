@@ -30,7 +30,6 @@ function base(over: Partial<ProcessSnapshot> = {}): ProcessSnapshot {
     carriers: [{ name: "AXA", code: "123" }],
     deedHash: "h1",
     escrowStage: "NONE",
-    retention: null,
     ...over,
   };
 }
@@ -83,7 +82,7 @@ describe("vérifications", () => {
   });
 });
 
-describe("signature, paiement et transfert, solde", () => {
+describe("signature, paiement et transfert", () => {
   it("la signature couvre le texte signé, pour les deux parties", () => {
     const s = base({ stage: "SIGNATURE", signoffs: [signe("DEED_SIGNED", "s", T0, "h1"), signe("DEED_SIGNED", "b", T0, "h1")] });
     expect(stageComplete(s)).toBe(true);
@@ -100,26 +99,21 @@ describe("signature, paiement et transfert, solde", () => {
     expect(stageComplete({ ...envoye, signoffs: [...envoye.signoffs, signe("TRANSFER_CONFIRMED", "b", plus(2))] })).toBe(true);
   });
 
-  it("la clôture exige la déclaration à douze mois validée après sa dernière modification", () => {
-    const s = base({ stage: "RETENTION", retention: { reportedAt: plus(10), retentionRate: 0.92 } });
-    expect(stageComplete({ ...s, signoffs: [signe("RETENTION_ACCEPTED", "s", plus(5))] })).toBe(false);
-    expect(stageComplete({ ...s, signoffs: [signe("RETENTION_ACCEPTED", "s", plus(15))] })).toBe(true);
-  });
 });
 
-describe("cinq étapes", () => {
+describe("les étapes", () => {
   it("ramène les étapes de l’ancien parcours à celle qui les regroupe", () => {
     expect(normalizeStage("NDA")).toBe("DATA_ROOM");
     expect(normalizeStage("KYC")).toBe("DATA_ROOM");
     expect(normalizeStage("DEED")).toBe("SIGNATURE");
     expect(normalizeStage("ESCROW")).toBe("TRANSFER");
+    expect(normalizeStage("RETENTION")).toBe("TRANSFER");
   });
 
-  it("enchaîne vérifications, signature, paiement et transfert, solde, clôture", () => {
+  it("enchaîne vérifications, signature, paiement et transfert, clôture", () => {
     expect(nextStage("DATA_ROOM")).toBe("SIGNATURE");
     expect(nextStage("SIGNATURE")).toBe("TRANSFER");
-    expect(nextStage("TRANSFER")).toBe("RETENTION");
-    expect(nextStage("RETENTION")).toBe("CLOSED");
+    expect(nextStage("TRANSFER")).toBe("CLOSED");
     expect(nextStage("CLOSED")).toBeNull();
   });
 });

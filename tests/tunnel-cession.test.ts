@@ -32,6 +32,7 @@ import {
 } from "@/app/actions/deal-process";
 import { uploadAccountDocumentAction } from "@/app/actions/account-verification";
 import { acceptOfferAction } from "@/app/actions/offers";
+import { signerEngagements } from "./setup/engagements";
 import { DATA_ROOM_KINDS } from "@/lib/listing/company-doc-kinds";
 
 const DEAL = "deal_nda";
@@ -117,6 +118,7 @@ afterAll(async () => {
   await prisma.retentionReport.deleteMany({ where: { dealId: DEAL } });
   await prisma.listingCompanyDocument.deleteMany({ where: { listingId, createdAt: { gte: debut } } });
   await prisma.accountDocument.deleteMany({ where: { userId: { in: [sellerId, buyerId] }, createdAt: { gte: debut } } });
+  await prisma.userAgreement.deleteMany({ where: { signedAt: { gte: debut } } });
   await prisma.deal.update({
     where: { id: DEAL },
     data: {
@@ -137,7 +139,7 @@ afterAll(async () => {
   await disposePlatformProxy();
 });
 
-describe("les cinq étapes, de l’offre acceptée à la clôture", () => {
+describe("de l’offre acceptée à la clôture", () => {
   it("va de bout en bout, comptes vérifiés une fois, et marque l’annonce cédée", async () => {
     await poser(DealStage.DATA_ROOM, false);
     await prisma.user.updateMany({ where: { id: { in: [sellerId, buyerId] } }, data: { kycStatus: "NONE" } });
@@ -150,7 +152,6 @@ describe("les cinq étapes, de l’offre acceptée à la clôture", () => {
     });
     expect(deal.escrowStage).toBe("RELEASED");
     expect(deal.fundsOrigin).toBe("FONDS_PROPRES");
-    expect(deal.adjustedDeferredAmount).not.toBeNull();
 
     const archives = await prisma.document.findMany({
       where: { dealId: DEAL, slot: { startsWith: "generated:" } },
@@ -334,7 +335,7 @@ describe("de l’offre retenue au dossier ouvert", () => {
     expect(resultat.error).toBe("Seul le cédant peut retenir une offre.");
   });
 
-  it("refuse tant que la fenêtre de vingt et un jours court encore", async () => {
+  it("refuse tant que la séance de vingt et un jours court encore", async () => {
     // lst_03 : fenêtre ouverte. Les offres y sont scellées, y compris pour le
     // cédant — c'est la règle qui empêche de choisir en connaissant les autres.
     const offre = await prisma.offer.findFirst({
@@ -345,9 +346,10 @@ describe("de l’offre retenue au dossier ouvert", () => {
     const cedant = offre.listing.portfolio.firm.users[0]?.id;
     if (!cedant) throw new Error("Cédant de lst_03 introuvable.");
 
+    await signerEngagements(cedant);
     connecterUtilisateur(cedant);
     const resultat = await acceptOfferAction({}, form({ offerId: offre.id }));
-    expect(resultat.error).toContain("scellées");
+    expect(resultat.error).toContain("séance est en cours");
   });
 
   it("ouvre le dossier, écarte les autres offres et met l’annonce en négociation", async () => {
@@ -363,6 +365,7 @@ describe("de l’offre retenue au dossier ouvert", () => {
     const cedant = offre.listing.portfolio.firm.users[0]?.id;
     if (!cedant) throw new Error("Cédant de lst_05 introuvable.");
 
+    await signerEngagements(cedant);
     connecterUtilisateur(cedant);
     // L'action se termine par une redirection vers le dossier : c'est son succès.
     await expect(acceptOfferAction({}, form({ offerId: offre.id }))).rejects.toThrow(/dossiers/);

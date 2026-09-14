@@ -18,8 +18,8 @@ describe("sale pipeline", () => {
     expect(pipelineProgressPercent("CLOSED")).toBe(100);
   });
 
-  it("séquestre 80 % à la signature", () => {
-    expect(ESCROW_UPFRONT_SHARE).toBe(0.8);
-    expect(nextPipelineAction("ESCROW", "buyer").body).toMatch(/80 %/);
+  it("tout le prix au séquestre, libéré à l’accord des compagnies", () => {
+    expect(ESCROW_UPFRONT_SHARE).toBe(1);
+    expect(nextPipelineAction("TRANSFER", "buyer").body).toMatch(/compagnies/);
   });
 });

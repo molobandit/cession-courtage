@@ -5,9 +5,9 @@ const now = new Date("2026-09-13T10:00:00Z");
 const dans = (jours: number) => new Date(now.getTime() + jours * 86_400_000);
 
 describe("statut de cotation", () => {
-  it("compte à rebours pendant la séance scellée", () => {
+  it("compte à rebours pendant la séance", () => {
     const s = marketStatus({ status: "OFFERS_OPEN", offerWindowClosesAt: dans(5), now });
-    expect(s.label).toBe("Offres scellées");
+    expect(s.label).toBe("Séance en cours");
     expect(s.detail).toBe("Clôture dans 5 jours");
     expect(s.tradable).toBe(true);
   });

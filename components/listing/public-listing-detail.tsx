@@ -28,6 +28,9 @@ export type PublicListingDetailModel = {
   isPartial: boolean;
   isNationwide: boolean;
   askingPrice: number;
+  /** Cote de la séance : meilleure offre et nombre d'offres déposées. */
+  bestOffer: number | null;
+  offerCount: number;
   annualCommissions: number;
   perceptionModeLine: string;
   perceptionAmountLine: string | null;
@@ -106,6 +109,8 @@ export function PublicListingDetail({
     sold,
     isPartial,
     askingPrice,
+    bestOffer,
+    offerCount,
     annualCommissions,
     perceptionModeLine,
     perceptionAmountLine,
@@ -307,6 +312,26 @@ export function PublicListingDetail({
           </div>
 
           <aside className="h-fit rounded-3xl border border-line bg-paper p-5 shadow-sm">
+            {!sold ? (
+              <div className="mb-4 rounded-2xl border border-indigo-line bg-indigo-soft px-4 py-3">
+                {offerCount >= 2 || (bestOffer !== null && bestOffer >= askingPrice) ? (
+                  <p className="mb-1 inline-flex items-center gap-1.5 rounded-full bg-indigo px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-white">
+                    Opportunité chaude
+                  </p>
+                ) : null}
+                <p className="tabular text-[26px] font-bold leading-tight text-ink">
+                  {bestOffer !== null ? formatEuroWhole(bestOffer) : "—"}
+                </p>
+                <p className="text-[13px] text-muted">
+                  {bestOffer !== null ? "Meilleure offre actuelle" : "Aucune offre pour le moment"}
+                </p>
+                <p className="mt-1 text-[13px] font-semibold text-indigo-dark">
+                  {offerCount === 0
+                    ? "Soyez le premier à faire une offre"
+                    : `${offerCount} offre${offerCount > 1 ? "s" : ""} déjà déposée${offerCount > 1 ? "s" : ""}`}
+                </p>
+              </div>
+            ) : null}
             {sold ? (
               <p className="text-center text-[15px] font-semibold text-ink">
                 Ce portefeuille est cédé.

@@ -50,7 +50,7 @@ describe("offerSchema", () => {
     expect(parsed.success).toBe(true);
     if (parsed.success) {
       expect(parsed.data.message).toBe("");
-      expect(parsed.data.upfrontPercent).toBe(80);
+      expect(parsed.data.upfrontPercent).toBe(100);
       expect(parsed.data.effectiveDate).toBeNull();
     }
   });

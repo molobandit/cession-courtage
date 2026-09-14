@@ -22,4 +22,7 @@ export type PublicListingCard = {
   sold: boolean;
   precompte: boolean | null;
   precompteAmount: string | null;
+  /** Meilleure offre déposée, et nombre d'offres : la cote de la séance. */
+  bestOffer?: number | null;
+  offerCount?: number;
 };

@@ -3,8 +3,8 @@ import type { DealStage } from "@prisma/client";
 /**
  * Ce qu'exige chaque étape du dossier de cession, et qui doit le faire.
  *
- * Cinq étapes, pas une de plus : offre acceptée, vérifications, signature,
- * paiement et transfert, solde. La vitesse ne vient pas de contrôles en moins
+ * Quatre étapes après l'offre acceptée : vérifications, signature, paiement
+ * et transfert, clôture. La vitesse ne vient pas de contrôles en moins
  * mais de contrôles faits une fois : la confidentialité est acceptée au dépôt,
  * l'offre vaut lettre d'intention, le compte de chaque cabinet est vérifié une
  * fois pour toutes, les pièces du cabinet cédant sont déposées sur l'annonce
@@ -26,8 +26,7 @@ export type SignoffKind =
   | "LOI_ACCEPTED"
   | "DEED_SIGNED"
   | "ATTESTATIONS_SENT"
-  | "TRANSFER_CONFIRMED"
-  | "RETENTION_ACCEPTED";
+  | "TRANSFER_CONFIRMED";
 
 export const SIGNOFF_LABELS: Record<string, string> = {
   NDA_SIGNED: "a accepté l’engagement de confidentialité",
@@ -54,13 +53,13 @@ export const MAX_PIECE_BYTES = 10 * 1024 * 1024;
 export const ACCEPTED_PIECE_TYPES = ["application/pdf", "image/jpeg", "image/png"] as const;
 
 /** Étapes réellement parcourues, dans l'ordre. */
-export const ACTIVE_STAGES: DealStage[] = ["DATA_ROOM", "SIGNATURE", "TRANSFER", "RETENTION", "CLOSED"];
+export const ACTIVE_STAGES: DealStage[] = ["DATA_ROOM", "SIGNATURE", "TRANSFER", "CLOSED"];
 
 /** Étapes de l'ancien parcours, ramenées à l'étape qui les regroupe désormais. */
 export function normalizeStage(stage: DealStage): DealStage {
   if (stage === "NDA" || stage === "LOI" || stage === "KYC") return "DATA_ROOM";
   if (stage === "DEED") return "SIGNATURE";
-  if (stage === "ESCROW") return "TRANSFER";
+  if (stage === "ESCROW" || stage === "RETENTION") return "TRANSFER";
   return stage;
 }
 
@@ -88,8 +87,6 @@ export type ProcessSnapshot = {
   /** Empreinte du protocole tel qu'il serait signé aujourd'hui. */
   deedHash: string | null;
   escrowStage: string;
-  /** Déclaration de conservation à douze mois, si elle existe. */
-  retention: { reportedAt: Date; retentionRate: number } | null;
 };
 
 export type Task = {
@@ -253,8 +250,8 @@ export function stageTasks(s: ProcessSnapshot): Task[] {
       return [
         task({
           key: "escrow-fund",
-          label: "Verser le comptant au séquestre",
-          detail: "80 % du prix, bloqués chez le tiers de séquestre jusqu’à la clôture. Origine des fonds déclarée.",
+          label: "Verser le prix au séquestre",
+          detail: "Le prix, dépôt de garantie déduit, bloqué chez le tiers de séquestre jusqu’à l’accord des compagnies. Origine des fonds déclarée.",
           owner: "buyer",
           done: verse,
         }),
@@ -270,38 +267,13 @@ export function stageTasks(s: ProcessSnapshot): Task[] {
         }),
         task({
           key: "transfer-confirm",
-          label: "Confirmer le rattachement des contrats",
-          detail: "Quand les compagnies ont basculé les contrats et les commissions sur le code de l’acquéreur.",
+          label: "Confirmer l’accord des compagnies",
+          detail: "Quand les compagnies ont rattaché les contrats et les commissions au code de l’acquéreur : le séquestre est alors libéré au cédant et la cession close.",
           owner: "buyer",
           done: Boolean(confirme),
           doneAt: confirme?.createdAt ?? null,
           available: Boolean(envoyees),
           waitingReason: envoyees ? undefined : "En attente de l’envoi des attestations.",
-        }),
-      ];
-    }
-
-    case "RETENTION": {
-      const declaree = Boolean(s.retention);
-      const x = s.retention ? freshSignoff(s, "RETENTION_ACCEPTED", "seller", s.retention.reportedAt) : null;
-      return [
-        task({
-          key: "retention-report",
-          label: "Déclarer la conservation à douze mois",
-          detail: "Contrats conservés et commissions encaissées. Le solde de 20 % en dépend.",
-          owner: "buyer",
-          done: declaree,
-          doneAt: s.retention?.reportedAt ?? null,
-        }),
-        task({
-          key: "retention-accept",
-          label: "Valider la déclaration et clore la cession",
-          detail: "La validation libère le séquestre et le solde ajusté.",
-          owner: "seller",
-          done: Boolean(x),
-          doneAt: x?.createdAt ?? null,
-          available: declaree,
-          waitingReason: declaree ? undefined : "En attente de la déclaration de l’acquéreur.",
         }),
       ];
     }
@@ -319,8 +291,7 @@ export function stageComplete(s: ProcessSnapshot): boolean {
 const NEXT: Partial<Record<DealStage, DealStage>> = {
   DATA_ROOM: "SIGNATURE",
   SIGNATURE: "TRANSFER",
-  TRANSFER: "RETENTION",
-  RETENTION: "CLOSED",
+  TRANSFER: "CLOSED",
 };
 
 export function nextStage(stage: DealStage): DealStage | null {
@@ -341,7 +312,6 @@ export function tasksFor(s: ProcessSnapshot, side: Side) {
 export const STAGE_INTRO: Partial<Record<DealStage, string>> = {
   DATA_ROOM: "L’acquéreur examine les pièces du cabinet et confirme son prix. Les deux comptes sont vérifiés une fois pour toutes, le cédant renseigne ses codes courtier.",
   SIGNATURE: "Les deux représentants signent le protocole et les attestations de transfert, en un geste chacun.",
-  TRANSFER: "L’acquéreur verse le comptant au séquestre, le cédant envoie les attestations, l’acquéreur confirme le rattachement des contrats.",
-  RETENTION: "À douze mois, l’acquéreur déclare la conservation, le cédant la valide : le séquestre et le solde ajusté se libèrent.",
+  TRANSFER: "L’acquéreur verse le prix au séquestre, le cédant envoie les attestations signées, l’acquéreur confirme l’accord des compagnies : les fonds sont libérés au cédant.",
   CLOSED: "La cession est close.",
 };

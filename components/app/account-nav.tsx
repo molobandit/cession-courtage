@@ -1,6 +1,8 @@
 const LINKS = [
   { href: "#identite", label: "Identité" },
   { href: "#cabinet", label: "Cabinet" },
+  { href: "#profil-cabinet", label: "Profil du cabinet" },
+  { href: "#engagements", label: "Engagements" },
   { href: "#recherche", label: "Recherche" },
   { href: "#verification", label: "Compte vérifié" },
   { href: "#mot-de-passe", label: "Mot de passe" },

@@ -37,9 +37,9 @@ const ARTICLES = [
     body: "Sans accompagnement, la valorisation est minorée d’un dixième. À six mois, elle est majorée d’un cinquième. L’écart entre les deux situations dépasse souvent ce que rapporterait une année de prospection supplémentaire. C’est logique du point de vue de l’acquéreur : la présentation du cédant à ses mandants est ce qui détermine la rétention réelle des dix-huit premiers mois.",
   },
   {
-    title: "Pourquoi nous pratiquons les offres scellées",
-    lede: `Quand les propositions se découvrent les unes après les autres, la première fixe le prix de toutes les suivantes.`,
-    body: `Sur une transaction unique, un cédant n’a aucun moyen de savoir si la proposition qu’il tient est bonne. Les offres scellées répondent à cela : pendant ${OFFER_WINDOW_DAYS} jours, aucun candidat ne voit ce que proposent les autres, et le cédant lui-même ne voit ni les montants ni les identités. Tout s’ouvre à la clôture, en même temps. Chacun propose ce que le dossier vaut pour lui, et non ce qu’il faut pour dépasser un concurrent. La plateforme n’adjuge pas : le cédant décide seul, et reste libre de refuser la mieux-disante sans se justifier.`,
+    title: "Pourquoi la meilleure offre est affichée en séance",
+    lede: `Un acquéreur qui ne sait pas où en est la cote propose au hasard ; un cédant qui ne voit rien décide à l’aveugle.`,
+    body: `Pendant ${OFFER_WINDOW_DAYS} jours, la fiche affiche la meilleure offre et le nombre d’offres déposées, comme la cote d’un titre, sans jamais révéler qui a offert. Chaque acquéreur se positionne en connaissance de cause, et un portefeuille recherché trouve son prix. Le cédant suit la séance et retient une offre à la clôture ; la plateforme n’adjuge pas, il reste libre de préférer une offre mieux financée à la plus élevée.`,
   },
   {
     title: "La part différée, et comment elle s’ajuste",

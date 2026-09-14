@@ -108,8 +108,8 @@ describe("portefeuilles : cloisonnement par cabinet", () => {
   });
 });
 
-describe("offres scellees : filtrage au niveau de la requete", () => {
-  it("le cedant ne recoit aucune ligne tant que la fenetre est ouverte", async () => {
+describe("seance d'offres : filtrage au niveau de la requete", () => {
+  it("le cedant suit les offres pendant la seance", async () => {
     const listing = await prisma.listing.findFirst({ where: { publicNumber: 10003 } });
     expect(listing).not.toBeNull();
 
@@ -118,8 +118,8 @@ describe("offres scellees : filtrage au niveau de la requete", () => {
     expect(stored).toBeGreaterThan(0);
 
     const result = await listOffersForListing(listing!.id, nadia);
-    expect(result.access).toBe("sealed");
-    expect(result.offers).toHaveLength(0);
+    expect(result.access).toBe("full");
+    expect(result.offers).toHaveLength(stored);
   });
 
   it("le cedant voit les offres une fois la fenetre close", async () => {

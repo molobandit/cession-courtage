@@ -16,7 +16,7 @@ import { CESSION_FUNDS_DISCLAIMER } from "@/lib/partners/catalog";
 export const metadata: Metadata = {
   title: "Questions fréquentes",
   description:
-    "Confidentialité, valorisation, offres scellées, tarifs, transfert ORIAS et rétention : les réponses aux questions que se posent les courtiers.",
+    "Confidentialité, valorisation, séance d’offres, tarifs, séquestre et transfert : les réponses aux questions que se posent les courtiers.",
   alternates: { canonical: "/faq" },
 };
 
@@ -70,15 +70,15 @@ const SECTIONS: Section[] = [
   },
   {
     title: "Offres et négociation",
-    intro: "Ce qui se passe pendant la fenêtre, et après.",
+    intro: "Ce qui se passe pendant la séance, et après.",
     questions: [
       {
-        q: "Comment fonctionnent les offres scellées ?",
-        a: `La fenêtre dure ${OFFER_WINDOW_DAYS} jours à compter de la publication. Pendant cette période, aucun candidat ne voit les propositions des autres, et vous ne voyez ni les montants ni les identités. Tout s’ouvre en même temps à la clôture.`,
+        q: "Comment fonctionne la séance d’offres ?",
+        a: `La séance dure ${OFFER_WINDOW_DAYS} jours à compter de la publication. La meilleure offre et le nombre d’offres s’affichent en direct sur la fiche, sans jamais l’identité des acquéreurs : chacun sait où en est la cote avant de s’engager. Le cédant suit les offres et en retient une à la clôture.`,
       },
       {
-        q: "Pourquoi ne puis-je pas voir les offres au fur et à mesure ?",
-        a: "Parce que la première proposition servirait d’ancrage et vous feriez un choix trop tôt. En masquant les montants jusqu’à la clôture, chaque candidat propose ce que le dossier vaut pour lui, et non ce qu’il faut pour dépasser un concurrent.",
+        q: "Pourquoi le cédant attend-il la clôture pour retenir une offre ?",
+        a: "Pour laisser à chaque acquéreur le temps d’examiner le dossier et de se positionner. Retenir la première offre venue priverait le cédant d’une meilleure proposition arrivée le lendemain.",
       },
       {
         q: "Suis-je obligé d’accepter la meilleure offre ?",

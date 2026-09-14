@@ -126,9 +126,9 @@ export async function loadDesk(actor: Actor) {
     });
     if (annonce.status === "DRAFT") {
       aFaire.push({ key: `t-draft-${annonce.id}`, href: `/app/annonces/${annonce.id}`, icon: "megaphone", title: `Publier l’annonce · N° ${annonce.publicNumber}`, detail: "Tant qu’elle est en brouillon, aucun acquéreur ne la voit.", cta: "Publier" });
-    } else if (offres.length && !scelle) {
+    } else if (offres.length) {
       const meilleure = Math.max(...offres.map((o) => Number(o.offer?.amount ?? 0)));
-      aFaire.push({ key: `t-offres-${annonce.id}`, href: `/app/annonces/${annonce.id}/offres`, icon: "megaphone", title: `${offres.length} offre${offres.length > 1 ? "s" : ""} à examiner · N° ${annonce.publicNumber}`, detail: `Meilleure offre ${formatEuroWhole(meilleure)} pour ${formatEuroWhole(Number(annonce.askingPrice))} demandés`, cta: "Comparer", urgent: true });
+      aFaire.push({ key: `t-offres-${annonce.id}`, href: `/app/annonces/${annonce.id}/offres`, icon: "megaphone", title: `${offres.length} offre${offres.length > 1 ? "s" : ""} ${scelle ? "en séance" : "à examiner"} · N° ${annonce.publicNumber}`, detail: `Meilleure offre ${formatEuroWhole(meilleure)} pour ${formatEuroWhole(Number(annonce.askingPrice))} demandés`, cta: "Comparer", urgent: true });
     }
   }
 

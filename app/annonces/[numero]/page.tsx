@@ -43,6 +43,8 @@ import { InvestorDepositForm } from "@/components/investor/placement-forms";
 import { listCertificationStatuses } from "@/lib/listing/certification";
 import { DepositForm } from "@/components/listing/deposit-form";
 import { depositTerms } from "@/lib/billing/deposit-fate";
+import { EMPTY_QUOTE, listingQuotes } from "@/lib/offer/quote";
+import { loadEngagementReadiness } from "@/lib/buyer/readiness";
 import { breakdownBy, renewalYears, type AnalyticsLine } from "@/lib/portfolio/analytics";
 import { qualityFromPortfolio } from "@/lib/portfolio/quality";
 
@@ -116,6 +118,7 @@ export default async function PublicListingPage({
   const investorMode = Boolean(voie === "investir" || (actor && isInvestor(actor)));
   const isSeller = Boolean(actor && ownsFirm(actor, listing.portfolio.firmId));
   const sealed = isOfferWindowSealed(listing);
+  const cote = (await listingQuotes([listing.id])).get(listing.id) ?? EMPTY_QUOTE;
   // Lots du portefeuille : l'acquéreur peut ne reprendre qu'une partie des
   // fournisseurs, et ceux déjà engagés ailleurs doivent apparaître comme pris.
   const { lots, available } = await lotAvailability(listing.id);
@@ -146,6 +149,10 @@ export default async function PublicListingPage({
 
   const deposit = interestDepositFor(askingPrice);
   const myDeposit = actor && !isSeller && !isInvestor(actor) ? await findMyDeposit(listing.id, actor.id) : null;
+  const readiness =
+    actor && !isSeller && canBuy(actor)
+      ? await loadEngagementReadiness(actor, 0, `/annonces/${listing.publicNumber}#position`)
+      : null;
   const investorPos =
     actor && isInvestor(actor) && !isSeller ? await findMyInvestorPosition(listing.id, actor.id) : null;
   const certification =
@@ -233,6 +240,8 @@ export default async function PublicListingPage({
         isPartial: listing.isPartial,
         isNationwide: listing.isNationwide,
         askingPrice,
+        bestOffer: cote.bestOffer,
+        offerCount: cote.offerCount,
         annualCommissions,
         perceptionModeLine: perception.modeLine,
         perceptionAmountLine: perception.amountLine,
@@ -299,8 +308,8 @@ export default async function PublicListingPage({
             <section className="rounded-3xl border border-indigo-line bg-indigo-soft p-6">
               <h2 className="text-xl font-semibold text-ink">Dossier de cession ouvert</h2>
               <p className="mt-2 text-[15px] leading-relaxed text-muted">
-                Le parcours continue jusqu’à la clôture : confidentialité, pièces, accord de
-                prix, conformité, acte, séquestre 80 %, transfert, solde 20 %.
+                Le parcours continue jusqu’à la clôture : vérifications, signature, prix au séquestre,
+                accord des compagnies et libération des fonds.
               </p>
               <Button asChild variant="primary" className="mt-4">
                 <Link href={`/app/dossiers/${myDeal.id}`}>Ouvrir le dossier</Link>
@@ -412,7 +421,7 @@ export default async function PublicListingPage({
                 </span>
                 , ouvre l’échange des coordonnées entre vous et lui. {CESSION_FUNDS_DISCLAIMER}
               </p>
-              <DepositForm listingId={listing.id} amountLabel={formatEuroWhole(deposit)} amountEur={deposit} />
+              <DepositForm listingId={listing.id} amountLabel={formatEuroWhole(deposit)} amountEur={deposit} readiness={readiness!} />
             </>
           )}
         </section>
@@ -423,9 +432,8 @@ export default async function PublicListingPage({
           <h2 className="text-2xl font-semibold text-ink">Déposer une offre</h2>
           <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-muted">
             {sealed
-              ? "Le cédant ne verra ni votre montant ni le nombre de propositions avant la clôture."
-              : "La fenêtre de 21 jours est close : votre offre est transmise tout de suite au cédant, qui peut la retenir sans attendre."}{" "}
-            Aucun autre candidat ne verra votre offre.
+              ? "Séance en cours : la meilleure offre et le nombre d’offres sont affichés, jamais l’identité des acquéreurs. Le cédant retient une offre à la clôture."
+              : "La séance de 21 jours est close : votre offre est transmise tout de suite au cédant, qui peut la retenir sans attendre."}
             {sealed && daysLeft !== null && daysLeft >= 0
               ? ` Il reste ${daysLeft} jour${daysLeft > 1 ? "s" : ""}.`
               : ""}
@@ -451,7 +459,7 @@ export default async function PublicListingPage({
                 lots={lots}
                 availableCarriers={available}
                 needsDeposit
-                needsNda
+                readiness={readiness!}
                 depositLabel={formatEuroWhole(deposit)}
                 depositTermsLines={depositTerms(formatEuroWhole(deposit), deposit)}
               />
@@ -461,17 +469,17 @@ export default async function PublicListingPage({
                 asking={String(askingPrice)}
                 lots={lots}
                 availableCarriers={available}
-                needsNda={!myDeposit.ndaAcceptedAt}
+                readiness={readiness!}
               />
             )}
           </div>
         </section>
       ) : listing.status === "OFFERS_OPEN" && sealed ? (
         <section className="rounded-3xl border border-line bg-paper p-7">
-          <h2 className="text-xl font-semibold text-ink">Fenêtre d’offres en cours</h2>
+          <h2 className="text-xl font-semibold text-ink">Séance d’offres en cours</h2>
           <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-muted">
-            Les propositions restent masquées pendant {OFFER_WINDOW_DAYS} jours, y compris
-            pour le cédant. Elles s’ouvrent toutes en même temps à la clôture.
+            La séance dure {OFFER_WINDOW_DAYS} jours. La meilleure offre et le nombre d’offres sont affichés en direct ; le
+            cédant retient une offre à la clôture.
           </p>
           {!actor ? (
             <Button asChild variant="primary" className="mt-5">

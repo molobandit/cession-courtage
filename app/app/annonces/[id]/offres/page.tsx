@@ -3,7 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { OfferReviewBoard } from "@/components/offer/offer-review-board";
 import { getActor, isOriasVerified, listOffersForListing } from "@/lib/authz";
 import { ForbiddenError } from "@/lib/authz/errors";
-import { ownsFirm } from "@/lib/authz/policies";
+import { isOfferWindowSealed, ownsFirm } from "@/lib/authz/policies";
 import { listListingPositions } from "@/lib/position/load";
 import { prisma } from "@/lib/prisma";
 
@@ -41,7 +41,8 @@ export default async function ListingOffersPage({
     throw error;
   }
 
-  const canRetain = ownsFirm(actor, listing.portfolio.firmId) && result.access === "full";
+  // Retenir une offre attend la clôture de la séance ; la voir, non.
+  const canRetain = ownsFirm(actor, listing.portfolio.firmId) && result.access === "full" && !isOfferWindowSealed(listing);
   const candidats = ownsFirm(actor, listing.portfolio.firmId) ? await listListingPositions(listing.id) : [];
 
   return (

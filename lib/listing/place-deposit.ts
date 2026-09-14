@@ -11,10 +11,13 @@ import { prisma } from "@/lib/prisma";
  * d'offre, qui fait les deux en un geste : l'acquéreur pressé ne remplit
  * qu'un formulaire, sans rien sauter de ce qui l'engage.
  */
+export type DepositPayment = { method: "CARD" | "SEPA" | null; ref: string | null; status: "RECORDED" | "PROCESSING" | "PAID" };
+
 export async function placeDeposit(
-  actor: Actor,
+  actor: Pick<Actor, "id" | "email">,
   listing: { id: string; askingPrice: unknown; publicNumber: number | null; portfolio: { firmId: string } },
-  ndaAccepted: boolean,
+  ndaAcceptedAt: Date | null,
+  payment: DepositPayment = { method: null, ref: null, status: "RECORDED" },
 ) {
     const amount = interestDepositFor(Number(listing.askingPrice));
     if (amount <= 0) throw new Error("Montant de dépôt invalide.");
@@ -24,13 +27,19 @@ export async function placeDeposit(
     // conserve, un changement de prix demande ne le revalorise pas.
     const deposit = await prisma.interestDeposit.upsert({
       where: { listingId_buyerId: { listingId: listing.id, buyerId: actor.id } },
-      update: ndaAccepted ? { ndaAcceptedAt: new Date() } : {},
+      update: {
+        ...(ndaAcceptedAt ? { ndaAcceptedAt } : {}),
+        ...(payment.method ? { paymentMethod: payment.method, paymentRef: payment.ref, paymentStatus: payment.status } : {}),
+      },
       create: {
         listingId: listing.id,
         buyerId: actor.id,
         amount: amount.toFixed(2),
         rate: INTEREST_DEPOSIT_RATE.toFixed(4),
-        ndaAcceptedAt: ndaAccepted ? new Date() : null,
+        ndaAcceptedAt,
+        paymentMethod: payment.method,
+        paymentRef: payment.ref,
+        paymentStatus: payment.status,
       },
     });
 

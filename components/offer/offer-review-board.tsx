@@ -56,7 +56,7 @@ function vsAskingCopy(amount: number, asking: number): { label: string; tone: "o
 export function OfferReviewBoard({
   listing,
   offers,
-  access,
+  access: _access,
   canRetain,
   children,
 }: {
@@ -74,6 +74,7 @@ export function OfferReviewBoard({
   const scale = barScale(asking, ranked.map((o) => o.amount)) * 1.08;
   const askingWidth = (asking / scale) * 100;
   const cotation = marketStatus({ status: listing.status, offerWindowClosesAt: listing.offerWindowClosesAt });
+  const sealed = cotation.tone === "sealed";
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-8">
@@ -81,17 +82,13 @@ export function OfferReviewBoard({
         back={{ href: "/app/cessions", label: "Mes cessions" }}
         kicker="Carnet d’offres"
         badge={<MarketBadge label={cotation.label} tone={cotation.tone} detail={cotation.detail} />}
-        title={`Dossier N° ${listing.publicNumber} — ${access === "sealed" ? "offres scellées" : ranked.length ? `${ranked.length} offre${ranked.length > 1 ? "s" : ""} à comparer` : "aucune offre pour le moment"}`}
+        title={`Dossier N° ${listing.publicNumber} — ${ranked.length ? `${ranked.length} offre${ranked.length > 1 ? "s" : ""} à comparer` : "aucune offre pour le moment"}`}
         subtitle="Les acquéreurs restent sous alias. Retenir une offre ouvre le dossier de cession et écarte les offres concurrentes sur les mêmes compagnies."
         figures={[
           { label: "Prix demandé", value: formatEuro(asking), note: listing.displayedZone },
           { label: "Commissions / an", value: formatEuro(listing.annualCommissions) },
-          access === "sealed"
-            ? { label: "Meilleure offre", value: "Scellée", note: listing.offerWindowClosesAt ? `Visible le ${formatDate(listing.offerWindowClosesAt)}` : undefined }
-            : { label: "Meilleure offre", value: best ? formatEuro(best.amount) : "—", note: best ? vsAskingCopy(best.amount, asking).label.split(" · ")[0] : undefined, accent: Boolean(best) },
-          access === "sealed"
-            ? { label: "Comptant proposé", value: "—" }
-            : { label: "Comptant, meilleure offre", value: best ? formatPercent(best.upfrontPercent, 0) : "—" },
+          { label: "Meilleure offre", value: best ? formatEuro(best.amount) : "—", note: best ? vsAskingCopy(best.amount, asking).label.split(" · ")[0] : undefined, accent: Boolean(best) },
+          { label: "Comptant, meilleure offre", value: best ? formatPercent(best.upfrontPercent, 0) : "—" },
         ]}
         actions={
           <>
@@ -115,15 +112,16 @@ export function OfferReviewBoard({
 
       {children}
 
-      {access === "sealed" ? (
-        <section className="mt-6 rounded-[1.75rem] border border-line bg-indigo-soft/60 p-6">
-          <h2 className="text-lg font-bold text-ink">Fenêtre encore ouverte</h2>
-          <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-muted">
-            Les montants, le nombre de propositions et les messages restent masqués jusqu’à la
-            clôture, y compris pour vous. Cela place tous les acquéreurs sur un pied d’égalité.
+      {sealed ? (
+        <section className="mt-6 rounded-[1.75rem] border border-indigo-line bg-indigo-soft/60 p-5">
+          <h2 className="text-lg font-bold text-ink">Séance en cours</h2>
+          <p className="mt-1 max-w-2xl text-[15px] leading-relaxed text-muted">
+            Les offres arrivent en direct et la meilleure s’affiche sur la fiche publique. Vous pourrez en retenir une à la clôture
+            {listing.offerWindowClosesAt ? `, le ${formatDate(listing.offerWindowClosesAt)}` : ""}.
           </p>
         </section>
-      ) : ranked.length === 0 ? (
+      ) : null}
+      {ranked.length === 0 ? (
         <section className="mt-6 rounded-[1.75rem] border border-dashed border-line bg-paper p-6">
           <h2 className="text-lg font-bold text-ink">Aucune offre visible</h2>
           <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-muted">

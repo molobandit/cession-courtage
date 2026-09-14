@@ -1,7 +1,6 @@
 import Link from "next/link";
 import type { DealStage } from "@prisma/client";
 import {
-  acceptRetentionAction,
   confirmCarrierTransferAction,
   confirmPriceAction,
   sendAttestationsAction,
@@ -27,7 +26,7 @@ import {
 } from "@/lib/deal/process";
 import type { DealProcess } from "@/lib/deal/process-load";
 import { DATA_ROOM_KINDS, companyDocLabel } from "@/lib/listing/company-doc-kinds";
-import { adjustedDeferredAmount } from "@/lib/retention/adjust";
+import { escrowAmountAfterDeposit } from "@/lib/billing/deposit-fate";
 import { formatDateTime, formatEuro, formatPercent } from "@/lib/format/fr";
 import { cn } from "@/lib/utils";
 
@@ -179,7 +178,18 @@ function TaskAction({ p, task, side, escrowLive }: { p: DealProcess; task: Task;
   }
 
   if (task.key === "escrow-fund") {
-    return <EscrowForm dealId={id} amountLabel={formatEuro(Number(deal.upfrontAmount))} live={escrowLive} />;
+    const depot = Number(deal.listing.deposits.find((d) => d.buyerId === deal.buyerId)?.amount ?? 0);
+    const aVerser = escrowAmountAfterDeposit(Number(deal.upfrontAmount), depot);
+    return (
+      <div className="grid gap-2">
+        <p className="text-[14px] text-ink">
+          Prix {formatEuro(Number(deal.upfrontAmount))}
+          {depot > 0 ? ` − dépôt de garantie déjà versé ${formatEuro(depot)}` : ""} ={" "}
+          <span className="tabular font-bold">{formatEuro(aVerser)} à verser au séquestre</span>
+        </p>
+        <EscrowForm dealId={id} amountLabel={formatEuro(aVerser)} live={escrowLive} />
+      </div>
+    );
   }
 
   if (task.key === "attestations-sent") {
@@ -216,54 +226,8 @@ function TaskAction({ p, task, side, escrowLive }: { p: DealProcess; task: Task;
         <CommitForm
           dealId={id}
           action={confirmCarrierTransferAction}
-          consentLabel="Les compagnies ont rattaché les contrats et les commissions à mon code. J’informe les clients avec le courrier fourni."
-          submitLabel="Confirmer le transfert"
-        />
-      </div>
-    );
-  }
-
-  if (task.key === "retention-report") {
-    return (
-      <Link href={`/app/dossiers/${id}/retention`} className={lien}>
-        Déclarer la conservation
-      </Link>
-    );
-  }
-
-  if (task.key === "retention-accept") {
-    const releve = deal.retentionReports.find((r) => r.monthIndex === 12);
-    if (!releve) return null;
-    const solde = adjustedDeferredAmount({
-      deferredAmount: Number(deal.deferredAmount),
-      retentionRate: Number(releve.retentionRate),
-      targetRate: Number(deal.retentionTargetRate),
-    });
-    return (
-      <div className="grid gap-4">
-        <dl className="grid gap-3 rounded-2xl bg-surface-alt p-4 sm:grid-cols-3">
-          <div>
-            <dt className="text-[12px] uppercase tracking-wide text-muted">Contrats conservés</dt>
-            <dd className="tabular text-[15px] font-semibold text-ink">
-              {releve.contractsRetained} / {releve.contractsTransferred} · {formatPercent(Number(releve.retentionRate) * 100)}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-[12px] uppercase tracking-wide text-muted">Commissions encaissées</dt>
-            <dd className="tabular text-[15px] font-semibold text-ink">{formatEuro(Number(releve.actualCommissions))}</dd>
-          </div>
-          <div>
-            <dt className="text-[12px] uppercase tracking-wide text-muted">Solde libéré</dt>
-            <dd className="tabular text-[15px] font-semibold text-ink">
-              {formatEuro(solde)} <span className="text-[12px] font-normal text-muted">sur {formatEuro(Number(deal.deferredAmount))}</span>
-            </dd>
-          </div>
-        </dl>
-        <CommitForm
-          dealId={id}
-          action={acceptRetentionAction}
-          consentLabel="Je valide la déclaration de conservation. Le séquestre et le solde ajusté sont libérés, la cession est close."
-          submitLabel="Valider et clore la cession"
+          consentLabel="Les compagnies ont accepté le transfert et rattaché les contrats et les commissions à mon code. J’informe les clients avec le courrier fourni. Le séquestre est libéré au cédant."
+          submitLabel="Confirmer l’accord des compagnies"
         />
       </div>
     );
@@ -274,7 +238,7 @@ function TaskAction({ p, task, side, escrowLive }: { p: DealProcess; task: Task;
 
 /** Rappels réglementaires de l'étape, sans case à cocher de plus. */
 function ComplianceNotes({ stage }: { stage: DealStage }) {
-  if (stage !== "TRANSFER" && stage !== "RETENTION") return null;
+  if (stage !== "TRANSFER" && stage !== "CLOSED") return null;
   return (
     <aside className="mt-4 rounded-2xl border border-line bg-surface-alt/60 p-4 text-[13px] leading-relaxed text-ink">
       <p className="font-semibold">À ne pas oublier</p>
@@ -301,8 +265,7 @@ export function DealProcessPanel({ p, side, escrowLive }: { p: DealProcess; side
         <p className="text-[12px] font-semibold uppercase tracking-wide text-ok">Cession close</p>
         <h2 className="mt-1 text-xl font-semibold text-ink">Le portefeuille a changé de mains.</h2>
         <p className="mt-2 text-[15px] leading-relaxed text-muted">
-          Prix {formatEuro(Number(deal.agreedPrice))}. Séquestre libéré
-          {deal.adjustedDeferredAmount ? `, solde ajusté à ${formatEuro(Number(deal.adjustedDeferredAmount))}` : ""}. Toutes les
+          Prix {formatEuro(Number(deal.agreedPrice))}. Séquestre libéré au cédant après l’accord des compagnies. Toutes les
           pièces restent consultables dans l’onglet Documents.
         </p>
       </section>

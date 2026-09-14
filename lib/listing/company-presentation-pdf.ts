@@ -247,6 +247,11 @@ export async function renderCompanyPresentationPdf(p: CompanyPresentation): Prom
   titreSection(ctx, "Répartition des commissions", 22 + (p.breakdowns[0]?.shares.length ?? 0) * 17);
   for (const b of p.breakdowns) barres(ctx, b.title, b.shares);
 
+  for (const volet of p.profile) {
+    titreSection(ctx, `Profil du cabinet — ${volet.section}`, Math.min(volet.rows.length, 3) * 20);
+    lignesCleValeur(ctx, volet.rows);
+  }
+
   if (p.regulatory.length) {
     titreSection(ctx, "Conformité et organisation");
     lignesCleValeur(ctx, p.regulatory);

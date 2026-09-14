@@ -1,8 +1,12 @@
 import type { DealStage } from "@prisma/client";
 import { DEAL_STAGE_ORDER } from "@/lib/labels";
 
-/** Part du prix séquestrée à la signature, avant le solde de rétention. */
-export const ESCROW_UPFRONT_SHARE = 0.8;
+/**
+ * Part du prix versée au séquestre : tout le prix, dépôt de garantie déduit.
+ * Les fonds sont libérés au cédant après la signature et l'accord des
+ * compagnies sur le transfert.
+ */
+export const ESCROW_UPFRONT_SHARE = 1;
 
 export type PipelineStep = {
   key: string;
@@ -38,13 +42,9 @@ export const SALE_PIPELINE: PipelineStep[] = [
   {
     key: "TRANSFER",
     label: "Paiement et transfert",
-    summary: "Comptant au séquestre, attestations envoyées aux compagnies, contrats rattachés.",
+    summary: "Prix au séquestre, attestations envoyées, accord des compagnies : les fonds sont libérés au cédant.",
   },
-  {
-    key: "RETENTION",
-    label: "Solde",
-    summary: "Conservation déclarée à douze mois et validée : séquestre et solde ajusté libérés.",
-  },
+
   {
     key: "CLOSED",
     label: "Clôturé",
@@ -58,6 +58,7 @@ const REGROUPEES: Partial<Record<DealStage, DealStage>> = {
   KYC: "DATA_ROOM",
   DEED: "SIGNATURE",
   ESCROW: "TRANSFER",
+  RETENTION: "TRANSFER",
 };
 
 export function pipelineIndex(stage: DealStage | "POSITION"): number {
@@ -112,13 +113,10 @@ export function nextPipelineAction(
       };
     case "ESCROW":
     case "TRANSFER":
-      return seller
-        ? { title: "Envoyer les attestations aux compagnies", body: "Dès que le comptant (80 %) est au séquestre." }
-        : { title: "Verser le comptant, puis confirmer le transfert", body: "80 % du prix au séquestre, puis confirmation du rattachement des contrats." };
     case "RETENTION":
       return seller
-        ? { title: "Valider la déclaration de conservation", body: "Votre validation libère le séquestre et le solde ajusté." }
-        : { title: "Déclarer la conservation à douze mois", body: "Contrats conservés et commissions encaissées : le solde de 20 % en dépend." };
+        ? { title: "Envoyer les attestations aux compagnies", body: "Dès que le prix est au séquestre. Les fonds vous sont libérés à l’accord des compagnies." }
+        : { title: "Verser le prix au séquestre, puis confirmer le transfert", body: "Le prix, dépôt déduit, reste au séquestre jusqu’à l’accord des compagnies." };
     case "CLOSED":
       return {
         title: "Cession close",

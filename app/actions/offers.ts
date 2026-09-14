@@ -4,8 +4,7 @@ import { DealStage, ListingStatus, OfferStatus } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { canBuy, getActor, isOriasVerified, listOffersForListing } from "@/lib/authz";
-import { ownsFirm } from "@/lib/authz/policies";
-import { isOfferWindowSealed } from "@/lib/authz/policies";
+import { isOfferWindowSealed, ownsFirm } from "@/lib/authz/policies";
 import { ForbiddenError, UnauthenticatedError } from "@/lib/authz/errors";
 import { hasContactSubscription } from "@/lib/billing/contact-access";
 import { offPlatformPhoneError } from "@/lib/chat/phone-block";
@@ -18,7 +17,10 @@ import {
 } from "@/lib/listing/lot-availability";
 import { fullyCommitted } from "@/lib/listing/lots";
 import { findMyDeposit } from "@/lib/listing/deposit";
-import { placeDeposit } from "@/lib/listing/place-deposit";
+import { loadAgreementsStatus, AGREEMENTS_REQUIRED_MESSAGE } from "@/lib/account/agreements-load";
+import { isDepositMethod, startDepositPayment } from "@/lib/billing/deposit-checkout";
+import { checkFinancing } from "@/lib/buyer/financing-load";
+import { recordOffer } from "@/lib/offer/record";
 import { listingAcceptsOffers } from "@/lib/offer/acceptance";
 import { notifyOfferDecision } from "@/lib/position/events";
 import { ensurePosition } from "@/lib/position/load";
@@ -35,10 +37,13 @@ async function requireBuyerActor() {
   return actor;
 }
 
+const REDIRECTION = new Error("redirection vers le paiement");
+
 export async function submitOfferAction(
   _prev: OfferFormState,
   formData: FormData,
 ): Promise<OfferFormState> {
+  let paiement: string | null = null;
   try {
     const actor = await requireBuyerActor();
     if (!(await hasContactSubscription(actor))) {
@@ -72,26 +77,15 @@ export async function submitOfferAction(
     }
 
     /*
-     * Dépôt de garantie exigé avant toute offre.
-     *
-     * Une offre engage le cédant : il ouvre ses pièces et cesse de chercher
-     * d'autres repreneurs. Le dépôt est ce qui rend cet engagement réciproque.
-     * Le refus arrive ici, avant l'écriture, avec le geste à faire.
+     * Avant toute offre : les engagements signés une fois (confidentialité,
+     * contrat d'intermédiation), un financement justifié qui couvre le montant,
+     * et un dépôt de garantie. Chaque refus dit le geste à faire.
      */
-    const depot = await findMyDeposit(listingId, actor.id);
-    const nda = formData.get("nda") === "on";
-    if (!depot) {
-      // Engagement, confidentialité et offre en un seul geste, si l'acquéreur coche les deux cases.
-      if (formData.get("engagement") !== "on" || !nda) {
-        return {
-          error: `Cochez le dépôt de garantie de ${INTEREST_DEPOSIT_LABEL} du prix demandé et l’engagement de confidentialité pour déposer votre offre. Le dépôt vient en déduction du prix si la cession aboutit.`,
-        };
-      }
-      await placeDeposit(actor, listing, true);
-    } else if (!depot.ndaAcceptedAt) {
-      if (!nda) return { error: "Acceptez l’engagement de confidentialité pour déposer votre offre." };
-      await prisma.interestDeposit.update({ where: { id: depot.id }, data: { ndaAcceptedAt: new Date() } });
-    }
+    const engagements = await loadAgreementsStatus(actor);
+    if (!engagements.valid) return { error: AGREEMENTS_REQUIRED_MESSAGE };
+    const financement = await checkFinancing(actor.id, amount);
+    if (!financement.ok) return { error: financement.raison };
+
     /*
      * Lot visé. Vide = portefeuille entier, ce qui reste le cas courant.
      * La vérification a lieu ici, avant l'écriture : une offre déposée sur un
@@ -105,49 +99,45 @@ export async function submitOfferAction(
     const lot = await checkOfferLot(listingId, demandes);
     if (!lot.ok) return { error: lot.error };
 
-    await prisma.offer.upsert({
-      where: { listingId_buyerId: { listingId, buyerId: actor.id } },
-      update: {
-        amount: amount.toFixed(2),
-        upfrontPercent: upfront.toFixed(2),
-        message,
-        effectiveDate,
-        carriers: lot.carriers,
-        status: OfferStatus.SUBMITTED,
-        submittedAt: new Date(),
-      },
-      create: {
-        listingId,
-        buyerId: actor.id,
-        amount: amount.toFixed(2),
-        upfrontPercent: upfront.toFixed(2),
-        message,
-        effectiveDate,
-        carriers: lot.carriers,
-      },
-    });
-    const offer = await prisma.offer.findUnique({
-      where: { listingId_buyerId: { listingId, buyerId: actor.id } },
-      select: { id: true },
-    });
-    const position = await ensurePosition({ listingId, buyerId: actor.id });
-    const { findFirmSeller, notifyOfferReceived } = await import("@/lib/notify/transactional");
-    const seller = await findFirmSeller(listing.portfolio.firmId);
-    if (offer && seller && listing.publicNumber) {
-      await notifyOfferReceived({
-        offerId: offer.id,
-        sellerUserId: seller.id,
-        sellerEmail: seller.email,
-        publicNumber: listing.publicNumber,
-        sealed: isOfferWindowSealed(listing),
-        href: `/app/positions/${position.id}`,
-      }).catch(() => null);
+    const offre = {
+      amount,
+      upfrontPercent: upfront,
+      message,
+      effectiveDate: effectiveDate ? effectiveDate.toISOString().slice(0, 10) : null,
+      carriers: lot.carriers,
+    };
+
+    const depot = await findMyDeposit(listingId, actor.id);
+    let positionId: string;
+    if (depot) {
+      positionId = (await recordOffer(actor, listing, offre)).positionId;
+    } else {
+      // Dépôt et offre en un seul geste : l'offre part dès que le dépôt est payé.
+      const methode = formData.get("paymentMethod");
+      if (formData.get("engagement") !== "on" || !isDepositMethod(methode)) {
+        return {
+          error: `Choisissez la carte ou le prélèvement et cochez le dépôt de garantie de ${INTEREST_DEPOSIT_LABEL} du prix demandé. Il vient en déduction du prix si la cession aboutit.`,
+        };
+      }
+      const suite = await startDepositPayment({
+        buyer: actor,
+        listing,
+        method: methode,
+        pendingOffer: offre,
+        cancelPath: `/annonces/${listing.publicNumber}#position`,
+      });
+      if (suite.kind === "redirect") {
+        paiement = suite.url;
+        throw REDIRECTION;
+      }
+      positionId = suite.positionId ?? (await ensurePosition({ listingId, buyerId: actor.id })).id;
     }
     revalidatePath(`/annonces/${listing.publicNumber}`);
     revalidatePath("/app");
     // L'offre faite, l'acquéreur retrouve son dossier : c'est là qu'il suit la réponse.
-    redirect(`/app/positions/${position.id}`);
+    redirect(`/app/positions/${positionId}`);
   } catch (error) {
+    if (error === REDIRECTION && paiement) redirect(paiement);
     if (
       typeof error === "object" &&
       error !== null &&
@@ -217,9 +207,15 @@ export async function acceptOfferAction(
       return { error: "Seul le cédant peut retenir une offre." };
     }
 
-    const access = await listOffersForListing(offer.listingId, actor);
-    if (access.access === "sealed") {
-      return { error: "La fenêtre est encore ouverte : les offres restent scellées." };
+    const engagementsCedant = await loadAgreementsStatus(actor);
+    if (!engagementsCedant.valid) return { error: AGREEMENTS_REQUIRED_MESSAGE };
+
+    await listOffersForListing(offer.listingId, actor);
+    if (isOfferWindowSealed(offer.listing)) {
+      const cloture = offer.listing.offerWindowClosesAt;
+      return {
+        error: `La séance est en cours${cloture ? ` jusqu’au ${cloture.toLocaleDateString("fr-FR", { timeZone: "Europe/Paris" })}` : ""} : vous pourrez retenir une offre à sa clôture.`,
+      };
     }
 
     const dealKey = { listingId: offer.listingId, buyerId: offer.buyerId };
@@ -248,8 +244,8 @@ export async function acceptOfferAction(
     }
 
     const amount = Number(offer.amount);
-    // Le séquestre prend 80 % comptant, quel que soit le comptant indiqué dans l'offre.
-    const upfront = Math.round(amount * 0.8 * 100) / 100;
+    // Tout le prix passe par le séquestre ; le dépôt en sera déduit au versement.
+    const upfront = Math.round(amount * 100) / 100;
     const seller = await prisma.user.findUnique({
       where: { id: actor.id },
       select: { publicAlias: true },
@@ -290,18 +286,15 @@ export async function acceptOfferAction(
         buyerAlias: `Acquéreur ${offer.buyer.publicAlias}`,
       },
     });
-    // Confidentialité : acceptée par l'acquéreur à son dépôt, par le cédant en retenant l'offre.
-    if (formData.get("nda") !== "on" && formData.get("nda") !== null) {
-      // Case présente mais décochée : impossible par le formulaire, refusée par prudence.
-      return { error: "Acceptez l’engagement de confidentialité pour retenir l’offre." };
-    }
-    const depotAcheteur = await prisma.interestDeposit.findUnique({
-      where: { listingId_buyerId: dealKey },
-      select: { ndaAcceptedAt: true, placedAt: true },
-    });
+    // Confidentialité : signée une fois par chaque partie, pour la durée de son ORIAS.
+    const acheteur = await prisma.user.findUnique({ where: { id: offer.buyerId }, select: { id: true, oriasNumber: true } });
+    const [ndaAcheteur, ndaCedant] = await Promise.all([
+      acheteur ? loadAgreementsStatus(acheteur) : null,
+      loadAgreementsStatus(actor),
+    ]);
     for (const [userId, at] of [
-      [offer.buyerId, depotAcheteur?.ndaAcceptedAt ?? depotAcheteur?.placedAt ?? offer.submittedAt],
-      [actor.id, new Date()],
+      [offer.buyerId, ndaAcheteur?.signed.NDA?.signedAt ?? offer.submittedAt],
+      [actor.id, ndaCedant.signed.NDA?.signedAt ?? new Date()],
     ] as const) {
       await prisma.dealSignoff.upsert({
         where: { dealId_kind_userId: { dealId: deal.id, kind: "NDA_SIGNED", userId } },

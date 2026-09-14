@@ -442,16 +442,3 @@ export async function confirmCarrierTransferAction(_prev: DealProcessState, form
     return fail(error, "Confirmation impossible pour le moment.");
   }
 }
-
-export async function acceptRetentionAction(_prev: DealProcessState, formData: FormData): Promise<DealProcessState> {
-  try {
-    const { actor, p, side, dealId } = await context(formData);
-    requireTask(p, side, "retention-accept");
-    consent(formData);
-    await recordSignoff({ dealId, userId: actor.id, kind: "RETENTION_ACCEPTED" });
-    await afterFact(dealId, actor.id);
-    return { ok: "Déclaration validée." };
-  } catch (error) {
-    return fail(error, "Validation impossible pour le moment.");
-  }
-}

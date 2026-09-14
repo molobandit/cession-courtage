@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState } from "react";
+import { ReadinessChecklist, PaymentMethodChoice, usePaymentMethod, type EngagementReadiness } from "@/components/offer/engagement-readiness";
 import { placeInterestDepositAction, type DepositFormState } from "@/app/actions/deposits";
 import { Button } from "@/components/ui/button";
 import { keepFormSubmit } from "@/components/ui/keep-form";
@@ -22,37 +23,34 @@ export function DepositForm({
   listingId,
   amountLabel,
   amountEur,
+  readiness,
 }: {
   listingId: string;
   amountLabel: string;
   amountEur?: number;
+  readiness: EngagementReadiness;
 }) {
   const [state, action, pending] = useActionState(placeInterestDepositAction, initial);
-  const [nda, setNda] = useState(false);
+  const [methode, setMethode] = usePaymentMethod();
+  const pret = readiness.agreements && readiness.financing.ok;
 
   return (
-    <form onSubmit={keepFormSubmit(action)} className="mt-5">
+    <form onSubmit={keepFormSubmit(action)} className="mt-5 grid gap-4">
       <input type="hidden" name="listingId" value={listingId} />
-      <ul className="mb-4 grid gap-1.5 rounded-xl border border-line bg-surface-alt px-4 py-3 text-[13px] leading-relaxed text-ink">
+      <ReadinessChecklist readiness={readiness} />
+      <ul className="grid gap-1.5 rounded-xl border border-line bg-surface-alt px-4 py-3 text-[13px] leading-relaxed text-ink">
         {depositTerms(amountLabel, amountEur).map((regle) => (
           <li key={regle}>{regle}</li>
         ))}
       </ul>
-      <label className="mb-4 flex items-start gap-3 text-[14px] leading-relaxed text-ink">
-        <input type="checkbox" name="nda" checked={nda} onChange={(e) => setNda(e.target.checked)} className="mt-1 h-4 w-4 shrink-0 accent-[#2563eb]" />
-        <span>
-          J’accepte l’engagement de confidentialité : les informations du cabinet ne servent qu’à cette acquisition et je ne
-          démarche aucun de ses clients.{" "}
-          <a href="/confidentialite-cession" target="_blank" className="text-indigo-dark underline-offset-2 hover:underline">
-            Lire l’engagement
-          </a>
-        </span>
-      </label>
-      <Button type="submit" variant="primary" disabled={pending || !nda}>
-        {pending ? "Enregistrement…" : `Déposer mon engagement de ${amountLabel}`}
-      </Button>
+      <PaymentMethodChoice value={methode} onChange={setMethode} />
+      <div>
+        <Button type="submit" variant="primary" disabled={pending || !pret}>
+          {pending ? "Enregistrement…" : `Payer mon dépôt de ${amountLabel}`}
+        </Button>
+      </div>
       {state.error ? (
-        <p role="alert" className="mt-3 text-[15px] text-danger">
+        <p role="alert" className="text-[15px] text-danger">
           {state.error}
         </p>
       ) : null}

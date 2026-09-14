@@ -52,9 +52,9 @@ export const offerSchema = z.object({
     .refine((v) => v >= ASKING_MIN && v <= ASKING_MAX, {
       message: `Montant d’offre hors fourchette (${ASKING_MIN} à ${ASKING_MAX} €).`,
     }),
-  /** Le séquestre de la plateforme prend 80 % comptant : c'est la valeur par défaut. */
+  /** Tout le prix passe par le séquestre : 100 % par défaut. */
   upfrontPercent: z.preprocess(
-    (v) => (v == null || v === "" ? 80 : v),
+    (v) => (v == null || v === "" ? 100 : v),
     frenchAmount.refine((v) => v >= 0 && v <= 100, {
       message: "Le comptant doit être compris entre 0 et 100 %.",
     }),

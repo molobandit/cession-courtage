@@ -14,6 +14,8 @@ import { nextListingPublicNumber } from "@/lib/listing/next-public-number";
 import { persistListingBriefFields } from "@/lib/listing/brief-fields";
 import { firstIssue, listingCreateSchema } from "@/lib/validations/actions";
 import { valuePortfolio } from "@/lib/valuation/run";
+import { AGREEMENTS_REQUIRED_MESSAGE, loadAgreementsStatus } from "@/lib/account/agreements-load";
+import { notifyAdminsListingSubmitted } from "@/lib/listing/review";
 
 export type ListingFormState = { error?: string };
 
@@ -164,13 +166,21 @@ export async function publishListingAction(
     if (listing.status !== ListingStatus.DRAFT && listing.status !== ListingStatus.WITHDRAWN) {
       return { error: "Cette annonce ne peut plus être publiée ainsi." };
     }
+    const engagements = await loadAgreementsStatus(actor);
+    if (!engagements.valid) return { error: AGREEMENTS_REQUIRED_MESSAGE };
+
+    /*
+     * La mise en vente est gratuite, et relue avant publication : l'équipe
+     * vérifie que l'annonce est sincère et anonyme avant qu'un acquéreur ne la
+     * voie. Le cédant est prévenu dès la décision.
+     */
     await prisma.listing.update({
       where: { id: listing.id },
-      data: { status: ListingStatus.PUBLISHED, publishedAt: listing.publishedAt ?? new Date() },
+      data: { status: ListingStatus.PENDING_REVIEW, submittedForReviewAt: new Date(), reviewNote: null },
     });
-    await rematchListing(listing.id);
+    await notifyAdminsListingSubmitted(listing.id, listing.publicNumber).catch((e: unknown) => console.error("notifyAdminsListingSubmitted", e));
     revalidatePath(`/app/annonces/${listing.id}`);
-    revalidatePath("/annonces");
+    revalidatePath("/admin/annonces");
     return {};
   } catch (error) {
     return { error: error instanceof Error ? error.message : "Publication impossible." };
@@ -185,8 +195,8 @@ export async function openOfferWindowAction(
     const actor = await requireSellerActor();
     const listing = await findMyListing(String(formData.get("listingId") ?? ""), actor);
     if (!listing) return { error: "Annonce introuvable." };
-    if (listing.status !== ListingStatus.PUBLISHED && listing.status !== ListingStatus.DRAFT) {
-      return { error: "La fenêtre d'offres ne peut pas être ouverte." };
+    if (listing.status !== ListingStatus.PUBLISHED) {
+      return { error: "La séance s’ouvre une fois l’annonce publiée par l’équipe." };
     }
     const closes = new Date(Date.now() + OFFER_WINDOW_DAYS * 24 * 60 * 60 * 1000);
     await prisma.listing.update({

@@ -85,6 +85,8 @@ enum CommissionType {
 
 enum ListingStatus {
   DRAFT
+  /// Soumise par le cédant, relue par l'équipe avant publication.
+  PENDING_REVIEW
   PUBLISHED
   OFFERS_OPEN
   OFFERS_CLOSED
@@ -239,6 +241,8 @@ model User {
   kycReviewedAt   DateTime?
   /// Motif du refus de vérification, montré au titulaire du compte.
   kycReviewNote   String?
+  /// Mode de financement déclaré avec la capacité : CASH, CREDIT ou BOTH.
+  financingMode   String?
   /// Consultation du registre ORIAS. Ne vaut pas validation : l'humain tranche.
   oriasLookupStatus String?
   oriasLookupAt     DateTime?
@@ -291,6 +295,8 @@ model User {
   buyerPositions          BuyerPosition[]     @relation("BuyerPositions")
   dealSignoffs            DealSignoff[]       @relation("DealSignoffs")
   accountDocuments        AccountDocument[]
+  agreements              UserAgreement[]
+  depositCheckouts        DepositCheckout[]
 
   @@index([firmId])
   @@index([role])
@@ -314,6 +320,8 @@ model Firm {
   createdAt         DateTime         @default(now())
   website           String?
   activityType      String?
+  /// Profil du cabinet en quatre volets, voir lib/firm/profile.ts.
+  profileJson       Json             @default("{}")
 
   users       User[]
   portfolios  Portfolio[]
@@ -508,6 +516,12 @@ model Listing {
   deposits             InterestDeposit[]
   certificationDocs    CertificationDocument[]
   companyDocuments     ListingCompanyDocument[]
+  depositCheckouts     DepositCheckout[]
+
+  submittedForReviewAt DateTime?
+  reviewedAt           DateTime?
+  /// Motif du renvoi en brouillon, montré au cédant.
+  reviewNote           String?
   investorInquiries    InvestorInquiry[]
   investorPositions    InvestorPosition[]
 
@@ -767,6 +781,11 @@ model InterestDeposit {
   settledAt DateTime?
   /// Engagement de confidentialité accepté au dépôt.
   ndaAcceptedAt DateTime?
+  /// CARD, SEPA, ou null quand le dépôt a été enregistré sans paiement en ligne.
+  paymentMethod String?
+  paymentRef    String?
+  /// RECORDED (sans débit), PROCESSING (prélèvement en cours) ou PAID.
+  paymentStatus String   @default("RECORDED")
 
   listing Listing @relation(fields: [listingId], references: [id], onDelete: Restrict)
   buyer   User    @relation(fields: [buyerId], references: [id], onDelete: Restrict)
@@ -864,6 +883,47 @@ model Document {
   @@index([dealId])
   @@index([sha256])
   @@index([dealId, slot])
+}
+
+/// Engagement signé une fois par cycle ORIAS : confidentialité, contrat d'intermédiation.
+model UserAgreement {
+  id            String   @id @default(cuid())
+  userId        String
+  /// NDA ou INTERMEDIATION.
+  kind          String
+  version       String
+  oriasNumber   String
+  contentHash   String
+  signatureName String
+  ipAddress     String?
+  signedAt      DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, kind, version, oriasNumber])
+}
+
+/// Paiement en ligne du dépôt de garantie, par carte ou prélèvement SEPA.
+model DepositCheckout {
+  id           String   @id @default(cuid())
+  listingId    String
+  buyerId      String
+  /// CARD ou SEPA.
+  method       String
+  amountCents  Int
+  sessionId    String?
+  /// PENDING, PROCESSING, PAID, FAILED.
+  status       String   @default("PENDING")
+  /// Offre saisie avec le dépôt, déposée dès le paiement confirmé.
+  pendingOffer Json?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  buyer   User    @relation(fields: [buyerId], references: [id], onDelete: Cascade)
+
+  @@index([buyerId])
+  @@index([sessionId])
 }
 
 /// Pièce d'identification d'un compte, déposée une fois pour toutes les cessions.

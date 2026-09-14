@@ -2,9 +2,9 @@ import { describe, expect, it } from "vitest";
 import { offerReceivedCopy } from "@/lib/notify/copy";
 
 describe("courriel d'offre reçue", () => {
-  it("ne cite aucun montant tant que la fenêtre est scellée", () => {
+  it("renvoie au carnet d’offres pendant la séance, sans montant", () => {
     const copy = offerReceivedCopy({ publicNumber: 10005, sealed: true });
-    expect(copy.bodyText).toMatch(/masqué/);
+    expect(copy.bodyText).toMatch(/carnet d’offres/);
     expect(copy.bodyText).not.toMatch(/\d[\d\s]*€/);
     expect(copy.bodyText).not.toMatch(/montant de/i);
   });

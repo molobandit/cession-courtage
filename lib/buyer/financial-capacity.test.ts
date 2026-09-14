@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  financementPret,
   CAPACITE_MINIMUM_EUR,
   capaciteVerifiee,
   controlePerime,
@@ -97,5 +98,26 @@ describe("ce que voit le cédant", () => {
     // cédant en erreur alors que personne ne l'a contrôlé.
     expect(montantVisibleParLeCedant({ ...verifiee, statut: "DECLARED" }, MAINTENANT)).toBeNull();
     expect(montantVisibleParLeCedant({ ...verifiee, verifieeLe: VIEUX }, MAINTENANT)).toBeNull();
+  });
+});
+
+describe("financement exigé avant tout engagement", () => {
+  const maintenant = new Date("2026-09-14T10:00:00Z");
+  const declare = { montantEur: 80_000, statut: "DECLARED" as const, verifieeLe: null };
+
+  it("refuse sans déclaration, sans justificatif, ou refusée", () => {
+    expect(financementPret({ capacite: { montantEur: null, statut: "NONE", verifieeLe: null }, mode: null, justificatifDepose: false, montantVise: 0 }, maintenant).ok).toBe(false);
+    expect(financementPret({ capacite: declare, mode: "CREDIT", justificatifDepose: false, montantVise: 0 }, maintenant).ok).toBe(false);
+    expect(financementPret({ capacite: { ...declare, statut: "REJECTED" }, mode: "CREDIT", justificatifDepose: true, montantVise: 0 }, maintenant).ok).toBe(false);
+  });
+
+  it("accepte une déclaration justifiée qui couvre le montant", () => {
+    expect(financementPret({ capacite: declare, mode: "CREDIT", justificatifDepose: true, montantVise: 60_000 }, maintenant)).toEqual({ ok: true });
+  });
+
+  it("refuse un montant au-delà de la capacité, ou un contrôle périmé", () => {
+    expect(financementPret({ capacite: declare, mode: "CASH", justificatifDepose: true, montantVise: 90_000 }, maintenant).ok).toBe(false);
+    const perime = { montantEur: 80_000, statut: "VERIFIED" as const, verifieeLe: new Date("2025-01-01T00:00:00Z") };
+    expect(financementPret({ capacite: perime, mode: "CASH", justificatifDepose: true, montantVise: 0 }, maintenant).ok).toBe(false);
   });
 });

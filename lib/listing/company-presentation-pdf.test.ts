@@ -27,6 +27,7 @@ function fiche(over: Partial<CompanyPresentation> = {}): CompanyPresentation {
     sale: { askingPrice: 19373, multiple: 1.75, negotiable: true, motive: "Départ à la retraite", desiredDate: "2027-01", presentation: "Clientèle fidèle ≈ vingt ans d’ancienneté.\nÉquipe autonome.", zone: "Nord", certified: true, partial: false },
     breakdowns: [{ title: "Par branche", shares: [{ label: "Santé", value: 3084, share: 0.278, contracts: 80 }] }],
     regulatory: [{ label: "Formation DDA", value: "Formations DDA à jour" }],
+    profile: [{ section: "Positionnement", rows: [{ label: "Branches travaillées", value: "Santé et prévoyance, Emprunteur" }] }],
     documents: [{ label: "Statuts de la société", date: new Date("2026-09-01T10:00:00Z") }],
     ...over,
   };

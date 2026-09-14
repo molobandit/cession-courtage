@@ -6,6 +6,7 @@ import { companyDocLabel } from "@/lib/listing/company-doc-kinds";
 import { listCertificationStatuses } from "@/lib/listing/certification";
 import { DISTRIBUTION_LABELS, RISK_TYPE_LABELS, SEGMENT_LABELS } from "@/lib/labels";
 import { breakdownBy, type AnalyticsLine, type Share } from "@/lib/portfolio/analytics";
+import { profileFacts, readFirmProfile } from "@/lib/firm/profile";
 import { prisma } from "@/lib/prisma";
 
 /**
@@ -56,6 +57,8 @@ export type CompanyPresentation = {
   };
   breakdowns: { title: string; shares: Share[] }[];
   regulatory: { label: string; value: string }[];
+  /** Profil du cabinet renseigné dans le compte, volet par volet. */
+  profile: { section: string; rows: { label: string; value: string }[] }[];
   documents: { label: string; date: Date }[];
 };
 
@@ -180,6 +183,7 @@ export async function loadCompanyPresentation(listingId: string): Promise<Compan
       { title: "Par zone", shares: breakdownBy(lines, (l) => (listing.isNationwide ? "France entière" : `Département ${l.department}`), 5) },
     ],
     regulatory: regulatoryFacts(brief.regulatory),
+    profile: profileFacts(readFirmProfile(firm.profileJson)),
     documents: listing.companyDocuments.map((d) => ({ label: companyDocLabel(d.kind), date: d.createdAt })),
   };
 }

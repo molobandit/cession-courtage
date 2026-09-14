@@ -3,7 +3,7 @@ import { CapacityActions } from "@/components/admin/capacity-actions";
 import { getActor, isAdmin, listFinancialCapacities } from "@/lib/authz";
 import { formatDate } from "@/lib/format/fr";
 import { formatEuroWhole } from "@/lib/format/number";
-import { libelleCapacite } from "@/lib/buyer/financial-capacity";
+import { MODES_FINANCEMENT, libelleCapacite } from "@/lib/buyer/financial-capacity";
 
 export const metadata = { title: "Capacités financières" };
 
@@ -77,7 +77,19 @@ export default async function AdminCapacitesPage() {
                     <td className="px-3 py-3 text-right tabular">
                       {capacite.montantEur !== null ? formatEuroWhole(capacite.montantEur) : "—"}
                     </td>
-                    <td className="px-3 py-3">{libelleCapacite(capacite)}</td>
+                    <td className="px-3 py-3">
+                      {libelleCapacite(capacite)}
+                      <span className="block text-[13px] text-muted">
+                        {MODES_FINANCEMENT.find((m) => m.value === c.financingMode)?.label ?? "Mode non déclaré"}
+                      </span>
+                      {c.accountDocuments[0] ? (
+                        <a href={`/api/compte/documents/${c.accountDocuments[0].id}`} target="_blank" rel="noreferrer" className="block text-[13px] text-indigo-dark underline-offset-2 hover:underline">
+                          Justificatif : {c.accountDocuments[0].fileName}
+                        </a>
+                      ) : (
+                        <span className="block text-[13px] text-danger">Aucun justificatif</span>
+                      )}
+                    </td>
                     <td className="px-3 py-3">
                       {c.financialCapacityAt ? (
                         <>

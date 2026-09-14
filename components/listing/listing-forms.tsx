@@ -362,7 +362,7 @@ function TinyForm({
 }
 
 export function PublishListingButton({ listingId }: { listingId: string }) {
-  return <TinyForm action={publishListingAction} listingId={listingId} label="Publier" pendingLabel="Publication…" />;
+  return <TinyForm action={publishListingAction} listingId={listingId} label="Soumettre pour publication" pendingLabel="Envoi…" />;
 }
 
 export function OpenOffersButton({ listingId }: { listingId: string }) {

@@ -48,6 +48,17 @@ export function ListingAdCard({ item }: { item: PublicListingCard }) {
             <p className="mt-0.5 text-[12px] text-muted">Prix demandé</p>
           </div>
         </div>
+        {!item.sold && item.offerCount ? (
+          <p className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-xl bg-indigo-soft px-3 py-2 text-[13px] text-ink">
+            {item.offerCount >= 2 || (item.bestOffer ?? 0) >= item.askingPrice ? (
+              <span className="rounded-full bg-indigo px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">Opportunité chaude</span>
+            ) : null}
+            <span>
+              Meilleure offre <span className="tabular font-bold">{formatEuroWhole(item.bestOffer ?? 0)}</span>
+            </span>
+            <span className="text-muted">· {item.offerCount} offre{item.offerCount > 1 ? "s" : ""}</span>
+          </p>
+        ) : null}
         {/* « Non précisé » sur chaque carte n'apprenait rien : la ligne n'apparaît que si le mode est connu. */}
         {perception.mode !== "UNSTATED" ? (
           <p className="mt-3 text-[13px] font-medium text-ink">{perception.modeLine}</p>

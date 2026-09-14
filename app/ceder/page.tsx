@@ -16,7 +16,7 @@ import { formatEuroWhole } from "@/lib/format/number";
 export const metadata: Metadata = {
   title: "Céder un portefeuille de courtage",
   description:
-    "Le parcours du cédant : import anonymisé, valorisation en cascade, annonce sous alias, offres scellées et transfert ORIAS accompagné.",
+    "Le parcours du cédant : import anonymisé, valorisation en cascade, annonce relue et publiée gratuitement, séance d’offres cotée en direct, séquestre et transfert accompagnés.",
 };
 
 const PROTECTIONS = [

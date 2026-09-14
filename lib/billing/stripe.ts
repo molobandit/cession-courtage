@@ -157,6 +157,8 @@ export async function stripeCreatePaymentCheckout(input: {
   metadata: Record<string, string>;
   successUrl: string;
   cancelUrl: string;
+  /** Moyens proposés : la carte par défaut, le prélèvement SEPA sur demande. */
+  paymentMethodTypes?: ("card" | "sepa_debit")[];
 }): Promise<StripeCheckoutSession> {
   const body = new URLSearchParams();
   body.set("mode", "payment");
@@ -165,7 +167,9 @@ export async function stripeCreatePaymentCheckout(input: {
   body.set("success_url", input.successUrl);
   body.set("cancel_url", input.cancelUrl);
   body.set("locale", "fr");
-  body.set("payment_method_types[0]", "card");
+  (input.paymentMethodTypes ?? ["card"]).forEach((type, i) => body.set(`payment_method_types[${i}]`, type));
+  // Un prélèvement SEPA suppose un client Stripe, qui porte le mandat.
+  if (input.paymentMethodTypes?.includes("sepa_debit")) body.set("customer_creation", "always");
   body.set("billing_address_collection", "required");
   body.set("line_items[0][quantity]", "1");
   body.set("line_items[0][price_data][currency]", "eur");

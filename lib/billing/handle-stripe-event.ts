@@ -7,6 +7,7 @@ import {
   type StripeSubscription,
 } from "@/lib/billing/stripe";
 import { DIRECT_FEES_KIND, settleDirectFeesFromSession } from "@/lib/direct/fees-payment";
+import { DEPOSIT_KIND, failDepositSession, settleDepositSession } from "@/lib/billing/deposit-checkout";
 
 type StripeEvent = {
   type: string;
@@ -14,6 +15,18 @@ type StripeEvent = {
 };
 
 export async function handleStripeEvent(event: StripeEvent): Promise<void> {
+  // Dépôt de garantie : paiement unique, par carte ou prélèvement SEPA.
+  if (event.type.startsWith("checkout.session.")) {
+    const session = event.data.object as unknown as StripeCheckoutSession;
+    if (session.metadata?.kind === DEPOSIT_KIND) {
+      if (event.type === "checkout.session.async_payment_failed") await failDepositSession(session);
+      else if (event.type === "checkout.session.completed" || event.type === "checkout.session.async_payment_succeeded") {
+        await settleDepositSession(session);
+      }
+      return;
+    }
+  }
+
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as unknown as StripeCheckoutSession;
     // Honoraires d'un service à la carte : paiement unique, pas d'abonnement.

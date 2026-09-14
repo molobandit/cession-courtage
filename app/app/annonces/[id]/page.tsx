@@ -46,16 +46,16 @@ export default async function SellerListingPage({ params }: { params: Promise<{ 
         kicker="Mon annonce"
         badge={<MarketBadge label={cotation.label} tone={cotation.tone} detail={cotation.detail} />}
         title={`Dossier N° ${listing.publicNumber}`}
-        subtitle={<>{listing.portfolio.label} · {listing.displayedZone}{listing.offerWindowClosesAt ? ` · offres scellées ${sealed ? "jusqu’au" : "closes depuis le"} ${formatDate(listing.offerWindowClosesAt)}` : ""}</>}
+        subtitle={<>{listing.portfolio.label} · {listing.displayedZone}{listing.offerWindowClosesAt ? ` · séance ${sealed ? "ouverte jusqu’au" : "close depuis le"} ${formatDate(listing.offerWindowClosesAt)}` : ""}</>}
         figures={[
           { label: "Prix demandé", value: formatEuro(listing.askingPrice) },
           { label: "Candidats", value: String(candidats.length), note: "Acquéreurs ayant pris position" },
-          { label: "Offres", value: String(offres), note: sealed ? "Montants visibles à la clôture" : "Visibles, à comparer", accent: offres > 0 && !sealed },
+          { label: "Offres", value: String(offres), note: sealed ? "À retenir à la clôture de la séance" : "À comparer et retenir", accent: offres > 0 },
         ]}
         actions={
           <>
             {listing.status === "DRAFT" || listing.status === "WITHDRAWN" ? <PublishListingButton listingId={listing.id} /> : null}
-            {listing.status === "PUBLISHED" || listing.status === "DRAFT" ? <OpenOffersButton listingId={listing.id} /> : null}
+            {listing.status === "PUBLISHED" ? <OpenOffersButton listingId={listing.id} /> : null}
             <Link
               href={`/app/annonces/${listing.id}/offres`}
               className="inline-flex h-10 items-center rounded-full bg-indigo px-4 text-[14px] font-semibold !text-white hover:bg-indigo-dark"
@@ -71,6 +71,18 @@ export default async function SellerListingPage({ params }: { params: Promise<{ 
           </>
         }
       />
+
+      {listing.status === "PENDING_REVIEW" ? (
+        <p className="mt-4 rounded-2xl border border-indigo-line bg-indigo-soft px-4 py-3 text-[15px] text-ink">
+          <span className="font-semibold">En cours de cotation.</span> L’équipe relit votre annonce avant publication ; vous êtes
+          prévenu dès sa décision. La mise en vente est gratuite.
+        </p>
+      ) : listing.status === "DRAFT" && listing.reviewNote ? (
+        <p className="mt-4 rounded-2xl border border-warn/30 bg-warn/5 px-4 py-3 text-[15px] text-ink">
+          <span className="font-semibold">Annonce à corriger.</span> Motif : {listing.reviewNote}. Corrigez-la puis soumettez-la de
+          nouveau.
+        </p>
+      ) : null}
 
       <div className="mt-4 flex flex-wrap gap-2">
         <Button asChild variant="outline" size="sm">

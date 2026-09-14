@@ -113,7 +113,7 @@ export default async function MemberHomePage() {
             <DeskKpi
               label="En séance"
               value={formatCount(indices.enSeance)}
-              note={`dont ${formatCount(indices.scellees)} en offres scellées`}
+              note={`dont ${formatCount(indices.scellees)} en séance d’offres`}
               href="/annonces"
             />
             <DeskKpi label="Volume en séance" value={volumeCourt(indices.volumeEur)} note="Somme des prix demandés" />

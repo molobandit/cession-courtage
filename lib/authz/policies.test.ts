@@ -67,8 +67,8 @@ describe("offerAccessFor", () => {
     portfolio: { firmId: "f1" },
   };
 
-  it("masque tout au cédant pendant la fenêtre", () => {
-    expect(offerAccessFor(seller, { ...listingOpen, now })).toBe("sealed");
+  it("montre les offres au cédant pendant la séance", () => {
+    expect(offerAccessFor(seller, { ...listingOpen, now })).toBe("full");
     expect(offerAccessFor(buyer, { ...listingOpen, now })).toBe("own");
   });
 

@@ -10,6 +10,7 @@ import { getActor, isOriasVerified, listListingMessages } from "@/lib/authz";
 import { isOfferWindowSealed, ownsFirm } from "@/lib/authz/policies";
 import { interestDepositFor } from "@/lib/billing/rates";
 import { depositTerms } from "@/lib/billing/deposit-fate";
+import { loadEngagementReadiness } from "@/lib/buyer/readiness";
 import { nextPipelineAction } from "@/lib/deal/pipeline";
 import { formatDateTime } from "@/lib/format/fr";
 import { formatEuroWhole } from "@/lib/format/number";
@@ -46,6 +47,7 @@ export default async function PositionPage({ params }: { params: Promise<{ id: s
   if (!estAcheteur && !estCedant) notFound();
 
   const prix = Number(listing.askingPrice);
+  const readiness = estAcheteur ? await loadEngagementReadiness(actor, 0, `/app/positions/${position.id}`) : null;
   const scelle = isOfferWindowSealed(listing);
   const courant = positionStepIndex(state);
   const message = estAcheteur ? state.buyerMessage : state.sellerMessage;
@@ -71,7 +73,7 @@ export default async function PositionPage({ params }: { params: Promise<{ id: s
             lots={lots.lots}
             availableCarriers={lots.available}
             needsDeposit={sansDepot}
-            needsNda={sansDepot || !deposit?.ndaAcceptedAt}
+            readiness={readiness!}
             depositLabel={formatEuroWhole(interestDepositFor(prix))}
             depositTermsLines={depositTerms(formatEuroWhole(interestDepositFor(prix)), interestDepositFor(prix))}
           />
@@ -80,7 +82,7 @@ export default async function PositionPage({ params }: { params: Promise<{ id: s
               <summary className="cursor-pointer text-[14px] font-medium text-ink">
                 Consulter d’abord les pièces du cabinet : déposer seulement l’engagement
               </summary>
-              <DepositForm listingId={listing.id} amountLabel={formatEuroWhole(interestDepositFor(prix))} amountEur={interestDepositFor(prix)} />
+              <DepositForm listingId={listing.id} amountLabel={formatEuroWhole(interestDepositFor(prix))} amountEur={interestDepositFor(prix)} readiness={readiness!} />
             </details>
           ) : null}
         </div>
@@ -94,7 +96,7 @@ export default async function PositionPage({ params }: { params: Promise<{ id: s
             <p className="text-[13px] text-muted">
               {Number(offer.upfrontPercent)} % comptant
               {scelle && listing.offerWindowClosesAt
-                ? ` · le cédant découvrira les offres le ${dateLongue.format(listing.offerWindowClosesAt)}`
+                ? ` · transmise au cédant, qui retiendra une offre à la clôture le ${dateLongue.format(listing.offerWindowClosesAt)}`
                 : " · transmise au cédant"}
             </p>
           </div>
@@ -104,11 +106,17 @@ export default async function PositionPage({ params }: { params: Promise<{ id: s
     }
   } else if (estCedant && state.key === "OFFER" && offer) {
     action = scelle ? (
-      <p className="mt-5 rounded-2xl border border-line bg-surface p-4 text-[15px] text-muted">
-        Offre scellée jusqu’à la clôture de la fenêtre
-        {listing.offerWindowClosesAt ? `, le ${dateLongue.format(listing.offerWindowClosesAt)}` : ""}. Vous pourrez
-        alors la comparer et la retenir.
-      </p>
+      <div className="mt-5 rounded-2xl border border-line bg-surface p-4">
+        <p className="text-[13px] text-muted">Offre de {position.buyer.publicAlias}</p>
+        <p className="tabular text-xl font-bold text-ink">{formatEuroWhole(Number(offer.amount))}</p>
+        <p className="mt-1 text-[14px] text-muted">
+          Séance en cours{listing.offerWindowClosesAt ? ` jusqu’au ${dateLongue.format(listing.offerWindowClosesAt)}` : ""} : vous
+          pourrez retenir une offre à la clôture.{" "}
+          <Link href={`/app/annonces/${listing.id}/offres`} className="font-medium text-indigo-dark hover:underline">
+            Comparer les offres
+          </Link>
+        </p>
+      </div>
     ) : (
       <div className="mt-5 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-line bg-surface p-4">
         <div>

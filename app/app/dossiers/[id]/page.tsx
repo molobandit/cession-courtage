@@ -36,7 +36,6 @@ export default async function DealPage({ params }: { params: Promise<{ id: strin
   const counterpartyLabel = counterpartyDisplayName(counterparty);
   const agreed = Number(p.deal.agreedPrice);
   const upfront = Number(p.deal.upfrontAmount);
-  const deferred = Number(p.deal.deferredAmount);
 
   const suivi = tasksFor(p.snapshot, side);
   const tasks = stageTasks(p.snapshot);
@@ -88,12 +87,8 @@ export default async function DealPage({ params }: { params: Promise<{ id: strin
           <dd className="mt-1 text-[15px] font-semibold">{p.deal.loiEffectiveDate ? formatDate(p.deal.loiEffectiveDate) : "Fixée par la lettre d’intention"}</dd>
         </div>
         <div>
-          <dt className="text-[12px] uppercase tracking-wide text-muted">Séquestre 80 %</dt>
+          <dt className="text-[12px] uppercase tracking-wide text-muted">Montant au séquestre</dt>
           <dd className="tabular mt-1 text-[15px] font-semibold">{formatEuro(upfront)}</dd>
-        </div>
-        <div>
-          <dt className="text-[12px] uppercase tracking-wide text-muted">Solde 20 % (différé)</dt>
-          <dd className="tabular mt-1 text-[15px] font-semibold">{formatEuro(deferred)}</dd>
         </div>
         <div className="sm:col-span-2">
           <dt className="text-[12px] uppercase tracking-wide text-muted">Compagnies cédées</dt>
@@ -250,8 +245,8 @@ export default async function DealPage({ params }: { params: Promise<{ id: strin
         progress={{ percent: pipelineProgressPercent(deal.stage), tone: deal.stage === "CLOSED" ? "closed" : "active" }}
         figures={[
           { label: "Prix convenu", value: formatEuro(agreed) },
-          { label: "Comptant séquestré", value: formatEuro(upfront), note: "80 % du prix" },
-          { label: "Solde différé", value: formatEuro(deferred), note: "Libéré après la conservation" },
+          { label: "Au séquestre", value: formatEuro(upfront), note: "Dépôt de garantie déduit au versement" },
+          { label: "Libération", value: "Accord des compagnies", note: "Après la signature" },
           { label: "Séquestre", value: ESCROW_STAGE_LABELS[deal.escrowStage as keyof typeof ESCROW_STAGE_LABELS] ?? deal.escrowStage },
         ]}
         actions={

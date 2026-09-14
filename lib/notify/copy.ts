@@ -11,7 +11,7 @@ export function offerReceivedCopy(input: {
         "Une offre a été déposée sur votre dossier.",
         "",
         `Dossier n° ${input.publicNumber}.`,
-        "Le montant reste masqué jusqu’à la clôture de la fenêtre d’offres scellées.",
+        "Consultez-la dans votre carnet d’offres : vous pourrez retenir une offre à la clôture de la séance.",
         "",
         `— ${BRAND_NAME}`,
       ].join("\n"),

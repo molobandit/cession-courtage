@@ -16,12 +16,14 @@ import { prisma } from "@/lib/prisma";
 import { disposePlatformProxy } from "./setup/prisma-test";
 import { connecterUtilisateur } from "./setup/auth-stub";
 import { submitOfferAction, withdrawOfferAction } from "@/app/actions/offers";
-import { acceptRetentionAction } from "@/app/actions/deal-process";
+import { confirmCarrierTransferAction } from "@/app/actions/deal-process";
+import { declarerFinancement, restaurer, sauvegarder, signerEngagements } from "./setup/engagements";
 
 const LISTING = "lst_03"; // fenêtre d'offres encore ouverte
 let acheteur: string;
 let depotCree = false;
 let offreCreee: string | null = null;
+let sauvegarde: Awaited<ReturnType<typeof sauvegarder>>;
 
 function form(champs: Record<string, string>): FormData {
   const data = new FormData();
@@ -50,6 +52,7 @@ beforeAll(async () => {
   });
   if (!candidat) throw new Error("Aucun acquéreur abonné disponible pour lst_03.");
   acheteur = candidat.id;
+  sauvegarde = await sauvegarder([acheteur]);
 });
 
 beforeEach(() => connecterUtilisateur(acheteur));
@@ -62,10 +65,26 @@ afterAll(async () => {
       .delete({ where: { listingId_buyerId: { listingId: LISTING, buyerId: acheteur } } })
       .catch(() => undefined);
   }
+  await restaurer(sauvegarde);
   await disposePlatformProxy();
 });
 
 describe("aucune offre sans engagement", () => {
+  it("refuse l’offre tant que les engagements ne sont pas signés", async () => {
+    const resultat = await submitOfferAction({}, form({ listingId: LISTING, amount: "40000", paymentMethod: "CARD", engagement: "on" }));
+    expect(resultat.error).toContain("engagements");
+    expect(await prisma.interestDeposit.count({ where: { listingId: LISTING, buyerId: acheteur } })).toBe(0);
+  });
+
+  it("refuse une offre que le financement déclaré ne couvre pas", async () => {
+    await signerEngagements(acheteur);
+    await declarerFinancement(acheteur, 30_000);
+    connecterUtilisateur(acheteur);
+    const resultat = await submitOfferAction({}, form({ listingId: LISTING, amount: "40000", paymentMethod: "CARD", engagement: "on" }));
+    expect(resultat.error).toContain("ne couvre pas");
+    await declarerFinancement(acheteur, 100_000);
+  });
+
   it("refuse l’offre tant que le dépôt n’est pas versé", async () => {
     const resultat = await submitOfferAction(
       {},
@@ -79,15 +98,6 @@ describe("aucune offre sans engagement", () => {
     expect(resultat.error).toContain("dépôt de garantie");
     const offres = await prisma.offer.count({ where: { listingId: LISTING, buyerId: acheteur } });
     expect(offres).toBe(0);
-  });
-
-  it("refuse l’offre sans l’engagement de confidentialité", async () => {
-    const resultat = await submitOfferAction(
-      {},
-      form({ listingId: LISTING, amount: "40000", engagement: "on" }),
-    );
-    expect(resultat.error).toContain("confidentialité");
-    expect(await prisma.interestDeposit.count({ where: { listingId: LISTING, buyerId: acheteur } })).toBe(0);
   });
 
   it("accepte l’offre une fois le dépôt en place", async () => {
@@ -105,7 +115,6 @@ describe("aucune offre sans engagement", () => {
           amount: "40000",
           upfrontPercent: "70",
           message: "Je souhaite me positionner sur ce dossier.",
-          nda: "on",
         }),
       ),
     ).rejects.toThrow(/NEXT_REDIRECT/);
@@ -171,22 +180,14 @@ describe("la clôture impute le dépôt sur le prix", () => {
       });
     }
 
-    // La clôture passe par la validation, par le cédant, de la déclaration à douze mois.
-    const douzeMois = await prisma.retentionReport.findUnique({
-      where: { dealId_monthIndex: { dealId: deal.id, monthIndex: 12 } },
-    });
-    if (!douzeMois) {
-      await prisma.retentionReport.create({
-        data: { dealId: deal.id, monthIndex: 12, contractsRetained: 92, contractsTransferred: 100, actualCommissions: "10000.00", retentionRate: "0.9200" },
-      });
-    }
-    await prisma.deal.update({ where: { id: deal.id }, data: { stage: DealStage.RETENTION } });
-    connecterUtilisateur(deal.sellerId);
-    const resultat = await acceptRetentionAction({}, form({ dealId: deal.id, consent: "on" }));
+    // La clôture suit l'accord des compagnies, confirmé par l'acquéreur : le séquestre est libéré.
+    await prisma.deal.update({ where: { id: deal.id }, data: { stage: DealStage.TRANSFER, escrowStage: "FUNDS_HELD" } });
+    await prisma.dealSignoff.create({ data: { dealId: deal.id, kind: "ATTESTATIONS_SENT", userId: deal.sellerId } });
+    connecterUtilisateur(deal.buyerId);
+    const resultat = await confirmCarrierTransferAction({}, form({ dealId: deal.id, consent: "on" }));
     expect(resultat.error).toBeUndefined();
     expect((await prisma.deal.findUniqueOrThrow({ where: { id: deal.id }, select: { stage: true } })).stage).toBe(DealStage.CLOSED);
-    await prisma.dealSignoff.deleteMany({ where: { dealId: deal.id, kind: "RETENTION_ACCEPTED" } });
-    if (!douzeMois) await prisma.retentionReport.delete({ where: { dealId_monthIndex: { dealId: deal.id, monthIndex: 12 } } });
+    await prisma.dealSignoff.deleteMany({ where: { dealId: deal.id, kind: { in: ["ATTESTATIONS_SENT", "TRANSFER_CONFIRMED"] } } });
 
     const depot = await prisma.interestDeposit.findUnique({
       where: { listingId_buyerId: { listingId: deal.listingId, buyerId: deal.buyerId } },

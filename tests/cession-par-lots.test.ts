@@ -19,6 +19,7 @@ import { prisma } from "@/lib/prisma";
 import { disposePlatformProxy } from "./setup/prisma-test";
 import { connecterUtilisateur } from "./setup/auth-stub";
 import { acceptOfferAction } from "@/app/actions/offers";
+import { restaurer, sauvegarder, signerEngagements } from "./setup/engagements";
 import { listingLots, lotAvailability, readCarriers } from "@/lib/listing/lot-availability";
 
 const LISTING = "lst_05";
@@ -30,6 +31,7 @@ let statutInitial: ListingStatus;
 let quota: { id: string; dealQuota: number | null; dealsUsed: number } | null = null;
 const dossiersCrees: string[] = [];
 const offresCreees: string[] = [];
+let sauvegarde: Awaited<ReturnType<typeof sauvegarder>>;
 
 function form(champs: Record<string, string | string[]>): FormData {
   const data = new FormData();
@@ -70,6 +72,9 @@ beforeAll(async () => {
   });
   acheteurs = candidats.map((u) => u.id);
   if (acheteurs.length < 2) throw new Error("Deux acquéreurs vérifiés sont nécessaires.");
+  // Retenir une offre suppose les engagements du cédant, signés une fois.
+  sauvegarde = await sauvegarder([cedant]);
+  await signerEngagements(cedant);
 
   /*
    * Le forfait du cédant plafonne le nombre de dossiers. Ce plafond est réel et
@@ -106,6 +111,7 @@ afterAll(async () => {
     });
   }
   await prisma.listing.update({ where: { id: LISTING }, data: { status: statutInitial } });
+  await restaurer(sauvegarde);
   if (quota) {
     // `dealsUsed` aussi : chaque acceptation l'incrémente, et le laisser gonflé
     // épuiserait le forfait du cédant pour les tests suivants.

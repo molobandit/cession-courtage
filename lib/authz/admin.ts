@@ -213,6 +213,8 @@ export async function listFinancialCapacities(actor: Actor) {
       financialCapacityStatus: true,
       financialCapacityAt: true,
       financialCapacityNote: true,
+      financingMode: true,
+      accountDocuments: { where: { kind: "FINANCING" }, select: { id: true, fileName: true }, take: 1 },
       firm: { select: { legalName: true, siren: true } },
     },
   });

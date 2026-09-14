@@ -30,6 +30,7 @@ import { takePositionAction } from "@/app/actions/positions";
 import { loadPosition } from "@/lib/position/load";
 import { fundEscrowAction } from "@/app/actions/deal-process";
 import { menerDossier } from "./setup/dossier";
+import { declarerFinancement, restaurer, sauvegarder, signerEngagements } from "./setup/engagements";
 
 const ANNONCE_CATALOGUE = "lst_catalog_05";
 const ANNONCE_DEMANDE = "lst_catalog_10";
@@ -44,6 +45,7 @@ const etatsAnnonces = new Map<string, ListingStatus>();
 let quotas: { id: string; dealsUsed: number }[] = [];
 const mandatsCrees: string[] = [];
 const debut = new Date();
+let sauvegarde: Awaited<ReturnType<typeof sauvegarder>>;
 
 function form(champs: Record<string, string | string[]>): FormData {
   const data = new FormData();
@@ -92,6 +94,23 @@ async function acheterJusquALaVente(listingId: string, acheteur: Compte, enUnGes
   // Reprendre position ne crée pas un second dossier.
   expect(await destination(takePositionAction({}, form({ listingId })))).toBe(versPosition);
 
+  // Avant les engagements signés, aucune offre.
+  const sansEngagements = await submitOfferAction(
+    {},
+    form({ listingId, amount: String(Number(listing.askingPrice)), paymentMethod: "CARD", engagement: "on" }),
+  );
+  expect(sansEngagements.error).toContain("engagements");
+  await signerEngagements(acheteur.id);
+  connecterUtilisateur(acheteur.id);
+  // Puis, sans accord de principe bancaire, toujours aucune offre.
+  const sansFinancement = await submitOfferAction(
+    {},
+    form({ listingId, amount: String(Number(listing.askingPrice)), paymentMethod: "CARD", engagement: "on" }),
+  );
+  expect(sansFinancement.error).toContain("accord de principe");
+  await declarerFinancement(acheteur.id, Number(listing.askingPrice) * 2);
+  connecterUtilisateur(acheteur.id);
+
   const sansDepot = await submitOfferAction(
     {},
     form({ listingId, amount: String(Number(listing.askingPrice)), upfrontPercent: "80", message: "Reprise complète envisagée." }),
@@ -103,12 +122,12 @@ async function acheterJusquALaVente(listingId: string, acheteur: Compte, enUnGes
     // Engagement, confidentialité et offre, date d'effet comprise, en un seul formulaire.
     const dateEffet = new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth() + 2, 1)).toISOString().slice(0, 10);
     versFiche = await destination(
-      submitOfferAction({}, form({ listingId, amount: String(Number(listing.askingPrice)), effectiveDate: dateEffet, engagement: "on", nda: "on" })),
+      submitOfferAction({}, form({ listingId, amount: String(Number(listing.askingPrice)), effectiveDate: dateEffet, engagement: "on", paymentMethod: "SEPA" })),
     );
   } else {
-    // Sans l'engagement de confidentialité, pas de dépôt.
-    expect((await placeInterestDepositAction({}, form({ listingId }))).error).toContain("confidentialité");
-    expect(await placeInterestDepositAction({}, form({ listingId, nda: "on" }))).toEqual({ placed: true });
+    // Le dépôt se paie par carte ou prélèvement : il faut en choisir un.
+    expect((await placeInterestDepositAction({}, form({ listingId }))).error).toContain("prélèvement");
+    expect(await placeInterestDepositAction({}, form({ listingId, paymentMethod: "CARD" }))).toEqual({ placed: true });
     versFiche = await destination(
       submitOfferAction(
         {},
@@ -124,6 +143,7 @@ async function acheterJusquALaVente(listingId: string, acheteur: Compte, enUnGes
     select: { id: true },
   });
 
+  await signerEngagements(cedant.id);
   connecterUtilisateur(cedant.id);
   const versDossier = await destination(acceptOfferAction({}, form({ offerId: offre.id })));
   expect(versDossier).toMatch(/^\/app\/dossiers\//);
@@ -161,15 +181,17 @@ async function acheterJusquALaVente(listingId: string, acheteur: Compte, enUnGes
 
   const depot = await prisma.interestDeposit.findUniqueOrThrow({
     where: { listingId_buyerId: { listingId, buyerId: acheteur.id } },
-    select: { outcome: true },
+    select: { outcome: true, paymentMethod: true },
   });
   expect(depot.outcome).toBe("DEDUCTED");
+  expect(depot.paymentMethod).toBe(enUnGeste ? "SEPA" : "CARD");
 }
 
 beforeAll(async () => {
   cedant = await compte({ id: CEDANT });
   acheteurCatalogue = await compte({ email: "acquisition@expansion-idf.demo" });
   acheteurDemande = await compte({ email: "direction@alliance-paca.demo" });
+  sauvegarde = await sauvegarder([cedant.id, acheteurCatalogue.id, acheteurDemande.id]);
 
   for (const id of [ANNONCE_CATALOGUE, ANNONCE_DEMANDE]) {
     const l = await prisma.listing.findUniqueOrThrow({ where: { id }, select: { status: true } });
@@ -221,6 +243,7 @@ afterAll(async () => {
   for (const u of [cedant, acheteurCatalogue, acheteurDemande]) {
     await prisma.user.update({ where: { id: u.id }, data: { kycStatus: u.kycStatus as never, kycReviewNote: null, kycReviewedAt: null } });
   }
+  await restaurer(sauvegarde);
   await disposePlatformProxy();
 });
 

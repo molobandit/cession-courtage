@@ -4,7 +4,7 @@ import type { ListingStatus } from "@prisma/client";
  * Statut de cotation d'un portefeuille, dit de la même façon partout.
  *
  * Le site se présente comme une bourse : un titre y est ouvert, en séance
- * scellée, en négociation ou adjugé, et chacun lit l'état d'un coup d'œil.
+ * en séance, en négociation ou adjugé, et chacun lit l'état d'un coup d'œil.
  * Les pages disaient au contraire « Fenêtre close » sur une annonce qui recevait
  * encore des offres, « Clôture dans 15 jours » sur un portefeuille vendu, et
  * chaque écran avait ses propres mots. Tout passe désormais par ici.
@@ -40,6 +40,8 @@ export function marketStatus(input: {
   switch (input.status) {
     case "DRAFT":
       return { label: "Brouillon", tone: "off", detail: "Non publié", tradable: false };
+    case "PENDING_REVIEW":
+      return { label: "En cours de cotation", tone: "off", detail: "Relecture par l’équipe avant publication", tradable: false };
     case "WITHDRAWN":
       return { label: "Retiré du marché", tone: "off", detail: null, tradable: false };
     case "SOLD":
@@ -55,7 +57,7 @@ export function marketStatus(input: {
       const jours = joursRestants(input.offerWindowClosesAt, now);
       if (input.status === "OFFERS_OPEN" && jours !== null && jours >= 0) {
         return {
-          label: "Offres scellées",
+          label: "Séance en cours",
           tone: "sealed",
           detail:
             jours === 0 ? "Clôture aujourd’hui" : jours === 1 ? "Clôture demain" : `Clôture dans ${jours} jours`,
@@ -65,7 +67,7 @@ export function marketStatus(input: {
       return {
         label: "Offres ouvertes",
         tone: "open",
-        detail: "Offres transmises au cédant sans délai",
+        detail: "Le cédant peut retenir une offre",
         tradable: true,
       };
     }
@@ -75,8 +77,9 @@ export function marketStatus(input: {
 /** Libellé seul, pour les tableaux et les écrans d'administration. */
 export const MARKET_STATUS_LABELS: Record<ListingStatus, string> = {
   DRAFT: "Brouillon",
+  PENDING_REVIEW: "En cours de cotation",
   PUBLISHED: "Offres ouvertes",
-  OFFERS_OPEN: "Offres scellées",
+  OFFERS_OPEN: "Séance en cours",
   OFFERS_CLOSED: "Offres ouvertes",
   UNDER_NEGOTIATION: "En négociation",
   SOLD: "Vendu",

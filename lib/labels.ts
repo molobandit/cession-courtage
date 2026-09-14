@@ -47,13 +47,14 @@ export const COMMISSION_TYPE_LABELS: Record<CommissionType, string> = {
 
 /**
  * Vocabulaire de cotation, identique à `MARKET_STATUS_LABELS` : une annonce dont
- * la fenêtre scellée est terminée reçoit encore des offres, elle est donc
+ * la séance de 21 jours est terminée reçoit encore des offres, elle est donc
  * « ouverte », pas « close ».
  */
 export const LISTING_STATUS_LABELS: Record<ListingStatus, string> = {
   DRAFT: "Brouillon",
+  PENDING_REVIEW: "En cours de cotation",
   PUBLISHED: "Offres ouvertes",
-  OFFERS_OPEN: "Offres scellées",
+  OFFERS_OPEN: "Séance en cours",
   OFFERS_CLOSED: "Offres ouvertes",
   UNDER_NEGOTIATION: "En négociation",
   SOLD: "Vendu",

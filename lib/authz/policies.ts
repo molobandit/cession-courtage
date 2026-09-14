@@ -163,12 +163,13 @@ export function offerAccessFor(
     now?: Date;
   },
 ): OfferAccess {
+  /*
+   * Séance ouverte : le cédant suit les offres dès leur dépôt, comme la salle
+   * suit la meilleure offre affichée sur la fiche. Il ne peut en retenir une
+   * qu'à la clôture de la séance (voir `acceptOfferAction`), ce qui laisse à
+   * chaque acquéreur le temps de se positionner.
+   */
   const seller = ownsFirm(actor, listing.portfolio.firmId);
-  const sealed = isOfferWindowSealed(listing);
-  if (sealed) {
-    if (seller) return "sealed";
-    return "own";
-  }
   if (seller) return "full";
   return "own";
 }

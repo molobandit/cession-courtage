@@ -11,7 +11,6 @@ import type { DealStage } from "@prisma/client";
 import { uploadAccountDocumentAction } from "@/app/actions/account-verification";
 import { decideKycAction } from "@/app/actions/admin-orias";
 import {
-  acceptRetentionAction,
   confirmCarrierTransferAction,
   confirmPriceAction,
   fundEscrowAction,
@@ -21,7 +20,6 @@ import {
   uploadRoomDocumentAction,
   type DealProcessState,
 } from "@/app/actions/deal-process";
-import { submitRetentionReportAction } from "@/app/actions/retention";
 import { ACCOUNT_PIECES } from "@/lib/account/verification";
 import { loadDealProcess } from "@/lib/deal/process-load";
 import { DATA_ROOM_KINDS } from "@/lib/listing/company-doc-kinds";
@@ -100,21 +98,12 @@ export async function jouerEtape(dealId: string, options: { verifierComptes?: bo
       connecterUtilisateur(b);
       reussi("rattachement", await confirmCarrierTransferAction({}, f({ consent: "on" })));
       return;
-    case "RETENTION":
-      connecterUtilisateur(b);
-      reussi(
-        "déclaration M+12",
-        await submitRetentionReportAction({}, f({ monthIndex: "12", contractsTransferred: "100", contractsRetained: "92", actualCommissions: "10000" })),
-      );
-      connecterUtilisateur(s);
-      reussi("validation", await acceptRetentionAction({}, f({ consent: "on" })));
-      return;
     default:
       return;
   }
 }
 
-const ORDRE: DealStage[] = ["DATA_ROOM", "SIGNATURE", "TRANSFER", "RETENTION", "CLOSED"];
+const ORDRE: DealStage[] = ["DATA_ROOM", "SIGNATURE", "TRANSFER", "CLOSED"];
 
 export async function menerDossier(dealId: string, jusqua: DealStage = "CLOSED", options: { verifierComptes?: boolean } = {}): Promise<void> {
   for (let i = 0; i < ORDRE.length; i += 1) {

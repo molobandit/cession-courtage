@@ -25,7 +25,6 @@ import { fullyCommitted } from "@/lib/listing/lots";
 import { holdEscrowFunds, releaseEscrowFunds, signDealDocument } from "@/lib/partners/runtime";
 import { notifyDealStage } from "@/lib/position/events";
 import { prisma } from "@/lib/prisma";
-import { adjustedDeferredAmount } from "@/lib/retention/adjust";
 import { putObject } from "@/lib/storage/objects";
 
 /**
@@ -47,7 +46,7 @@ const DEAL_INCLUDE = {
       publicNumber: true,
       status: true,
       portfolio: { select: { label: true } },
-      deposits: { select: { buyerId: true, ndaAcceptedAt: true, placedAt: true } },
+      deposits: { select: { buyerId: true, ndaAcceptedAt: true, placedAt: true, amount: true } },
       companyDocuments: { select: { id: true, kind: true, fileName: true, createdAt: true }, orderBy: { createdAt: "asc" } },
     },
   },
@@ -125,7 +124,6 @@ export async function loadDealProcess(dealId: string) {
   });
 
   const deed = buildTransferDeed(context());
-  const douzeMois = deal.retentionReports.find((r) => r.monthIndex === 12) ?? null;
 
   const snapshot: ProcessSnapshot = {
     stage: etape,
@@ -144,7 +142,6 @@ export async function loadDealProcess(dealId: string) {
     carriers,
     deedHash: documentHash(deed),
     escrowStage: deal.escrowStage,
-    retention: douzeMois ? { reportedAt: douzeMois.reportedAt, retentionRate: Number(douzeMois.retentionRate) } : null,
   };
 
   return { deal, snapshot, carriers, revealed, context, parties: { seller: sellerParty, buyer: buyerParty } };
@@ -215,15 +212,6 @@ async function onEnter(p: DealProcess, entered: DealStage) {
 
 async function closeDeal(p: DealProcess) {
   const { deal } = p;
-  const douzeMois = deal.retentionReports.find((r) => r.monthIndex === 12);
-  if (douzeMois) {
-    const ajuste = adjustedDeferredAmount({
-      deferredAmount: Number(deal.deferredAmount),
-      retentionRate: Number(douzeMois.retentionRate),
-      targetRate: Number(deal.retentionTargetRate),
-    });
-    await prisma.deal.update({ where: { id: deal.id }, data: { adjustedDeferredAmount: ajuste.toFixed(2) } });
-  }
   await releaseEscrowFunds(deal.id);
 
   /*

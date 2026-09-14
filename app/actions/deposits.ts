@@ -5,7 +5,10 @@ import { canBuy, getActor, isOriasVerified } from "@/lib/authz/actor";
 import { ForbiddenError, UnauthenticatedError } from "@/lib/authz/errors";
 import { isTradableListingStatus, ownsFirm } from "@/lib/authz/policies";
 import { hasContactSubscription } from "@/lib/billing/contact-access";
-import { placeDeposit } from "@/lib/listing/place-deposit";
+import { redirect } from "next/navigation";
+import { AGREEMENTS_REQUIRED_MESSAGE, loadAgreementsStatus } from "@/lib/account/agreements-load";
+import { isDepositMethod, startDepositPayment } from "@/lib/billing/deposit-checkout";
+import { checkFinancing } from "@/lib/buyer/financing-load";
 import { prisma } from "@/lib/prisma";
 import { idSchema } from "@/lib/validations/actions";
 
@@ -25,6 +28,7 @@ export async function placeInterestDepositAction(
   _prev: DepositFormState,
   formData: FormData,
 ): Promise<DepositFormState> {
+  let paiement: string | null = null;
   try {
     const actor = await getActor();
     if (!actor) throw new UnauthenticatedError();
@@ -47,6 +51,7 @@ export async function placeInterestDepositAction(
         status: true,
         askingPrice: true,
         publicNumber: true,
+        offerWindowClosesAt: true,
         portfolio: { select: { firmId: true } },
       },
     });
@@ -57,18 +62,33 @@ export async function placeInterestDepositAction(
       return { error: "Vous ne pouvez pas déposer sur votre propre annonce." };
     }
 
-    if (formData.get("nda") !== "on") {
-      return { error: "Acceptez l’engagement de confidentialité : il protège les pièces que le cédant va vous ouvrir." };
-    }
-    const { position } = await placeDeposit(actor, listing, true);
+    const engagements = await loadAgreementsStatus(actor);
+    if (!engagements.valid) return { error: AGREEMENTS_REQUIRED_MESSAGE };
+    const financement = await checkFinancing(actor.id, 0);
+    if (!financement.ok) return { error: financement.raison };
+    const methode = formData.get("paymentMethod");
+    if (!isDepositMethod(methode)) return { error: "Choisissez de payer le dépôt par carte ou par prélèvement." };
 
-    revalidatePath(`/annonces/${listing.publicNumber}`);
-    revalidatePath(`/app/positions/${position.id}`);
-    revalidatePath("/app");
-    return { placed: true };
+    const suite = await startDepositPayment({
+      buyer: actor,
+      listing,
+      method: methode,
+      cancelPath: `/annonces/${listing.publicNumber}#position`,
+    });
+    if (suite.kind === "redirect") {
+      paiement = suite.url;
+    } else {
+      revalidatePath(`/annonces/${listing.publicNumber}`);
+      if (suite.positionId) revalidatePath(`/app/positions/${suite.positionId}`);
+      revalidatePath("/app");
+      return { placed: true };
+    }
   } catch (error) {
     if (error instanceof UnauthenticatedError) return { error: "Authentification requise." };
     if (error instanceof ForbiddenError) return { error: error.message };
+    console.error("placeInterestDepositAction", error);
     return { error: "Dépôt impossible." };
   }
+  if (paiement) redirect(paiement);
+  return { error: "Dépôt impossible." };
 }

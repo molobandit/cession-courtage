@@ -71,3 +71,46 @@ export function libelleCapacite(c: Capacite, maintenant = new Date()): string {
 export function montantVisibleParLeCedant(c: Capacite, maintenant = new Date()): number | null {
   return capaciteVerifiee(c, maintenant) ? c.montantEur : null;
 }
+
+export type ModeFinancement = "CASH" | "CREDIT" | "BOTH";
+
+export const MODES_FINANCEMENT: { value: ModeFinancement; label: string; piece: string }[] = [
+  { value: "CREDIT", label: "Crédit bancaire", piece: "Accord de principe bancaire" },
+  { value: "CASH", label: "Comptant", piece: "Attestation bancaire de disponibilité des fonds" },
+  { value: "BOTH", label: "Comptant et crédit", piece: "Accord de principe bancaire et attestation de fonds" },
+];
+
+/**
+ * Un acquéreur peut-il s'engager (dépôt, offre) pour ce montant ?
+ *
+ * Un accord de principe bancaire, ou pour un achat comptant une attestation de
+ * fonds, est exigé avant tout engagement : le cédant qui ouvre ses pièces et
+ * suspend sa recherche doit pouvoir compter sur un acquéreur qui peut payer.
+ * La déclaration suffit pour s'engager ; le contrôle de l'éditeur ajoute la
+ * mention « financement vérifié » que voit le cédant.
+ */
+export function financementPret(
+  input: { capacite: Capacite; mode: string | null; justificatifDepose: boolean; montantVise: number },
+  maintenant = new Date(),
+): { ok: true } | { ok: false; raison: string } {
+  const { capacite, mode, justificatifDepose, montantVise } = input;
+  if (capacite.statut === "NONE" || !mode || capacite.montantEur === null) {
+    return { ok: false, raison: "Déclarez votre capacité d’acquisition et déposez votre accord de principe bancaire, une seule fois, dans votre profil." };
+  }
+  if (!justificatifDepose) {
+    return { ok: false, raison: "Déposez votre accord de principe bancaire (ou votre attestation de fonds) dans votre profil avant de vous engager." };
+  }
+  if (capacite.statut === "REJECTED") {
+    return { ok: false, raison: "Votre justificatif de financement n’a pas été retenu. Déposez-en un nouveau depuis votre profil." };
+  }
+  if (capacite.statut === "VERIFIED" && capacite.verifieeLe && controlePerime(capacite.verifieeLe, maintenant)) {
+    return { ok: false, raison: "Votre justificatif de financement a plus de douze mois : déposez-en un récent." };
+  }
+  if (capacite.montantEur < montantVise) {
+    return {
+      ok: false,
+      raison: `Votre capacité déclarée (${Math.round(capacite.montantEur).toLocaleString("fr-FR")} €) ne couvre pas ce montant. Mettez-la à jour dans votre profil.`,
+    };
+  }
+  return { ok: true };
+}

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { AccountNav } from "@/components/app/account-nav";
@@ -6,6 +7,9 @@ import { EffacementForm } from "@/components/app/effacement-form";
 import { NotifyForm } from "@/components/app/notify-form";
 import { PasswordForm } from "@/components/app/password-form";
 import { VerificationPanel } from "@/components/account/verification-panel";
+import { FirmProfilePanel } from "@/components/firm/firm-profile-panel";
+import { loadAgreementsStatus } from "@/lib/account/agreements-load";
+import { profileCompletion, readFirmProfile } from "@/lib/firm/profile";
 import { missingPartyFields } from "@/lib/direct/documents";
 import { loadDocumentParty } from "@/lib/direct/parties";
 import { SubscribeButton } from "@/components/billing/subscribe-button";
@@ -37,6 +41,14 @@ export default async function ProfilPage({
   searchParams: Promise<{ session_id?: string; next?: string }>;
 }) {
   const actor = await getActor();
+  const [profilCabinet, engagements] = actor
+    ? await Promise.all([
+        actor.firmId
+          ? prisma.firm.findUnique({ where: { id: actor.firmId }, select: { profileJson: true } }).then((f) => readFirmProfile(f?.profileJson))
+          : Promise.resolve(readFirmProfile({})),
+        loadAgreementsStatus(actor),
+      ])
+    : [readFirmProfile({}), { valid: false, signed: {}, missing: [] }];
   const verification = actor
     ? await prisma.user.findUnique({
         where: { id: actor.id },
@@ -101,6 +113,8 @@ export default async function ProfilPage({
           financialCapacityStatus: true,
           financialCapacityAt: true,
           financialCapacityNote: true,
+          financingMode: true,
+          accountDocuments: { where: { kind: "FINANCING" }, select: { id: true, fileName: true, createdAt: true }, take: 1 },
         },
       }),
       prisma.subscription.findMany({
@@ -243,6 +257,33 @@ export default async function ProfilPage({
         />
       </section>
 
+      <section id="profil-cabinet" className={card}>
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <h2 className="text-lg font-semibold text-ink">Profil du cabinet</h2>
+          <span className="tabular text-[14px] font-semibold text-indigo-dark">Complété à {profileCompletion(profilCabinet)} %</span>
+        </div>
+        <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-muted">
+          Positionnement, organisation, conformité et stratégie : rempli une fois, il nourrit la présentation remise aux
+          acquéreurs engagés et la relecture de vos annonces.
+        </p>
+        <div className="mt-5">
+          <FirmProfilePanel profile={profilCabinet} />
+        </div>
+      </section>
+
+      <section id="engagements" className={card}>
+        <h2 className="text-lg font-semibold text-ink">Engagements</h2>
+        <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-muted">
+          Confidentialité et contrat d’intermédiation, signés une fois pour la durée de votre ORIAS.
+        </p>
+        <p className={`mt-3 text-[15px] font-semibold ${engagements.valid ? "text-ok" : "text-warn"}`}>
+          {engagements.valid ? "✓ Signés, valables pour toutes vos annonces et cessions" : "À signer avant de vous engager ou de publier"}
+        </p>
+        <Link href="/app/engagements" className="mt-2 inline-block text-[14px] font-medium text-indigo-dark underline-offset-2 hover:underline">
+          {engagements.valid ? "Relire mes engagements" : "Signer mes engagements"}
+        </Link>
+      </section>
+
       <section id="recherche" className={card}>
         <h2 className="text-lg font-semibold text-ink">Critères de recherche</h2>
         <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-muted">
@@ -360,12 +401,11 @@ export default async function ProfilPage({
 
       {canBuy(actor) ? (
         <section id="capacite" className={card}>
-          <h2 className="text-lg font-semibold text-ink">Capacité d’acquisition</h2>
+          <h2 className="text-lg font-semibold text-ink">Financement</h2>
           <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-muted">
-            Le site indique aux cédants que la capacité financière des acquéreurs
-            est vérifiée. Déclarez le montant que vous pouvez engager : notre
-            équipe le contrôle avant qu’il ne soit porté à la connaissance d’un
-            cédant. Une vérification vaut douze mois.
+            Obligatoire avant tout dépôt ou offre, une seule fois : le montant que vous pouvez engager, votre mode de
+            financement et votre accord de principe bancaire (ou attestation de fonds pour un achat comptant). Notre
+            équipe le contrôle ; le cédant voit alors « financement vérifié ». Un contrôle vaut douze mois.
           </p>
           <CapacityForm
             montantActuel={phoneRow?.financialCapacityEur ? Number(phoneRow.financialCapacityEur) : null}
@@ -375,6 +415,8 @@ export default async function ProfilPage({
               verifieeLe: phoneRow?.financialCapacityAt ?? null,
             })}
             note={phoneRow?.financialCapacityNote ?? null}
+            modeActuel={phoneRow?.financingMode ?? null}
+            justificatif={phoneRow?.accountDocuments[0] ?? null}
           />
         </section>
       ) : null}

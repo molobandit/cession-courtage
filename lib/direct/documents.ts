@@ -82,7 +82,7 @@ const dateLongue = new Intl.DateTimeFormat("fr-FR", {
   timeZone: "Europe/Paris",
 });
 
-function fill(value: string | null | undefined): string {
+export function fill(value: string | null | undefined): string {
   const v = value?.trim();
   return v ? v : MISSING;
 }
@@ -245,7 +245,7 @@ export function buildLetterOfIntent(ctx: DocumentContext): GeneratedDocument {
         `Le prix proposé est de ${euro.format(ctx.salePrice)}, net vendeur.`,
         solde > 0
           ? `${euro.format(comptant)} (${ctx.upfrontPercent.toLocaleString("fr-FR")} %) sont versés sur un compte séquestre à la signature du protocole. Le solde de ${euro.format(solde)} est libéré après la vérification de conservation à douze mois : il est ajusté au taux de conservation constaté rapporté à l’objectif de 90 %, dans la limite de 50 % à 100 % du solde.`
-          : "Il est payable en totalité comptant, par l’intermédiaire du compte séquestre.",
+          : "Il est versé en totalité sur un compte séquestre tenu par un tiers habilité, déduction faite du dépôt de garantie déjà versé. Les fonds sont libérés au cédant après la signature du protocole et l’accord des compagnies sur le transfert.",
       ],
     },
     {
@@ -343,7 +343,7 @@ export function buildTransferDeed(ctx: DocumentContext): GeneratedDocument {
   ];
   if (ctx.escrow) {
     paiement.push(
-      `La part comptant est versée sur un compte séquestre ouvert au nom des parties. Elle est libérée au profit du cédant une fois les attestations de transfert émises et la cession constatée.`,
+      `La somme due est versée sur un compte séquestre tenu par un tiers habilité, déduction faite du dépôt de garantie. Elle est libérée au profit du cédant après la signature du présent protocole et l’accord des compagnies sur le transfert des contrats.`,
     );
   }
 
