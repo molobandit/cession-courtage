@@ -32,7 +32,7 @@ export function investorInterventionLabel(value: string): string {
 export function formatInvestorTicket(minEur: number | null, maxEur: number | null): string {
   if (minEur == null && maxEur == null) return "Non renseigné";
   if (minEur != null && maxEur != null) {
-    return `${formatEuroWhole(minEur)} – ${formatEuroWhole(maxEur)}`;
+    return `${formatEuroWhole(minEur)} à ${formatEuroWhole(maxEur)}`;
   }
   if (minEur != null) return `à partir de ${formatEuroWhole(minEur)}`;
   return `jusqu’à ${formatEuroWhole(maxEur!)}`;

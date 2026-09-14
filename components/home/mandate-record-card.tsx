@@ -23,7 +23,7 @@ export function MandateRecordCard({ item }: { item: PublicMandateCard }) {
         <div>
           <dt className="text-[12px] text-muted">Commissions recherchées</dt>
           <dd className="tabular mt-0.5 text-[15px] font-semibold text-indigo">
-            {formatEuroWhole(item.minCommissions)} – {formatEuroWhole(item.maxCommissions)}
+            {formatEuroWhole(item.minCommissions)} à {formatEuroWhole(item.maxCommissions)}
           </dd>
         </div>
       </dl>

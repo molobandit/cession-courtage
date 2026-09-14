@@ -6,6 +6,8 @@ import { canSell, findMyPortfolio, getActor, isOriasVerified, listMyPortfolios }
 import { formatEuro } from "@/lib/format/fr";
 import { readFirmProfile } from "@/lib/firm/profile";
 import { defaultsFromFirmProfile } from "@/lib/listing/form-defaults";
+import { listingCommissionShares } from "@/lib/listing/lot-totals";
+import { precompteFromContracts } from "@/lib/listing/perception";
 import { prisma } from "@/lib/prisma";
 
 export const metadata = { title: "Nouvelle annonce" };
@@ -46,7 +48,12 @@ export default async function NewListingPage({
   const firm = actor.firmId
     ? await prisma.firm.findUnique({ where: { id: actor.firmId }, select: { profileJson: true } })
     : null;
-  const profil = defaultsFromFirmProfile(readFirmProfile(firm?.profileJson));
+  const parts = await listingCommissionShares([{ id: selected.id, portfolioId: selected.id, isPartial: false }]);
+  const lu = precompteFromContracts(null, parts.get(selected.id)?.advanced ?? 0, parts.get(selected.id)?.total ?? 0);
+  const profil = {
+    ...defaultsFromFirmProfile(readFirmProfile(firm?.profileJson)),
+    ...(lu === null ? {} : { precompte: lu ? "yes" : "no" }),
+  };
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-6 sm:px-6 sm:py-8">

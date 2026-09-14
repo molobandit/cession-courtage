@@ -35,6 +35,7 @@ const listingPublicInclude = {
           clientSegment: true,
           department: true,
           annualCommission: true,
+          commissionType: true,
           clientKey: true,
           renewalDate: true,
           effectiveDate: true,

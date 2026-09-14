@@ -56,7 +56,7 @@ export async function issueMagicLink(email: string): Promise<void> {
   const url = `${base}/connexion/magique?email=${encodeURIComponent(email)}&token=${raw}`;
   await sendMail({
     to: email,
-    subject: `Votre code de connexion — ${BRAND_NAME}`,
+    subject: `Votre code de connexion · ${BRAND_NAME}`,
     purpose: "MAGIC_LINK",
     bodyText: [
       "Bonjour,",

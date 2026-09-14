@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 
 const STEPS = [
   {
-    title: "Étape 1 — Identification du vendeur",
+    title: "Étape 1 : Identification du vendeur",
     items: [
       "Extrait Kbis ou justificatif d’immatriculation",
       "Informations légales de la société",
@@ -23,7 +23,7 @@ const STEPS = [
     ],
   },
   {
-    title: "Étape 2 — Justification du portefeuille",
+    title: "Étape 2 : Justification du portefeuille",
     items: [
       "États de portefeuille",
       "Relevés des compagnies",
@@ -35,7 +35,7 @@ const STEPS = [
     ],
   },
   {
-    title: "Étape 3 — Espace documentaire",
+    title: "Étape 3 : Espace documentaire",
     items: [
       "Dépôt des pièces, classement par catégorie",
       "Documents obligatoires ou facultatifs",
@@ -44,14 +44,14 @@ const STEPS = [
     ],
   },
   {
-    title: "Étape 4 — Analyse interne",
+    title: "Étape 4 : Analyse interne",
     items: [
       "Revue des commissions, du mix et des compagnies",
       "Les pièces ne sont jamais accessibles publiquement",
     ],
   },
   {
-    title: "Étape 5 — Rapport de certification",
+    title: "Étape 5 : Rapport de certification",
     items: [
       `Attribution du label ${CERTIFIED_LABEL}`,
       `ou non-certification par ${BRAND_NAME}`,

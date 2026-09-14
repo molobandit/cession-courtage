@@ -23,11 +23,11 @@ export const HERO_TITLE = `${HERO_HEADLINE} ${HERO_HEADLINE_REST}`;
  * sur l’accueil (marché / marché, portefeuille / portefeuilles).
  */
 export const HERO_LEDE =
-  "Cédants, acquéreurs et investisseurs s’y rencontrent pour conclure — sur des dossiers ouverts, chiffrés et vérifiés.";
+  "Cédants, acquéreurs et investisseurs s’y rencontrent pour conclure, sur des dossiers ouverts, chiffrés et vérifiés.";
 
 
 export const MARKET_HALL = "Salle de marché";
-export const MARKET_HALL_TITLE = "Salle de marché — Portefeuilles disponibles";
+export const MARKET_HALL_TITLE = "Portefeuilles à vendre";
 export const MARKET_ACCESS = "Accès au marché";
 export const NO_FEE_LABEL = "Sans frais";
 export const TAKE_POSITION = "Prenez position.";

@@ -30,7 +30,7 @@ describe("regroupement par journée parisienne", () => {
 
   it("affiche l’heure de Paris, pas l’heure UTC", () => {
     const [jour] = groupSlotsByParisDay([creneau("2026-09-14T07:00:00.000Z")]);
-    expect(jour.slots[0].timeLabel).toBe("09:00 – 09:30");
+    expect(jour.slots[0].timeLabel).toBe("09:00 à 09:30");
   });
 
   it("capitalise le libellé du jour", () => {

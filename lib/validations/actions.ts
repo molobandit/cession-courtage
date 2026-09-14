@@ -146,10 +146,10 @@ export const listingCreateSchema = z.object({
     .max(40)
     .optional()
     .transform((v) => (v && v.length > 0 ? v : undefined)),
+  // Affiché sous les commissions de chaque annonce : l'acquéreur doit le savoir d'emblée.
   precompte: z
-    .enum(["yes", "no", ""])
-    .optional()
-    .transform((v) => (v === "yes" ? true : v === "no" ? false : null)),
+    .enum(["yes", "no"], { message: "Indiquez si les commissions sont linéaires ou en précompte." })
+    .transform((v) => v === "yes"),
   precompteAmount: z
     .string()
     .trim()

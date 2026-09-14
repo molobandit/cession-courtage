@@ -109,7 +109,7 @@ export default function ConfidentialitePage() {
             <LegalRow
               key={r.donnee}
               label={r.donnee}
-              value={`${dureeLisible(r.jours)} — ${r.motif}`}
+              value={`${dureeLisible(r.jours)} : ${r.motif}`}
             />
           ))}
         </div>

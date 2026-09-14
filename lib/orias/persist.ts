@@ -36,6 +36,6 @@ export const ORIAS_LOOKUP_LABELS: Record<string, string> = {
   MATCH: "Présent au registre, société concordante",
   MISMATCH: "Présent au registre, identité discordante",
   NOT_FOUND: "Absent du registre public",
-  UNAVAILABLE: "Registre injoignable — décision humaine",
+  UNAVAILABLE: "Registre injoignable : décision humaine",
   INVALID: "Numéro invalide",
 };

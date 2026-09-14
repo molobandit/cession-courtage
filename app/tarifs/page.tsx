@@ -595,7 +595,7 @@ function PlanRow({
         <CheckIcon className={accent ? "mt-0.5 text-indigo" : "mt-0.5 text-ok"} />
       ) : (
         <span className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-surface-alt text-[11px] text-muted">
-          –
+          ×
         </span>
       )}
       <span>

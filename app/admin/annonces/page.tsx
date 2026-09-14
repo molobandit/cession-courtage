@@ -50,7 +50,7 @@ export default async function AdminListingsReviewPage() {
                       <span className="font-medium text-ink">N° {a.publicNumber}</span>
                       <span className="block text-[13px] text-muted">{a.portfolio.label}</span>
                       <span className="block text-[13px] text-muted">
-                        {a.displayedZone} · soumise le {a.submittedForReviewAt ? formatDateTime(a.submittedForReviewAt) : "—"}
+                        {a.displayedZone} · soumise le {a.submittedForReviewAt ? formatDateTime(a.submittedForReviewAt) : "date inconnue"}
                       </span>
                     </td>
                     <td className="px-3 py-3">

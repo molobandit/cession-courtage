@@ -358,7 +358,7 @@ export async function startDirectFeesCheckoutAction(
       userId: actor.id,
       email: actor.email,
       amountCents: montant,
-      name: `Services à la carte — ${lignes.map((l) => l.label).join(", ")}`,
+      name: `Services à la carte : ${lignes.map((l) => l.label).join(", ")}`,
       description: `${deal.portfolioLabel} · ${formatEuroWhole(feesTotal(lignes))} HT + TVA`,
       metadata: { kind: DIRECT_FEES_KIND, directDealId: deal.id },
       successUrl: `${origine}/app/formaliser/${deal.id}?session_id={CHECKOUT_SESSION_ID}`,

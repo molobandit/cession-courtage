@@ -122,7 +122,7 @@ export function CreateListingForm({
         <legend className={legendClass}>Données financières</legend>
         <p className="text-[13px] leading-relaxed text-muted">
           Trois exercices de commissions (montants, pas un pourcentage), la part
-          du récurrent, et la prime annuelle gérée — distincte des commissions.
+          du récurrent, et la prime annuelle gérée, distincte des commissions.
         </p>
         <div className="grid gap-3 sm:grid-cols-3">
           <div className="grid gap-1">
@@ -175,11 +175,13 @@ export function CreateListingForm({
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="grid gap-1">
-            <Label htmlFor="precompte">Précompte</Label>
-            <select id="precompte" name="precompte" className={selectClass} defaultValue={d.precompte ?? ""}>
-              <option value="">Non renseigné</option>
-              <option value="yes">Oui</option>
-              <option value="no">Non</option>
+            <Label htmlFor="precompte">Commissions linéaires ou précompte</Label>
+            <select id="precompte" name="precompte" required className={selectClass} defaultValue={d.precompte ?? ""}>
+              <option value="" disabled>
+                Choisir
+              </option>
+              <option value="no">Linéaire</option>
+              <option value="yes">Précompte</option>
             </select>
           </div>
           <div className="grid gap-1">

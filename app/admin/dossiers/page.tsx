@@ -95,7 +95,7 @@ export default async function AdminDossiersPage() {
                   const jours = joursDepuis(deal.updatedAt);
                   const attente =
                     deal.stage === "CLOSED"
-                      ? "—"
+                      ? "Clôturé"
                       : nextPipelineAction(deal.stage, "seller").title;
                   return (
                     <tr key={deal.id} className="border-t border-line align-top">

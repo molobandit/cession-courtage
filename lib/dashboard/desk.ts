@@ -150,7 +150,7 @@ export async function loadDesk(actor: Actor) {
       etape: suivi ? suivi.state.title : "Proposition envoyée",
       percent: suivi ? suivi.state.percent : 1,
       montant: `Budget ${formatEuroWhole(Number(p.mandate.maxBudget))}`,
-      multiple: "—",
+      multiple: "",
       issue: suivi ? suivi.state.outcome : "active",
     });
   });
@@ -161,12 +161,12 @@ export async function loadDesk(actor: Actor) {
       key: `mandat-${m.id}`,
       href: m.isPublic && m.publicNumber ? `/annonces/demandes/${m.publicNumber}` : "/app/mandats",
       side: "Demande",
-      numero: m.publicNumber ? String(m.publicNumber) : "—",
+      numero: m.publicNumber ? String(m.publicNumber) : "",
       libelle: `Budget jusqu’à ${formatEuroWhole(Number(m.maxBudget))}`,
       etape: `${m._count.proposals} proposition${m._count.proposals > 1 ? "s" : ""} · ${m._count.matches} correspondance${m._count.matches > 1 ? "s" : ""}`,
       percent: null,
       montant: formatEuroWhole(Number(m.maxBudget)),
-      multiple: "—",
+      multiple: "",
     });
   }
 

@@ -64,7 +64,7 @@ export default async function AdminAgendaPage() {
         {settings?.lastSyncAt ? (
           <p className="mt-1 text-[13px] text-muted">
             Dernière synchro : {formatDateTime(settings.lastSyncAt)}
-            {settings.lastSyncError ? ` — ${settings.lastSyncError}` : ""}
+            {settings.lastSyncError ? ` : ${settings.lastSyncError}` : ""}
           </p>
         ) : null}
         <form action={saveAdvisorIcsAction} className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end">
@@ -98,7 +98,7 @@ export default async function AdminAgendaPage() {
           {windows.map((row) => (
             <li key={row.id} className="flex items-center justify-between gap-3 border-b border-line py-2">
               <span>
-                {WEEKDAY_LABELS[row.weekday]} · {hmFromMinutes(row.startMinutes)} –{" "}
+                {WEEKDAY_LABELS[row.weekday]} · {hmFromMinutes(row.startMinutes)} à{" "}
                 {hmFromMinutes(row.endMinutes)}
               </span>
               <form action={deleteAdvisorWindowAction}>

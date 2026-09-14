@@ -82,7 +82,7 @@ export function OfferReviewBoard({
         back={{ href: "/app/cessions", label: "Mes ventes" }}
         kicker="Carnet d’offres"
         badge={<MarketBadge label={cotation.label} tone={cotation.tone} detail={cotation.detail} />}
-        title={`Dossier N° ${listing.publicNumber} — ${
+        title={`Dossier N° ${listing.publicNumber} · ${
           submitted.length
             ? `${submitted.length} offre${submitted.length > 1 ? "s" : ""} à comparer`
             : ranked.length
@@ -93,8 +93,8 @@ export function OfferReviewBoard({
         figures={[
           { label: "Prix demandé", value: formatEuro(asking), note: listing.displayedZone },
           { label: "Commissions / an", value: formatEuro(listing.annualCommissions) },
-          { label: "Meilleure offre", value: best ? formatEuro(best.amount) : "—", note: best ? vsAskingCopy(best.amount, asking).label.split(" · ")[0] : undefined, accent: Boolean(best) },
-          { label: "Comptant, meilleure offre", value: best ? formatPercent(best.upfrontPercent, 0) : "—" },
+          { label: "Meilleure offre", value: best ? formatEuro(best.amount) : "Aucune", note: best ? vsAskingCopy(best.amount, asking).label.split(" · ")[0] : undefined, accent: Boolean(best) },
+          { label: "Comptant, meilleure offre", value: best ? formatPercent(best.upfrontPercent, 0) : "Aucune offre" },
         ]}
         actions={
           <>

@@ -142,11 +142,11 @@ export default async function DirectDealPage({
           label: serviceByKey(deal.kit ? "kit" : deal.escrow ? "escrow" : "attestations")!.listTitle,
         }}
         kicker="Service à la carte"
-        title={`${deal.portfolioLabel} — ${stepByKey(etape).label}`}
+        title={`${deal.portfolioLabel} · ${stepByKey(etape).label}`}
         subtitle={<>Avec {deal.counterpartyEmail}. {stepByKey(etape).summary}</>}
         progress={{ percent: avancement, tone: etape === "CLOSED" ? "closed" : "active" }}
         figures={[
-          { label: "Prix", value: prix > 0 ? formatEuroWhole(prix) : "—" },
+          { label: "Prix", value: prix > 0 ? formatEuroWhole(prix) : "À définir" },
           { label: "Comptant", value: `${Number(deal.upfrontPercent)} %` },
           { label: "Honoraires", value: `${formatEuroWhole(totalHt)} HT`, note: deal.feesPaidAt ? "Réglés" : "À régler", accent: !deal.feesPaidAt && totalHt > 0 },
         ]}

@@ -28,7 +28,7 @@ export function listingMultiple(askingPrice: number, annualCommissions: number):
 }
 
 export function formatMultiple(value: number | null): string {
-  if (value === null) return "—";
+  if (value === null) return "n.c.";
   return `×${value.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 

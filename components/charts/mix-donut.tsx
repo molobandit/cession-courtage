@@ -98,12 +98,12 @@ export function MixDonut({
             <circle cx="100" cy="100" r="80" fill="none" stroke="#eef2f7" strokeWidth="30" />
             {parts.length === 1 ? (
               <circle cx="100" cy="100" r="80" fill="none" stroke={parts[0]!.couleur} strokeWidth="30">
-                <title>{`${parts[0]!.label} — ${formatEuroWhole(parts[0]!.value)} · ${pourcent(parts[0]!.share)}`}</title>
+                <title>{`${parts[0]!.label} : ${formatEuroWhole(parts[0]!.value)} · ${pourcent(parts[0]!.share)}`}</title>
               </circle>
             ) : (
               parts.map((p) => (
                 <path key={p.label} d={arc(100, 100, 95, 65, p.debut, p.fin)} fill={p.couleur} className="transition-opacity hover:opacity-80">
-                  <title>{`${p.label} — ${formatEuroWhole(p.value)} · ${pourcent(p.share, 1)} · ${formatCount(p.contracts)} contrats`}</title>
+                  <title>{`${p.label} : ${formatEuroWhole(p.value)} · ${pourcent(p.share, 1)} · ${formatCount(p.contracts)} contrats`}</title>
                 </path>
               ))
             )}

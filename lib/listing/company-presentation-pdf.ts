@@ -164,7 +164,7 @@ function barres(ctx: Ctx, titre: string, parts: { label: string; value: number; 
 
 export async function renderCompanyPresentationPdf(p: CompanyPresentation): Promise<Uint8Array> {
   const doc = await PDFDocument.create();
-  doc.setTitle(`Présentation du cabinet — dossier n° ${p.publicNumber}`);
+  doc.setTitle(`Présentation du cabinet · dossier n° ${p.publicNumber}`);
   doc.setAuthor("La bourse du portefeuille");
   doc.setSubject(`Présentation de ${p.firm.legalName}`);
   doc.setCreationDate(p.issuedAt);
@@ -248,7 +248,7 @@ export async function renderCompanyPresentationPdf(p: CompanyPresentation): Prom
   for (const b of p.breakdowns) barres(ctx, b.title, b.shares);
 
   for (const volet of p.profile) {
-    titreSection(ctx, `Profil du cabinet — ${volet.section}`, Math.min(volet.rows.length, 3) * 20);
+    titreSection(ctx, `Profil du cabinet · ${volet.section}`, Math.min(volet.rows.length, 3) * 20);
     lignesCleValeur(ctx, volet.rows);
   }
 

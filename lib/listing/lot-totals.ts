@@ -45,3 +45,48 @@ export function commissionsCedees(
   const lot = listing.isPartial ? lots.get(listing.id) : undefined;
   return lot ? lot.annualCommissions : Number(listing.portfolio.annualCommissions);
 }
+
+/**
+ * Part précomptée des commissions cédées, annonce par annonce : sur le lot pour
+ * une cession partielle, sur tout le portefeuille sinon.
+ */
+export async function listingCommissionShares(
+  listings: { id: string; portfolioId: string; isPartial: boolean }[],
+): Promise<Map<string, { advanced: number; total: number }>> {
+  const out = new Map<string, { advanced: number; total: number }>();
+  const ajoute = (id: string, type: string, montant: number) => {
+    const t = out.get(id) ?? { advanced: 0, total: 0 };
+    t.total += montant;
+    if (type === "ADVANCED") t.advanced += montant;
+    out.set(id, t);
+  };
+
+  const partielles = listings.filter((l) => l.isPartial).map((l) => l.id);
+  for (let i = 0; i < partielles.length; i += PAQUET) {
+    const rows = await prisma.listingLine.findMany({
+      where: { listingId: { in: partielles.slice(i, i + PAQUET) } },
+      select: { listingId: true, contractLine: { select: { annualCommission: true, commissionType: true } } },
+    });
+    for (const r of rows) ajoute(r.listingId, r.contractLine.commissionType, Number(r.contractLine.annualCommission));
+  }
+
+  const totales = listings.filter((l) => !l.isPartial || !out.has(l.id));
+  const portefeuilles = [...new Set(totales.map((l) => l.portfolioId))];
+  const parPortefeuille = new Map<string, { type: string; montant: number }[]>();
+  for (let i = 0; i < portefeuilles.length; i += PAQUET) {
+    const groupes = await prisma.contractLine.groupBy({
+      by: ["portfolioId", "commissionType"],
+      where: { portfolioId: { in: portefeuilles.slice(i, i + PAQUET) } },
+      _sum: { annualCommission: true },
+    });
+    for (const g of groupes) {
+      const liste = parPortefeuille.get(g.portfolioId) ?? [];
+      liste.push({ type: g.commissionType, montant: Number(g._sum.annualCommission ?? 0) });
+      parPortefeuille.set(g.portfolioId, liste);
+    }
+  }
+  for (const l of totales) {
+    for (const g of parPortefeuille.get(l.portfolioId) ?? []) ajoute(l.id, g.type, g.montant);
+  }
+  return out;
+}

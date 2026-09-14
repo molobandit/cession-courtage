@@ -121,7 +121,7 @@ export default async function AdminOriasPage() {
                   </td>
                   <td className="px-2 py-2">{roleLabel[u.role] ?? u.role}</td>
                   <td className="px-2 py-2">
-                    {u.kycSubmittedAt ? formatDate(u.kycSubmittedAt) : "—"}
+                    {u.kycSubmittedAt ? formatDate(u.kycSubmittedAt) : "Non transmis"}
                   </td>
                   <td className="px-2 py-2">
                     <KycAdminActions userId={u.id} />

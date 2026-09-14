@@ -97,7 +97,7 @@ describe("mise en vente gratuite, relue avant publication", () => {
 
   it("renvoyée, elle se corrige ; en relecture, elle ne se modifie plus", async () => {
     connecterUtilisateur(cedant);
-    const correction = form({ listingId: LISTING, askingPrice: "12 500", presentation: "Portefeuille santé en agence, sans nom de cabinet.", negotiable: "yes", sellerSupportMonths: "3" });
+    const correction = form({ listingId: LISTING, askingPrice: "12 500", presentation: "Portefeuille santé en agence, sans nom de cabinet.", negotiable: "yes", sellerSupportMonths: "3", precompte: "no" });
     await expect(updateListingAction({}, correction)).rejects.toThrow(/NEXT_REDIRECT/);
     const l = await prisma.listing.findUniqueOrThrow({ where: { id: LISTING }, select: { status: true, askingPrice: true, presentation: true } });
     expect(l.status).toBe(ListingStatus.DRAFT);

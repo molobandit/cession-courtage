@@ -78,7 +78,7 @@ export async function startDepositPayment(input: {
     userId: buyer.id,
     email: buyer.email,
     amountCents: checkout.amountCents,
-    name: `Dépôt de garantie — dossier n° ${listing.publicNumber ?? ""}`,
+    name: `Dépôt de garantie · dossier n° ${listing.publicNumber ?? ""}`,
     description: "Déduit du prix si la cession aboutit, acquis au cédant en cas de retrait.",
     metadata: { kind: DEPOSIT_KIND, depositCheckoutId: checkout.id, listingId: listing.id },
     successUrl: `${origine}/app/depot/retour?session_id={CHECKOUT_SESSION_ID}`,

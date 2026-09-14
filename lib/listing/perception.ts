@@ -9,7 +9,7 @@ export function perceptionMode(precompte: boolean | null | undefined): Perceptio
 }
 
 export function perceptionLabel(mode: PerceptionMode): string {
-  if (mode === "PRECOMPTE") return "Précompté";
+  if (mode === "PRECOMPTE") return "Précompte";
   if (mode === "LINEAR") return "Linéaire";
   return "Non précisé";
 }
@@ -38,4 +38,22 @@ export function commissionPerceptionCopy(input: {
         ? `Montant précompté : ${formatEuroWhole(amount)} / an`
         : null,
   };
+}
+
+/**
+ * Linéaire ou précompte, tel qu'on l'affiche sous les commissions.
+ *
+ * Ce que le cédant a déclaré fait foi. À défaut, le bordereau importé le dit :
+ * chaque contrat porte son type de commission, et le portefeuille est dit
+ * « précompte » quand la majorité de ses commissions l'est. Sans déclaration ni
+ * contrat, rien n'est inventé.
+ */
+export function precompteFromContracts(
+  declared: boolean | null | undefined,
+  advancedCommissions: number,
+  totalCommissions: number,
+): boolean | null {
+  if (declared === true || declared === false) return declared;
+  if (!(totalCommissions > 0)) return null;
+  return advancedCommissions / totalCommissions >= 0.5;
 }

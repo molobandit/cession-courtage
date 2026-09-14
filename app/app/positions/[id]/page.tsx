@@ -182,7 +182,7 @@ export default async function PositionPage({ params }: { params: Promise<{ id: s
         back={{ href: estAcheteur ? "/app/achats" : "/app/cessions", label: estAcheteur ? "Mes achats" : "Mes ventes" }}
         kicker={estAcheteur ? "Position Acheteur" : `Candidat ${position.buyer.publicAlias}`}
         badge={<span className="text-[13px] text-muted">pris le {formatDateTime(position.createdAt)}</span>}
-        title={`Dossier N° ${listing.publicNumber} — ${state.title}`}
+        title={`Dossier N° ${listing.publicNumber} · ${state.title}`}
         progress={{
           percent: state.percent,
           tone: state.outcome === "closed" ? "closed" : state.outcome === "lost" || state.outcome === "withdrawn" ? "lost" : "active",

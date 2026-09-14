@@ -28,7 +28,7 @@ import { EMPTY_CELL, formatDateTime } from "@/lib/format/fr";
 import { formatEuroWhole } from "@/lib/format/number";
 import { RISK_TYPE_LABELS, SEGMENT_LABELS } from "@/lib/labels";
 import { OFFER_WINDOW_DAYS } from "@/lib/listing/constants";
-import { commissionPerceptionCopy } from "@/lib/listing/perception";
+import { commissionPerceptionCopy, precompteFromContracts } from "@/lib/listing/perception";
 import { loadListingBriefFields } from "@/lib/listing/brief-fields";
 import { cessionMotiveLabel, regulatoryFacts } from "@/lib/listing/brief-labels";
 import { actorCanReadCompanyDocs, listCompanyDocs } from "@/lib/listing/company-docs";
@@ -165,7 +165,12 @@ export default async function PublicListingPage({
   const sold = listing.status === "SOLD";
   const perception = commissionPerceptionCopy({
     annualCommissions,
-    precompte: listing.precompte,
+    // Déclaré par le cédant, sinon lu dans les contrats cédés.
+    precompte: precompteFromContracts(
+      listing.precompte,
+      sourceLines.filter((l) => l.commissionType === "ADVANCED").reduce((s, l) => s + Number(l.annualCommission), 0),
+      sourceLines.reduce((s, l) => s + Number(l.annualCommission), 0),
+    ),
     precompteAmount: listing.precompteAmount,
   });
   const brief = await loadListingBriefFields(listing.id);

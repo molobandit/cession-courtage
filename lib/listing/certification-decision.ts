@@ -76,10 +76,10 @@ export function resteAFaire(pieces: PieceCertification[]): string[] {
     if (statut === "VALIDATED") continue;
     manques.push(
       statut === "REJECTED"
-        ? `${slot.label} — pièce refusée, à remplacer`
+        ? `${slot.label} : pièce refusée, à remplacer`
         : statut === "RECEIVED"
-          ? `${slot.label} — reçue, contrôle en cours`
-          : `${slot.label} — à déposer`,
+          ? `${slot.label} : reçue, contrôle en cours`
+          : `${slot.label} : à déposer`,
     );
   }
   return manques;

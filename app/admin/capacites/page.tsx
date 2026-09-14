@@ -75,7 +75,7 @@ export default async function AdminCapacitesPage() {
                       )}
                     </td>
                     <td className="px-3 py-3 text-right tabular">
-                      {capacite.montantEur !== null ? formatEuroWhole(capacite.montantEur) : "—"}
+                      {capacite.montantEur !== null ? formatEuroWhole(capacite.montantEur) : "Non déclaré"}
                     </td>
                     <td className="px-3 py-3">
                       {libelleCapacite(capacite)}

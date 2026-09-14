@@ -293,6 +293,11 @@ export function PublicListingDetail({
                 <p className="tabular text-lg font-semibold text-ink">
                   {formatEuroWhole(annualCommissions)}
                 </p>
+                <p className="text-[13px] font-semibold text-ink">
+                  {perceptionModeLine.endsWith("Non précisé")
+                    ? "Linéaire ou précompte non précisé"
+                    : perceptionModeLine.replace("Mode de perception : ", "")}
+                </p>
               </div>
             </div>
 
@@ -323,7 +328,7 @@ export function PublicListingDetail({
                   </p>
                 ) : null}
                 <p className="tabular text-[26px] font-bold leading-tight text-ink">
-                  {bestOffer !== null ? formatEuroWhole(bestOffer) : "—"}
+                  {bestOffer !== null ? formatEuroWhole(bestOffer) : "Aucune"}
                 </p>
                 <p className="text-[13px] text-muted">
                   {bestOffer !== null ? "Meilleure offre actuelle" : "Aucune offre pour le moment"}
@@ -581,7 +586,7 @@ function YearlyRenewals({ years }: { years: RenewalYear[] }) {
                 <div
                   key={`${y.kind}-${y.year}`}
                   className="flex h-full flex-1 flex-col items-center justify-end gap-1"
-                  title={`${y.year} · ${y.kind === "past" ? "renouvelé" : "à venir"} — ${formatEuroWhole(y.commissions)} · ${formatCount(y.contracts)} contrats`}
+                  title={`${y.year} · ${y.kind === "past" ? "renouvelé" : "à venir"} : ${formatEuroWhole(y.commissions)} · ${formatCount(y.contracts)} contrats`}
                 >
                   <span className="tabular whitespace-nowrap text-[11px] font-medium text-ink">
                     {formatEuroWhole(y.commissions)}

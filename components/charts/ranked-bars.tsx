@@ -74,10 +74,10 @@ export function RankedBars({
                 <li
                   key={s.label}
                   className="grid grid-cols-[1.75rem_minmax(0,1fr)_4.75rem] items-center gap-x-3 py-2.5"
-                  title={`${s.label} — ${formatEuroWhole(s.value)} · ${pourcent(s.share, 1)} · ${formatCount(s.contracts)} contrats`}
+                  title={`${s.label} : ${formatEuroWhole(s.value)} · ${pourcent(s.share, 1)} · ${formatCount(s.contracts)} contrats`}
                 >
                   <span className="tabular text-[12px] font-semibold text-muted">
-                    {reste ? "—" : String(i + 1).padStart(2, "0")}
+                    {reste ? "+" : String(i + 1).padStart(2, "0")}
                   </span>
                   <div className="min-w-0">
                     <div className="flex items-baseline gap-2">

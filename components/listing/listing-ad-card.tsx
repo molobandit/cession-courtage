@@ -3,7 +3,7 @@ import { MarketBadge } from "@/components/listing/market-badge";
 import { MarketStamp } from "@/components/listing/market-stamp";
 import { UNCERTIFIED_LABEL } from "@/lib/copy/market";
 import { formatCount, formatEuroWhole } from "@/lib/format/number";
-import { commissionPerceptionCopy } from "@/lib/listing/perception";
+import { commissionPerceptionCopy, perceptionLabel } from "@/lib/listing/perception";
 import type { PublicListingCard } from "@/lib/listing/public-card";
 
 export function ListingAdCard({ item }: { item: PublicListingCard }) {
@@ -40,6 +40,9 @@ export function ListingAdCard({ item }: { item: PublicListingCard }) {
               {formatEuroWhole(item.annualCommissions)}
             </p>
             <p className="mt-0.5 text-[12px] text-muted">Commissions / an</p>
+            <p className="mt-1 text-[13px] font-semibold text-ink">
+              {perception.mode === "UNSTATED" ? "Linéaire ou précompte non précisé" : perceptionLabel(perception.mode)}
+            </p>
           </div>
           <div className="border-l border-line pl-4">
             <p className="tabular text-[18px] font-bold text-ink">
@@ -58,10 +61,6 @@ export function ListingAdCard({ item }: { item: PublicListingCard }) {
             </span>
             <span className="text-muted">· {item.offerCount} offre{item.offerCount > 1 ? "s" : ""}</span>
           </p>
-        ) : null}
-        {/* « Non précisé » sur chaque carte n'apprenait rien : la ligne n'apparaît que si le mode est connu. */}
-        {perception.mode !== "UNSTATED" ? (
-          <p className="mt-3 text-[13px] font-medium text-ink">{perception.modeLine}</p>
         ) : null}
         {perception.amountLine ? (
           <p className="mt-0.5 text-[13px] text-muted">{perception.amountLine}</p>

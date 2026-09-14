@@ -37,7 +37,7 @@ export async function notifySignupReceived(input: {
     to: input.email,
     purpose: "SIGNUP_USER",
     dedupeKey: `signup:user:${input.userId}`,
-    subject: `Inscription reçue — ${BRAND_NAME}`,
+    subject: `Inscription reçue · ${BRAND_NAME}`,
     bodyText: [
       `Bonjour${input.fullName ? ` ${input.fullName}` : ""},`,
       "",
@@ -45,7 +45,7 @@ export async function notifySignupReceived(input: {
       "",
       "Aucun paiement n’est demandé à cette étape.",
       "",
-      `— ${BRAND_NAME}`,
+      `L’équipe ${BRAND_NAME}`,
     ].join("\n"),
   });
 
@@ -55,7 +55,7 @@ export async function notifySignupReceived(input: {
       to: adminTo,
       purpose: "SIGNUP_ADMIN",
       dedupeKey: `signup:admin:${input.userId}`,
-      subject: `Nouvelle inscription à valider — ${who}`,
+      subject: `Nouvelle inscription à valider : ${who}`,
       bodyText: [
         "Une inscription attend une décision.",
         "",
@@ -90,13 +90,13 @@ export async function notifyOriasDecision(input: {
       to: input.email,
       purpose: "ORIAS_APPROVED",
       dedupeKey: `orias:approved:${input.userId}`,
-      subject: `ORIAS validé — ${BRAND_NAME}`,
+      subject: `ORIAS validé · ${BRAND_NAME}`,
       bodyText: [
         greeting,
         "",
         "Votre numéro ORIAS a été validé. L’espace membre est ouvert.",
         "",
-        `— ${BRAND_NAME}`,
+        `L’équipe ${BRAND_NAME}`,
       ].join("\n"),
     });
     await notifyInApp({
@@ -114,7 +114,7 @@ export async function notifyOriasDecision(input: {
     to: input.email,
     purpose: "ORIAS_REJECTED",
     dedupeKey: `orias:rejected:${input.userId}`,
-    subject: `ORIAS refusé — ${BRAND_NAME}`,
+    subject: `ORIAS refusé · ${BRAND_NAME}`,
     bodyText: [
       greeting,
       "",
@@ -122,7 +122,7 @@ export async function notifyOriasDecision(input: {
       "",
       `Motif : ${reason}`,
       "",
-      `— ${BRAND_NAME}`,
+      `L’équipe ${BRAND_NAME}`,
     ].join("\n"),
   });
   await notifyInApp({
@@ -174,21 +174,21 @@ export async function notifyDepositPlaced(input: {
     `Un dépôt de ${input.amountLabel} a été posé sur le dossier n° ${input.publicNumber}.`,
     "Les coordonnées du cabinet cédant sont désormais ouvertes entre les parties.",
     "",
-    `— ${BRAND_NAME}`,
+    `L’équipe ${BRAND_NAME}`,
   ].join("\n");
 
   await sendMail({
     to: input.seller.email,
     purpose: "DEPOSIT_PLACED",
     dedupeKey: `deposit:${input.depositKey}:seller`,
-    subject: `Dépôt posé — dossier n° ${input.publicNumber}`,
+    subject: `Dépôt posé · dossier n° ${input.publicNumber}`,
     bodyText: body,
   });
   await sendMail({
     to: input.counterparty.email,
     purpose: "DEPOSIT_PLACED",
     dedupeKey: `deposit:${input.depositKey}:counterparty`,
-    subject: `Dépôt posé — dossier n° ${input.publicNumber}`,
+    subject: `Dépôt posé · dossier n° ${input.publicNumber}`,
     bodyText: body,
   });
   await notifyInApp({
@@ -233,7 +233,7 @@ export async function notifyAdvisorBooking(input: {
     to: input.email,
     purpose: "ADVISOR_BOOKING_USER",
     dedupeKey: `advisor:user:${input.bookingId}`,
-    subject: `Entretien confirmé — ${when}`,
+    subject: `Entretien confirmé : ${when}`,
     bodyText: [
       `Bonjour ${input.fullName},`,
       "",
@@ -244,7 +244,7 @@ export async function notifyAdvisorBooking(input: {
       "",
       "Si vous devez décaler, répondez à ce message.",
       "",
-      `— ${BRAND_NAME}`,
+      `L’équipe ${BRAND_NAME}`,
     ].join("\n"),
   });
 
@@ -254,7 +254,7 @@ export async function notifyAdvisorBooking(input: {
       to: adminTo,
       purpose: "ADVISOR_BOOKING_ADMIN",
       dedupeKey: `advisor:admin:${input.bookingId}`,
-      subject: `Entretien réservé — ${input.fullName} — ${when}`,
+      subject: `Entretien réservé : ${input.fullName}, ${when}`,
       bodyText: [
         "Un entretien conseiller a été réservé sur le site.",
         "",
@@ -299,7 +299,7 @@ export async function notifyDirectDealInvited(input: {
     to: input.to,
     purpose: "DIRECT_INVITED",
     dedupeKey: `direct:${input.dealId}:invited`,
-    subject: `Un confrère vous invite à formaliser une cession — ${BRAND_NAME}`,
+    subject: `Un confrère vous invite à formaliser une cession · ${BRAND_NAME}`,
     bodyText: [
       "Bonjour,",
       "",
@@ -316,7 +316,7 @@ export async function notifyDirectDealInvited(input: {
       "",
       "Rien n’est engagé tant que vous n’avez pas confirmé.",
       "",
-      `— ${BRAND_NAME}`,
+      `L’équipe ${BRAND_NAME}`,
     ].join("\n"),
   });
 }
@@ -334,13 +334,13 @@ export async function notifyDirectDealAdvanced(input: {
       to: destinataire.email,
       purpose: "DIRECT_STAGE",
       dedupeKey: `direct:${input.dealId}:${input.stage}:${destinataire.email}`,
-      subject: `${input.stageLabel} — ${input.portfolioLabel}`,
+      subject: `${input.stageLabel} · ${input.portfolioLabel}`,
       bodyText: [
         `Le dossier « ${input.portfolioLabel} » vient de franchir l’étape : ${input.stageLabel}.`,
         "",
         `Suivre le dossier : /app/formaliser/${input.dealId}`,
         "",
-        `— ${BRAND_NAME}`,
+        `L’équipe ${BRAND_NAME}`,
       ].join("\n"),
     });
     if (destinataire.userId) {
@@ -375,7 +375,7 @@ export async function notifyMandateProposal(input: {
       "",
       `Consulter la fiche et prendre position : ${lien}`,
       "",
-      `— ${BRAND_NAME}`,
+      `L’équipe ${BRAND_NAME}`,
     ].join("\n"),
   });
   await notifyInApp({
@@ -411,8 +411,8 @@ export async function notifyPositionEvent(input: {
     to: input.email,
     purpose: "POSITION_EVENT",
     dedupeKey: `position:${input.key}:${input.userId}`,
-    subject: `${input.title} — ${BRAND_NAME}`,
-    bodyText: [input.body, "", `Suivre le dossier : ${input.href}`, "", `— ${BRAND_NAME}`].join("\n"),
+    subject: `${input.title} · ${BRAND_NAME}`,
+    bodyText: [input.body, "", `Suivre le dossier : ${input.href}`, "", `L’équipe ${BRAND_NAME}`].join("\n"),
   });
   await notifyInApp({
     userId: input.userId,

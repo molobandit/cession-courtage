@@ -31,7 +31,7 @@ export default async function DealPiecePage({ params }: { params: Promise<{ id: 
         : buildDocument(piece, ctx);
   if (!doc) notFound();
 
-  const nom = (userId: string) => (userId === deal.sellerId ? p.parties.seller : p.parties.buyer).representative ?? "—";
+  const nom = (userId: string) => (userId === deal.sellerId ? p.parties.seller : p.parties.buyer).representative ?? "Signataire";
   const deedHash = documentHash(buildTransferDeed(ctx));
   const signaturesProtocole = (libelleAcheteur: string): ElectronicSignature[] =>
     deal.signoffs

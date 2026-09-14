@@ -28,7 +28,7 @@ export function dealPieces(input: { stage: DealStage; carriers: { name: string }
   input.carriers.forEach((c, i) => {
     pieces.push({
       key: certificateKey(i),
-      title: `Attestation de transfert — ${c.name}`,
+      title: `Attestation de transfert · ${c.name}`,
       available: signe,
       hint: signe ? "Signée, à adresser à la compagnie" : "Signée avec le protocole",
     });

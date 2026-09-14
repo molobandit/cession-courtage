@@ -2,7 +2,7 @@ import Link from "next/link";
 import { MarketStamp } from "@/components/listing/market-stamp";
 import { UNCERTIFIED_LABEL } from "@/lib/copy/market";
 import { formatCount, formatEuroWhole } from "@/lib/format/number";
-import { commissionPerceptionCopy } from "@/lib/listing/perception";
+import { commissionPerceptionCopy, perceptionLabel } from "@/lib/listing/perception";
 import type { PublicListingCard } from "@/lib/listing/public-card";
 
 export function ListingAdRow({ item }: { item: PublicListingCard }) {
@@ -26,7 +26,7 @@ export function ListingAdRow({ item }: { item: PublicListingCard }) {
           <p className="mt-2 text-[15px] text-muted">
             {formatEuroWhole(item.annualCommissions)} de commissions / an
             {" · "}
-            {perceptionLabelShort(perception.modeLine)}
+            {perception.mode === "UNSTATED" ? "linéaire ou précompte non précisé" : perceptionLabel(perception.mode)}
             {" · "}
             {formatCount(item.contractCount)} contrats
             {item.riskTypes[0] ? ` · ${item.riskTypes[0]}` : ""}
@@ -38,8 +38,4 @@ export function ListingAdRow({ item }: { item: PublicListingCard }) {
       </Link>
     </li>
   );
-}
-
-function perceptionLabelShort(modeLine: string) {
-  return modeLine.replace("Mode de perception : ", "Perception ");
 }

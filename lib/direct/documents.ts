@@ -152,7 +152,7 @@ function signatories(ctx: DocumentContext) {
 
 function carrierAnnex(ctx: DocumentContext) {
   return {
-    heading: "Annexe — Compagnies et codes concernés",
+    heading: "Annexe. Compagnies et codes concernés",
     columns: ["Compagnie", "Code courtier du cédant"],
     rows:
       ctx.carriers.length > 0
@@ -180,33 +180,33 @@ export function buildConfidentialityAgreement(ctx: DocumentContext): GeneratedDo
         ],
       },
       {
-        heading: "Article 1 — Objet",
+        heading: "Article 1. Objet",
         paragraphs: [
           `Les parties étudient la cession du portefeuille suivant : ${ctx.portfolioLabel}. Le présent accord encadre l’usage des informations échangées à cette fin.`,
         ],
       },
       {
-        heading: "Article 2 — Informations confidentielles",
+        heading: "Article 2. Informations confidentielles",
         paragraphs: [
           "Sont confidentielles toutes les informations transmises par une partie à l’autre, quel qu’en soit le support : bordereaux de commissions, conditions conclues avec les compagnies, données financières, organisation du cabinet et, plus généralement, toute information relative au portefeuille.",
           "Ne sont pas confidentielles les informations déjà publiques, ou que la partie qui les reçoit détenait légitimement avant leur communication.",
         ],
       },
       {
-        heading: "Article 3 — Engagements",
+        heading: "Article 3. Engagements",
         paragraphs: [
           "Chaque partie s’engage à n’utiliser ces informations que pour évaluer et réaliser la cession, à ne les communiquer qu’à ses conseils et collaborateurs tenus au secret, et à ne démarcher aucun client du portefeuille sur leur fondement.",
           "Aucune donnée nominative de client final n’est transmise avant la signature du protocole de cession. Au-delà, ces données sont traitées conformément au règlement (UE) 2016/679.",
         ],
       },
       {
-        heading: "Article 4 — Durée",
+        heading: "Article 4. Durée",
         paragraphs: [
           "Le présent accord prend effet à sa signature. Il demeure en vigueur trois ans, que la cession se réalise ou non. En l’absence de cession, chaque partie restitue ou détruit les informations reçues dans les quinze jours suivant la demande de l’autre.",
         ],
       },
       {
-        heading: "Article 5 — Droit applicable",
+        heading: "Article 5. Droit applicable",
         paragraphs: [
           "Le présent accord est soumis au droit français. Tout différend relève des juridictions compétentes du ressort du siège du cédant.",
         ],
@@ -234,13 +234,13 @@ export function buildLetterOfIntent(ctx: DocumentContext): GeneratedDocument {
       ],
     },
     {
-      heading: "Article 1 — Objet",
+      heading: "Article 1. Objet",
       paragraphs: [
         `Après examen des pièces mises à sa disposition, l’acquéreur fait part de son intention d’acquérir le portefeuille suivant : ${ctx.portfolioLabel}.`,
       ],
     },
     {
-      heading: "Article 2 — Prix",
+      heading: "Article 2. Prix",
       paragraphs: [
         `Le prix proposé est de ${euro.format(ctx.salePrice)}, net vendeur.`,
         solde > 0
@@ -249,18 +249,18 @@ export function buildLetterOfIntent(ctx: DocumentContext): GeneratedDocument {
       ],
     },
     {
-      heading: "Article 3 — Date d’effet envisagée",
+      heading: "Article 3. Date d’effet envisagée",
       paragraphs: [`Les parties envisagent un transfert des contrats au ${formatLongDate(ctx.effectiveDate)}.`],
     },
     {
-      heading: "Article 4 — Conditions",
+      heading: "Article 4. Conditions",
       paragraphs: [
         "La présente intention est subordonnée à la vérification de l’identité et de l’immatriculation des deux cabinets, à la signature d’un protocole de cession, et, lorsque la compagnie l’exige, à son accord sur le transfert des contrats.",
         ...(ctx.conditions?.trim() ? [`Conditions particulières : ${ctx.conditions.trim()}`] : []),
       ],
     },
     {
-      heading: "Article 5 — Exclusivité et portée",
+      heading: "Article 5. Exclusivité et portée",
       paragraphs: [
         "À compter de son acceptation, le cédant s’interdit de négocier la cession du portefeuille avec un tiers pendant soixante jours.",
         "La présente lettre ne vaut pas cession. Seules les stipulations relatives à l’exclusivité et à la confidentialité engagent les parties dès son acceptation.",
@@ -361,52 +361,52 @@ export function buildTransferDeed(ctx: DocumentContext): GeneratedDocument {
         ],
       },
       {
-        heading: "Article 1 — Objet",
+        heading: "Article 1. Objet",
         paragraphs: [
           `Le cédant cède au cessionnaire, qui l’accepte, le portefeuille désigné comme suit : ${ctx.portfolioLabel}.`,
           "La cession porte sur les contrats en cours souscrits par l’intermédiaire du cédant auprès des compagnies listées en annexe, ainsi que sur le droit aux commissions afférentes à compter de la date d’effet.",
         ],
       },
-      { heading: "Article 2 — Prix et modalités de paiement", paragraphs: paiement },
+      { heading: "Article 2. Prix et modalités de paiement", paragraphs: paiement },
       {
-        heading: "Article 3 — Transfert",
+        heading: "Article 3. Transfert",
         paragraphs: [
           `La cession prend effet le ${formatLongDate(ctx.effectiveDate)}.`,
           "Le cédant signe, pour chaque compagnie, une attestation demandant le rattachement des contrats et des commissions au code du cessionnaire. Les commissions échues avant la date d’effet restent acquises au cédant.",
         ],
       },
       {
-        heading: "Article 4 — Déclarations du cédant",
+        heading: "Article 4. Déclarations du cédant",
         paragraphs: [
           "Le cédant déclare être régulièrement immatriculé à l’ORIAS, que les contrats cédés ont été souscrits dans le respect des règles de distribution applicables, et qu’il n’existe à sa connaissance aucune réclamation ou procédure de nature à affecter le portefeuille qui n’ait été portée à la connaissance du cessionnaire.",
         ],
       },
       {
-        heading: "Article 5 — Engagements du cessionnaire",
+        heading: "Article 5. Engagements du cessionnaire",
         paragraphs: [
           "Le cessionnaire déclare être immatriculé à l’ORIAS dans une catégorie lui permettant de distribuer les contrats cédés. Il reprend, à compter de la date d’effet, le suivi des clients et le devoir de conseil qui s’y attache.",
         ],
       },
       {
-        heading: "Article 6 — Information des clients",
+        heading: "Article 6. Information des clients",
         paragraphs: [
           "Les parties informent conjointement les clients du changement d’intermédiaire dans le mois suivant la date d’effet, dans le respect du règlement (UE) 2016/679.",
         ],
       },
       {
-        heading: "Article 7 — Non-sollicitation",
+        heading: "Article 7. Non-sollicitation",
         paragraphs: [
           "Pendant trois ans à compter de la date d’effet, le cédant s’interdit de solliciter, directement ou par personne interposée, les clients du portefeuille cédé.",
         ],
       },
       {
-        heading: "Article 8 — Conditions suspensives",
+        heading: "Article 8. Conditions suspensives",
         paragraphs: [
           "La cession est subordonnée, lorsque la compagnie l’exige, à son accord sur le transfert des contrats au code du cessionnaire. À défaut d’accord d’une compagnie dans les soixante jours, le prix est réduit à proportion des commissions annuelles concernées.",
         ],
       },
       {
-        heading: "Article 9 — Droit applicable",
+        heading: "Article 9. Droit applicable",
         paragraphs: [
           "Le présent protocole est soumis au droit français. Tout différend relève des juridictions compétentes du ressort du siège du cédant.",
         ],
@@ -525,7 +525,7 @@ export function documentsFor(input: {
       });
     } else {
       carriers.forEach((carrier, index) => {
-        pieces.push(entree(certificateKey(index), `Attestation — ${carrier.name}`, "TRANSFER"));
+        pieces.push(entree(certificateKey(index), `Attestation · ${carrier.name}`, "TRANSFER"));
       });
     }
   }

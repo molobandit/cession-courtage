@@ -199,7 +199,7 @@ function TaskAction({ p, task, side, escrowLive }: { p: DealProcess; task: Task;
           {p.carriers.map((c, i) => (
             <li key={c.name} className="flex items-center justify-between gap-2 rounded-xl border border-line px-3 py-2 text-[14px]">
               <span className="text-ink">
-                {c.name} <span className="text-[12px] text-muted">code {c.code || "—"}</span>
+                {c.name} <span className="text-[12px] text-muted">code {c.code || "à renseigner"}</span>
               </span>
               <Link href={pieceLink(id, certificateKey(i))} className="text-[13px] font-medium text-indigo-dark hover:underline">
                 Télécharger

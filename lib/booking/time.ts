@@ -106,7 +106,7 @@ export function formatParisSlot(startsAt: Date, endsAt: Date): { dayLabel: strin
   }).format(endsAt);
   return {
     dayLabel: day.charAt(0).toUpperCase() + day.slice(1),
-    timeLabel: `${start} – ${end}`,
+    timeLabel: `${start} à ${end}`,
   };
 }
 

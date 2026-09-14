@@ -67,9 +67,19 @@ describe("listingCreateSchema", () => {
       portfolioId: "pf_01",
       askingPrice: "45 000,60",
       sellerSupportMonths: 6,
+      precompte: "no",
     });
     expect(parsed.success).toBe(true);
     if (parsed.success) expect(parsed.data.askingPrice).toBe(45001);
+  });
+
+  it("exige de dire si les commissions sont linéaires ou en précompte", () => {
+    const base = { portfolioId: "pf_01", askingPrice: "45 000", sellerSupportMonths: 3 };
+    const sans = listingCreateSchema.safeParse(base);
+    expect(sans.success).toBe(false);
+    if (!sans.success) expect(sans.error.issues[0]!.message).toContain("linéaires ou en précompte");
+    const avec = listingCreateSchema.safeParse({ ...base, precompte: "yes" });
+    expect(avec.success && avec.data.precompte).toBe(true);
   });
 
   it("refuse un accompagnement aberrant", () => {

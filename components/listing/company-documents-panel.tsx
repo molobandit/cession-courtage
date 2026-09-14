@@ -96,7 +96,7 @@ export function CompanyDocumentsPanel({
                 </a>
               ) : (
                 <span className="text-[12px] font-medium text-muted">
-                  {canDownload ? "—" : "Verrouillé"}
+                  {canDownload ? "" : "Verrouillé"}
                 </span>
               )}
             </li>

@@ -26,14 +26,14 @@ function ageFactor(averageAgeMonths: number): { label: string; factor: number } 
   if (averageAgeMonths > 72) return { label: "Ancienneté moyenne > 72 mois", factor: 1.15 };
   if (averageAgeMonths > 36) return { label: "Ancienneté moyenne > 36 mois", factor: 1.05 };
   if (averageAgeMonths < 12) return { label: "Ancienneté moyenne < 12 mois", factor: 0.88 };
-  return { label: "Ancienneté moyenne 12–36 mois", factor: 1 };
+  return { label: "Ancienneté moyenne 12 à 36 mois", factor: 1 };
 }
 
 function churnFactor(churnRate12m: number): { label: string; factor: number } {
   if (churnRate12m > 0.15) return { label: "Résiliation 12 mois > 15 %", factor: 0.7 };
   if (churnRate12m > 0.1) return { label: "Résiliation 12 mois > 10 %", factor: 0.85 };
   if (churnRate12m < 0.05) return { label: "Résiliation 12 mois < 5 %", factor: 1.1 };
-  return { label: "Résiliation 12 mois 5–10 %", factor: 1 };
+  return { label: "Résiliation 12 mois 5 à 10 %", factor: 1 };
 }
 
 function distributionFactor(mode: DistributionMode): { label: string; factor: number } {

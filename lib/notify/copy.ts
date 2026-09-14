@@ -13,7 +13,7 @@ export function offerReceivedCopy(input: {
         `Dossier n° ${input.publicNumber}.`,
         "Consultez-la dans votre carnet d’offres : vous pourrez retenir une offre à la clôture de la séance.",
         "",
-        `— ${BRAND_NAME}`,
+        `L’équipe ${BRAND_NAME}`,
       ].join("\n"),
     };
   }
@@ -24,7 +24,7 @@ export function offerReceivedCopy(input: {
       "",
       `Dossier n° ${input.publicNumber}. La séance est close : comparez les offres et retenez-en une depuis votre carnet d’offres.`,
       "",
-      `— ${BRAND_NAME}`,
+      `L’équipe ${BRAND_NAME}`,
     ].join("\n"),
   };
 }

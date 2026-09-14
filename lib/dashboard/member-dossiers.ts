@@ -118,7 +118,7 @@ export async function loadMemberDossiers(actor: Actor) {
             : "/annonces/demandes",
         ribbon: { label: "Position Vendeur", icon: "user" as const },
         tone: "escrow" as const,
-        title: `Demande N° ${p.mandate.publicNumber ?? "—"}`,
+        title: p.mandate.publicNumber ? `Demande N° ${p.mandate.publicNumber}` : "Demande d’acquisition",
         subtitle: `Acquéreur : ${p.mandate.buyer.publicAlias} · ${suivi ? suivi.state.title : "proposition envoyée"}`,
         percent: suivi ? suivi.state.percent : 1,
         bullets: [

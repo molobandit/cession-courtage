@@ -31,7 +31,7 @@ export default async function AgreementsPage({ searchParams }: { searchParams: P
         subtitle={
           <>
             Confidentialité et contrat d’intermédiation : les mêmes pour toutes vos annonces, prises de position et
-            cessions. ORIAS n° {actor.oriasNumber ?? "—"}.
+            cessions. ORIAS n° {actor.oriasNumber ?? "non renseigné"}.
           </>
         }
       />

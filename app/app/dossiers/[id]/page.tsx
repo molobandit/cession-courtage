@@ -103,7 +103,7 @@ export default async function DealPage({ params }: { params: Promise<{ id: strin
         <div className="sm:col-span-2">
           <dt className="text-[12px] uppercase tracking-wide text-muted">Compagnies cédées</dt>
           <dd className="mt-1 text-[15px] text-ink">
-            {p.carriers.length ? p.carriers.map((c) => (c.code ? `${c.name} (${c.code})` : c.name)).join(", ") : "—"}
+            {p.carriers.length ? p.carriers.map((c) => (c.code ? `${c.name} (${c.code})` : c.name)).join(", ") : "Aucune"}
           </dd>
         </div>
         {p.deal.adjustedDeferredAmount ? (
@@ -241,7 +241,7 @@ export default async function DealPage({ params }: { params: Promise<{ id: strin
             {tasks.length ? ` · ${suivi.done}/${suivi.total}` : ""}
           </span>
         }
-        title={`Dossier N° ${deal.listing.publicNumber} — ${titre}`}
+        title={`Dossier N° ${deal.listing.publicNumber} · ${titre}`}
         subtitle={
           <>
             Contrepartie : {counterpartyLabel}.{" "}

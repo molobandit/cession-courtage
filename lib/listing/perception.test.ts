@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { commissionPerceptionCopy, perceptionMode } from "@/lib/listing/perception";
+import { commissionPerceptionCopy, perceptionMode, precompteFromContracts } from "@/lib/listing/perception";
 
 describe("perceptionMode", () => {
   it("distingue linéaire, précompté et non précisé", () => {
@@ -23,7 +23,20 @@ describe("commissionPerceptionCopy", () => {
       precompte: true,
       precompteAmount: "40000",
     });
-    expect(copy.modeLine).toBe("Mode de perception : Précompté");
+    expect(copy.modeLine).toBe("Mode de perception : Précompte");
     expect(copy.amountLine).toContain("40");
+  });
+});
+
+describe("linéaire ou précompte d’après les contrats", () => {
+  it("garde ce que le cédant a déclaré", () => {
+    expect(precompteFromContracts(false, 900, 1000)).toBe(false);
+    expect(precompteFromContracts(true, 0, 1000)).toBe(true);
+  });
+
+  it("à défaut, suit la majorité des commissions du bordereau", () => {
+    expect(precompteFromContracts(null, 620, 1000)).toBe(true);
+    expect(precompteFromContracts(null, 70, 1000)).toBe(false);
+    expect(precompteFromContracts(null, 0, 0)).toBeNull();
   });
 });
