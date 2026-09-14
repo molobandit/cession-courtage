@@ -38,8 +38,9 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="fr">
-      <body className={`${sans.variable} ${serif.variable} min-h-screen bg-page text-ink antialiased`}>
+    // Les variables de police vont sur <html> : --font-sans y est résolue, sinon le site retombe en Times.
+    <html lang="fr" className={`${sans.variable} ${serif.variable}`}>
+      <body className="min-h-screen bg-page text-ink antialiased">
         <MemberChrome>{children}</MemberChrome>
       </body>
     </html>
