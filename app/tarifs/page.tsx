@@ -7,10 +7,6 @@ import { hasContactSubscription } from "@/lib/billing/contact-access";
 import {
   GROWTH_PLAN_ANNUAL_EUR,
   INTEREST_DEPOSIT_LABEL,
-  VERIFIED_FEE_RATE_MAX,
-  VERIFIED_FEE_RATE_MIN,
-  interestDepositFor,
-  successFeeFor,
 } from "@/lib/billing/rates";
 import { formatEuroWhole } from "@/lib/format/number";
 import { safeInternalPath } from "@/lib/nav/safe-next";
@@ -33,7 +29,6 @@ export const metadata: Metadata = {
   description: `Mettre en vente : ${NO_FEE_LABEL.toLowerCase()}. Accès au marché ${GROWTH_PLAN_ANNUAL_EUR} € HT par an.`,
 };
 
-const EXAMPLES = [12_000, 34_000, 80_000, 150_000];
 
 const PLAN_ROWS: { label: string; free: boolean; paid: boolean }[] = [
   { label: "Consulter la salle de marché", free: true, paid: true },
@@ -168,12 +163,6 @@ export default async function TarifsPage({
               className="rounded-full border border-line bg-surface px-5 py-2.5 text-[14px] font-medium text-ink shadow-sm hover:border-indigo"
             >
               Ce que nous vérifions
-            </a>
-            <a
-              href="#services"
-              className="rounded-full border border-line bg-surface px-5 py-2.5 text-[14px] font-medium text-ink shadow-sm hover:border-indigo"
-            >
-              Cession et séquestre
             </a>
             <Link
               href="/partenaires"
@@ -442,53 +431,6 @@ export default async function TarifsPage({
         </div>
       </section>
 
-      <section className="border-t border-line bg-surface">
-        <div className="mx-auto max-w-6xl px-4 py-16">
-          <h2 className="text-center text-3xl font-bold tracking-tight text-ink">Exemples</h2>
-          <p className="mx-auto mt-3 max-w-2xl text-center text-[15px] text-muted">
-            Dépôt de {INTEREST_DEPOSIT_LABEL} pour révéler le cédant. Honoraires
-            de l’option 2 uniquement si la vente aboutit. Séquestre inclus.
-          </p>
-          <div className="mt-8 overflow-hidden rounded-3xl border border-line">
-            <table className="w-full min-w-[40rem] border-collapse text-left">
-              <thead className="bg-page">
-                <tr>
-                  <th scope="col" className="px-5 py-4 text-[14px] font-semibold text-ink">
-                    Prix demandé
-                  </th>
-                  <th scope="col" className="px-5 py-4 text-right text-[14px] font-semibold text-ink">
-                    Dépôt {INTEREST_DEPOSIT_LABEL}
-                  </th>
-                  <th scope="col" className="px-5 py-4 text-right text-[14px] font-semibold text-ink">
-                    Honoraires {(VERIFIED_FEE_RATE_MIN * 100).toLocaleString("fr-FR")} %
-                  </th>
-                  <th scope="col" className="px-5 py-4 text-right text-[14px] font-semibold text-ink">
-                    Honoraires {(VERIFIED_FEE_RATE_MAX * 100).toLocaleString("fr-FR")} %
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {EXAMPLES.map((price) => (
-                  <tr key={price} className="border-t border-line">
-                    <td className="tabular px-5 py-4 text-[15px] font-medium text-ink">
-                      {formatEuroWhole(price)}
-                    </td>
-                    <td className="tabular px-5 py-4 text-right text-[15px] text-ink">
-                      {formatEuroWhole(interestDepositFor(price))}
-                    </td>
-                    <td className="tabular px-5 py-4 text-right text-[15px] text-ink">
-                      {formatEuroWhole(successFeeFor(price, VERIFIED_FEE_RATE_MIN))}
-                    </td>
-                    <td className="tabular px-5 py-4 text-right text-[15px] text-ink">
-                      {formatEuroWhole(successFeeFor(price, VERIFIED_FEE_RATE_MAX))}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
 
       <section className="border-t border-line bg-page">
         <div className="mx-auto max-w-3xl px-4 py-16">
