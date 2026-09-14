@@ -108,7 +108,7 @@ const FAQ = [
   },
   {
     q: "Que contrôlez-vous concrètement ?",
-    a: "Sur l’option certifiée : Kbis et existence de la société, pièce d’identité du représentant, justificatif ORIAS du dossier, états de portefeuille et bordereaux de commissions. L’annonce simple repose sur les données déclarées. Dans les deux cas, le numéro ORIAS est contrôlé à l’inscription.",
+    a: "Sur l’option Certifié : Kbis et existence de la société, pièce d’identité du représentant, justificatif ORIAS du dossier, états de portefeuille et bordereaux de commissions. L’annonce simple repose sur les données déclarées. Dans les deux cas, le numéro ORIAS est contrôlé à l’inscription.",
   },
   {
     q: "Quand le vendeur est-il identifié ?",
@@ -280,7 +280,7 @@ export default async function TarifsPage({
             </h2>
             <p className="mx-auto mt-3 max-w-2xl text-[15px] text-muted">
               L’abonnement n’est pas une vérification. L’annonce simple publie
-              les données déclarées. L’option certifiée contrôle la société, la
+              les données déclarées. L’option Certifié contrôle la société, la
               personne et le portefeuille.
             </p>
           </div>
