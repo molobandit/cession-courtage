@@ -9,8 +9,8 @@ import { PartnerStrip } from "@/components/partners/partner-grid";
 import { SectionTab, SectionTabs } from "@/components/ui/section-tabs";
 import { counterpartyDisplayName, findMyDeal, getActor, isOriasVerified } from "@/lib/authz";
 import { dealPieces } from "@/lib/deal/pieces";
-import { pipelineProgressPercent } from "@/lib/deal/pipeline";
-import { stageTasks, tasksFor, type Side } from "@/lib/deal/process";
+import { ESCROW_UPFRONT_SHARE, pipelineProgressPercent } from "@/lib/deal/pipeline";
+import { currentPrice, revisionPending, stageTasks, tasksFor, type Side } from "@/lib/deal/process";
 import { escrowAmountAfterDeposit } from "@/lib/billing/deposit-fate";
 import { loadDealProcess } from "@/lib/deal/process-load";
 import { formatDate, formatDateTime, formatEuro } from "@/lib/format/fr";
@@ -31,12 +31,19 @@ export default async function DealPage({ params }: { params: Promise<{ id: strin
   const p = await loadDealProcess(deal.id);
   if (!p) notFound();
 
+  // Un dossier ouvert sous l'ancien parcours s'affiche à l'étape qui regroupe la sienne.
+  const etape = p.snapshot.stage;
   const isSeller = deal.sellerId === actor.id;
   const side: Side = isSeller ? "seller" : "buyer";
   const counterparty = isSeller ? deal.buyer : deal.seller;
   const counterpartyLabel = counterpartyDisplayName(counterparty);
   const agreed = Number(p.deal.agreedPrice);
-  const upfront = Number(p.deal.upfrontAmount);
+  // Avant la signature, le prix n'est pas figé : un ancien dossier garde en base
+  // la part comptant de l'ancien parcours, alors que le séquestre recevra le prix entier.
+  const upfront =
+    p.snapshot.stage === "DATA_ROOM"
+      ? Math.round((revisionPending(p.snapshot) ? agreed : currentPrice(p.snapshot)) * ESCROW_UPFRONT_SHARE * 100) / 100
+      : Number(p.deal.upfrontAmount);
   const depot = Number(p.deal.listing.deposits.find((d) => d.buyerId === p.deal.buyerId)?.amount ?? 0);
   const auSequestre = escrowAmountAfterDeposit(upfront, depot);
 
@@ -49,7 +56,7 @@ export default async function DealPage({ params }: { params: Promise<{ id: strin
         ? suivi.mine[0].label
         : suivi.waiting.length
           ? `En attente ${suivi.waiting.every((t) => t.owner === "seller") ? "du cédant" : suivi.waiting.every((t) => t.owner === "buyer") ? "de l’acquéreur" : "des deux parties"}`
-          : DEAL_STAGE_LABELS[deal.stage];
+          : DEAL_STAGE_LABELS[etape];
 
   const pieces = dealPieces({ stage: deal.stage, carriers: p.carriers });
   const autres = p.deal.documents.filter((d) => d.slot === "other");
@@ -59,7 +66,7 @@ export default async function DealPage({ params }: { params: Promise<{ id: strin
   const parcours = (
     <div className="grid gap-6">
       <DealProcessPanel p={p} side={side} escrowLive={escrowRailLive()} />
-      <SalePipeline currentKey={deal.stage} />
+      <SalePipeline currentKey={etape} />
       <DealJournal p={p} />
       <PartnerStrip partners={presentPartners()} />
     </div>
@@ -230,7 +237,7 @@ export default async function DealPage({ params }: { params: Promise<{ id: strin
         kicker={isSeller ? "Dossier de cession" : "Dossier d’acquisition"}
         badge={
           <span className="rounded-full border border-indigo-line bg-paper px-2.5 py-0.5 text-[12px] font-semibold text-indigo-dark">
-            {DEAL_STAGE_LABELS[deal.stage]}
+            {DEAL_STAGE_LABELS[etape]}
             {tasks.length ? ` · ${suivi.done}/${suivi.total}` : ""}
           </span>
         }
@@ -245,7 +252,7 @@ export default async function DealPage({ params }: { params: Promise<{ id: strin
                 : "Rien à faire de votre côté pour l’instant : vous serez prévenu dès que l’autre partie aura agi."}
           </>
         }
-        progress={{ percent: pipelineProgressPercent(deal.stage), tone: deal.stage === "CLOSED" ? "closed" : "active" }}
+        progress={{ percent: pipelineProgressPercent(etape), tone: deal.stage === "CLOSED" ? "closed" : "active" }}
         figures={[
           { label: "Prix convenu", value: formatEuro(agreed) },
           { label: "Au séquestre", value: formatEuro(auSequestre), note: depot > 0 ? `Dépôt de garantie de ${formatEuro(depot)} déduit` : "Prix convenu entier" },

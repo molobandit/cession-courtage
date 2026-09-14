@@ -34,6 +34,7 @@ export default async function AgreementTextPage({ params }: { params: Promise<{ 
       issuedAt={signe?.signedAt ?? new Date()}
       backHref="/app/engagements"
       backLabel="Retour à mes engagements"
+      electronic
       signatures={trace ? [{ label: "Le courtier", name: trace.signatureName, signedAt: trace.signedAt, hash: trace.contentHash }] : []}
     />
   );

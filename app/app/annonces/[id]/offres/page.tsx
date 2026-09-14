@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { OfferReviewBoard } from "@/components/offer/offer-review-board";
-import { getActor, isOriasVerified, listOffersForListing } from "@/lib/authz";
+import { getActor, isAdmin, isOriasVerified, listOffersForListing } from "@/lib/authz";
 import { ForbiddenError } from "@/lib/authz/errors";
 import { isOfferWindowSealed, ownsFirm } from "@/lib/authz/policies";
+import { commissionsCedees, listingLotTotals } from "@/lib/listing/lot-totals";
 import { listListingPositions } from "@/lib/position/load";
 import { prisma } from "@/lib/prisma";
 
@@ -28,10 +29,12 @@ export default async function ListingOffersPage({
       displayedZone: true,
       status: true,
       offerWindowClosesAt: true,
+      isPartial: true,
       portfolio: { select: { annualCommissions: true, firmId: true } },
     },
   });
-  if (!listing) notFound();
+  // Carnet du cédant : un acquéreur suit sa propre offre depuis sa position.
+  if (!listing || !(ownsFirm(actor, listing.portfolio.firmId) || isAdmin(actor))) notFound();
 
   let result: Awaited<ReturnType<typeof listOffersForListing>>;
   try {
@@ -54,7 +57,7 @@ export default async function ListingOffersPage({
         displayedZone: listing.displayedZone,
         status: listing.status,
         offerWindowClosesAt: listing.offerWindowClosesAt,
-        annualCommissions: Number(listing.portfolio.annualCommissions),
+        annualCommissions: commissionsCedees(listing, listing.isPartial ? await listingLotTotals([listing.id]) : new Map()),
       }}
       offers={result.offers.map((offer) => ({
         id: offer.id,

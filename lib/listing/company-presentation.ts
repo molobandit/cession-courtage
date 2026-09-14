@@ -135,7 +135,10 @@ export async function loadCompanyPresentation(listingId: string): Promise<Compan
     .map((h) => ({ label: h.label, value: Number(h.value) }));
 
   const asking = Number(listing.askingPrice);
-  const commissions = Number(portfolio.annualCommissions);
+  const lot = listing.isPartial && listing.lines.length > 0;
+  const commissions = lot
+    ? Math.round(lines.reduce((s, l) => s + l.annualCommission, 0) * 100) / 100
+    : Number(portfolio.annualCommissions);
 
   return {
     publicNumber: listing.publicNumber,
@@ -159,8 +162,8 @@ export async function loadCompanyPresentation(listingId: string): Promise<Compan
     portfolio: {
       label: portfolio.label,
       annualCommissions: commissions,
-      contractCount: portfolio.contractCount,
-      clientCount: portfolio.clientCount,
+      contractCount: lot ? lines.length : portfolio.contractCount,
+      clientCount: lot ? new Set(lines.map((l) => l.clientKey)).size : portfolio.clientCount,
       averageAgeMonths: portfolio.averageAgeMonths,
       churnRate: Number(portfolio.churnRate12m),
       history: historique,

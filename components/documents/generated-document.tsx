@@ -23,7 +23,9 @@ export type ElectronicSignature = { label: string; name: string; signedAt: Date;
  * Partagée par les dossiers de gré à gré et les dossiers de cession : un même
  * protocole ne doit pas se présenter de deux façons selon le chemin emprunté.
  * Signée électroniquement, la pièce porte le nom des signataires, la date et
- * l'empreinte du texte ; sinon, des cadres pour la signature manuscrite.
+ * l'empreinte du texte ; sinon, des cadres pour la signature manuscrite. Une
+ * pièce qui ne se signe que sur la plateforme (`electronic`) n'affiche jamais
+ * de blancs à remplir à la main.
  */
 export function GeneratedDocumentView({
   doc,
@@ -32,6 +34,7 @@ export function GeneratedDocumentView({
   backLabel = "Retour au dossier",
   signatures,
   banner,
+  electronic = false,
 }: {
   doc: GeneratedDocument;
   issuedAt: Date;
@@ -39,6 +42,7 @@ export function GeneratedDocumentView({
   backLabel?: string;
   signatures?: ElectronicSignature[];
   banner?: React.ReactNode;
+  electronic?: boolean;
 }) {
   return (
     <main className="mx-auto max-w-3xl px-4 py-8">
@@ -124,7 +128,7 @@ export function GeneratedDocumentView({
           </section>
         ) : null}
 
-        {signatures && signatures.length > 0 ? null : (
+        {electronic || (signatures && signatures.length > 0) ? null : (
           <p className="mt-10">Fait en deux exemplaires, le ____________________ à ____________________</p>
         )}
 
@@ -145,6 +149,12 @@ export function GeneratedDocumentView({
                     </p>
                     {e.hash ? <p className="break-all font-mono text-[10px] text-muted">Empreinte {e.hash}</p> : null}
                   </div>
+                ) : electronic ? (
+                  s.label === "La plateforme" ? null : (
+                    <p className="mt-3 rounded-lg bg-surface-alt px-3 py-2 text-[12px] text-muted">
+                      Signature électronique sur la plateforme, en attente
+                    </p>
+                  )
                 ) : (
                   <>
                     <p className="mt-2 text-[12px] text-muted">« Lu et approuvé », signature et cachet</p>

@@ -11,12 +11,13 @@ import { disposePlatformProxy } from "./setup/prisma-test";
 import { connecterUtilisateur } from "./setup/auth-stub";
 import { signAgreementsAction } from "@/app/actions/agreements";
 import { reviewListingAction } from "@/app/actions/listing-review";
-import { publishListingAction } from "@/app/actions/listings";
+import { publishListingAction, updateListingAction } from "@/app/actions/listings";
 import { getListingByPublicNumber } from "@/lib/authz";
 import { listingQuotes } from "@/lib/offer/quote";
 import { restaurer, sauvegarder } from "./setup/engagements";
 
 const LISTING = "lst_01";
+let brief: { askingPrice: unknown; presentation: string | null };
 const debut = new Date(Date.now() - 1000);
 let cedant: string;
 let admin: string;
@@ -35,6 +36,7 @@ beforeAll(async () => {
     select: { status: true, publishedAt: true, offerWindowClosesAt: true, portfolio: { select: { firm: { select: { users: { select: { id: true }, where: { role: { in: ["SELLER", "BOTH"] } } } } } } } },
   });
   initial = { status: l.status, publishedAt: l.publishedAt, offerWindowClosesAt: l.offerWindowClosesAt };
+  brief = await prisma.listing.findUniqueOrThrow({ where: { id: LISTING }, select: { askingPrice: true, presentation: true } });
   cedant = l.portfolio.firm.users[0]!.id;
   admin = (await prisma.user.findFirstOrThrow({ where: { role: "ADMIN" }, select: { id: true } })).id;
   sauvegarde = await sauvegarder([cedant]);
@@ -45,7 +47,7 @@ afterAll(async () => {
   connecterUtilisateur(null);
   await prisma.listing.update({
     where: { id: LISTING },
-    data: { ...initial, submittedForReviewAt: null, reviewedAt: null, reviewNote: null },
+    data: { ...initial, ...brief, askingPrice: String(brief.askingPrice), submittedForReviewAt: null, reviewedAt: null, reviewNote: null },
   });
   await restaurer(sauvegarde);
   await prisma.notification.deleteMany({ where: { createdAt: { gte: debut } } });
@@ -91,6 +93,22 @@ describe("mise en vente gratuite, relue avant publication", () => {
     const l = await prisma.listing.findUniqueOrThrow({ where: { id: LISTING }, select: { status: true, reviewNote: true } });
     expect(l.status).toBe(ListingStatus.DRAFT);
     expect(l.reviewNote).toContain("Raison sociale");
+  });
+
+  it("renvoyée, elle se corrige ; en relecture, elle ne se modifie plus", async () => {
+    connecterUtilisateur(cedant);
+    const correction = form({ listingId: LISTING, askingPrice: "12 500", presentation: "Portefeuille santé en agence, sans nom de cabinet.", negotiable: "yes", sellerSupportMonths: "3" });
+    await expect(updateListingAction({}, correction)).rejects.toThrow(/NEXT_REDIRECT/);
+    const l = await prisma.listing.findUniqueOrThrow({ where: { id: LISTING }, select: { status: true, askingPrice: true, presentation: true } });
+    expect(l.status).toBe(ListingStatus.DRAFT);
+    expect(Number(l.askingPrice)).toBe(12500);
+    expect(l.presentation).toContain("sans nom de cabinet");
+    expect((await updateListingAction({}, form({ listingId: LISTING, askingPrice: "500" }))).error).toContain("prix");
+
+    expect(await publishListingAction({}, form({ listingId: LISTING }))).toEqual({});
+    expect((await updateListingAction({}, form({ listingId: LISTING, askingPrice: "13 000" }))).error).toContain("brouillon");
+    connecterUtilisateur(admin);
+    expect((await reviewListingAction({}, form({ listingId: LISTING, decision: "reject", note: "Précisez la part du récurrent." }))).ok).toBeTruthy();
   });
 
   it("publiée, elle ouvre sa séance de 21 jours et prévient le cédant", async () => {

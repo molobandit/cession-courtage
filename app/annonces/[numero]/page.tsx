@@ -92,9 +92,13 @@ export default async function PublicListingPage({
   }));
 
   const askingPrice = Number(listing.askingPrice);
-  const annualCommissions = Number(listing.portfolio.annualCommissions);
-  const contractCount = listing.portfolio.contractCount;
-  const clientCount = listing.portfolio.clientCount;
+  // Une cession partielle se mesure sur son lot, pas sur le portefeuille entier.
+  const lot = listing.isPartial && listing.lines.length > 0;
+  const annualCommissions = lot
+    ? Math.round(lines.reduce((s, l) => s + l.annualCommission, 0) * 100) / 100
+    : Number(listing.portfolio.annualCommissions);
+  const contractCount = lot ? lines.length : listing.portfolio.contractCount;
+  const clientCount = lot ? new Set(lines.map((l) => l.clientKey)).size : listing.portfolio.clientCount;
   const multiple = annualCommissions > 0 ? askingPrice / annualCommissions : null;
 
   const byRisk = breakdownBy(
@@ -409,7 +413,7 @@ export default async function PublicListingPage({
                 {formatEuroWhole(Number(myDeposit.amount))}
               </span>{" "}
               est enregistré. Les coordonnées du cédant et les PDF du cabinet sont
-              ouverts ci-dessus. Les assurés du portefeuille restent anonymes.
+              ouverts dans l’onglet Documents. Les assurés du portefeuille restent anonymes.
             </p>
           ) : (
             <>

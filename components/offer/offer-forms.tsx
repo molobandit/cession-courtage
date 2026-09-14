@@ -97,7 +97,18 @@ export function SubmitOfferForm({
 export function WithdrawOfferButton({ offerId }: { offerId: string }) {
   const [state, action, pending] = useActionState(withdrawOfferAction, initial);
   return (
-    <form action={action}>
+    <form
+      action={action}
+      onSubmit={(event) => {
+        if (
+          !window.confirm(
+            "Retirer votre offre est définitif : le dépôt de garantie déjà versé reste acquis au cédant. Retirer quand même ?",
+          )
+        ) {
+          event.preventDefault();
+        }
+      }}
+    >
       <input type="hidden" name="offerId" value={offerId} />
       <Button type="submit" size="sm" variant="outline" disabled={pending}>
         {pending ? "Retrait…" : "Retirer"}

@@ -15,6 +15,7 @@ import { nextPipelineAction } from "@/lib/deal/pipeline";
 import { formatDateTime } from "@/lib/format/fr";
 import { formatEuroWhole } from "@/lib/format/number";
 import { lotAvailability } from "@/lib/listing/lot-availability";
+import { commissionsCedees, listingLotTotals } from "@/lib/listing/lot-totals";
 import { listingAcceptsOffers } from "@/lib/offer/acceptance";
 import { loadPosition } from "@/lib/position/load";
 import { POSITION_STEPS, positionStepIndex } from "@/lib/position/progress";
@@ -47,6 +48,7 @@ export default async function PositionPage({ params }: { params: Promise<{ id: s
   if (!estAcheteur && !estCedant) notFound();
 
   const prix = Number(listing.askingPrice);
+  const commissions = commissionsCedees(listing, listing.isPartial ? await listingLotTotals([listing.id]) : new Map());
   const readiness = estAcheteur ? await loadEngagementReadiness(actor, 0, `/app/positions/${position.id}`) : null;
   const scelle = isOfferWindowSealed(listing);
   const courant = positionStepIndex(state);
@@ -187,10 +189,10 @@ export default async function PositionPage({ params }: { params: Promise<{ id: s
         }}
         figures={[
           { label: "Prix demandé", value: formatEuroWhole(prix) },
-          { label: "Commissions / an", value: formatEuroWhole(Number(listing.portfolio.annualCommissions)) },
+          { label: "Commissions / an", value: formatEuroWhole(commissions) },
           {
             label: "Multiple",
-            value: formatMultiple(listingMultiple(prix, Number(listing.portfolio.annualCommissions))),
+            value: formatMultiple(listingMultiple(prix, commissions)),
             note: "Prix ÷ commissions",
           },
           deal
@@ -250,7 +252,7 @@ export default async function PositionPage({ params }: { params: Promise<{ id: s
               </div>
               <div className="flex justify-between gap-3">
                 <dt className="text-muted">Commissions / an</dt>
-                <dd className="tabular text-ink">{formatEuroWhole(Number(listing.portfolio.annualCommissions))}</dd>
+                <dd className="tabular text-ink">{formatEuroWhole(commissions)}</dd>
               </div>
               <div className="flex justify-between gap-3">
                 <dt className="text-muted">Zone</dt>

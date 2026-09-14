@@ -176,10 +176,13 @@ export function PublicListingDetail({
               {hasQualityFigures(quality)
                 ? "Commissions sur trois exercices, part du récurrent et prime gérée, distincte des commissions."
                 : "Commissions annuelles, par profil de clientèle et par branche."}
+              {isPartial
+                ? " Cession partielle : commissions, contrats et clients sont ceux du lot cédé ; les exercices passés portent sur le portefeuille entier."
+                : ""}
             </p>
             <dl className="mt-5 divide-y divide-line">
               {[
-                { label: "Commissions annuelles", value: formatEuroWhole(annualCommissions) },
+                { label: isPartial ? "Commissions annuelles du lot" : "Commissions annuelles", value: formatEuroWhole(annualCommissions) },
                 { label: "Mode de perception", value: perceptionModeLine.replace("Mode de perception : ", "") },
                 ...(perceptionAmountLine
                   ? [{ label: "Montant précompté", value: perceptionAmountLine.replace("Montant précompté : ", "") }]

@@ -8,6 +8,7 @@ import { FINANCING_DOC_KIND } from "@/lib/buyer/financing-load";
 import { safeFileName, sha256Buffer } from "@/lib/import/persist";
 import { deleteObject, putObject } from "@/lib/storage/objects";
 import { parseFrenchNumber } from "@/lib/import/values";
+import { notifyPositionEvent } from "@/lib/notify/transactional";
 import { prisma } from "@/lib/prisma";
 import { idSchema } from "@/lib/validations/actions";
 
@@ -133,7 +134,7 @@ export async function trancherCapaciteAction(
 
     const cible = await prisma.user.findUnique({
       where: { id: parsed.data },
-      select: { id: true, financialCapacityStatus: true },
+      select: { id: true, email: true, financialCapacityStatus: true },
     });
     if (!cible) return { error: "Compte introuvable." };
 
@@ -155,6 +156,19 @@ export async function trancherCapaciteAction(
         metadata: { note: note || null },
       },
     });
+
+    // L'acquéreur apprend la décision sans avoir à revenir voir son profil.
+    await notifyPositionEvent({
+      key: `capacity:${decision}:${Date.now()}`,
+      userId: cible.id,
+      email: cible.email,
+      title: decision === "VERIFIED" ? "Financement vérifié" : "Financement à revoir",
+      body:
+        decision === "VERIFIED"
+          ? "Votre capacité d’acquisition est vérifiée pour douze mois : les cédants voient « financement vérifié » à côté de vos offres."
+          : `Motif : ${note.replace(/[.\s]+$/, "")}. Déposez un nouveau justificatif dans votre profil pour reprendre vos offres.`,
+      href: "/app/profil#capacite",
+    }).catch((e: unknown) => console.error("notify", e));
 
     revalidatePath("/admin/capacites");
     return { done: true };

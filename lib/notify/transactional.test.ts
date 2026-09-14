@@ -11,7 +11,7 @@ describe("courriel d'offre reçue", () => {
 
   it("invite à comparer une fois la fenêtre close, toujours sans chiffre", () => {
     const copy = offerReceivedCopy({ publicNumber: 10005, sealed: false });
-    expect(copy.bodyText).toMatch(/comparer/);
+    expect(copy.bodyText).toMatch(/comparez/);
     expect(copy.bodyText).not.toMatch(/\d[\d\s]*€/);
   });
 });

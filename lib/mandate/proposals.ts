@@ -7,6 +7,7 @@ const LISTING_CARD = {
   status: true,
   askingPrice: true,
   displayedZone: true,
+  isPartial: true,
   portfolio: { select: { label: true, annualCommissions: true } },
 } as const;
 

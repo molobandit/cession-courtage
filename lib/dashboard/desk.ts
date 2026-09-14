@@ -9,6 +9,7 @@ import { stepByKey, type DirectStage } from "@/lib/direct/stages";
 import { formatEuroWhole } from "@/lib/format/number";
 import { marketStatus } from "@/lib/listing/market-status";
 import { loadPublicListingCards } from "@/lib/listing/load-public-cards";
+import { commissionsCedees, listingLotTotals } from "@/lib/listing/lot-totals";
 import { listMyProposalsAsSeller } from "@/lib/mandate/proposals";
 import { formatMultiple, listingMultiple, marketIndices, quoteBoard } from "@/lib/market/indices";
 import { listListingPositions, listMyPositions, positionSnapshot } from "@/lib/position/load";
@@ -45,6 +46,10 @@ export async function loadDesk(actor: Actor) {
     Promise.all(propositions.map((p) => positionSnapshot(p.listing.id, p.mandate.buyerId))),
   ]);
   const candidats = new Map(candidatsParAnnonce);
+  const lots = await listingLotTotals([
+    ...positions.map((p) => p.position.listing).filter((l) => l.isPartial).map((l) => l.id),
+    ...annonces.filter((a) => a.isPartial).map((a) => a.id),
+  ]);
   const dealsVendeur = deals.filter((d) => d.sellerId === actor.id);
 
   const aFaire: TodoItem[] = [];
@@ -53,7 +58,7 @@ export async function loadDesk(actor: Actor) {
   // Achats : une ligne par position.
   for (const { position, state, deal, offer } of positions) {
     const l = position.listing;
-    const multiple = formatMultiple(listingMultiple(Number(l.askingPrice), Number(l.portfolio.annualCommissions)));
+    const multiple = formatMultiple(listingMultiple(Number(l.askingPrice), commissionsCedees(l, lots)));
     const href = `/app/positions/${position.id}`;
     lignes.push({
       key: `pos-${position.id}`,
@@ -81,7 +86,7 @@ export async function loadDesk(actor: Actor) {
   // Ventes : une ligne par annonce, avec son dossier le plus avancé ou ses candidats.
   for (const annonce of annonces) {
     const cotation = marketStatus({ status: annonce.status, offerWindowClosesAt: annonce.offerWindowClosesAt });
-    const multiple = formatMultiple(listingMultiple(Number(annonce.askingPrice), Number(annonce.portfolio.annualCommissions)));
+    const multiple = formatMultiple(listingMultiple(Number(annonce.askingPrice), commissionsCedees(annonce, lots)));
     const dossiers = dealsVendeur.filter((d) => d.listing.publicNumber === annonce.publicNumber);
     const plusAvance = [...dossiers].sort((a, b) => pipelineProgressPercent(b.stage) - pipelineProgressPercent(a.stage))[0];
     const liste = candidats.get(annonce.id) ?? [];

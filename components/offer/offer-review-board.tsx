@@ -82,7 +82,13 @@ export function OfferReviewBoard({
         back={{ href: "/app/cessions", label: "Mes cessions" }}
         kicker="Carnet d’offres"
         badge={<MarketBadge label={cotation.label} tone={cotation.tone} detail={cotation.detail} />}
-        title={`Dossier N° ${listing.publicNumber} — ${ranked.length ? `${ranked.length} offre${ranked.length > 1 ? "s" : ""} à comparer` : "aucune offre pour le moment"}`}
+        title={`Dossier N° ${listing.publicNumber} — ${
+          submitted.length
+            ? `${submitted.length} offre${submitted.length > 1 ? "s" : ""} à comparer`
+            : ranked.length
+              ? "aucune offre en cours"
+              : "aucune offre pour le moment"
+        }`}
         subtitle="Les acquéreurs restent sous alias. Retenir une offre ouvre le dossier de cession et écarte les offres concurrentes sur les mêmes compagnies."
         figures={[
           { label: "Prix demandé", value: formatEuro(asking), note: listing.displayedZone },

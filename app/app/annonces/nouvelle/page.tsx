@@ -4,6 +4,9 @@ import { MemberPageHeader } from "@/components/app/member-page-header";
 import { CreateListingForm } from "@/components/listing/listing-forms";
 import { canSell, findMyPortfolio, getActor, isOriasVerified, listMyPortfolios } from "@/lib/authz";
 import { formatEuro } from "@/lib/format/fr";
+import { readFirmProfile } from "@/lib/firm/profile";
+import { defaultsFromFirmProfile } from "@/lib/listing/form-defaults";
+import { prisma } from "@/lib/prisma";
 
 export const metadata = { title: "Nouvelle annonce" };
 
@@ -40,14 +43,18 @@ export default async function NewListingPage({
   }
   const mid = selected.valuations[0] ? Number(selected.valuations[0].midValue) : Number(selected.annualCommissions) * 2.5;
   const asking = Math.min(200000, Math.max(2000, Math.round(mid)));
+  const firm = actor.firmId
+    ? await prisma.firm.findUnique({ where: { id: actor.firmId }, select: { profileJson: true } })
+    : null;
+  const profil = defaultsFromFirmProfile(readFirmProfile(firm?.profileJson));
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-6 sm:px-6 sm:py-8">
       <MemberPageHeader title="Mettre un portefeuille en séance">
         {selected.label} · commissions {formatEuro(selected.annualCommissions)} / an
         {selected.valuations[0] ? ` · médiane ${formatEuro(selected.valuations[0].midValue)}` : ""}
-        . Renseignez le cadre juridique, l’organisation et la conformité. Les PDF
-        du cabinet se déposent ensuite sur la fiche.
+        . Le profil de votre cabinet pré-remplit l’organisation et la conformité : vérifiez, complétez,
+        enregistrez. Les PDF du cabinet se déposent ensuite sur la fiche.
       </MemberPageHeader>
       {portfolios.length > 1 ? (
         <p className="mt-2 text-sm">
@@ -63,6 +70,7 @@ export default async function NewListingPage({
           portfolioId={selected.id}
           defaultAsking={String(asking)}
           defaultCertify={certifier === "1"}
+          defaults={profil}
           qualityDefaults={{
             commissionsYear1:
               selected.commissionsYear1 != null ? String(Number(selected.commissionsYear1)) : "",

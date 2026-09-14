@@ -27,6 +27,86 @@ async function requireSellerActor() {
   return actor;
 }
 
+const LISTING_FORM_FIELDS = [
+  "presentation", "cessionMotive", "portfolioKind", "branchActivity", "desiredCessionDate", "precompte",
+  "precompteAmount", "transferVehicle", "oriasCategories", "distribution", "distanceShare", "employeeCount",
+  "softwareStack", "introducersCount", "rcProInsurer", "pendingLitigation", "socialCommitments", "complianceDema",
+  "ddaTraining", "amlProcedure", "sellerDependency", "premisesStatus", "exclusiveMandates", "stornoShare",
+] as const;
+
+/** Lecture commune à la création et à la modification : mêmes règles, mêmes messages. */
+function parseListingForm(formData: FormData) {
+  const texte: Record<string, FormDataEntryValue> = {};
+  for (const champ of LISTING_FORM_FIELDS) texte[champ] = formData.get(champ) ?? "";
+  return listingCreateSchema.safeParse({
+    ...texte,
+    portfolioId: formData.get("portfolioId"),
+    askingPrice: formData.get("askingPrice"),
+    sellerSupportMonths: formData.get("sellerSupportMonths") ?? 0,
+    negotiable: formData.get("negotiable") ?? "yes",
+    certificationRequested: formData.get("certificationRequested"),
+    commissionsYear1: formData.get("commissionsYear1"),
+    commissionsYear2: formData.get("commissionsYear2"),
+    commissionsYear3: formData.get("commissionsYear3"),
+    managedAnnualPremium: formData.get("managedAnnualPremium"),
+    recurrentSharePercent: formData.get("recurrentSharePercent"),
+  });
+}
+
+type ListingFormData = Extract<ReturnType<typeof parseListingForm>, { success: true }>["data"];
+
+function supportMonths(data: ListingFormData): number {
+  const support = data.sellerSupportMonths;
+  return support >= 6 ? 6 : support >= 3 ? 3 : 0;
+}
+
+async function saveFinancials(portfolioId: string, data: ListingFormData) {
+  await prisma.portfolio.update({
+    where: { id: portfolioId },
+    data: {
+      commissionsYear1: data.commissionsYear1 != null ? data.commissionsYear1.toFixed(2) : undefined,
+      commissionsYear2: data.commissionsYear2 != null ? data.commissionsYear2.toFixed(2) : undefined,
+      commissionsYear3: data.commissionsYear3 != null ? data.commissionsYear3.toFixed(2) : undefined,
+      managedAnnualPremium: data.managedAnnualPremium != null ? data.managedAnnualPremium.toFixed(2) : undefined,
+      recurrentCommissionShare:
+        data.recurrentSharePercent != null ? (data.recurrentSharePercent / 100).toFixed(4) : undefined,
+    },
+  });
+}
+
+async function saveBrief(listingId: string, data: ListingFormData) {
+  await persistListingBriefFields(listingId, {
+    presentation: data.presentation,
+    cessionMotive: data.cessionMotive,
+    negotiable: data.negotiable,
+    certificationRequested: data.certificationRequested,
+    portfolioKind: data.portfolioKind,
+    branchActivity: data.branchActivity,
+    desiredCessionDate: data.desiredCessionDate,
+    precompte: data.precompte,
+    precompteAmount: data.precompteAmount,
+    regulatory: {
+      transferVehicle: data.transferVehicle ?? null,
+      oriasCategories: data.oriasCategories ?? null,
+      distribution: data.distribution ?? null,
+      distanceShare: data.distanceShare ?? null,
+      employeeCount: data.employeeCount ?? null,
+      softwareStack: data.softwareStack ?? null,
+      introducersCount: data.introducersCount ?? null,
+      rcProInsurer: data.rcProInsurer ?? null,
+      pendingLitigation: data.pendingLitigation ?? null,
+      socialCommitments: data.socialCommitments ?? null,
+      complianceDema: data.complianceDema ?? null,
+      ddaTraining: data.ddaTraining ?? null,
+      amlProcedure: data.amlProcedure ?? null,
+      sellerDependency: data.sellerDependency ?? null,
+      premisesStatus: data.premisesStatus ?? null,
+      exclusiveMandates: data.exclusiveMandates ?? null,
+      stornoShare: data.stornoShare ?? null,
+    },
+  });
+}
+
 export async function createListingAction(
   _prev: ListingFormState,
   formData: FormData,
@@ -34,47 +114,10 @@ export async function createListingAction(
   let destination: string | null = null;
   try {
     const actor = await requireSellerActor();
-    const parsed = listingCreateSchema.safeParse({
-      portfolioId: formData.get("portfolioId"),
-      askingPrice: formData.get("askingPrice"),
-      sellerSupportMonths: formData.get("sellerSupportMonths") ?? 0,
-      presentation: formData.get("presentation") ?? "",
-      cessionMotive: formData.get("cessionMotive") ?? "",
-      negotiable: formData.get("negotiable") ?? "yes",
-      certificationRequested: formData.get("certificationRequested"),
-      portfolioKind: formData.get("portfolioKind") ?? "",
-      branchActivity: formData.get("branchActivity") ?? "",
-      desiredCessionDate: formData.get("desiredCessionDate") ?? "",
-      precompte: formData.get("precompte") ?? "",
-      precompteAmount: formData.get("precompteAmount") ?? "",
-      transferVehicle: formData.get("transferVehicle") ?? "",
-      oriasCategories: formData.get("oriasCategories") ?? "",
-      distribution: formData.get("distribution") ?? "",
-      distanceShare: formData.get("distanceShare") ?? "",
-      employeeCount: formData.get("employeeCount") ?? "",
-      softwareStack: formData.get("softwareStack") ?? "",
-      introducersCount: formData.get("introducersCount") ?? "",
-      rcProInsurer: formData.get("rcProInsurer") ?? "",
-      pendingLitigation: formData.get("pendingLitigation") ?? "",
-      socialCommitments: formData.get("socialCommitments") ?? "",
-      complianceDema: formData.get("complianceDema") ?? "",
-      ddaTraining: formData.get("ddaTraining") ?? "",
-      amlProcedure: formData.get("amlProcedure") ?? "",
-      sellerDependency: formData.get("sellerDependency") ?? "",
-      premisesStatus: formData.get("premisesStatus") ?? "",
-      exclusiveMandates: formData.get("exclusiveMandates") ?? "",
-      stornoShare: formData.get("stornoShare") ?? "",
-      commissionsYear1: formData.get("commissionsYear1"),
-      commissionsYear2: formData.get("commissionsYear2"),
-      commissionsYear3: formData.get("commissionsYear3"),
-      managedAnnualPremium: formData.get("managedAnnualPremium"),
-      recurrentSharePercent: formData.get("recurrentSharePercent"),
-    });
+    const parsed = parseListingForm(formData);
     if (!parsed.success) return { error: firstIssue(parsed.error) };
     const { portfolioId, askingPrice: asking } = parsed.data;
     const portfolio = await getMyPortfolio(portfolioId, actor);
-    const support = parsed.data.sellerSupportMonths;
-    const sellerSupportMonths = support >= 6 ? 6 : support >= 3 ? 3 : 0;
 
     const lines = await prisma.contractLine.findMany({
       where: { portfolioId: portfolio.id },
@@ -83,25 +126,7 @@ export async function createListingAction(
     const departments = [...new Set(lines.map((l) => l.department))];
     const zone = displayedZoneFor(departments);
 
-    await prisma.portfolio.update({
-      where: { id: portfolio.id },
-      data: {
-        commissionsYear1:
-          parsed.data.commissionsYear1 != null ? parsed.data.commissionsYear1.toFixed(2) : undefined,
-        commissionsYear2:
-          parsed.data.commissionsYear2 != null ? parsed.data.commissionsYear2.toFixed(2) : undefined,
-        commissionsYear3:
-          parsed.data.commissionsYear3 != null ? parsed.data.commissionsYear3.toFixed(2) : undefined,
-        managedAnnualPremium:
-          parsed.data.managedAnnualPremium != null
-            ? parsed.data.managedAnnualPremium.toFixed(2)
-            : undefined,
-        recurrentCommissionShare:
-          parsed.data.recurrentSharePercent != null
-            ? (parsed.data.recurrentSharePercent / 100).toFixed(4)
-            : undefined,
-      },
-    });
+    await saveFinancials(portfolio.id, parsed.data);
 
     const listing = await prisma.listing.create({
       data: {
@@ -109,7 +134,7 @@ export async function createListingAction(
         askingPrice: asking.toFixed(2),
         displayedZone: zone.displayedZone,
         status: ListingStatus.DRAFT,
-        sellerSupportMonths,
+        sellerSupportMonths: supportMonths(parsed.data),
         publicNumber: await nextListingPublicNumber(),
         departments,
         regions: zone.regionCodes,
@@ -117,42 +142,53 @@ export async function createListingAction(
       },
     });
     await valuePortfolio(portfolio.id, listing.id);
-    await persistListingBriefFields(listing.id, {
-      presentation: parsed.data.presentation,
-      cessionMotive: parsed.data.cessionMotive,
-      negotiable: parsed.data.negotiable,
-      certificationRequested: parsed.data.certificationRequested,
-      portfolioKind: parsed.data.portfolioKind,
-      branchActivity: parsed.data.branchActivity,
-      desiredCessionDate: parsed.data.desiredCessionDate,
-      precompte: parsed.data.precompte,
-      precompteAmount: parsed.data.precompteAmount,
-      regulatory: {
-        transferVehicle: parsed.data.transferVehicle ?? null,
-        oriasCategories: parsed.data.oriasCategories ?? null,
-        distribution: parsed.data.distribution ?? null,
-        distanceShare: parsed.data.distanceShare ?? null,
-        employeeCount: parsed.data.employeeCount ?? null,
-        softwareStack: parsed.data.softwareStack ?? null,
-        introducersCount: parsed.data.introducersCount ?? null,
-        rcProInsurer: parsed.data.rcProInsurer ?? null,
-        pendingLitigation: parsed.data.pendingLitigation ?? null,
-        socialCommitments: parsed.data.socialCommitments ?? null,
-        complianceDema: parsed.data.complianceDema ?? null,
-        ddaTraining: parsed.data.ddaTraining ?? null,
-        amlProcedure: parsed.data.amlProcedure ?? null,
-        sellerDependency: parsed.data.sellerDependency ?? null,
-        premisesStatus: parsed.data.premisesStatus ?? null,
-        exclusiveMandates: parsed.data.exclusiveMandates ?? null,
-        stornoShare: parsed.data.stornoShare ?? null,
-      },
-    });
+    await saveBrief(listing.id, parsed.data);
     destination = `/app/annonces/${listing.id}`;
   } catch (error) {
     return { error: error instanceof Error ? error.message : "Création impossible." };
   }
   if (destination) redirect(destination);
   return { error: "Création impossible." };
+}
+
+/**
+ * Correction d'une annonce en brouillon, notamment après un renvoi de
+ * l'équipe. Une annonce en relecture ou en ligne ne se modifie pas : ce que
+ * les acquéreurs ont lu doit rester ce qui a été relu.
+ */
+export async function updateListingAction(
+  _prev: ListingFormState,
+  formData: FormData,
+): Promise<ListingFormState> {
+  let destination: string | null = null;
+  try {
+    const actor = await requireSellerActor();
+    const listing = await findMyListing(String(formData.get("listingId") ?? ""), actor);
+    if (!listing) return { error: "Annonce introuvable." };
+    if (listing.status !== ListingStatus.DRAFT && listing.status !== ListingStatus.WITHDRAWN) {
+      return { error: "Seule une annonce en brouillon se modifie. Retirez-la d’abord si elle est en ligne." };
+    }
+    formData.set("portfolioId", listing.portfolioId);
+    const parsed = parseListingForm(formData);
+    if (!parsed.success) return { error: firstIssue(parsed.error) };
+
+    await saveFinancials(listing.portfolioId, parsed.data);
+    const prixChange = Number(listing.askingPrice) !== parsed.data.askingPrice;
+    await prisma.listing.update({
+      where: { id: listing.id },
+      data: { askingPrice: parsed.data.askingPrice.toFixed(2), sellerSupportMonths: supportMonths(parsed.data) },
+    });
+    if (prixChange || listing.sellerSupportMonths !== supportMonths(parsed.data)) {
+      await valuePortfolio(listing.portfolioId, listing.id);
+    }
+    await saveBrief(listing.id, parsed.data);
+    revalidatePath(`/app/annonces/${listing.id}`);
+    destination = `/app/annonces/${listing.id}?modifiee=1`;
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "Modification impossible." };
+  }
+  if (destination) redirect(destination);
+  return { error: "Modification impossible." };
 }
 
 export async function publishListingAction(

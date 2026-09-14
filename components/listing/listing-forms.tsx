@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import {
   createListingAction,
   openOfferWindowAction,
+  updateListingAction,
   publishListingAction,
   withdrawListingAction,
   type ListingFormState,
@@ -21,13 +22,29 @@ const areaClass =
 const fieldsetClass = "grid gap-4 rounded-[1.75rem] border border-line bg-paper p-5 shadow-sm sm:p-7";
 const legendClass = "text-[13px] font-medium uppercase tracking-[0.14em] text-indigo-dark";
 
+/** Valeurs de départ du formulaire : l'annonce à corriger, ou le profil du cabinet. */
+export type ListingFormDefaults = Partial<Record<(typeof TEXT_FIELDS)[number], string>>;
+
+const TEXT_FIELDS = [
+  "portfolioKind", "branchActivity", "desiredCessionDate", "cessionMotive", "negotiable", "sellerSupportMonths",
+  "precompte", "precompteAmount", "transferVehicle", "oriasCategories", "distribution", "distanceShare",
+  "complianceDema", "rcProInsurer", "employeeCount", "introducersCount", "softwareStack", "socialCommitments",
+  "pendingLitigation", "ddaTraining", "amlProcedure", "sellerDependency", "premisesStatus", "exclusiveMandates",
+  "stornoShare", "presentation",
+] as const;
+
 export function CreateListingForm({
   portfolioId,
+  listingId,
   defaultAsking,
   defaultCertify = false,
   qualityDefaults,
+  defaults = {},
 }: {
   portfolioId: string;
+  /** Présent : le formulaire corrige ce brouillon au lieu d'en créer un. */
+  listingId?: string;
+  defaults?: ListingFormDefaults;
   defaultAsking: string;
   defaultCertify?: boolean;
   qualityDefaults?: {
@@ -38,16 +55,18 @@ export function CreateListingForm({
     managedAnnualPremium: string;
   };
 }) {
-  const [state, action, pending] = useActionState(createListingAction, initial);
+  const [state, action, pending] = useActionState(listingId ? updateListingAction : createListingAction, initial);
+  const d = defaults;
   return (
     <form action={action} className="grid max-w-2xl gap-6">
       <input type="hidden" name="portfolioId" value={portfolioId} />
+      {listingId ? <input type="hidden" name="listingId" value={listingId} /> : null}
       <fieldset className={fieldsetClass}>
         <legend className={legendClass}>Informations générales</legend>
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="grid gap-1">
             <Label htmlFor="portfolioKind">Type de portefeuille</Label>
-            <select id="portfolioKind" name="portfolioKind" className={selectClass} defaultValue="Mixte">
+            <select id="portfolioKind" name="portfolioKind" className={selectClass} defaultValue={d.portfolioKind ?? "Mixte"}>
               <option value="IARD">IARD</option>
               <option value="Vie">Vie / prévoyance</option>
               <option value="Mixte">Mixte</option>
@@ -56,17 +75,17 @@ export function CreateListingForm({
           </div>
           <div className="grid gap-1">
             <Label htmlFor="branchActivity">Branche principale</Label>
-            <Input id="branchActivity" name="branchActivity" placeholder="Santé, auto, IARD…" />
+            <Input id="branchActivity" name="branchActivity" defaultValue={d.branchActivity} placeholder="Santé, auto, IARD…" />
           </div>
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="grid gap-1">
             <Label htmlFor="desiredCessionDate">Date de cession souhaitée</Label>
-            <Input id="desiredCessionDate" name="desiredCessionDate" placeholder="2026, T2 2027…" />
+            <Input id="desiredCessionDate" name="desiredCessionDate" defaultValue={d.desiredCessionDate} placeholder="2026, T2 2027…" />
           </div>
           <div className="grid gap-1">
             <Label htmlFor="cessionMotive">Motif de la cession</Label>
-            <select id="cessionMotive" name="cessionMotive" className={selectClass} defaultValue="">
+            <select id="cessionMotive" name="cessionMotive" className={selectClass} defaultValue={d.cessionMotive ?? ""}>
               <option value="">Non précisé</option>
               <option value="retraite">Départ à la retraite</option>
               <option value="recentrage">Recentrage d’activité</option>
@@ -84,14 +103,14 @@ export function CreateListingForm({
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="grid gap-1">
             <Label htmlFor="negotiable">Négociable</Label>
-            <select id="negotiable" name="negotiable" className={selectClass} defaultValue="yes">
+            <select id="negotiable" name="negotiable" className={selectClass} defaultValue={d.negotiable ?? "yes"}>
               <option value="yes">Oui</option>
               <option value="no">Non</option>
             </select>
           </div>
           <div className="grid gap-1">
             <Label htmlFor="sellerSupportMonths">Accompagnement</Label>
-            <select id="sellerSupportMonths" name="sellerSupportMonths" defaultValue="3" className={selectClass}>
+            <select id="sellerSupportMonths" name="sellerSupportMonths" defaultValue={d.sellerSupportMonths ?? "3"} className={selectClass}>
               <option value="0">Aucun (malus valorisation)</option>
               <option value="3">3 mois</option>
               <option value="6">6 mois ou plus</option>
@@ -157,7 +176,7 @@ export function CreateListingForm({
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="grid gap-1">
             <Label htmlFor="precompte">Précompte</Label>
-            <select id="precompte" name="precompte" className={selectClass} defaultValue="">
+            <select id="precompte" name="precompte" className={selectClass} defaultValue={d.precompte ?? ""}>
               <option value="">Non renseigné</option>
               <option value="yes">Oui</option>
               <option value="no">Non</option>
@@ -165,7 +184,7 @@ export function CreateListingForm({
           </div>
           <div className="grid gap-1">
             <Label htmlFor="precompteAmount">Montant du précompte</Label>
-            <Input id="precompteAmount" name="precompteAmount" placeholder="Si applicable" />
+            <Input id="precompteAmount" name="precompteAmount" defaultValue={d.precompteAmount} placeholder="Si applicable" />
           </div>
         </div>
       </fieldset>
@@ -174,7 +193,7 @@ export function CreateListingForm({
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="grid gap-1">
             <Label htmlFor="transferVehicle">Objet de la cession</Label>
-            <select id="transferVehicle" name="transferVehicle" className={selectClass} defaultValue="">
+            <select id="transferVehicle" name="transferVehicle" className={selectClass} defaultValue={d.transferVehicle ?? ""}>
               <option value="">Non précisé</option>
               <option value="parts">Cession de parts sociales</option>
               <option value="fonds">Cession de fonds de commerce / portefeuille</option>
@@ -183,11 +202,11 @@ export function CreateListingForm({
           </div>
           <div className="grid gap-1">
             <Label htmlFor="oriasCategories">Catégories ORIAS</Label>
-            <Input id="oriasCategories" name="oriasCategories" placeholder="COA, MIA…" />
+            <Input id="oriasCategories" name="oriasCategories" defaultValue={d.oriasCategories} placeholder="COA, MIA…" />
           </div>
           <div className="grid gap-1">
             <Label htmlFor="distribution">Mode de distribution</Label>
-            <select id="distribution" name="distribution" className={selectClass} defaultValue="">
+            <select id="distribution" name="distribution" className={selectClass} defaultValue={d.distribution ?? ""}>
               <option value="">Non précisé</option>
               <option value="agence">Agence / bureau</option>
               <option value="distance">Vente à distance</option>
@@ -196,11 +215,11 @@ export function CreateListingForm({
           </div>
           <div className="grid gap-1">
             <Label htmlFor="distanceShare">Part vente à distance</Label>
-            <Input id="distanceShare" name="distanceShare" placeholder="ex. 30 %" />
+            <Input id="distanceShare" name="distanceShare" defaultValue={d.distanceShare} placeholder="ex. 30 %" />
           </div>
           <div className="grid gap-1">
             <Label htmlFor="complianceDema">Démarchage téléphonique</Label>
-            <select id="complianceDema" name="complianceDema" className={selectClass} defaultValue="">
+            <select id="complianceDema" name="complianceDema" className={selectClass} defaultValue={d.complianceDema ?? ""}>
               <option value="">Non précisé</option>
               <option value="aucun">Aucun démarchage</option>
               <option value="conforme">Activité conforme Bloctel</option>
@@ -209,7 +228,7 @@ export function CreateListingForm({
           </div>
           <div className="grid gap-1">
             <Label htmlFor="rcProInsurer">Assureur RC professionnelle</Label>
-            <Input id="rcProInsurer" name="rcProInsurer" placeholder="Compagnie, n° de contrat" />
+            <Input id="rcProInsurer" name="rcProInsurer" defaultValue={d.rcProInsurer} placeholder="Compagnie, n° de contrat" />
           </div>
         </div>
       </fieldset>
@@ -218,21 +237,22 @@ export function CreateListingForm({
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="grid gap-1">
             <Label htmlFor="employeeCount">Effectif</Label>
-            <Input id="employeeCount" name="employeeCount" placeholder="Salariés, mandataires" />
+            <Input id="employeeCount" name="employeeCount" defaultValue={d.employeeCount} placeholder="Salariés, mandataires" />
           </div>
           <div className="grid gap-1">
             <Label htmlFor="introducersCount">Apporteurs d’affaires</Label>
-            <Input id="introducersCount" name="introducersCount" placeholder="Nombre, nature des accords" />
+            <Input id="introducersCount" name="introducersCount" defaultValue={d.introducersCount} placeholder="Nombre, nature des accords" />
           </div>
           <div className="grid gap-1 sm:col-span-2">
             <Label htmlFor="softwareStack">Logiciels métier</Label>
-            <Input id="softwareStack" name="softwareStack" placeholder="CRM, comparateur, GED…" />
+            <Input id="softwareStack" name="softwareStack" defaultValue={d.softwareStack} placeholder="CRM, comparateur, GED…" />
           </div>
           <div className="grid gap-1 sm:col-span-2">
             <Label htmlFor="socialCommitments">Engagements sociaux</Label>
             <textarea
               id="socialCommitments"
               name="socialCommitments"
+              defaultValue={d.socialCommitments}
               rows={3}
               className={areaClass}
               placeholder="Clauses de non-concurrence, reprise du personnel, location-gérance…"
@@ -243,6 +263,7 @@ export function CreateListingForm({
             <textarea
               id="pendingLitigation"
               name="pendingLitigation"
+              defaultValue={d.pendingLitigation}
               rows={3}
               className={areaClass}
               placeholder="Aucun, ou description sans nom de client final"
@@ -259,7 +280,7 @@ export function CreateListingForm({
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="grid gap-1">
             <Label htmlFor="ddaTraining">Formation DDA</Label>
-            <select id="ddaTraining" name="ddaTraining" className={selectClass} defaultValue="">
+            <select id="ddaTraining" name="ddaTraining" className={selectClass} defaultValue={d.ddaTraining ?? ""}>
               <option value="">Non précisé</option>
               <option value="a_jour">Formations à jour</option>
               <option value="en_cours">Plan de rattrapage en cours</option>
@@ -268,7 +289,7 @@ export function CreateListingForm({
           </div>
           <div className="grid gap-1">
             <Label htmlFor="amlProcedure">Dispositif LCB-FT</Label>
-            <select id="amlProcedure" name="amlProcedure" className={selectClass} defaultValue="">
+            <select id="amlProcedure" name="amlProcedure" className={selectClass} defaultValue={d.amlProcedure ?? ""}>
               <option value="">Non précisé</option>
               <option value="formalise">Formalisé</option>
               <option value="en_cours">Mise à jour en cours</option>
@@ -277,7 +298,7 @@ export function CreateListingForm({
           </div>
           <div className="grid gap-1">
             <Label htmlFor="sellerDependency">Dépendance au cédant</Label>
-            <select id="sellerDependency" name="sellerDependency" className={selectClass} defaultValue="">
+            <select id="sellerDependency" name="sellerDependency" className={selectClass} defaultValue={d.sellerDependency ?? ""}>
               <option value="">Non précisé</option>
               <option value="faible">Faible</option>
               <option value="moyenne">Moyenne</option>
@@ -286,15 +307,15 @@ export function CreateListingForm({
           </div>
           <div className="grid gap-1">
             <Label htmlFor="premisesStatus">Locaux</Label>
-            <Input id="premisesStatus" name="premisesStatus" placeholder="Bail, propriété, coworking…" className="mt-1.5 h-11 rounded-xl" />
+            <Input id="premisesStatus" name="premisesStatus" defaultValue={d.premisesStatus} placeholder="Bail, propriété, coworking…" className="mt-1.5 h-11 rounded-xl" />
           </div>
           <div className="grid gap-1 sm:col-span-2">
             <Label htmlFor="exclusiveMandates">Mandats exclusifs / compagnies clés</Label>
-            <Input id="exclusiveMandates" name="exclusiveMandates" placeholder="Sans nom de client final" className="mt-1.5 h-11 rounded-xl" />
+            <Input id="exclusiveMandates" name="exclusiveMandates" defaultValue={d.exclusiveMandates} placeholder="Sans nom de client final" className="mt-1.5 h-11 rounded-xl" />
           </div>
           <div className="grid gap-1 sm:col-span-2">
             <Label htmlFor="stornoShare">Storno / clawback commissions</Label>
-            <Input id="stornoShare" name="stornoShare" placeholder="ex. 4 % sur 12 mois" className="mt-1.5 h-11 rounded-xl" />
+            <Input id="stornoShare" name="stornoShare" defaultValue={d.stornoShare} placeholder="ex. 4 % sur 12 mois" className="mt-1.5 h-11 rounded-xl" />
           </div>
         </div>
       </fieldset>
@@ -305,6 +326,7 @@ export function CreateListingForm({
           <textarea
             id="presentation"
             name="presentation"
+              defaultValue={d.presentation}
             rows={7}
             className={areaClass}
             placeholder="Histoire, potentiel, profil des clients, points forts, compagnies, modalités de transmission…"
@@ -326,7 +348,7 @@ export function CreateListingForm({
       </label>
       {state.error ? <p className="text-sm text-danger">{state.error}</p> : null}
       <Button type="submit" disabled={pending}>
-        {pending ? "Création…" : "Enregistrer le brouillon"}
+        {pending ? "Enregistrement…" : listingId ? "Enregistrer les modifications" : "Enregistrer le brouillon"}
       </Button>
       <p className="text-[13px] leading-relaxed text-muted">
         Après enregistrement, déposez les PDF du cabinet (Kbis, ORIAS, RC pro, présentation)

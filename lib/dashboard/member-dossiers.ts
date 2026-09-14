@@ -11,6 +11,7 @@ import {
 import type { Actor } from "@/lib/authz/actor";
 import { pipelineProgressPercent } from "@/lib/deal/pipeline";
 import { formatEuroWhole } from "@/lib/format/number";
+import { commissionsCedees, listingLotTotals } from "@/lib/listing/lot-totals";
 import { asStringArray } from "@/lib/json-array";
 import { listMyProposalsAsSeller } from "@/lib/mandate/proposals";
 import { listMyPositions, positionSnapshot } from "@/lib/position/load";
@@ -55,6 +56,7 @@ export async function loadMemberDossiers(actor: Actor) {
   const dealsVendeur = deals.filter((d) => d.sellerId === actor.id);
   const dealsAcheteur = deals.filter((d) => d.buyerId === actor.id);
   const numerosVendus = new Set(dealsVendeur.map((d) => d.listing.publicNumber));
+  const lots = await listingLotTotals(positions.map((p) => p.position.listing).filter((l) => l.isPartial).map((l) => l.id));
   const suivis = await Promise.all(
     propositions.map((p) => positionSnapshot(p.listing.id, p.mandate.buyerId)),
   );
@@ -145,7 +147,7 @@ export async function loadMemberDossiers(actor: Actor) {
       percent: state.percent,
       bullets: [
         { text: position.listing.displayedZone },
-        { text: `Commissions : ${formatEuroWhole(Number(position.listing.portfolio.annualCommissions))} / an` },
+        { text: `Commissions : ${formatEuroWhole(commissionsCedees(position.listing, lots))} / an` },
       ],
       amount: formatEuroWhole(Number(deal ? deal.agreedPrice : position.listing.askingPrice)),
       active: state.outcome === "active",

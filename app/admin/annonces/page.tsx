@@ -4,6 +4,7 @@ import { getActor, isAdmin } from "@/lib/authz";
 import { formatDateTime } from "@/lib/format/fr";
 import { formatEuroWhole } from "@/lib/format/number";
 import { DATA_ROOM_KINDS } from "@/lib/listing/company-doc-kinds";
+import { commissionsCedees, listingLotTotals } from "@/lib/listing/lot-totals";
 import { listListingsToReview } from "@/lib/listing/review";
 
 export const metadata = { title: "Annonces à relire" };
@@ -13,6 +14,7 @@ export default async function AdminListingsReviewPage() {
   if (!actor) redirect("/connexion?next=/admin/annonces");
   if (!isAdmin(actor)) redirect("/app");
   const annonces = await listListingsToReview();
+  const lots = await listingLotTotals(annonces.filter((a) => a.isPartial).map((a) => a.id));
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-6">
@@ -59,7 +61,7 @@ export default async function AdminListingsReviewPage() {
                     <td className="px-3 py-3 text-right tabular">
                       {formatEuroWhole(Number(a.askingPrice))}
                       <span className="block text-[13px] text-muted">
-                        {formatEuroWhole(Number(a.portfolio.annualCommissions))} · {a.portfolio.contractCount} contrats
+                        {formatEuroWhole(commissionsCedees(a, lots))} · {lots.get(a.id)?.contractCount ?? a.portfolio.contractCount} contrats
                       </span>
                     </td>
                     <td className="max-w-[22rem] px-3 py-3 text-[13px] text-ink">{a.presentation?.slice(0, 400) || <span className="text-muted">Aucune</span>}</td>

@@ -67,7 +67,7 @@ export function nextAction(state: DashboardState): NextAction {
           ? "Une offre vous attend"
           : `${state.offersToReview} offres vous attendent`,
       detail:
-        "La fenêtre est close, les propositions sont visibles. Vous restez libre de toutes les refuser.",
+        "Comparez les propositions : vous en retenez une à la clôture de la séance, ou aucune.",
       href: state.offersListing ? `/app/annonces/${state.offersListing.id}/offres` : "/app",
       cta: "Examiner les offres",
     };

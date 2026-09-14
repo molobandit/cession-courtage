@@ -64,6 +64,7 @@ export default async function DealPiecePage({ params }: { params: Promise<{ id: 
       issuedAt={ctx.issuedAt}
       backHref={`/app/dossiers/${deal.id}`}
       signatures={signatures}
+      electronic
       banner={
         piece.startsWith("attestation-") ? (
           <p className="rounded-xl border border-indigo-line bg-indigo-soft px-4 py-3 text-[14px] text-ink">

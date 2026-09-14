@@ -83,8 +83,8 @@ export async function rejectListing(listingId: string, adminId: string, note: st
       userId: c.cedant.id,
       email: c.cedant.email,
       title: `Annonce à corriger · dossier n° ${c.listing.publicNumber}`,
-      body: `Motif : ${note}. Corrigez l’annonce puis soumettez-la de nouveau.`,
-      href: `/app/annonces/${listingId}`,
+      body: `Motif : ${note.replace(/[.\s]+$/, "")}. Corrigez l’annonce puis soumettez-la de nouveau.`,
+      href: `/app/annonces/${listingId}/modifier`,
     }).catch((e: unknown) => console.error("notify", e));
   }
 }
@@ -100,6 +100,7 @@ export async function listListingsToReview() {
       displayedZone: true,
       submittedForReviewAt: true,
       presentation: true,
+      isPartial: true,
       companyDocuments: { select: { kind: true } },
       portfolio: {
         select: {

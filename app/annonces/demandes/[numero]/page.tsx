@@ -7,6 +7,7 @@ import { ProposeListingForm } from "@/components/mandate/propose-listing-form";
 import { canBuy, canSell, getActor, getPublicMandateByNumber, isOriasVerified } from "@/lib/authz";
 import { formatEuroWhole } from "@/lib/format/number";
 import { LISTING_STATUS_LABELS } from "@/lib/labels";
+import { commissionsCedees, listingLotTotals } from "@/lib/listing/lot-totals";
 import {
   listMatchesForMandate,
   listMyProposalsOnMandate,
@@ -56,6 +57,7 @@ export default async function PublicMandateDetailPage({ params }: PageProps) {
         ])
       : [[], []];
   const proposees = new Set(dejaProposees.map((p) => p.listingId));
+  const lots = await listingLotTotals(propositions.filter((p) => p.listing.isPartial).map((p) => p.listing.id));
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-12">
@@ -137,7 +139,7 @@ export default async function PublicMandateDetailPage({ params }: PageProps) {
                           Portefeuille n° {p.listing.publicNumber} · cédant {p.seller.publicAlias}
                         </p>
                         <p className="mt-0.5 text-[14px] text-muted">
-                          {p.listing.displayedZone} · {formatEuroWhole(Number(p.listing.portfolio.annualCommissions))} de commissions / an ·{" "}
+                          {p.listing.displayedZone} · {formatEuroWhole(commissionsCedees(p.listing, lots))} de commissions / an ·{" "}
                           {LISTING_STATUS_LABELS[p.listing.status]}
                         </p>
                         {p.message ? (

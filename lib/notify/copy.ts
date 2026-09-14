@@ -22,7 +22,7 @@ export function offerReceivedCopy(input: {
     bodyText: [
       "Une offre a été déposée sur votre dossier.",
       "",
-      `Dossier n° ${input.publicNumber}. La fenêtre est close : vous pouvez comparer les montants dans l’espace membre.`,
+      `Dossier n° ${input.publicNumber}. La séance est close : comparez les offres et retenez-en une depuis votre carnet d’offres.`,
       "",
       `— ${BRAND_NAME}`,
     ].join("\n"),

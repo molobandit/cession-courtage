@@ -51,7 +51,7 @@ function commun(party: DocumentParty, oriasNumber: string) {
     heading: "Entre les soussignés",
     paragraphs: [
       `${PLATEFORME}, ci-après « la plateforme » ;`,
-      `${describeParty(party)}, immatriculation ORIAS n° ${fill(oriasNumber)}, ci-après « le courtier ».`,
+      `${describeParty({ ...party, oriasNumber: oriasNumber || party.oriasNumber })}, ci-après « le courtier ».`,
     ],
   };
 }

@@ -136,7 +136,7 @@ export function positionState(facts: PositionFacts): PositionState {
       percent: 8,
       outcome: "active",
       waitingFor: "buyer",
-      buyerMessage: "Les coordonnées sont ouvertes. Déposez votre offre pour vous engager sur le prix.",
+      buyerMessage: "Les coordonnées du cédant et ses PDF sont ouverts sur la fiche, onglet Documents. Déposez votre offre pour vous engager sur le prix.",
       sellerMessage: "L’acquéreur a versé son dépôt : vos coordonnées lui sont ouvertes. Son offre suit.",
     };
   }
