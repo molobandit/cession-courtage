@@ -17,7 +17,7 @@ export const PAYMENT_FAQ: { q: string; a: string }[] = [
   },
   {
     q: "Que se passe-t-il si la cession s’arrête ?",
-    a: "Le solde encore consigné revient à l’acquéreur. Un dépôt d’intérêt peut rester dû selon l’état du dossier, par exemple si l’engagement a déjà ouvert l’identité du cédant. Les honoraires de cession ne sont dus que si la vente aboutit, pour l’option vérifiée.",
+    a: "Le solde encore consigné revient à l’acquéreur. Un dépôt d’intérêt peut rester dû selon l’état du dossier, par exemple si l’engagement a déjà ouvert l’identité du cédant. Les honoraires de cession ne sont dus que si la vente aboutit, pour l’option certifiée.",
   },
   {
     q: "La signature sur le dossier est-elle déjà opposable ?",

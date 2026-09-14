@@ -138,7 +138,7 @@ export function buildIntermediationContract(party: DocumentParty, oriasNumber: s
       {
         heading: "Article 4. Rémunération",
         paragraphs: [
-          `La mise en vente est gratuite. L’annonce simple n’emporte aucune commission sur la cession. L’option portefeuille vérifié emporte des honoraires de ${VERIFIED_FEE_RANGE_LABEL} du prix de cession, avec un minimum de ${formatEuroWhole(SUCCESS_FEE_FLOOR_EUR)}, à la charge du cédant et dus exclusivement en cas de cession conclue.`,
+          `La mise en vente est gratuite. L’annonce simple n’emporte aucune commission sur la cession. L’option portefeuille certifié emporte des honoraires de ${VERIFIED_FEE_RANGE_LABEL} du prix de cession, avec un minimum de ${formatEuroWhole(SUCCESS_FEE_FLOOR_EUR)}, à la charge du cédant et dus exclusivement en cas de cession conclue.`,
           `L’accès au marché (contact des cédants et messagerie) est un abonnement de ${GROWTH_PLAN_ANNUAL_EUR.toLocaleString("fr-FR")} € HT par an. Aucune autre somme n’est due à la plateforme au titre du présent contrat.`,
         ],
       },

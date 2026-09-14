@@ -103,7 +103,7 @@ export default function ConditionsGeneralesPage() {
         <p>
           Deux options de cession coexistent. L’option annonce simple ne comporte
           pas de vérification détaillée de la société. L’option portefeuille
-          vérifié comprend le contrôle du Kbis, de l’identité du représentant,
+          certifié comprend le contrôle du Kbis, de l’identité du représentant,
           du justificatif ORIAS du dossier et des documents du portefeuille. Les
           honoraires de chaque option sont fixés par le contrat d’intermédiation
           signé sur la plateforme et ne sont dus qu’en cas de cession conclue.

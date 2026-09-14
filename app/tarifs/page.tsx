@@ -108,11 +108,11 @@ const FAQ = [
   },
   {
     q: "Que contrôlez-vous concrètement ?",
-    a: "Sur l’option vérifiée : Kbis et existence de la société, pièce d’identité du représentant, justificatif ORIAS du dossier, états de portefeuille et bordereaux de commissions. L’annonce simple repose sur les données déclarées. Dans les deux cas, le numéro ORIAS est contrôlé à l’inscription.",
+    a: "Sur l’option certifiée : Kbis et existence de la société, pièce d’identité du représentant, justificatif ORIAS du dossier, états de portefeuille et bordereaux de commissions. L’annonce simple repose sur les données déclarées. Dans les deux cas, le numéro ORIAS est contrôlé à l’inscription.",
   },
   {
     q: "Quand le vendeur est-il identifié ?",
-    a: `Après un dépôt de ${INTEREST_DEPOSIT_LABEL} du prix demandé. Avant cela, le cédant reste sous alias, même si vous êtes abonné, et même si le portefeuille est vérifié.`,
+    a: `Après un dépôt de ${INTEREST_DEPOSIT_LABEL} du prix demandé. Avant cela, le cédant reste sous alias, même si vous êtes abonné, et même si le portefeuille est certifié.`,
   },
   {
     q: "Combien coûte une vente ?",
@@ -280,7 +280,7 @@ export default async function TarifsPage({
             </h2>
             <p className="mx-auto mt-3 max-w-2xl text-[15px] text-muted">
               L’abonnement n’est pas une vérification. L’annonce simple publie
-              les données déclarées. L’option vérifiée contrôle la société, la
+              les données déclarées. L’option certifiée contrôle la société, la
               personne et le portefeuille.
             </p>
           </div>
@@ -296,7 +296,7 @@ export default async function TarifsPage({
                     Annonce simple
                   </th>
                   <th scope="col" className="px-5 py-4 text-center text-[14px] font-semibold text-ink">
-                    Portefeuille vérifié
+                    Portefeuille certifié
                   </th>
                 </tr>
               </thead>
@@ -336,7 +336,7 @@ export default async function TarifsPage({
                   Option 2 · {CERTIFIED_LABEL}
                 </p>
                 <h3 className="mt-4 text-2xl font-bold tracking-tight">
-                  Portefeuille vérifié
+                  Portefeuille certifié
                 </h3>
                 <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-white/80">
                   Contrôle de la société (souvent appelé KYB), de l’identité du
@@ -399,7 +399,7 @@ export default async function TarifsPage({
                 "Calculé sur le prix demandé",
                 "Dévoile les coordonnées du cédant",
                 "Messagerie anonyme avant le dépôt",
-                "Même un portefeuille vérifié reste sous alias jusqu’ici",
+                "Même un portefeuille certifié reste sous alias jusqu’ici",
               ]}
             />
             <ServiceCard

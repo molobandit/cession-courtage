@@ -72,7 +72,7 @@ export default async function OutilsPage() {
       tools: [
         {
           href: "/certification",
-          title: "Portefeuille vérifié",
+          title: "Portefeuille certifié",
           detail: "Kbis, identité, ORIAS du dossier et documents du portefeuille.",
         },
         {
