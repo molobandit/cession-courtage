@@ -36,7 +36,6 @@ const PLAN_ROWS: { label: string; free: boolean; paid: boolean }[] = [
   { label: "Détail pour se positionner", free: false, paid: true },
   { label: "Contact et messages", free: false, paid: true },
   { label: "Dépôt d’offre", free: false, paid: true },
-  { label: `Identité du vendeur (dépôt ${INTEREST_DEPOSIT_LABEL})`, free: false, paid: false },
 ];
 
 const COMPARE_ROWS: {
