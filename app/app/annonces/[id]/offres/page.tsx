@@ -63,7 +63,12 @@ export default async function ListingOffersPage({
         message: offer.message,
         status: offer.status,
         submittedAt: offer.submittedAt,
-        buyer: { publicAlias: offer.buyer.publicAlias },
+        buyer: {
+          publicAlias: offer.buyer.publicAlias,
+          financialCapacityEur: offer.buyer.financialCapacityEur,
+          financialCapacityStatus: offer.buyer.financialCapacityStatus,
+          financialCapacityAt: offer.buyer.financialCapacityAt,
+        },
       }))}
       access={result.access}
       canRetain={canRetain}

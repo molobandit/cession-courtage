@@ -9,7 +9,7 @@ export const PAYMENT_FAQ: { q: string; a: string }[] = [
   },
   {
     q: "Où va l’argent du prix de vente ?",
-    a: "Pas sur les comptes de La bourse du portefeuille. Le prix est conçu pour transiter par Trustap, le séquestre. Quatre cinquièmes partent à la signature. Le cinquième restant sort après le transfert et le contrôle de conservation. Tant que le contrat Trustap n’est pas validé, l’étape est enregistrée sur le dossier sans mouvement réel.",
+    a: "Pas sur les comptes de La bourse du portefeuille. Le prix est conçu pour transiter par Trustap, le séquestre. L’acquéreur y consigne le prix entier, dépôt déduit, après la signature. Les fonds sortent quand il confirme l’accord des compagnies sur le transfert. Tant que le contrat Trustap n’est pas validé, l’étape est enregistrée sur le dossier sans mouvement réel.",
   },
   {
     q: "À quoi sert Stripe alors ?",
@@ -29,7 +29,7 @@ export const PAYMENT_FAQ: { q: string; a: string }[] = [
   },
   {
     q: "Mon plafond carte ne passe pas. Que faire ?",
-    a: "Sous 999 euros, le dépôt d’intérêt est conçu pour Stripe, par carte, puis par prélèvement SEPA si ce moyen est ouvert au contrat. À partir de 999 euros, le versement rejoint Trustap. Le prix de cession, lui, va toujours au séquestre, jamais sur l’abonnement.",
+    a: "Choisissez le prélèvement SEPA au moment de payer le dépôt de garantie : il n’a pas de plafond de carte et s’encaisse sous quelques jours. Le prix de cession, lui, va toujours au séquestre, jamais sur l’abonnement.",
   },
   {
     q: "Puis-je emprunter pour acheter ?",

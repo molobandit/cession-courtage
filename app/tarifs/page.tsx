@@ -443,7 +443,7 @@ export default async function TarifsPage({
               price="Inclus"
               items={[
                 "Consignation jusqu’à la remise du portefeuille",
-                "Quatre cinquièmes à la signature, le reste après vérification",
+                "Prix entier consigné, dépôt déduit, libéré à l’accord des compagnies",
                 "Restitution à l’acquéreur si la vente n’aboutit pas",
                 "Aucun frais de séquestre en plus des honoraires",
               ]}

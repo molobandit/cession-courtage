@@ -11,6 +11,7 @@ import { counterpartyDisplayName, findMyDeal, getActor, isOriasVerified } from "
 import { dealPieces } from "@/lib/deal/pieces";
 import { pipelineProgressPercent } from "@/lib/deal/pipeline";
 import { stageTasks, tasksFor, type Side } from "@/lib/deal/process";
+import { escrowAmountAfterDeposit } from "@/lib/billing/deposit-fate";
 import { loadDealProcess } from "@/lib/deal/process-load";
 import { formatDate, formatDateTime, formatEuro } from "@/lib/format/fr";
 import { DEAL_STAGE_LABELS, ESCROW_STAGE_LABELS } from "@/lib/labels";
@@ -36,6 +37,8 @@ export default async function DealPage({ params }: { params: Promise<{ id: strin
   const counterpartyLabel = counterpartyDisplayName(counterparty);
   const agreed = Number(p.deal.agreedPrice);
   const upfront = Number(p.deal.upfrontAmount);
+  const depot = Number(p.deal.listing.deposits.find((d) => d.buyerId === p.deal.buyerId)?.amount ?? 0);
+  const auSequestre = escrowAmountAfterDeposit(upfront, depot);
 
   const suivi = tasksFor(p.snapshot, side);
   const tasks = stageTasks(p.snapshot);
@@ -88,7 +91,7 @@ export default async function DealPage({ params }: { params: Promise<{ id: strin
         </div>
         <div>
           <dt className="text-[12px] uppercase tracking-wide text-muted">Montant au séquestre</dt>
-          <dd className="tabular mt-1 text-[15px] font-semibold">{formatEuro(upfront)}</dd>
+          <dd className="tabular mt-1 text-[15px] font-semibold">{formatEuro(auSequestre)}</dd>
         </div>
         <div className="sm:col-span-2">
           <dt className="text-[12px] uppercase tracking-wide text-muted">Compagnies cédées</dt>
@@ -245,7 +248,7 @@ export default async function DealPage({ params }: { params: Promise<{ id: strin
         progress={{ percent: pipelineProgressPercent(deal.stage), tone: deal.stage === "CLOSED" ? "closed" : "active" }}
         figures={[
           { label: "Prix convenu", value: formatEuro(agreed) },
-          { label: "Au séquestre", value: formatEuro(upfront), note: "Dépôt de garantie déduit au versement" },
+          { label: "Au séquestre", value: formatEuro(auSequestre), note: depot > 0 ? `Dépôt de garantie de ${formatEuro(depot)} déduit` : "Prix convenu entier" },
           { label: "Libération", value: "Accord des compagnies", note: "Après la signature" },
           { label: "Séquestre", value: ESCROW_STAGE_LABELS[deal.escrowStage as keyof typeof ESCROW_STAGE_LABELS] ?? deal.escrowStage },
         ]}

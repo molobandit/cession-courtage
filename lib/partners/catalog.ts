@@ -42,7 +42,7 @@ export const PARTNERS: PartnerCopy[] = [
     purpose:
       "Conservation du prix de vente et des dépôts à partir de 999 euros, hors des comptes de La bourse du portefeuille, puis libération par étapes.",
     detail:
-      "Trustap est prévu pour le séquestre, certifié PCI DSS de niveau 1, avec les contrôles d’identité et de lutte contre le blanchiment exigés pour ce métier. L’acquéreur verse d’abord la part comptant, soit quatre cinquièmes du prix convenu. La libération suit la signature, le transfert auprès des compagnies et de l’ORIAS, puis la période de vérification pour le cinquième restant. Un litige reste chez Trustap, pas chez l’éditeur. Si la cession s’arrête, le solde consigné revient à l’acquéreur.",
+      "Trustap est prévu pour le séquestre, certifié PCI DSS de niveau 1, avec les contrôles d’identité et de lutte contre le blanchiment exigés pour ce métier. L’acquéreur consigne le prix convenu, dépôt de garantie déduit, après la signature. Les fonds sont libérés au cédant quand l’acquéreur confirme l’accord des compagnies sur le transfert. Un litige reste chez Trustap, pas chez l’éditeur. Si la cession s’arrête, le solde consigné revient à l’acquéreur.",
     termsUrl: "https://www.trustap.com/terms/",
     logoSrc: "/partners/trustap.svg",
   },
@@ -103,7 +103,7 @@ export const TRUST_PILLARS: { title: string; body: string }[] = [
   },
   {
     title: "Libération conditionnée",
-    body: "Quatre cinquièmes du prix sont consignés à la signature. Le cinquième restant sort après le transfert et le contrôle de conservation du portefeuille.",
+    body: "Le prix entier est consigné après la signature, dépôt déduit. Il sort quand l’acquéreur confirme l’accord des compagnies sur le transfert.",
   },
   {
     title: "Preuve de signature",
@@ -126,7 +126,7 @@ export const READY_BADGE = "Prêt. Contrat à valider";
 
 /** Phrase unique pour les écrans qui parlent encore d’encaissement. */
 export const CESSION_FUNDS_DISCLAIMER =
-  "La bourse du portefeuille n’encaisse pas le prix de cession. Tant que Trustap n’est pas activé, dépôt et séquestre s’enregistrent sans mouvement d’argent.";
+  "La bourse du portefeuille n’encaisse pas le prix de cession. Le dépôt de garantie se paie par carte ou prélèvement SEPA auprès d’un prestataire agréé ; tant que le séquestre n’est pas activé, le prix s’enregistre sur le dossier sans mouvement d’argent.";
 
 export function hasForbiddenDash(text: string): boolean {
   return /[—–]/.test(text) || / - /.test(text);
