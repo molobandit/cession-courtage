@@ -111,6 +111,7 @@ export async function listMyListings(actor?: Actor) {
       askingPrice: true,
       displayedZone: true,
       isPartial: true,
+      reviewNote: true,
       publishedAt: true,
       offerWindowClosesAt: true,
       portfolio: { select: { id: true, label: true, annualCommissions: true } },

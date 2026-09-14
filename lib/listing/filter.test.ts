@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   EMPTY_FILTERS,
+  bestDeals,
   countActiveFilters,
   filterListings,
   isWindowOpen,
@@ -119,6 +120,14 @@ describe("sortListings", () => {
 
   it("trie par commissions décroissantes", () => {
     expect(sortListings(LOT, "commissions-desc")[0]!.id).toBe("c");
+  });
+
+  it("meilleures affaires : achetables d’abord, multiple le plus bas en tête", () => {
+    // a : 20 000 / 5 000 = 4 ; b : 5 000 / 5 000 = 1 ; c : 50 000 / 30 000 ≈ 1,67
+    expect(sortListings(LOT, "best").map((l) => l.id)).toEqual(["b", "c", "a"]);
+    const vendu = listing({ id: "v", askingPrice: 1000, annualCommissions: 5000, status: "SOLD" });
+    expect(sortListings([...LOT, vendu], "best").at(-1)!.id).toBe("v");
+    expect(bestDeals([...LOT, vendu], 2).map((l) => l.id)).toEqual(["b", "c"]);
   });
 
   it("ne modifie pas la liste d'origine", () => {

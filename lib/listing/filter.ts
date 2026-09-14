@@ -32,7 +32,7 @@ export type CatalogueFilters = {
   certifiedOnly: boolean;
 };
 
-export type SortKey = "recent" | "price-asc" | "price-desc" | "commissions-desc";
+export type SortKey = "best" | "recent" | "price-asc" | "price-desc" | "commissions-desc";
 
 export const EMPTY_FILTERS: CatalogueFilters = {
   zone: "",
@@ -89,8 +89,43 @@ export function filterListings<T extends FilterableListing>(
   });
 }
 
+const HORS_MARCHE = new Set(["SOLD", "UNDER_NEGOTIATION", "WITHDRAWN", "DRAFT", "PENDING_REVIEW"]);
+
+/** Encore achetable : ni vendu, ni en négociation exclusive, ni retiré. */
+export function isTradable(listing: Pick<FilterableListing, "status">): boolean {
+  return !HORS_MARCHE.has(listing.status);
+}
+
+/**
+ * Multiple payé : prix demandé ÷ commissions annuelles. Plus il est bas, plus
+ * l'affaire est bonne pour l'acquéreur. Sans commissions, pas de multiple.
+ */
+export function dealMultiple(listing: Pick<FilterableListing, "askingPrice" | "annualCommissions">): number | null {
+  return listing.annualCommissions > 0 ? listing.askingPrice / listing.annualCommissions : null;
+}
+
+/**
+ * Meilleures affaires : les portefeuilles achetables d'abord, du multiple le
+ * plus bas au plus haut. C'est le tri qu'un acquéreur fait de tête sur le bon
+ * coin : « qu'est-ce qui rapporte le plus pour ce que ça coûte ? ».
+ */
+export function compareBestDeals(a: FilterableListing, b: FilterableListing): number {
+  const ta = isTradable(a) ? 0 : 1;
+  const tb = isTradable(b) ? 0 : 1;
+  if (ta !== tb) return ta - tb;
+  const ma = dealMultiple(a) ?? Number.POSITIVE_INFINITY;
+  const mb = dealMultiple(b) ?? Number.POSITIVE_INFINITY;
+  if (ma !== mb) return ma - mb;
+  return b.annualCommissions - a.annualCommissions;
+}
+
+export function bestDeals<T extends FilterableListing>(listings: T[], limit: number): T[] {
+  return listings.filter(isTradable).sort(compareBestDeals).slice(0, limit);
+}
+
 export function sortListings<T extends FilterableListing>(listings: T[], sort: SortKey): T[] {
   const sorted = [...listings];
+  if (sort === "best") sorted.sort(compareBestDeals);
   if (sort === "price-asc") sorted.sort((a, b) => a.askingPrice - b.askingPrice);
   if (sort === "price-desc") sorted.sort((a, b) => b.askingPrice - a.askingPrice);
   if (sort === "commissions-desc")

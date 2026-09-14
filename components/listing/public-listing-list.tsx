@@ -16,6 +16,7 @@ import type { PublicListingCard } from "@/lib/listing/public-card";
 export type { PublicListingCard };
 
 const SORT_LABELS: Record<SortKey, string> = {
+  best: "Meilleures affaires",
   recent: "Les plus récentes",
   "price-asc": "Prix croissant",
   "price-desc": "Prix décroissant",
@@ -30,7 +31,9 @@ export function PublicListingList({
   initialFilters,
   showDetailedFilters = false,
   accountHref,
+  initialSort = "recent",
 }: {
+  initialSort?: SortKey;
   listings: PublicListingCard[];
   initialFilters?: Partial<CatalogueFilters>;
   showDetailedFilters?: boolean;
@@ -40,7 +43,7 @@ export function PublicListingList({
     ...EMPTY_FILTERS,
     ...initialFilters,
   });
-  const [sort, setSort] = useState<SortKey>("recent");
+  const [sort, setSort] = useState<SortKey>(initialSort);
 
   const { zone, carrier, risk, segment, maxPrice, q, openOnly, certifiedOnly } = filters;
   const patch = (change: Partial<CatalogueFilters>) =>

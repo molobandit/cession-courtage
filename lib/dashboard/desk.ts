@@ -8,6 +8,7 @@ import { listMyDirectDeals } from "@/lib/direct/load";
 import { stepByKey, type DirectStage } from "@/lib/direct/stages";
 import { formatEuroWhole } from "@/lib/format/number";
 import { marketStatus } from "@/lib/listing/market-status";
+import { bestDeals } from "@/lib/listing/filter";
 import { loadPublicListingCards } from "@/lib/listing/load-public-cards";
 import { commissionsCedees, listingLotTotals } from "@/lib/listing/lot-totals";
 import { listMyProposalsAsSeller } from "@/lib/mandate/proposals";
@@ -130,7 +131,7 @@ export async function loadDesk(actor: Actor) {
       issue: "active",
     });
     if (annonce.status === "DRAFT") {
-      aFaire.push({ key: `t-draft-${annonce.id}`, href: `/app/annonces/${annonce.id}`, icon: "megaphone", title: `Publier l’annonce · N° ${annonce.publicNumber}`, detail: "Tant qu’elle est en brouillon, aucun acquéreur ne la voit.", cta: "Publier" });
+      aFaire.push({ key: `t-draft-${annonce.id}`, href: `/app/annonces/${annonce.id}`, icon: "megaphone", title: `${annonce.reviewNote ? "Corriger" : "Soumettre"} l’annonce · N° ${annonce.publicNumber}`, detail: annonce.reviewNote ? `L’équipe l’a renvoyée : ${annonce.reviewNote.replace(/[.\s]+$/, "")}.` : "Gratuit : notre équipe la relit, puis la met en ligne.", cta: annonce.reviewNote ? "Corriger" : "Soumettre" });
     } else if (offres.length) {
       const meilleure = Math.max(...offres.map((o) => Number(o.offer?.amount ?? 0)));
       aFaire.push({ key: `t-offres-${annonce.id}`, href: `/app/annonces/${annonce.id}/offres`, icon: "megaphone", title: `${offres.length} offre${offres.length > 1 ? "s" : ""} ${scelle ? "en séance" : "à examiner"} · N° ${annonce.publicNumber}`, detail: `Meilleure offre ${formatEuroWhole(meilleure)} pour ${formatEuroWhole(Number(annonce.askingPrice))} demandés`, cta: "Comparer", urgent: true });
@@ -190,6 +191,8 @@ export async function loadDesk(actor: Actor) {
     indices,
     cote,
     bandeau,
+    /** Les portefeuilles achetables au multiple le plus bas, hors les siens. */
+    meilleures: bestDeals(cartes.filter((c) => !annonces.some((a) => a.id === c.id)), 3),
     aFaire: aFaire.slice(0, 6),
     lignes,
     enAttenteDuCedant: positions.filter((p) => p.state.key === "OFFER").length,

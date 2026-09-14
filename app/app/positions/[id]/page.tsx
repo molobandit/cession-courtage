@@ -179,7 +179,7 @@ export default async function PositionPage({ params }: { params: Promise<{ id: s
   return (
     <main className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 sm:py-8">
       <DeskPageHeader
-        back={{ href: estAcheteur ? "/app/achats" : "/app/cessions", label: estAcheteur ? "Mes achats" : "Mes cessions" }}
+        back={{ href: estAcheteur ? "/app/achats" : "/app/cessions", label: estAcheteur ? "Mes achats" : "Mes ventes" }}
         kicker={estAcheteur ? "Position Acheteur" : `Candidat ${position.buyer.publicAlias}`}
         badge={<span className="text-[13px] text-muted">pris le {formatDateTime(position.createdAt)}</span>}
         title={`Dossier N° ${listing.publicNumber} — ${state.title}`}

@@ -14,18 +14,14 @@ import { cn } from "@/lib/utils";
  */
 
 /**
- * Bandeau d'en-tête : le dégradé bleu de la marque, texte noir.
+ * Encadré simple : fond blanc, bord fin.
  *
- * C'est le bleu d'origine, redemandé tel quel. Le texte reste noir et en gras,
- * les chiffres sur des cartes claires pour se lire sans fatigue.
+ * Le grand bandeau en dégradé a été retiré à la demande du propriétaire, qui
+ * veut un intérieur aussi simple qu'assurdeal ou le bon coin : on lit le titre
+ * et les chiffres, rien ne détourne l'œil.
  */
 export function DeskBand({ children }: { children: React.ReactNode }) {
-  return (
-    <section className="relative overflow-hidden rounded-[1.75rem] bg-gradient-to-br from-indigo via-indigo-mid to-indigo-dark text-ink shadow-[0_24px_60px_-30px_rgba(37,99,235,0.7)]">
-      <div className="pointer-events-none absolute -right-20 -top-24 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
-      <div className="relative">{children}</div>
-    </section>
-  );
+  return <section className="rounded-2xl border border-line bg-paper">{children}</section>;
 }
 
 export function LivePill({ label = "En séance" }: { label?: string }) {
@@ -56,16 +52,16 @@ export function DeskKpi({
 }) {
   const contenu = (
     <>
-      <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-indigo-dark">{label}</p>
-      <p className={cn("tabular mt-2 text-[1.9rem] font-bold leading-none tracking-tight", accent ? "text-indigo" : "text-ink")}>
+      <p className="text-[13px] text-muted">{label}</p>
+      <p className={cn("tabular mt-1 text-[1.5rem] font-bold leading-tight tracking-tight", accent ? "text-indigo-dark" : "text-ink")}>
         {value}
       </p>
       {note ? <p className="mt-2 text-[12px] leading-snug text-muted">{note}</p> : null}
     </>
   );
-  const classe = "block h-full rounded-2xl border border-white/70 bg-white/80 p-4 transition";
+  const classe = "block h-full rounded-xl border border-line bg-paper p-4 transition";
   return href ? (
-    <Link href={href} className={cn(classe, "hover:border-indigo hover:bg-paper")}>
+    <Link href={href} className={cn(classe, "hover:border-indigo")}>
       {contenu}
     </Link>
   ) : (
@@ -333,9 +329,9 @@ export function DeskPanel({
 export type DeskFigure = { label: string; value: string; note?: string; accent?: boolean };
 
 /**
- * En-tête commun des pages du poste : fil de retour, étiquette, titre,
- * avancement et chiffres clés, dans le même bandeau bleu clair que le tableau
- * de bord. Chaque page commence ainsi par ce qu'on vient y lire.
+ * En-tête commun des pages de l'espace membre : fil de retour, titre, ce qu'on
+ * vient faire, puis les chiffres clés dans des cases blanches. Sans bandeau
+ * coloré, comme les plateformes que les courtiers utilisent déjà.
  */
 export function DeskPageHeader({
   back,
@@ -357,59 +353,55 @@ export function DeskPageHeader({
   actions?: React.ReactNode;
 }) {
   return (
-    <div>
+    <header>
       {back ? (
         <Link href={back.href} className="mb-3 inline-flex items-center gap-2 text-[14px] text-muted hover:text-ink">
           <ToolIcon name="arrow-left" className="h-4 w-4" />
           {back.label}
         </Link>
       ) : null}
-      <DeskBand>
-        <div className="p-5 sm:p-7">
-          <div className="flex flex-wrap items-start justify-between gap-5">
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2.5">
-                {kicker ? (
-                  <span className="text-[12px] font-bold uppercase tracking-[0.18em] text-ink">{kicker}</span>
-                ) : null}
-                {badge}
-              </div>
-              <h1 className="mt-2 text-[1.7rem] font-bold leading-tight tracking-tight text-ink sm:text-[2.1rem]">{title}</h1>
-              {subtitle ? <p className="mt-2 max-w-2xl text-[15px] font-medium leading-relaxed text-ink">{subtitle}</p> : null}
-            </div>
-            {actions ? <div className="flex flex-wrap gap-2.5">{actions}</div> : null}
-          </div>
-
-          {progress ? (
-            <div className="mt-5 flex items-center gap-3">
-              <div
-                className="h-2.5 flex-1 overflow-hidden rounded-full bg-paper"
-                role="progressbar"
-                aria-valuenow={progress.percent}
-                aria-valuemin={0}
-                aria-valuemax={100}
-              >
-                <div
-                  className={cn(
-                    "h-full rounded-full",
-                    progress.tone === "closed" ? "bg-ok" : progress.tone === "lost" ? "bg-muted/40" : "bg-indigo",
-                  )}
-                  style={{ width: `${Math.max(progress.percent, 3)}%` }}
-                />
-              </div>
-              <span className="tabular w-12 text-right text-[15px] font-bold text-ink">{progress.percent} %</span>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="min-w-0">
+          {kicker || badge ? (
+            <div className="flex flex-wrap items-center gap-2">
+              {kicker ? <span className="text-[13px] text-muted">{kicker}</span> : null}
+              {badge}
             </div>
           ) : null}
-
-          {figures && figures.length ? (
-            <div className={cn("mt-5 grid gap-3", figures.length >= 4 ? "grid-cols-2 lg:grid-cols-4" : "grid-cols-2 sm:grid-cols-3")}>
-              {figures.map((f) => (
-                <DeskKpi key={f.label} label={f.label} value={f.value} note={f.note} accent={f.accent} />
-              ))}
-            </div>
-          ) : null}
+          <h1 className="mt-1 text-2xl font-bold leading-tight tracking-tight text-ink sm:text-[1.75rem]">{title}</h1>
+          {subtitle ? <p className="mt-1.5 max-w-2xl text-[15px] leading-relaxed text-muted">{subtitle}</p> : null}
         </div>
-      </DeskBand>
-    </div>
+        {actions ? <div className="flex flex-wrap gap-2.5">{actions}</div> : null}
+      </div>
+
+      {progress ? (
+        <div className="mt-4 flex max-w-xl items-center gap-3">
+          <div
+            className="h-2 flex-1 overflow-hidden rounded-full bg-surface-alt"
+            role="progressbar"
+            aria-valuenow={progress.percent}
+            aria-valuemin={0}
+            aria-valuemax={100}
+          >
+            <div
+              className={cn(
+                "h-full rounded-full",
+                progress.tone === "closed" ? "bg-ok" : progress.tone === "lost" ? "bg-muted/40" : "bg-indigo",
+              )}
+              style={{ width: `${Math.max(progress.percent, 3)}%` }}
+            />
+          </div>
+          <span className="tabular text-[14px] font-semibold text-ink">{progress.percent} %</span>
+        </div>
+      ) : null}
+
+      {figures && figures.length ? (
+        <div className={cn("mt-5 grid gap-3", figures.length >= 4 ? "grid-cols-2 lg:grid-cols-4" : "grid-cols-2 sm:grid-cols-3")}>
+          {figures.map((f) => (
+            <DeskKpi key={f.label} label={f.label} value={f.value} note={f.note} accent={f.accent} />
+          ))}
+        </div>
+      ) : null}
+    </header>
   );
 }

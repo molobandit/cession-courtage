@@ -36,7 +36,7 @@ export async function takePositionAction(
   if (!isOriasVerified(actor)) redirect("/en-attente-orias");
   if (!canBuy(actor)) return { error: "Ce compte ne peut pas acquérir de portefeuille." };
   if (ownsFirm(actor, listing.portfolio.firmId)) {
-    return { error: "C’est votre propre annonce : suivez les candidats depuis « Mes cessions »." };
+    return { error: "C’est votre propre annonce : suivez les candidats depuis « Mes ventes »." };
   }
   if (!(await hasContactSubscription(actor))) {
     redirect(`/tarifs?next=${encodeURIComponent(fiche)}#abonnements`);

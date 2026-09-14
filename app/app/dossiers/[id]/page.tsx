@@ -233,7 +233,7 @@ export default async function DealPage({ params }: { params: Promise<{ id: strin
   return (
     <main className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 sm:py-8 lg:py-10">
       <DeskPageHeader
-        back={{ href: isSeller ? "/app/cessions" : "/app/achats", label: isSeller ? "Mes cessions" : "Mes achats" }}
+        back={{ href: isSeller ? "/app/cessions" : "/app/achats", label: isSeller ? "Mes ventes" : "Mes achats" }}
         kicker={isSeller ? "Dossier de cession" : "Dossier d’acquisition"}
         badge={
           <span className="rounded-full border border-indigo-line bg-paper px-2.5 py-0.5 text-[12px] font-semibold text-indigo-dark">

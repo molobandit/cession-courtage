@@ -16,7 +16,9 @@ export const metadata: Metadata = {
   alternates: { canonical: "/annonces" },
 };
 
-export default async function PublicListingsPage() {
+export default async function PublicListingsPage({ searchParams }: { searchParams: Promise<{ tri?: string }> }) {
+  const { tri } = await searchParams;
+  const meilleures = tri === "meilleures";
   const cards = await loadPublicListingCards();
   const actor = await getActor();
   const mandateHref =
@@ -33,15 +35,27 @@ export default async function PublicListingsPage() {
 
   return (
     <main>
-      <PageIntro title={MARKET_HALL_TITLE}>
-        Portefeuilles disponibles. Les filtres détaillés (zone, branches, budget)
-        se règlent dans le compte, puis s’appliquent ici une fois connecté.
+      <PageIntro title={meilleures ? "Meilleures affaires" : MARKET_HALL_TITLE}>
+        {meilleures
+          ? "Les portefeuilles encore achetables, du plus rentable au moins rentable pour le prix demandé."
+          : "Tous les portefeuilles à vendre. Filtrez, comparez, prenez position."}
       </PageIntro>
       <div className="mx-auto max-w-6xl px-4 py-8">
           <nav className="flex flex-wrap gap-2" aria-label="Type de dossier">
-            <span className="rounded-full bg-indigo px-4 py-2 text-[14px] font-medium text-white">
-              Portefeuilles à céder
-            </span>
+            <Link
+              href="/annonces"
+              aria-current={meilleures ? undefined : "page"}
+              className={meilleures ? "rounded-full border border-line px-4 py-2 text-[14px] text-muted hover:border-indigo hover:text-indigo" : "rounded-full bg-indigo px-4 py-2 text-[14px] font-medium !text-white"}
+            >
+              Portefeuilles à vendre
+            </Link>
+            <Link
+              href="/annonces?tri=meilleures"
+              aria-current={meilleures ? "page" : undefined}
+              className={meilleures ? "rounded-full bg-indigo px-4 py-2 text-[14px] font-medium !text-white" : "rounded-full border border-line px-4 py-2 text-[14px] text-muted hover:border-indigo hover:text-indigo"}
+            >
+              Meilleures affaires
+            </Link>
             <Link
               href="/annonces/demandes"
               className="rounded-full border border-line px-4 py-2 text-[14px] text-muted hover:border-indigo hover:text-indigo"
@@ -64,7 +78,9 @@ export default async function PublicListingsPage() {
           </div>
         ) : (
           <PublicListingList
+            key={meilleures ? "best" : "all"}
             listings={cards}
+            initialSort={meilleures ? "best" : "recent"}
             initialFilters={initialFilters}
             showDetailedFilters={showDetailedFilters}
             accountHref={actor ? "/app/profil#recherche" : "/connexion?next=/annonces"}
