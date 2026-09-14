@@ -11,6 +11,9 @@ describe("safeInternalPath", () => {
     expect(safeInternalPath("https://evil.example")).toBeNull();
     expect(safeInternalPath("//evil.example")).toBeNull();
     expect(safeInternalPath("annonces")).toBeNull();
+    // Les navigateurs lisent « /\ » comme « // » : un autre site.
+    expect(safeInternalPath("/\\evil.example")).toBeNull();
+    expect(safeInternalPath(" //evil.example")).toBeNull();
   });
 });
 

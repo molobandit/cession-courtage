@@ -14,6 +14,7 @@ import { notifySignupReceived } from "@/lib/notify/transactional";
 import { hashPassword } from "@/lib/auth/password";
 import { FREE_PLAN_DEAL_QUOTA, SUCCESS_FEE_RATE } from "@/lib/billing/rates";
 import { departmentFromPostalCode, geoForDepartment } from "@/lib/geo";
+import { safeInternalPath } from "@/lib/nav/safe-next";
 import {
   emailCodeSchema,
   loginSchema,
@@ -257,7 +258,7 @@ export async function loginAction(_prev: FormState, formData: FormData): Promise
     return { fieldErrors, error: firstIssue(fieldErrors) };
   }
   const next = String(formData.get("next") || "/app");
-  const safeNext = next.startsWith("/") && !next.startsWith("//") ? next : "/app";
+  const safeNext = safeInternalPath(next) ?? "/app";
 
   // Verrou progressif : sans lui, rien n'empeche d'essayer des mots de passe en
   // boucle sur un compte connu.

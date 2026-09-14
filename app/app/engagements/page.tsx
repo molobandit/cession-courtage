@@ -6,12 +6,13 @@ import { AGREEMENTS } from "@/lib/account/agreements";
 import { loadAgreementsStatus } from "@/lib/account/agreements-load";
 import { getActor, isOriasVerified } from "@/lib/authz";
 import { formatDate } from "@/lib/format/fr";
+import { safeInternalPath } from "@/lib/nav/safe-next";
 
 export const metadata = { title: "Mes engagements" };
 
 function retourSur(next: string | undefined): string | null {
   // Seules les adresses internes sont suivies : un lien extérieur ne sert pas de retour.
-  return next && next.startsWith("/") && !next.startsWith("//") ? next : null;
+  return safeInternalPath(next);
 }
 
 export default async function AgreementsPage({ searchParams }: { searchParams: Promise<{ next?: string }> }) {

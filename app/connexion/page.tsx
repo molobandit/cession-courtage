@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { LoginForm } from "@/components/auth/login-form";
 import { getActor, isAdmin, isInvestor, isOriasVerified } from "@/lib/authz";
+import { safeInternalPath } from "@/lib/nav/safe-next";
 
 export const metadata = { title: "Connexion" };
 
@@ -24,7 +25,7 @@ export default async function LoginPage({
   } catch {
     nextPath = "/app";
   }
-  if (!nextPath.startsWith("/") || nextPath.startsWith("//")) nextPath = "/app";
+  nextPath = safeInternalPath(nextPath) ?? "/app";
   const invalidLink = params.error === "lien-invalide";
 
   const actor = await getActor();
