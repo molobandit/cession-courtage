@@ -320,11 +320,6 @@ export default async function TarifsPage({
               </tbody>
             </table>
           </div>
-          <p className="mt-3 text-center text-[13px] text-muted">
-            Le numéro ORIAS est contrôlé pour tous les comptes. Sur l’annonce
-            simple, nous ne relisons pas le Kbis, la pièce d’identité ni les
-            bordereaux du dossier.
-          </p>
 
           <article
             id="services"
