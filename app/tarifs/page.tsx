@@ -7,9 +7,6 @@ import { hasContactSubscription } from "@/lib/billing/contact-access";
 import {
   GROWTH_PLAN_ANNUAL_EUR,
   INTEREST_DEPOSIT_LABEL,
-  SIMPLE_FEE_LABEL,
-  SUCCESS_FEE_FLOOR_EUR,
-  VERIFIED_FEE_RANGE_LABEL,
   VERIFIED_FEE_RATE_MAX,
   VERIFIED_FEE_RATE_MIN,
   interestDepositFor,
@@ -60,11 +57,6 @@ const COMPARE_ROWS: {
   { label: "Justificatif ORIAS du dossier", simple: "non", verified: "oui" },
   { label: "États de portefeuille et bordereaux", simple: "non", verified: "oui" },
   { label: "Badge en salle de marché", simple: "Non certifié", verified: CERTIFIED_LABEL },
-  {
-    label: "Honoraires si la vente aboutit",
-    simple: SIMPLE_FEE_LABEL,
-    verified: VERIFIED_FEE_RANGE_LABEL,
-  },
 ];
 
 const VERIFIED_PILLS = [
@@ -130,7 +122,7 @@ const FAQ = [
   },
   {
     q: "Combien coûte une vente ?",
-    a: `L’annonce simple est à ${SIMPLE_FEE_LABEL} de commission. L’option vérifiée est à ${VERIFIED_FEE_RANGE_LABEL}, uniquement si la vente aboutit. Plancher de ${formatEuroWhole(SUCCESS_FEE_FLOOR_EUR)} sur les très petits dossiers vérifiés. Le séquestre est inclus, sans frais supplémentaires.`,
+    a: "La mise en vente est gratuite. Les honoraires sont précisés dans le contrat d’intermédiation signé sur la plateforme, et ne sont dus que si la vente aboutit. Le séquestre est inclus, sans frais supplémentaires.",
   },
   {
     q: "Quand l’argent est-il débloqué ?",
@@ -366,11 +358,9 @@ export default async function TarifsPage({
                 </p>
               </div>
               <div className="shrink-0 text-right">
-                <p className="tabular text-4xl font-bold sm:text-5xl">
-                  {VERIFIED_FEE_RANGE_LABEL}
-                </p>
+                <p className="text-2xl font-bold sm:text-3xl">Au contrat</p>
                 <p className="mt-1 text-[13px] text-white/70">
-                  Plancher {formatEuroWhole(SUCCESS_FEE_FLOOR_EUR)}
+                  Dus seulement si la vente aboutit
                 </p>
               </div>
             </div>
@@ -427,9 +417,9 @@ export default async function TarifsPage({
             <ServiceCard
               title="Annonce simple"
               lede="Le portefeuille est présenté tel que déclaré, sans relecture des pièces."
-              price={SIMPLE_FEE_LABEL}
+              price="Gratuit"
               items={[
-                "Aucune commission sur la vente",
+                "Mise en vente gratuite",
                 "Pas de Kbis, pièce d’identité ni bordereaux contrôlés",
                 "Statut non certifié en salle de marché",
                 "Paiement via séquestre, comme l’option 2",

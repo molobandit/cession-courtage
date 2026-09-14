@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BrandMark } from "@/components/brand-mark";
@@ -51,9 +51,7 @@ export function MemberShell({
   return (
     <div className="flex min-h-dvh bg-page">
       <aside className="sticky top-0 hidden h-dvh shrink-0 lg:flex">
-        <Suspense fallback={<div className="h-full w-60 border-r border-indigo/25 bg-[#93c5fd]" />}>
-          <MemberRail canSell={canSell} canBuy={canBuy} isInvestor={isInvestor} />
-        </Suspense>
+        <MemberRail canSell={canSell} canBuy={canBuy} isInvestor={isInvestor} />
       </aside>
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-30 border-b border-line bg-surface">
@@ -132,14 +130,12 @@ export function MemberShell({
                   </>
                 ) : null}
               </p>
-              <Suspense fallback={null}>
-                <MemberNav
-                  canSell={canSell}
-                  canBuy={canBuy}
-                  isInvestor={isInvestor}
-                  onNavigate={() => setOpen(false)}
-                />
-              </Suspense>
+              <MemberNav
+                canSell={canSell}
+                canBuy={canBuy}
+                isInvestor={isInvestor}
+                onNavigate={() => setOpen(false)}
+              />
               <form action="/api/deconnexion" method="post" className="mt-2">
                 <button
                   type="submit"

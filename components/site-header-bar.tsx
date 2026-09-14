@@ -4,16 +4,15 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BrandMark } from "@/components/brand-mark";
+import { MARKET_ACCESS, MARKET_HALL } from "@/lib/copy/market";
 import { BRAND_NAME } from "@/lib/site";
 
-// Quatre intentions, dites en un mot, comme sur le bon coin : acheter, trouver
-// la bonne affaire, vendre, investir. Les tarifs ferment la marche.
 const NAV = [
-  { href: "/annonces", label: "Acheter" },
-  { href: "/annonces?tri=meilleures", label: "Meilleures affaires" },
+  { href: "/annonces", label: MARKET_HALL },
   { href: "/ceder", label: "Vendre" },
+  { href: "/acquerir", label: "Rechercher" },
   { href: "/investisseurs", label: "Investir" },
-  { href: "/tarifs", label: "Tarifs" },
+  { href: "/tarifs", label: MARKET_ACCESS },
 ];
 
 export type HeaderSession = {
@@ -51,7 +50,7 @@ export function SiteHeaderBar({
             <Link
               key={link.href}
               href={link.href}
-              className="whitespace-nowrap rounded-full px-3 py-2 text-[14px] font-medium text-ink/80 hover:bg-surface-alt hover:text-ink"
+              className="whitespace-nowrap rounded-full px-2.5 py-2 text-[13px] text-ink/80 hover:bg-surface-alt hover:text-ink"
             >
               {link.label}
             </Link>

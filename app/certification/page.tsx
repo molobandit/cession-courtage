@@ -2,12 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { PageIntro } from "@/components/page-intro";
-import { SIMPLE_FEE_LABEL, VERIFIED_FEE_RANGE_LABEL } from "@/lib/billing/rates";
 import { BRAND_NAME, CERTIFIED_LABEL } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Certification",
-  description: `Vérification de la société, pièces d’identité et documents. Honoraires de ${VERIFIED_FEE_RANGE_LABEL} si la vente aboutit. Séquestre jusqu’à la prise de possession.`,
+  description: `Vérification de la société, pièces d’identité et documents. Honoraires précisés au contrat, dus seulement si la vente aboutit.`,
   alternates: { canonical: "/certification" },
 };
 
@@ -64,7 +63,7 @@ export default function CertificationPage() {
     <main>
       <PageIntro kicker="Due diligence" title="Faire certifier mon portefeuille">
         Nous vérifions la société, les pièces d’identité et les documents du
-        portefeuille. Honoraires de {VERIFIED_FEE_RANGE_LABEL} si la vente
+        portefeuille. Honoraires précisés au contrat, dus seulement si la vente
         aboutit. La salle de marché affiche un cachet CERTIFIÉ. Plus de 50 points
         de contrôle.
       </PageIntro>
@@ -73,8 +72,8 @@ export default function CertificationPage() {
           <h2 className="text-2xl font-bold tracking-tight text-ink">Annonce simple</h2>
           <p className="mt-3 text-[15px] leading-relaxed text-muted">
             Les informations sont celles que vous déclarez. Nous ne relisons pas
-            le Kbis, la pièce d’identité ni les bordereaux. {SIMPLE_FEE_LABEL} de
-            commission. Le paiement transite quand même par le séquestre.
+            le Kbis, la pièce d’identité ni les bordereaux. Mise en vente
+            gratuite. Le paiement transite quand même par le séquestre.
           </p>
         </article>
         <article className="rounded-2xl border border-line bg-paper p-7">
@@ -82,7 +81,7 @@ export default function CertificationPage() {
           <p className="mt-3 text-[15px] leading-relaxed text-muted">
             Contrôle de la société (Kbis), de l’identité du représentant, du
             justificatif ORIAS du dossier et des documents du portefeuille.
-            Honoraires de {VERIFIED_FEE_RANGE_LABEL} si la vente aboutit. Le
+            Honoraires précisés au contrat, dus seulement si la vente aboutit. Le
             badge affiché est {CERTIFIED_LABEL}. Séquestre jusqu’à la prise de
             possession, sans frais de séquestre supplémentaires.
           </p>

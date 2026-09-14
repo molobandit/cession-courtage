@@ -259,7 +259,6 @@ export default async function PublicListingPage({
         averageAgeMonths: listing.portfolio.averageAgeMonths,
         sellerSupportMonths: listing.sellerSupportMonths,
         multiple,
-        deposit,
         daysLeft,
         publishedAt: listing.publishedAt,
         presentation,

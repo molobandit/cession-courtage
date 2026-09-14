@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { DeskPanel, PositionsTable } from "@/components/app/desk";
-import { QuickLinks } from "@/components/app/quick-links";
 import { getActor, isOriasVerified } from "@/lib/authz";
 import { loadDesk } from "@/lib/dashboard/desk";
 
@@ -20,30 +19,23 @@ export default async function Page() {
     <main className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-ink sm:text-[28px]">Mes achats</h1>
-          <p className="mt-1 max-w-2xl text-[15px] text-muted">Vos offres et vos recherches, étape par étape jusqu’à la reprise du portefeuille.</p>
+          <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-indigo">Poste de marché</p>
+          <h1 className="mt-1 text-2xl font-bold tracking-tight text-ink sm:text-[28px]">Mes achats</h1>
+          <p className="mt-1 max-w-2xl text-[15px] text-muted">Vos prises de position, vos offres et vos demandes, étape par étape jusqu’à la clôture.</p>
         </div>
         <Link
           href="/annonces"
           className="inline-flex h-11 items-center rounded-full bg-indigo px-5 text-[15px] font-semibold !text-white hover:bg-indigo-dark"
         >
-          Trouver un portefeuille
+          Aller en salle de marché
         </Link>
       </div>
-      <QuickLinks
-        links={[
-          { href: "/annonces?tri=meilleures", label: "Meilleures affaires" },
-          { href: "/app/mandats", label: "Ma recherche" },
-          { href: "/app/opportunites", label: "Portefeuilles pour moi" },
-          { href: "/app/profil#capacite", label: "Mon financement" },
-        ]}
-      />
       <DeskPanel
         className="mt-6"
         title={`${rows.length} dossier${rows.length > 1 ? "s" : ""}`}
         subtitle={`${actives} en cours`}
       >
-        <PositionsTable rows={rows} empty="Aucun achat en cours. Parcourez les annonces et prenez position sur un portefeuille." />
+        <PositionsTable rows={rows} empty="Aucune position d’achat. Prenez position sur un portefeuille en salle de marché." />
       </DeskPanel>
     </main>
   );

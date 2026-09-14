@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { LegalLayout, LegalSection } from "@/components/legal/legal-page";
-import { GROWTH_PLAN_ANNUAL_EUR, INTEREST_DEPOSIT_LABEL, SIMPLE_FEE_LABEL, SUCCESS_FEE_FLOOR_EUR, VERIFIED_FEE_RANGE_LABEL } from "@/lib/billing/rates";
+import { GROWTH_PLAN_ANNUAL_EUR, INTEREST_DEPOSIT_LABEL } from "@/lib/billing/rates";
 import { ASKING_MAX, ASKING_MIN, OFFER_WINDOW_DAYS } from "@/lib/listing/constants";
 import { formatEuroWhole } from "@/lib/format/number";
 
@@ -101,14 +101,12 @@ export default function ConditionsGeneralesPage() {
           modalités de paiement et de signature figurent à l’article 10.
         </p>
         <p>
-          Deux options de cession coexistent. L’option annonce simple n’emporte
-          aucune commission ({SIMPLE_FEE_LABEL}) et ne comporte pas de
-          vérification détaillée de la société.           L’option portefeuille vérifié
-          emporte des honoraires de {VERIFIED_FEE_RANGE_LABEL} du prix de
-          cession, dus par le cédant exclusivement en cas de cession conclue,
-          avec un plancher de {formatEuroWhole(SUCCESS_FEE_FLOOR_EUR)}. Cette
-          option comprend le contrôle du Kbis, de l’identité du représentant,
-          du justificatif ORIAS du dossier et des documents du portefeuille.
+          Deux options de cession coexistent. L’option annonce simple ne comporte
+          pas de vérification détaillée de la société. L’option portefeuille
+          vérifié comprend le contrôle du Kbis, de l’identité du représentant,
+          du justificatif ORIAS du dossier et des documents du portefeuille. Les
+          honoraires de chaque option sont fixés par le contrat d’intermédiation
+          signé sur la plateforme et ne sont dus qu’en cas de cession conclue.
           Dans les deux cas, le paiement transite par un séquestre, sans frais
           de séquestre supplémentaires. Les fonds sont libérés lorsque
           l’acquéreur a le portefeuille en sa possession. Si la cession

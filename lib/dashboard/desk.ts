@@ -27,7 +27,7 @@ export async function loadDesk(actor: Actor) {
   const vendeur = canSell(actor);
   const acheteur = canBuy(actor);
 
-  const [cartes, positions, annonces, deals, mandats, propositions, directs, nonLues] = await Promise.all([
+  const [cartes, positions, annonces, deals, mandats, propositions, directs, nonLues, demandesAchat, correspondances] = await Promise.all([
     loadPublicListingCards(),
     acheteur ? listMyPositions(actor.id) : Promise.resolve([]),
     vendeur ? listMyListings(actor) : Promise.resolve([]),
@@ -36,6 +36,8 @@ export async function loadDesk(actor: Actor) {
     vendeur ? listMyProposalsAsSeller(actor.id) : Promise.resolve([]),
     listMyDirectDeals(actor.id, actor.email),
     prisma.notification.count({ where: { userId: actor.id, readAt: null } }),
+    prisma.buyerMandate.count({ where: { isPublic: true, isActive: true, publicNumber: { not: null } } }),
+    acheteur ? prisma.match.count({ where: { mandate: { buyerId: actor.id } } }) : Promise.resolve(0),
   ]);
 
   const indices = marketIndices(cartes);
@@ -192,6 +194,8 @@ export async function loadDesk(actor: Actor) {
     cote,
     bandeau,
     /** Les portefeuilles achetables au multiple le plus bas, hors les siens. */
+    demandesAchat,
+    correspondances,
     meilleures: bestDeals(cartes.filter((c) => !annonces.some((a) => a.id === c.id)), 3),
     aFaire: aFaire.slice(0, 6),
     lignes,

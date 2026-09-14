@@ -2,7 +2,6 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { AccountNav } from "@/components/app/account-nav";
-import { QuickLinks } from "@/components/app/quick-links";
 import { DeuxFacteurs } from "@/components/app/deux-facteurs";
 import { EffacementForm } from "@/components/app/effacement-form";
 import { NotifyForm } from "@/components/app/notify-form";
@@ -206,7 +205,7 @@ export default async function ProfilPage({
 
   return (
     <main className="mx-auto w-full max-w-3xl px-4 py-6 sm:px-6 sm:py-8 lg:py-10">
-      <section className="rounded-2xl border border-line bg-paper p-5 sm:p-6">
+      <section className="rounded-[1.75rem] bg-indigo-soft p-5 sm:p-8">
         <div className="flex items-start gap-4">
           <span
             className="inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-indigo text-lg font-semibold text-white"
@@ -215,7 +214,8 @@ export default async function ProfilPage({
             {initial}
           </span>
           <div className="min-w-0">
-            <h1 className="text-2xl font-bold tracking-tight text-ink sm:text-3xl">Mon compte</h1>
+            <p className="text-[13px] font-medium uppercase tracking-[0.14em] text-indigo-dark">Espace membre</p>
+            <h1 className="mt-1 text-2xl font-bold tracking-tight text-ink sm:text-3xl">Mon compte</h1>
             <p className="mt-2 text-[15px] leading-relaxed text-muted">
               {ROLE_LABELS[actor.role]} · {KYC_STATUS_LABELS[actor.kycStatus]} · identifiant{" "}
               {actor.publicAlias.replace(/^#/, "")}
@@ -223,14 +223,8 @@ export default async function ProfilPage({
           </div>
         </div>
         <AccountNav />
-        <QuickLinks
-          links={[
-            { href: "/app/outils", label: "Outils" },
-            { href: "/app/services/kits-contractuels", label: "Services à la carte" },
-          ]}
-        />
         {checkoutConfirmed ? (
-          <p className="mt-5 rounded-2xl bg-indigo-soft px-4 py-3 text-[15px] font-medium text-ink">
+          <p className="mt-5 rounded-2xl bg-white px-4 py-3 text-[15px] font-medium text-ink">
             Paiement confirmé. L’abonnement 250 € HT est actif.
           </p>
         ) : null}

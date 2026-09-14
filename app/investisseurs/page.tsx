@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { InvestorInquiryForm } from "@/components/investor/inquiry-form";
 import { Button } from "@/components/ui/button";
-import { BRAND_NAME } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Investisseurs",
@@ -22,12 +21,6 @@ export default function InvestisseursPage() {
           <h1 className="mt-4 text-4xl font-bold tracking-tight leading-tight text-ink">
             Je suis investisseur
           </h1>
-          <p className="mt-5 text-[15px] leading-relaxed text-muted">
-            {BRAND_NAME} s’adresse aux investisseurs privés, family offices et
-            structures qui souhaitent suivre des dossiers de cession sous alias.
-            Un dépôt de 2,5 % du prix ouvre les coordonnées du cabinet cédant.
-            Aucune donnée nominative de client final.
-          </p>
           <div className="mt-7 flex flex-wrap gap-3">
             <Button asChild variant="primary">
               <Link href="/investisseurs/opportunites">Voir les opportunités</Link>

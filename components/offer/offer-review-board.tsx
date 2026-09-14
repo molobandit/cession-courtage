@@ -79,7 +79,7 @@ export function OfferReviewBoard({
   return (
     <main className="mx-auto max-w-6xl px-4 py-8">
       <DeskPageHeader
-        back={{ href: "/app/cessions", label: "Mes ventes" }}
+        back={{ href: "/app/cessions", label: "Mes cessions" }}
         kicker="Carnet d’offres"
         badge={<MarketBadge label={cotation.label} tone={cotation.tone} detail={cotation.detail} />}
         title={`Dossier N° ${listing.publicNumber} · ${

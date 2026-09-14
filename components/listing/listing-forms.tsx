@@ -12,7 +12,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { VERIFIED_FEE_RANGE_LABEL } from "@/lib/billing/rates";
 
 const initial: ListingFormState = {};
 const selectClass =
@@ -343,9 +342,9 @@ export function CreateListingForm({
           className="mt-1"
         />
         <span>
-          Faire certifier mon portefeuille ({VERIFIED_FEE_RANGE_LABEL} si la vente
-          aboutit, vérification de la société et des pièces). Sinon l’annonce
-          reste simple, sans commission, avec séquestre.
+          Faire certifier mon portefeuille (vérification de la société et des
+          pièces). Sinon l’annonce reste simple, avec séquestre. Les honoraires
+          sont précisés dans le contrat d’intermédiation.
         </span>
       </label>
       {state.error ? <p className="text-sm text-danger">{state.error}</p> : null}

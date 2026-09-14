@@ -4,9 +4,6 @@ import { Button } from "@/components/ui/button";
 import {
   GROWTH_PLAN_ANNUAL_EUR,
   INTEREST_DEPOSIT_LABEL,
-  SIMPLE_FEE_LABEL,
-  SUCCESS_FEE_FLOOR_EUR,
-  VERIFIED_FEE_RANGE_LABEL,
 } from "@/lib/billing/rates";
 import { ASKING_MAX, ASKING_MIN, OFFER_WINDOW_DAYS } from "@/lib/listing/constants";
 import { formatEuroWhole } from "@/lib/format/number";
@@ -122,11 +119,11 @@ const SECTIONS: Section[] = [
     questions: [
       {
         q: "Combien coûte la mise en vente ?",
-        a: "Déposer une annonce est gratuit. L’option simple ne prend aucune commission. L’option vérifiée facture des honoraires uniquement si la vente aboutit.",
+        a: "Déposer une annonce est gratuit. Les honoraires sont précisés dans le contrat d’intermédiation et ne sont dus que si la vente aboutit.",
       },
       {
         q: "Quels sont les honoraires ?",
-        a: `Option 1 : ${SIMPLE_FEE_LABEL} de commission. Les données du portefeuille sont celles déclarées par le cédant : pas de contrôle Kbis, pièce d’identité ni bordereaux. Option 2 : ${VERIFIED_FEE_RANGE_LABEL}, avec contrôle de la société (Kbis), de l’identité du représentant, du justificatif ORIAS du dossier, des états de portefeuille et des bordereaux. Plancher de ${formatEuroWhole(SUCCESS_FEE_FLOOR_EUR)} sur les très petits dossiers de l’option 2. Dans les deux cas, le numéro ORIAS est contrôlé à l’inscription et le paiement passe par un séquestre, sans frais de séquestre supplémentaires.`,
+        a: "Ils sont précisés dans le contrat d’intermédiation que vous signez sur la plateforme, et ne sont dus que si la vente aboutit. Dans tous les cas, le numéro ORIAS est contrôlé à l’inscription et le paiement passe par un séquestre, sans frais de séquestre supplémentaires.",
       },
       {
         q: "Que contrôlez-vous concrètement ?",

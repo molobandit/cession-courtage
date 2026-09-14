@@ -49,7 +49,7 @@ export default async function SellerListingPage({
   return (
     <main className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 sm:py-8">
       <DeskPageHeader
-        back={{ href: "/app/cessions", label: "Mes ventes" }}
+        back={{ href: "/app/cessions", label: "Mes cessions" }}
         kicker="Mon annonce"
         badge={<MarketBadge label={cotation.label} tone={cotation.tone} detail={cotation.detail} />}
         title={`Dossier N° ${listing.publicNumber}`}

@@ -8,8 +8,6 @@ import { MarketStamp } from "@/components/listing/market-stamp";
 import { MixDonut } from "@/components/charts/mix-donut";
 import { RankedBars } from "@/components/charts/ranked-bars";
 import { UNCERTIFIED_LABEL } from "@/lib/copy/market";
-import { GROWTH_PLAN_ANNUAL_EUR, INTEREST_DEPOSIT_LABEL } from "@/lib/billing/rates";
-import { CESSION_FUNDS_DISCLAIMER } from "@/lib/partners/catalog";
 import { formatCount, formatEuroWhole } from "@/lib/format/number";
 import type { RenewalYear, Share } from "@/lib/portfolio/analytics";
 import { hasQualityFigures, qualityFactRows, type PortfolioQuality } from "@/lib/portfolio/quality";
@@ -39,7 +37,6 @@ export type PublicListingDetailModel = {
   averageAgeMonths: number;
   sellerSupportMonths: number;
   multiple: number | null;
-  deposit: number;
   daysLeft: number | null;
   publishedAt: Date | null;
   presentation: string;
@@ -117,7 +114,6 @@ export function PublicListingDetail({
     contractCount,
     clientCount,
     multiple,
-    deposit,
     daysLeft: _daysLeft,
     publishedAt,
     presentation,
@@ -240,10 +236,6 @@ export function PublicListingDetail({
           <YearlyRenewals years={renewals} />
         </div>
 
-        <p className="rounded-2xl border border-line bg-paper px-5 py-4 text-[13px] leading-relaxed text-muted">
-          Fiche anonyme. Ni raison sociale, ni commune, ni donnée nominative de client
-          final. Les chiffres de mix viennent des commissions, pas d’un historique inventé.
-        </p>
         </div>
   );
 
@@ -327,12 +319,14 @@ export function PublicListingDetail({
                     Opportunité chaude
                   </p>
                 ) : null}
-                <p className="tabular text-[26px] font-bold leading-tight text-ink">
-                  {bestOffer !== null ? formatEuroWhole(bestOffer) : "Aucune"}
-                </p>
-                <p className="text-[13px] text-muted">
-                  {bestOffer !== null ? "Meilleure offre actuelle" : "Aucune offre pour le moment"}
-                </p>
+                {bestOffer !== null ? (
+                  <>
+                    <p className="tabular text-[26px] font-bold leading-tight text-ink">{formatEuroWhole(bestOffer)}</p>
+                    <p className="text-[13px] text-muted">Meilleure offre actuelle</p>
+                  </>
+                ) : (
+                  <p className="text-[15px] font-semibold text-ink">Aucune offre pour le moment</p>
+                )}
                 <p className="mt-1 text-[13px] font-semibold text-indigo-dark">
                   {offerCount === 0
                     ? "Soyez le premier à faire une offre"
@@ -389,17 +383,7 @@ export function PublicListingDetail({
                 Suivre ce dossier
               </Link>
             ) : null}
-            {/* Adjugé ou en négociation exclusive : plus d'abonnement ni de dépôt à annoncer. */}
-            {sold || (exclusive && !dealHref) ? null : (
-            <p className="mt-3 text-[12px] leading-relaxed text-muted">
-              Abonnement {GROWTH_PLAN_ANNUAL_EUR.toLocaleString("fr-FR")} € HT / an
-              pour le contact. Anonymat jusqu’au dépôt de {INTEREST_DEPOSIT_LABEL} (
-              {formatEuroWhole(deposit)}). {CESSION_FUNDS_DISCLAIMER}{" "}
-              <Link href="/partenaires" className="font-medium text-indigo-dark underline-offset-2 hover:underline">
-                Paiement sécurisé
-              </Link>
-            </p>
-            )}
+            {/* Abonnement, dépôt et séquestre s'expliquent au moment de prendre position, pas sur la fiche. */}
           </aside>
         </div>
 

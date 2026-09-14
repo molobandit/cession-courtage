@@ -9,7 +9,7 @@ import {
   NO_FEE_LABEL,
   SELL_PILLARS,
 } from "@/lib/copy/market";
-import { INTEREST_DEPOSIT_LABEL, SIMPLE_FEE_LABEL, VERIFIED_FEE_RANGE_LABEL } from "@/lib/billing/rates";
+import { INTEREST_DEPOSIT_LABEL } from "@/lib/billing/rates";
 import { ASKING_MAX, ASKING_MIN, OFFER_WINDOW_DAYS } from "@/lib/listing/constants";
 import { formatEuroWhole } from "@/lib/format/number";
 
@@ -95,7 +95,7 @@ export default function CederPage() {
                 <p className="mt-3 text-[15px] leading-relaxed text-muted">
                   Vous renseignez les informations principales. Nous ne
                   contrôlons pas le Kbis, la pièce d’identité ni les bordereaux
-                  du dossier. Aucune commission sur la vente. Le paiement
+                  du dossier. Mise en vente gratuite. Le paiement
                   transite quand même par le séquestre.
                 </p>
                 <Button asChild variant="primary" className="mt-6">
@@ -110,8 +110,8 @@ export default function CederPage() {
                 <p className="mt-3 text-[15px] leading-relaxed text-muted">
                   Nous contrôlons la société (Kbis), l’identité du représentant,
                   le justificatif ORIAS du dossier et les documents du
-                  portefeuille. Honoraires de {VERIFIED_FEE_RANGE_LABEL} si la
-                  vente aboutit. Séquestre jusqu’à la prise de possession.
+                  portefeuille. Honoraires précisés dans le contrat d’intermédiation, dus
+                  seulement si la vente aboutit. Séquestre jusqu’à la prise de possession.
                 </p>
                 <Button asChild variant="primary" className="mt-6">
                   <Link href="/inscription?voie=certifie">Faire certifier mon portefeuille</Link>
@@ -161,24 +161,17 @@ export default function CederPage() {
       <section className="mx-auto max-w-6xl px-4 py-16">
         <div className="rounded-2xl border border-line bg-paper p-8">
           <p className="text-[13px] font-semibold text-indigo">
-            Après la cession
+            Après la signature
           </p>
           <h2 className="mt-3 text-2xl font-bold tracking-tight text-ink">
-            La part différée s’ajuste sur la rétention constatée
+            Le prix vous est versé à l’accord des compagnies
           </h2>
           <p className="mt-4 max-w-3xl text-[15px] leading-relaxed text-muted">
-            Un acquéreur accepte rarement de tout payer comptant, parce qu’il porte
-            seul le risque que la clientèle parte après votre départ. Nous mesurons
-            la rétention à trois, six et douze mois. La part différée est recalculée
-            sur le taux réellement observé, rapporté à une cible de 90 %, et ne peut
-            pas descendre en dessous de la moitié du montant convenu. Vous savez dès
-            la signature ce que vous risquez au pire, et l’acquéreur accepte une part
-            comptant plus élevée parce qu’il est couvert.
-          </p>
-          <p className="mt-4 text-[15px] leading-relaxed text-muted">
-            Publier : {NO_FEE_LABEL.toLowerCase()}. Option 1 : {SIMPLE_FEE_LABEL} de commission.
-            Option 2 : {VERIFIED_FEE_RANGE_LABEL} après vérification. Le paiement
-            passe par le Trust dans les deux cas.
+            L’acquéreur verse le prix entier sur un compte séquestre tenu par un tiers
+            habilité, déduction faite de son dépôt de garantie. Vous adressez les
+            attestations de transfert aux compagnies ; dès que l’acquéreur confirme
+            leur accord, les fonds vous sont libérés et la cession est close. Publier
+            votre annonce est {NO_FEE_LABEL.toLowerCase()}.
           </p>
           <div className="mt-7 flex flex-wrap gap-3">
             <Button asChild variant="primary">
