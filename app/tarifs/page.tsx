@@ -9,10 +9,10 @@ import {
   INTEREST_DEPOSIT_LABEL,
 } from "@/lib/billing/rates";
 import { formatEuroWhole } from "@/lib/format/number";
+import { CESSION_FUNDS_DISCLAIMER } from "@/lib/partners/catalog";
 import { safeInternalPath } from "@/lib/nav/safe-next";
 import { CERTIFIED_BADGE, CERTIFIED_LABEL } from "@/lib/site";
 import { presentPartners } from "@/lib/partners/status";
-import { CESSION_FUNDS_DISCLAIMER } from "@/lib/partners/catalog";
 import { PartnerStrip } from "@/components/partners/partner-grid";
 import {
   ACCESS_MARKET_POINTS,
@@ -461,12 +461,21 @@ export default async function TarifsPage({
       <section className="border-t border-line bg-indigo-soft">
         <div className="mx-auto max-w-3xl px-4 py-16 text-center">
           <h2 className="text-3xl font-bold tracking-tight text-ink">
-            Prêt à publier ou à vous abonner ?
+            Prêt à vendre ou à acheter ?
           </h2>
-          <p className="mt-3 text-[15px] leading-relaxed text-muted">
-            Déposez une annonce sans frais, ou ouvrez l’accès au détail de
-            l’offre. {CESSION_FUNDS_DISCLAIMER}
-          </p>
+          <div className="mx-auto mt-6 grid max-w-2xl gap-3 text-left">
+            <p className="rounded-2xl border border-line bg-paper px-5 py-4 text-[15px] leading-relaxed text-muted">
+              <span className="font-semibold text-ink">Vous vendez.</span> La mise en vente est gratuite.
+              Notre équipe relit votre annonce, puis la publie en salle de marché sous alias.
+            </p>
+            <p className="rounded-2xl border border-line bg-paper px-5 py-4 text-[15px] leading-relaxed text-muted">
+              <span className="font-semibold text-ink">Vous achetez.</span> L’abonnement annuel ouvre le
+              détail des portefeuilles, la messagerie avec les cédants et le dépôt d’offres.
+            </p>
+            <p className="rounded-2xl border border-line bg-paper px-5 py-4 text-[15px] leading-relaxed text-muted">
+              <span className="font-semibold text-ink">Le paiement est encadré.</span> {CESSION_FUNDS_DISCLAIMER}
+            </p>
+          </div>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             <Button asChild variant="primary" size="lg">
               <Link href="/ceder">Déposer une annonce</Link>

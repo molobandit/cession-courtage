@@ -126,7 +126,7 @@ export const READY_BADGE = "Prêt. Contrat à valider";
 
 /** Phrase unique pour les écrans qui parlent encore d’encaissement. */
 export const CESSION_FUNDS_DISCLAIMER =
-  "La bourse du portefeuille n’encaisse pas le prix de cession. Le dépôt de garantie se paie par carte ou prélèvement SEPA auprès d’un prestataire agréé ; tant que le séquestre n’est pas activé, le prix s’enregistre sur le dossier sans mouvement d’argent.";
+  "La bourse du portefeuille ne détient jamais les fonds. Le dépôt de garantie se règle par carte bancaire ou prélèvement SEPA auprès d’un prestataire de paiement agréé. Le prix de cession est confié à un tiers de séquestre indépendant, puis remis au cédant une fois le transfert des contrats accepté par les compagnies. L’ouverture du séquestre en ligne est en cours : d’ici là, chaque versement est consigné dans le dossier de cession.";
 
 export function hasForbiddenDash(text: string): boolean {
   return /[—–]/.test(text) || / - /.test(text);

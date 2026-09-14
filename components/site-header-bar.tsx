@@ -10,6 +10,7 @@ import { BRAND_NAME } from "@/lib/site";
 const NAV = [
   { href: "/annonces", label: MARKET_HALL },
   { href: "/ceder", label: "Vendre" },
+  { href: "/certification", label: "Certifier votre portefeuille" },
   { href: "/acquerir", label: "Rechercher" },
   { href: "/investisseurs", label: "Investir" },
   { href: "/tarifs", label: MARKET_ACCESS },
