@@ -8,7 +8,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Paiement et signatures sécurisés",
   description:
-    "Stripe pour l’accès, Trustap pour le séquestre, Yousign ou DocuSign pour les actes. La bourse du portefeuille ne reçoit pas le prix de cession.",
+    "Stripe pour l’accès, Trustap pour le paiement sécurisé du prix, Yousign ou DocuSign pour les actes. La bourse du portefeuille ne reçoit pas le prix de cession.",
   alternates: { canonical: "/partenaires" },
 };
 

@@ -12,7 +12,7 @@ export function RecalculateValuationButton({ portfolioId }: { portfolioId: strin
     <form action={action}>
       <input type="hidden" name="portfolioId" value={portfolioId} />
       <Button type="submit" variant="outline" size="sm" disabled={pending}>
-        {pending ? "Calcul…" : "Recalculer"}
+        {pending ? "Étude…" : "Actualiser l’étude"}
       </Button>
       {state.error ? <p className="mt-1 text-xs text-danger">{state.error}</p> : null}
     </form>

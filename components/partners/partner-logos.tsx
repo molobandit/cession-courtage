@@ -61,7 +61,7 @@ export function PartnerHomeMarquee() {
             Circuit de confiance
           </p>
           <h2 className="mt-4 text-3xl font-bold tracking-tight text-ink sm:text-4xl">
-            Paiement, séquestre et <span className="text-indigo">signatures</span>
+            Paiement sécurisé et <span className="text-indigo">signatures</span>
           </h2>
           <p className="mx-auto mt-3 max-w-2xl text-[15px] text-muted">
             Stripe, Trustap, Yousign, DocuSign, Ondorse et CrediPro. La bourse du

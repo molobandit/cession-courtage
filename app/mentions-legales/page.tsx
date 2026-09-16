@@ -53,9 +53,9 @@ export default function MentionsLegalesPage() {
         <p>
           Elle ne fournit aucun conseil en investissement, aucune recommandation
           personnalisée, et n’exerce aucune activité d’intermédiation en assurance
-          au sens de l’article L. 511-1 du code des assurances. Les valorisations
-          proposées sont indicatives et ne constituent ni une garantie de prix, ni
-          une évaluation opposable aux tiers.
+          au sens de l’article L. 511-1 du code des assurances. Les études de
+          portefeuille et les prix des annonces sont indicatifs et ne constituent
+          ni une garantie de prix, ni une évaluation opposable aux tiers.
         </p>
         <p>
           Chaque partie demeure responsable de ses propres obligations
@@ -67,8 +67,8 @@ export default function MentionsLegalesPage() {
 
       <LegalSection title="Propriété intellectuelle">
         <p>
-          La structure du site, ses textes, sa charte graphique et sa méthode de
-          valorisation sont protégés. Toute reproduction ou extraction, totale ou
+          La structure du site, ses textes, sa charte graphique et sa méthode d’étude
+          des portefeuilles sont protégés. Toute reproduction ou extraction, totale ou
           partielle, sans autorisation écrite préalable est interdite.
         </p>
         <p>

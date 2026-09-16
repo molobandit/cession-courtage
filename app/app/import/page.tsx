@@ -25,9 +25,7 @@ export default async function ImportIndexPage() {
   return (
     <main className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 sm:py-8">
       <MemberPageHeader title="Importer un portefeuille">
-        Déposez un bordereau anonymisé. Le grain le plus fin autorisé est le
-        code postal : toute colonne de nom, d’e-mail, d’adresse ou de téléphone
-        entraîne un refus, et le fichier n’est pas conservé.
+        Déposez le fichier de votre portefeuille. Notre équipe réalise ensuite l’étude du portefeuille.
       </MemberPageHeader>
 
       <section className="rounded-3xl border border-line bg-paper p-5 shadow-sm sm:p-6">

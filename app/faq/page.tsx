@@ -13,7 +13,7 @@ import { CESSION_FUNDS_DISCLAIMER } from "@/lib/partners/catalog";
 export const metadata: Metadata = {
   title: "Questions fréquentes",
   description:
-    "Confidentialité, valorisation, séance d’offres, tarifs, séquestre et transfert : les réponses aux questions que se posent les courtiers.",
+    "Confidentialité, étude du portefeuille, séance d’offres, tarifs, paiement et transfert : les réponses aux questions que se posent les courtiers.",
   alternates: { canonical: "/faq" },
 };
 
@@ -31,7 +31,7 @@ const SECTIONS: Section[] = [
       },
       {
         q: "À quel moment mon identité est-elle révélée ?",
-        a: `Après le dépôt de ${INTEREST_DEPOSIT_LABEL} du prix demandé, jamais avant. Jusque-là, l’acquéreur ne connaît de vous qu’un alias. L’abonnement ouvre le contact et les messages, sans dévoiler votre nom.`,
+        a: `Après le dépôt de ${INTEREST_DEPOSIT_LABEL} du prix de l’annonce, jamais avant. Jusque-là, l’acquéreur ne connaît de vous qu’un alias. L’abonnement ouvre le contact et les messages, sans dévoiler votre nom.`,
       },
       {
         q: "Puis-je savoir qui a consulté mon dossier ?",
@@ -44,24 +44,24 @@ const SECTIONS: Section[] = [
     ],
   },
   {
-    title: "Valorisation",
-    intro: "Comment le prix est construit, et ce qui le fait bouger.",
+    title: "Étude du portefeuille",
+    intro: "Ce que nous regardons, et qui fixe le prix.",
     questions: [
       {
-        q: "Sur quoi repose la valorisation ?",
-        a: "Sur une valeur brute calculée à partir des multiples par branche appliqués à vos commissions, puis corrigée par cinq coefficients successifs : ancienneté moyenne, taux de résiliation, mode de distribution, accompagnement du cédant et score de conformité.",
+        q: "Qui fixe le prix de mon annonce ?",
+        a: "Notre équipe. Après l’étude de votre portefeuille, nous déterminons sa valeur et nous mettons l’annonce en ligne avec le prix correspondant. Vous n’avez ni prix à fixer, ni annonce à publier.",
       },
       {
-        q: "Pourquoi une fourchette et non un prix ?",
-        a: "Parce qu’une cession se négocie. Un prix unique donne une fausse précision et vous prive d’argument. La fourchette est bornée à 15 % de part et d’autre du point médian, et chaque coefficient est affiché avec son impact en euros pour que vous puissiez le discuter.",
+        q: "Que regarde l’étude ?",
+        a: "Les éléments et les caractéristiques de votre portefeuille : ancienneté des contrats, résiliations, mode de distribution, composition, accompagnement après la cession et conformité.",
       },
       {
-        q: "Quel poste pèse le plus lourd ?",
-        a: "Le taux de résiliation sur douze mois. Au delà de 15 % de chute annuelle, la valeur est amputée de près d’un tiers. À l’inverse, l’accompagnement du cédant est le levier le plus rapide à activer : six mois de présence valent une majoration nette.",
+        q: "Comment renforcer mon dossier ?",
+        a: "En maîtrisant les résiliations et en proposant à l’acquéreur un accompagnement de quelques mois après la cession.",
       },
       {
-        q: "La valorisation est-elle opposable à un acquéreur ?",
-        a: "Non. Elle est indicative et repose sur les données que vous déposez. Elle ne remplace pas une vérification préalable. Sa force est d’être traçable : un acquéreur peut vérifier le raisonnement ligne à ligne plutôt que de contester un multiple global.",
+        q: "Le prix de l’annonce engage-t-il l’acquéreur ?",
+        a: "Non. C’est le prix auquel l’annonce est mise en ligne. L’acquéreur fait son offre, et la vérification préalable reste indispensable.",
       },
     ],
   },
@@ -86,8 +86,8 @@ const SECTIONS: Section[] = [
         a: "Oui, tant qu’elle n’a pas été retenue. Une fois l’offre acceptée, un dossier s’ouvre et le parcours contractuel commence.",
       },
       {
-        q: "Quels montants puis-je demander ?",
-        a: `Le prix demandé est compris entre ${formatEuroWhole(ASKING_MIN)} et ${formatEuroWhole(ASKING_MAX)}.`,
+        q: "À quels prix les annonces sont-elles mises en ligne ?",
+        a: `Notre équipe fixe un prix compris entre ${formatEuroWhole(ASKING_MIN)} et ${formatEuroWhole(ASKING_MAX)}.`,
       },
     ],
   },
@@ -97,7 +97,7 @@ const SECTIONS: Section[] = [
     questions: [
       {
         q: "Quelles sont les étapes ?",
-        a: "Accord de confidentialité, salle de données, lettre d’intention, vérification d’identité, acte, signature, séquestre, transfert ORIAS, puis période de rétention. Les étapes se suivent dans cet ordre et ne peuvent pas être sautées.",
+        a: "Accord de confidentialité, salle de données, lettre d’intention, vérification d’identité, acte, signature, paiement sécurisé, transfert des contrats, puis période de rétention. Les étapes se suivent dans cet ordre et ne peuvent pas être sautées.",
       },
       {
         q: "Qu’est-ce que l’ajustement du prix différé ?",
@@ -127,7 +127,7 @@ const SECTIONS: Section[] = [
       },
       {
         q: "Que contrôlez-vous concrètement ?",
-        a: `Trois niveaux distincts. L’inscription contrôle le numéro ORIAS. Le dépôt de ${INTEREST_DEPOSIT_LABEL} révèle qui est le cédant, sans valider ses pièces. L’option certifié relit le Kbis, la pièce d’identité, le justificatif ORIAS du dossier et les documents du portefeuille. Ces pièces ne sont jamais publiées au catalogue.`,
+        a: `Deux niveaux distincts. Le dépôt de ${INTEREST_DEPOSIT_LABEL} révèle qui est le cédant, sans valider ses pièces. L’option certifié relit le Kbis, la pièce d’identité, le justificatif ORIAS du dossier et les documents du portefeuille. Ces pièces ne sont jamais publiées au catalogue.`,
       },
       {
         q: "Un acquéreur doit-il payer ?",
@@ -135,7 +135,7 @@ const SECTIONS: Section[] = [
       },
       {
         q: "Quand l’argent est-il débloqué ?",
-        a: `Les fonds restent sous séquestre jusqu’à ce que l’acquéreur ait le portefeuille en sa possession. Si la vente n’aboutit pas, le solde consigné revient à l’acquéreur. ${CESSION_FUNDS_DISCLAIMER}`,
+        a: `L’argent reste sur un compte sécurisé jusqu’à ce que l’acquéreur ait le portefeuille. Si la vente n’aboutit pas, il lui est rendu. ${CESSION_FUNDS_DISCLAIMER}`,
       },
     ],
   },
@@ -152,10 +152,6 @@ const SECTIONS: Section[] = [
       {
         q: "Quelles données puis-je importer ?",
         a: "Code postal, ville, branche, type de contrat, prime, commission, dates de contrat et sinistres agrégés. Le format CSV et le format XLSX sont acceptés.",
-      },
-      {
-        q: "Que se passe-t-il si mon fichier contient des noms de clients ?",
-        a: "L’import le refuse et vous indique la colonne en cause. La détection porte sur les en-têtes et sur le contenu des cellules. Aucune donnée nominative de client final n’entre en base, quelle que soit la manœuvre.",
       },
       {
         q: "Comment comptez-vous les clients sans les identifier ?",
@@ -244,15 +240,14 @@ export default function FaqPage() {
 
         <div className="mt-12 rounded-3xl border border-indigo-line bg-indigo-soft p-7">
           <h2 className="font-serif text-xl font-semibold text-ink">
-            Commencez par une estimation
+            Faites étudier votre portefeuille
           </h2>
           <p className="mt-3 text-[15px] leading-relaxed text-muted">
-            Sans inscription, sans engagement. Vous obtenez une fourchette et le
-            raisonnement qui la produit.
+            Notre équipe réalise l’étude, puis fixe le prix de l’annonce.
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <Button asChild variant="primary">
-              <Link href="/valoriser">Estimer mon portefeuille</Link>
+              <Link href="/etude-portefeuille">Découvrir l’étude</Link>
             </Button>
             <Button asChild variant="outline">
               <Link href="/tarifs">Voir les tarifs</Link>

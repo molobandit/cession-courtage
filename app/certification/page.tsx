@@ -73,7 +73,7 @@ export default function CertificationPage() {
           <p className="mt-3 text-[15px] leading-relaxed text-muted">
             Les informations sont celles que vous déclarez. Nous ne relisons pas
             le Kbis, la pièce d’identité ni les bordereaux. Mise en vente
-            gratuite. Le paiement transite quand même par le séquestre.
+            gratuite, paiement sécurisé.
           </p>
         </article>
         <article className="rounded-2xl border border-line bg-paper p-7">
@@ -82,8 +82,8 @@ export default function CertificationPage() {
             Contrôle de la société (Kbis), de l’identité du représentant, du
             justificatif ORIAS du dossier et des documents du portefeuille.
             Honoraires précisés au contrat, dus seulement si la vente aboutit. Le
-            badge affiché est {CERTIFIED_LABEL}. Séquestre jusqu’à la prise de
-            possession, sans frais de séquestre supplémentaires.
+            badge affiché est {CERTIFIED_LABEL}. Paiement sécurisé jusqu’au
+            transfert, sans frais supplémentaires.
           </p>
         </article>
       </div>

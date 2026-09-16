@@ -39,9 +39,9 @@ export function marketStatus(input: {
   const now = input.now ?? new Date();
   switch (input.status) {
     case "DRAFT":
-      return { label: "Brouillon", tone: "off", detail: "Non publié", tradable: false };
+      return { label: "Dossier à soumettre", tone: "off", detail: "Pas encore en ligne", tradable: false };
     case "PENDING_REVIEW":
-      return { label: "En cours de cotation", tone: "off", detail: "Relecture par l’équipe avant publication", tradable: false };
+      return { label: "Étude en cours", tone: "off", detail: "Notre équipe étudie le portefeuille et fixe le prix", tradable: false };
     case "WITHDRAWN":
       return { label: "Retiré du marché", tone: "off", detail: null, tradable: false };
     case "SOLD":
@@ -76,8 +76,8 @@ export function marketStatus(input: {
 
 /** Libellé seul, pour les tableaux et les écrans d'administration. */
 export const MARKET_STATUS_LABELS: Record<ListingStatus, string> = {
-  DRAFT: "Brouillon",
-  PENDING_REVIEW: "En cours de cotation",
+  DRAFT: "Dossier à soumettre",
+  PENDING_REVIEW: "Étude en cours",
   PUBLISHED: "Offres ouvertes",
   OFFERS_OPEN: "Séance en cours",
   OFFERS_CLOSED: "Offres ouvertes",

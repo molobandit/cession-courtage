@@ -27,15 +27,15 @@ const MANDATE_CRITERIA = [
 const SAFEGUARDS = [
   {
     title: "Vous savez ce que vous achetez avant de vous engager",
-    body: "Le teaser donne la zone, la répartition par branche, le nombre de contrats, l’ancienneté moyenne et la fourchette de valorisation. La composition détaillée arrive avec le mémorandum, après signature de l’accord de confidentialité.",
+    body: "La fiche donne la zone, la répartition par branche, le nombre de contrats et les commissions. La composition détaillée arrive avec le mémorandum, après signature de l’accord de confidentialité.",
   },
   {
-    title: "La valorisation est vérifiable",
-    body: "Vous ne recevez pas un multiple à prendre ou à laisser. Chaque coefficient de la cascade est affiché avec son impact en euros, et vous pouvez contester un poste sur des bases chiffrées pendant la négociation.",
+    title: "Chaque portefeuille est étudié",
+    body: "Avant sa mise en ligne, notre équipe étudie chaque portefeuille pour mettre en évidence ses éléments et ses caractéristiques, puis fixe le prix de l’annonce.",
   },
   {
-    title: "Votre offre reste confidentielle",
-    body: `Aucun autre candidat ne voit votre montant, et le cédant lui-même ne le découvre qu’à la clôture de la fenêtre de ${OFFER_WINDOW_DAYS} jours. Vous proposez ce que le dossier vaut pour vous, pas ce qu’il faut pour dépasser un concurrent.`,
+    title: "Votre identité reste confidentielle",
+    body: `Pendant la séance de ${OFFER_WINDOW_DAYS} jours, les autres candidats voient la meilleure offre et le nombre d’offres, jamais qui les a faites.`,
   },
   {
     title: "La rétention est garantie par le contrat",
@@ -69,8 +69,8 @@ export default async function AcquerirPage() {
         }
       >
         Accès à des portefeuilles certifiés avec plus de 50 points de contrôle.
-        Valorisation indépendante, paiement via un Trust, accompagnement jusqu’au
-        transfert des contrats.
+        Chaque portefeuille est étudié par notre équipe. Paiement sécurisé,
+        accompagnement jusqu’au transfert des contrats.
       </PageIntro>
 
       <section className="mx-auto max-w-6xl px-4 py-12">

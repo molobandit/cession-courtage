@@ -15,7 +15,7 @@ export async function generateMetadata({
     return {
       title: "Inscription investisseur",
       description:
-        "Compte investisseur : suivez des dossiers de cession sous alias, sans numéro ORIAS. Aucune donnée nominative de client final.",
+        "Compte investisseur : suivez des dossiers de cession sous alias, sans numéro ORIAS.",
     };
   }
   return {
@@ -51,7 +51,7 @@ export default async function RegisterPage({
           ? "Pas de numéro ORIAS ni de société de courtage. Vous suivez des dossiers sous alias. Les assurés restent anonymes."
           : certify
             ? "Vous demandez une certification. Après validation ORIAS, vous déposerez les pièces dans l’espace documentaire."
-            : "Renseignez votre société et vos coordonnées professionnelles. Aucune donnée nominative de client final n’est collectée."}
+            : "Renseignez votre société et vos coordonnées professionnelles."}
       </p>
       <div className="mt-6 border border-line bg-paper p-5">
         {investor ? <InvestorRegisterForm /> : <RegisterForm defaultRole={defaultRole} />}

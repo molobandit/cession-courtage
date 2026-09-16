@@ -10,58 +10,61 @@ import {
   SELL_PILLARS,
 } from "@/lib/copy/market";
 import { INTEREST_DEPOSIT_LABEL } from "@/lib/billing/rates";
-import { ASKING_MAX, ASKING_MIN, OFFER_WINDOW_DAYS } from "@/lib/listing/constants";
-import { formatEuroWhole } from "@/lib/format/number";
+import { OFFER_WINDOW_DAYS } from "@/lib/listing/constants";
 
 export const metadata: Metadata = {
   title: "Céder un portefeuille de courtage",
   description:
-    "Le parcours du cédant : import anonymisé, valorisation en cascade, annonce relue et publiée gratuitement, séance d’offres cotée en direct, séquestre et transfert accompagnés.",
+    "Le parcours du cédant : création du compte, import du portefeuille, étude par notre équipe, mise en ligne de l’annonce au prix fixé, séance d’offres, paiement sécurisé et transfert.",
 };
 
 const PROTECTIONS = [
   {
     title: "Votre nom n’apparaît nulle part",
-    body: "Votre annonce est publiée sous un alias numéroté. Ni raison sociale, ni adresse, ni commune. La zone affichée reste au niveau du département ou de la région. Vos concurrents, vos mandants et vos collaborateurs ne peuvent pas vous reconnaître.",
+    body: "Votre annonce est mise en ligne sous un numéro de dossier. Ni raison sociale, ni adresse, ni commune : la zone affichée reste au niveau du département ou de la région. Vos concurrents, vos mandants et vos collaborateurs ne peuvent pas vous reconnaître.",
   },
   {
-    title: "Les candidats ne se voient pas entre eux",
-    body: `Pendant les ${OFFER_WINDOW_DAYS} jours de la fenêtre, aucun acquéreur ne sait combien les autres proposent, ni même s’il y en a d’autres. Aucune surenchère en direct, aucune prolongation automatique.`,
+    title: "Les candidats restent anonymes",
+    body: `Pendant les ${OFFER_WINDOW_DAYS} jours de la séance, les acquéreurs voient la meilleure offre et le nombre d’offres, jamais l’identité des autres candidats.`,
   },
   {
-    title: "Vous ne voyez rien non plus avant la clôture",
-    body: "Les montants vous sont masqués tant que la fenêtre est ouverte. Cette règle s’applique au niveau des requêtes, pas seulement à l’affichage. Elle vous protège d’une décision prise trop tôt sur la première proposition venue.",
+    title: "Vous décidez à la clôture",
+    body: "Vous suivez les offres au fil de la séance, mais vous ne retenez qu’à sa clôture : vous comparez toutes les propositions avant de choisir.",
   },
   {
     title: "Vous restez libre de refuser",
-    body: "La plateforme n’adjuge pas. À la clôture, vous voyez toutes les propositions en même temps et vous décidez seul. Vous pouvez écarter la mieux-disante sans avoir à vous en expliquer.",
+    body: "La plateforme n’adjuge pas. Vous choisissez l’acquéreur, et vous pouvez écarter une offre sans avoir à vous en expliquer.",
   },
 ];
 
 const TIMELINE = [
   {
+    title: "Création du compte",
+    body: "Vous créez votre compte cédant.",
+  },
+  {
     title: "Import du portefeuille",
-    body: "Vous déposez un bordereau CSV ou XLSX. Les colonnes nominatives sont refusées, les séparateurs et les encodages usuels sont reconnus, et vous validez la correspondance des colonnes avant tout enregistrement.",
+    body: "Vous déposez le fichier de votre portefeuille, au format CSV ou XLSX.",
   },
   {
-    title: "Valorisation en cascade",
-    body: "Sept coefficients successifs corrigent la valeur brute issue des multiples par branche. Chacun est affiché avec son impact chiffré, et la plateforme vous indique les correctifs les plus rentables.",
+    title: "Étude du portefeuille",
+    body: "Nous réalisons une étude de votre portefeuille pour mettre en évidence ses différents éléments et caractéristiques.",
   },
   {
-    title: "Publication sous alias",
-    body: `Vous fixez un prix demandé entre ${formatEuroWhole(ASKING_MIN)} et ${formatEuroWhole(ASKING_MAX)}. Vous pouvez ne céder qu’une partie de votre portefeuille en sélectionnant les lignes concernées, la fourchette est alors recalculée sur ce sous-ensemble.`,
+    title: "Mise en ligne de l’annonce",
+    body: "Une fois la valeur déterminée par notre équipe, l’annonce est mise en ligne avec le prix correspondant, sous un numéro de dossier. Vous n’avez ni prix à fixer, ni annonce à publier.",
   },
   {
-    title: "Fenêtre d’offres",
-    body: `La fenêtre dure ${OFFER_WINDOW_DAYS} jours à compter de la publication. Vous suivez pendant ce temps le nombre de consultations du teaser et les accords de confidentialité signés, sans voir les montants.`,
+    title: "Séance d’offres",
+    body: `La séance dure ${OFFER_WINDOW_DAYS} jours. Vous suivez les candidats et les offres qui arrivent.`,
   },
   {
     title: "Choix de l’acquéreur",
-    body: "À la clôture, les propositions s’ouvrent toutes en même temps, avec l’alias de chaque candidat, le montant, la part comptant et le message d’intention.",
+    body: "À la clôture, vous comparez les offres et vous choisissez celle qui vous convient.",
   },
   {
-    title: "Dossier et transfert",
-    body: `Accord de confidentialité, mémorandum, salle de données, lettre d’intention, protocole, signature, séquestre, puis transfert ORIAS. Votre identité n’est révélée qu’après le dépôt de ${INTEREST_DEPOSIT_LABEL} du prix.`,
+    title: "Signature et transfert",
+    body: `Les actes sont contrôlés par nos avocats et signés en ligne, puis les contrats sont transférés. Votre identité n’est révélée qu’à l’acquéreur qui a versé un dépôt de ${INTEREST_DEPOSIT_LABEL} du prix.`,
   },
 ];
 
@@ -69,7 +72,7 @@ export default function CederPage() {
   return (
     <main>
       <PageIntro kicker="Vendre" title={NAV_SELL}>
-        Valorisez et cédez votre portefeuille dans un cadre sécurisé.
+        Nous étudions votre portefeuille, nous fixons le prix, et nous vous accompagnons jusqu’à la cession.
       </PageIntro>
 
       <section className="mx-auto max-w-6xl px-4 py-12">
@@ -95,8 +98,7 @@ export default function CederPage() {
                 <p className="mt-3 text-[15px] leading-relaxed text-muted">
                   Vous renseignez les informations principales. Nous ne
                   contrôlons pas le Kbis, la pièce d’identité ni les bordereaux
-                  du dossier. Mise en vente gratuite. Le paiement
-                  transite quand même par le séquestre.
+                  du dossier. Mise en vente gratuite, paiement sécurisé.
                 </p>
                 <Button asChild variant="primary" className="mt-6">
                   <Link href="/inscription?voie=annonce">Déposer une annonce</Link>
@@ -111,7 +113,7 @@ export default function CederPage() {
                   Nous contrôlons la société (Kbis), l’identité du représentant,
                   le justificatif ORIAS du dossier et les documents du
                   portefeuille. Honoraires précisés dans le contrat d’intermédiation, dus
-                  seulement si la vente aboutit. Séquestre jusqu’à la prise de possession.
+                  seulement si la vente aboutit. Paiement sécurisé jusqu’au transfert.
                 </p>
                 <Button asChild variant="primary" className="mt-6">
                   <Link href="/inscription?voie=certifie">Faire certifier mon portefeuille</Link>
@@ -164,14 +166,11 @@ export default function CederPage() {
             Après la signature
           </p>
           <h2 className="mt-3 text-2xl font-bold tracking-tight text-ink">
-            Le prix vous est versé à l’accord des compagnies
+            Un paiement sécurisé, du début à la fin
           </h2>
           <p className="mt-4 max-w-3xl text-[15px] leading-relaxed text-muted">
-            L’acquéreur verse le prix entier sur un compte séquestre tenu par un tiers
-            habilité, déduction faite de son dépôt de garantie. Vous adressez les
-            attestations de transfert aux compagnies ; dès que l’acquéreur confirme
-            leur accord, les fonds vous sont libérés et la cession est close. Publier
-            votre annonce est {NO_FEE_LABEL.toLowerCase()}.
+            L’acquéreur paie le prix sur un compte sécurisé. L’argent vous est versé dès que les compagnies ont accepté le
+            transfert des contrats. La mise en vente est {NO_FEE_LABEL.toLowerCase()}.
           </p>
           <div className="mt-7 flex flex-wrap gap-3">
             <Button asChild variant="primary">

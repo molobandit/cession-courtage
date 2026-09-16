@@ -19,7 +19,7 @@ const COLUMNS = [
     links: [
       { href: "/ceder", label: NAV_SELL },
       { href: "/rendez-vous", label: "Entretien avec un conseiller" },
-      { href: "/valoriser", label: "Valoriser un portefeuille" },
+      { href: "/etude-portefeuille", label: "Étude de portefeuille" },
       { href: "/certification", label: "Certification" },
       { href: "/tarifs", label: MARKET_ACCESS },
     ],
@@ -93,9 +93,9 @@ export function SiteFooter() {
           <p className="text-[13px] leading-relaxed text-white/65">
             La plateforme met en relation des professionnels. Elle n’est partie à
             aucune transaction, n’exerce aucune activité d’intermédiation en
-            assurance et ne fournit aucun conseil en investissement. Les
-            valorisations sont indicatives et ne constituent pas une garantie de
-            prix.
+            assurance et ne fournit aucun conseil en investissement. Les études
+            de portefeuille et les prix des annonces sont indicatifs et ne
+            constituent pas une garantie de prix.
           </p>
         </div>
       </div>

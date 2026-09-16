@@ -95,7 +95,7 @@ export function ServiceWizard({ service, title }: { service: ServiceKey; title: 
                   <Aide
                     texte={
                       service === "escrow"
-                        ? "Somme à bloquer sur le compte séquestre."
+                        ? "Somme à verser sur le compte sécurisé."
                         : "Prix convenu entre les parties, net vendeur."
                     }
                   />
@@ -145,8 +145,8 @@ export function ServiceWizard({ service, title }: { service: ServiceKey; title: 
                     onChange={() => setSequestre((v) => !v)}
                     className="h-4 w-4 accent-indigo"
                   />
-                  Paiement via Compte Séquestre
-                  <Aide texte={`Le comptant est bloqué sur un compte séquestre et libéré à la clôture. ${ESCROW_LABEL}.`} />
+                  Paiement sécurisé
+                  <Aide texte={`Le comptant reste sur un compte sécurisé, puis il est versé au cédant à la clôture. ${ESCROW_LABEL}.`} />
                 </label>
               </div>
             ) : null}
@@ -154,8 +154,8 @@ export function ServiceWizard({ service, title }: { service: ServiceKey; title: 
             {service === "escrow" ? (
               <label className="flex items-center gap-3 text-[16px] text-ink">
                 <input type="checkbox" checked disabled className="h-4 w-4 accent-indigo" />
-                Service de paiement sécurisé via compte séquestre
-                <Aide texte={`Les fonds sont bloqués jusqu’à la clôture, puis libérés au cédant. ${ESCROW_LABEL}.`} />
+                Service de paiement sécurisé
+                <Aide texte={`L’argent reste sur un compte sécurisé jusqu’à la clôture, puis il est versé au cédant. ${ESCROW_LABEL}.`} />
               </label>
             ) : null}
 

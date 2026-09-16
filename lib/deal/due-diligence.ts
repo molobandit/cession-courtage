@@ -77,7 +77,7 @@ const BASE_CHECKLIST: ChecklistEntry[] = [
   {
     category: "PORTFOLIO",
     label: "Liste complète des contrats",
-    detail: "Sans donnée nominative de client final : le bordereau importé fait foi.",
+    detail: "Le bordereau importé fait foi.",
     required: true,
   },
   {

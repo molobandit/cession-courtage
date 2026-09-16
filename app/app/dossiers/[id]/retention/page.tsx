@@ -75,7 +75,7 @@ export default async function RetentionPage({ params }: { params: Promise<{ id: 
       {deal.stage === "RETENTION" && deal.buyerId !== actor.id ? (
         <p className="mt-6 rounded-2xl border border-line bg-paper p-4 text-[15px] text-muted">
           L’acquéreur, qui gère désormais le portefeuille, déclare la conservation. À douze mois, vous validez sa
-          déclaration depuis le dossier : le séquestre et le solde ajusté sont alors libérés.
+          déclaration depuis le dossier : le solde ajusté vous est alors versé.
         </p>
       ) : deal.stage === "RETENTION" ? (
         <section className="mt-6">

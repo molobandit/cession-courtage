@@ -37,12 +37,12 @@ export const PARTNERS: PartnerCopy[] = [
   {
     id: "trustap",
     name: "Trustap",
-    role: "Séquestre du prix",
+    role: "Paiement sécurisé du prix",
     envKey: "TRUSTAP_API_KEY",
     purpose:
-      "Conservation du prix de vente et des dépôts à partir de 999 euros, hors des comptes de La bourse du portefeuille, puis libération par étapes.",
+      "Garde le prix de vente et les dépôts à partir de 999 euros sur un compte sécurisé, hors des comptes de La bourse du portefeuille.",
     detail:
-      "Trustap est prévu pour le séquestre, certifié PCI DSS de niveau 1, avec les contrôles d’identité et de lutte contre le blanchiment exigés pour ce métier. L’acquéreur consigne le prix convenu, dépôt de garantie déduit, après la signature. Les fonds sont libérés au cédant quand l’acquéreur confirme l’accord des compagnies sur le transfert. Un litige reste chez Trustap, pas chez l’éditeur. Si la cession s’arrête, le solde consigné revient à l’acquéreur.",
+      "Trustap est prévu pour le paiement sécurisé, certifié PCI DSS de niveau 1. Après la signature, l’acquéreur y verse le prix, dépôt de garantie déduit. L’argent est versé au cédant dès que les compagnies ont accepté le transfert. Si la cession s’arrête, il est rendu à l’acquéreur.",
     termsUrl: "https://www.trustap.com/terms/",
     logoSrc: "/partners/trustap.svg",
   },
@@ -76,9 +76,9 @@ export const PARTNERS: PartnerCopy[] = [
     role: "Vérification d’identité",
     envKey: "ONDORSE_API_KEY",
     purpose:
-      "Contrôle KYC et KYB des cabinets avant l’acte, exigé pour ouvrir un séquestre.",
+      "Vérifie l’identité des cabinets et de leurs représentants avant l’acte.",
     detail:
-      "Ondorse est le prestataire de conformité visé pour l’identité du courtier et de sa société, y compris le filtrage contre le blanchiment. Jusqu’à la validation du contrat, le dossier enregistre l’étape sans transmettre de pièce à un tiers. Aucune donnée nominative de client final n’entre dans ce contrôle.",
+      "Ondorse est le prestataire de conformité visé pour l’identité du courtier et de sa société, y compris le filtrage contre le blanchiment. Jusqu’à la validation du contrat, le dossier enregistre l’étape sans transmettre de pièce à un tiers.",
     termsUrl: "https://www.ondorse.co/fr",
     logoSrc: "/partners/ondorse.svg",
   },
@@ -88,9 +88,9 @@ export const PARTNERS: PartnerCopy[] = [
     role: "Prêt professionnel",
     envKey: "CREDIPRO_LIVE",
     purpose:
-      "Aide à financer l’acquisition, ou à refinancer un achat déjà payé comptant. Ce n’est pas un séquestre.",
+      "Aide à financer l’acquisition, ou à refinancer un achat déjà payé comptant.",
     detail:
-      "CrediPro est le courtier en financement professionnel visé. Deux usages : monter le prêt pour acheter, et le post-financement si l’acquéreur a déjà payé comptant et veut dégager de la trésorerie. L’étude de faisabilité sera gratuite dès validation du contrat. Le prêt, une fois obtenu, alimente Trustap. La bourse du portefeuille ne prête pas.",
+      "CrediPro est le courtier en financement professionnel visé. Deux usages : monter le prêt pour acheter, et le post-financement si l’acquéreur a déjà payé comptant et veut dégager de la trésorerie. L’étude de faisabilité sera gratuite dès validation du contrat. Le prêt, une fois obtenu, rejoint le compte sécurisé. La bourse du portefeuille ne prête pas.",
     termsUrl: "https://www.credipro.com",
     logoSrc: "/partners/credipro.svg",
   },
@@ -99,7 +99,7 @@ export const PARTNERS: PartnerCopy[] = [
 export const TRUST_PILLARS: { title: string; body: string }[] = [
   {
     title: "Aucun fonds sur nos comptes",
-    body: "La bourse du portefeuille n’encaisse pas le prix de cession. L’abonnement passe par Stripe. Le prix passe par le séquestre Trustap, une fois le contrat validé.",
+    body: "La bourse du portefeuille n’encaisse pas le prix de cession. L’abonnement passe par Stripe. Le prix passe par un compte sécurisé Trustap, une fois le contrat validé.",
   },
   {
     title: "Libération conditionnée",
@@ -111,7 +111,7 @@ export const TRUST_PILLARS: { title: string; body: string }[] = [
   },
   {
     title: "Identités professionnelles",
-    body: "ORIAS à l’entrée, puis Ondorse pour l’identité des parties avant l’acte. Les assurés du portefeuille restent hors de ce périmètre.",
+    body: "Ondorse vérifie l’identité des parties avant l’acte.",
   },
 ];
 
@@ -126,7 +126,7 @@ export const READY_BADGE = "Prêt. Contrat à valider";
 
 /** Phrase unique pour les écrans qui parlent encore d’encaissement. */
 export const CESSION_FUNDS_DISCLAIMER =
-  "La bourse du portefeuille ne détient jamais les fonds. Le dépôt de garantie se règle par carte bancaire ou prélèvement SEPA auprès d’un prestataire de paiement agréé. Le prix de cession est confié à un tiers de séquestre indépendant, puis remis au cédant une fois le transfert des contrats accepté par les compagnies. L’ouverture du séquestre en ligne est en cours : d’ici là, chaque versement est consigné dans le dossier de cession.";
+  "Votre paiement est sécurisé. Le dépôt de garantie se règle par carte ou prélèvement. Le prix est versé sur un compte sécurisé, puis remis au cédant dès que les compagnies ont accepté le transfert des contrats. La bourse du portefeuille ne garde jamais l’argent. Le paiement en ligne ouvre prochainement : d’ici là, chaque versement est suivi dans le dossier.";
 
 export function hasForbiddenDash(text: string): boolean {
   return /[—–]/.test(text) || / - /.test(text);

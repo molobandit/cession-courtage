@@ -12,4 +12,4 @@ export async function loadAgreementsStatus(user: { id: string; oriasNumber: stri
 }
 
 export const AGREEMENTS_REQUIRED_MESSAGE =
-  "Signez d’abord vos engagements (confidentialité et contrat d’intermédiation) : une seule fois, valables toute la durée de votre ORIAS.";
+  "Signez d’abord vos engagements (confidentialité et contrat d’intermédiation), valables pour toutes vos annonces et cessions.";

@@ -18,8 +18,7 @@ export function InvestorInquiryForm({ listingId }: { listingId?: string }) {
     return (
       <p className="rounded-xl border border-line bg-indigo-soft p-6 text-[15px] leading-relaxed text-ink">
         Votre positionnement est enregistré. Nous vous recontactons uniquement
-        sur les dossiers correspondant à vos critères, sous alias, sans donnée
-        nominative de client final.
+        sur les dossiers correspondant à vos critères, sous alias.
       </p>
     );
   }

@@ -4,10 +4,11 @@ import { getActor, isAdmin } from "@/lib/authz";
 import { formatDateTime } from "@/lib/format/fr";
 import { formatEuroWhole } from "@/lib/format/number";
 import { DATA_ROOM_KINDS } from "@/lib/listing/company-doc-kinds";
+import { ASKING_MAX, ASKING_MIN } from "@/lib/listing/constants";
 import { commissionsCedees, listingLotTotals } from "@/lib/listing/lot-totals";
 import { listListingsToReview } from "@/lib/listing/review";
 
-export const metadata = { title: "Annonces à relire" };
+export const metadata = { title: "Dossiers à étudier" };
 
 export default async function AdminListingsReviewPage() {
   const actor = await getActor();
@@ -18,10 +19,11 @@ export default async function AdminListingsReviewPage() {
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-6">
-      <h1 className="font-serif text-2xl text-ink">Annonces à relire</h1>
+      <h1 className="font-serif text-2xl text-ink">Dossiers à étudier</h1>
       <p className="mt-1 max-w-2xl text-sm text-muted">
-        Sincérité des chiffres, anonymat (ni raison sociale ni commune dans la présentation), complétude. Publiée, l’annonce
-        ouvre sa séance de 21 jours ; renvoyée, le cédant reçoit le motif.
+        Le cédant ne fixe pas le prix. Réalisez l’étude du portefeuille (sincérité des chiffres, anonymat, complétude),
+        fixez le prix, puis mettez l’annonce en ligne : la séance de 21 jours s’ouvre. Renvoyé, le dossier part au cédant
+        avec le motif.
       </p>
       <div className="mt-4 overflow-x-auto rounded-xl border border-line bg-surface">
         <table className="w-full min-w-[56rem] text-sm">
@@ -29,7 +31,7 @@ export default async function AdminListingsReviewPage() {
             <tr>
               <th className="px-3 py-2 font-medium">Dossier</th>
               <th className="px-3 py-2 font-medium">Cabinet</th>
-              <th className="px-3 py-2 text-right font-medium">Prix · commissions</th>
+              <th className="px-3 py-2 text-right font-medium">Étude · commissions</th>
               <th className="px-3 py-2 font-medium">Présentation</th>
               <th className="px-3 py-2 font-medium">Décision</th>
             </tr>
@@ -43,6 +45,8 @@ export default async function AdminListingsReviewPage() {
               </tr>
             ) : (
               annonces.map((a) => {
+                const etude = a.valuations[0];
+                const suggere = Math.round(Number(etude?.midValue ?? a.askingPrice));
                 const pieces = DATA_ROOM_KINDS.filter((k) => a.companyDocuments.some((d) => d.kind === k)).length;
                 return (
                   <tr key={a.id} className="border-t border-line align-top">
@@ -59,14 +63,16 @@ export default async function AdminListingsReviewPage() {
                       <span className="block text-[13px] text-muted">Pièces du cabinet : {pieces} / {DATA_ROOM_KINDS.length}</span>
                     </td>
                     <td className="px-3 py-3 text-right tabular">
-                      {formatEuroWhole(Number(a.askingPrice))}
+                      {etude
+                        ? `${formatEuroWhole(Number(etude.lowValue))} à ${formatEuroWhole(Number(etude.highValue))}`
+                        : "Étude à faire"}
                       <span className="block text-[13px] text-muted">
                         {formatEuroWhole(commissionsCedees(a, lots))} · {lots.get(a.id)?.contractCount ?? a.portfolio.contractCount} contrats
                       </span>
                     </td>
                     <td className="max-w-[22rem] px-3 py-3 text-[13px] text-ink">{a.presentation?.slice(0, 400) || <span className="text-muted">Aucune</span>}</td>
                     <td className="px-3 py-3">
-                      <ListingReviewActions listingId={a.id} />
+                      <ListingReviewActions listingId={a.id} suggestedPrice={Math.min(ASKING_MAX, Math.max(ASKING_MIN, suggere))} />
                     </td>
                   </tr>
                 );

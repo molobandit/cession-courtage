@@ -28,7 +28,7 @@ export default async function EditListingPage({ params }: { params: Promise<{ id
         Retour à l’annonce
       </Link>
       <MemberPageHeader title={`Modifier le dossier N° ${listing.publicNumber}`}>
-        {portfolio.label}. Corrigez ce qui doit l’être, enregistrez, puis soumettez de nouveau l’annonce à la relecture.
+        {portfolio.label}. Corrigez ce qui doit l’être, enregistrez, puis soumettez de nouveau votre dossier à notre équipe.
       </MemberPageHeader>
       {listing.reviewNote ? (
         <p className="mt-4 rounded-2xl border border-warn/30 bg-warn/5 px-4 py-3 text-[15px] text-ink">
@@ -39,7 +39,6 @@ export default async function EditListingPage({ params }: { params: Promise<{ id
         <CreateListingForm
           portfolioId={portfolio.id}
           listingId={listing.id}
-          defaultAsking={String(Math.round(Number(listing.askingPrice)))}
           defaultCertify={brief.certificationRequested}
           defaults={defaultsFromBrief(brief, listing.sellerSupportMonths)}
           qualityDefaults={{

@@ -183,7 +183,7 @@ export function PublicListingDetail({
                 ...(perceptionAmountLine
                   ? [{ label: "Montant précompté", value: perceptionAmountLine.replace("Montant précompté : ", "") }]
                   : []),
-                { label: "Prix demandé", value: formatEuroWhole(askingPrice) },
+                { label: "Prix", value: formatEuroWhole(askingPrice) },
                 {
                   label: "Multiple",
                   value:
@@ -206,7 +206,7 @@ export function PublicListingDetail({
           </article>
           <MixDonut
             title="Mix par branche"
-            subtitle="Part des commissions annuelles, sans donnée nominative."
+            subtitle="Part des commissions annuelles."
             shares={byRisk}
           />
         </div>
@@ -279,7 +279,7 @@ export function PublicListingDetail({
                 </p>
               </div>
               <div className="text-right">
-                <p className="text-[12px] text-muted">Prix demandé</p>
+                <p className="text-[12px] text-muted">Prix</p>
                 <p className="tabular text-3xl font-bold text-ok">{formatEuroWhole(askingPrice)}</p>
                 <p className="mt-2 text-[12px] text-muted">Commissions / an</p>
                 <p className="tabular text-lg font-semibold text-ink">

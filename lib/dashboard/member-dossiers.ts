@@ -99,7 +99,7 @@ export async function loadMemberDossiers(actor: Actor) {
             ? { text: `${candidatsPar.get(l.id)} candidat${(candidatsPar.get(l.id) ?? 0) > 1 ? "s" : ""} en cours` }
             : { text: "Aucun candidat pour le moment", muted: true },
         ],
-        amount: formatEuroWhole(Number(l.askingPrice)),
+        amount: l.publishedAt ? formatEuroWhole(Number(l.askingPrice)) : "Prix à venir",
         active: l.status !== "WITHDRAWN" && l.status !== "SOLD",
       })),
     // Réponses du cédant aux demandes d'acquisition : ses positions vendeur.

@@ -106,23 +106,23 @@ export function nextAction(state: DashboardState): NextAction {
   if (state.canSell && state.draftListing) {
     return {
       tone: "action",
-      title: `Votre dossier n° ${state.draftListing.publicNumber} est encore en brouillon`,
-      detail: "Tant qu’elle n’est pas publiée, aucun acquéreur ne peut la voir.",
+      title: `Votre dossier n° ${state.draftListing.publicNumber} n’est pas encore soumis`,
+      detail: "Soumettez-le : notre équipe réalise l’étude du portefeuille, fixe le prix, puis met l’annonce en ligne.",
       href: `/app/annonces/${state.draftListing.id}`,
-      cta: "Compléter et publier",
+      cta: "Compléter et soumettre",
     };
   }
 
   if (state.canSell && state.unvaluedPortfolioCount > 0) {
     return {
       tone: "action",
-      title: "Un portefeuille attend sa valorisation",
+      title: "Un portefeuille attend son étude",
       detail:
-        "La cascade détaille l’impact en euros de chaque poste, et indique les correctifs les plus rentables.",
+        "L’étude met en évidence les éléments et les caractéristiques de votre portefeuille.",
       href: state.unvaluedPortfolio
         ? `/app/portefeuilles/${state.unvaluedPortfolio.id}`
         : "/app",
-      cta: "Lancer la valorisation",
+      cta: "Lancer l’étude",
     };
   }
 
@@ -130,8 +130,7 @@ export function nextAction(state: DashboardState): NextAction {
     return {
       tone: "action",
       title: "Commencez par importer votre portefeuille",
-      detail:
-        "Un bordereau CSV ou XLSX suffit. Les colonnes nominatives sont refusées à l’import.",
+      detail: "Un bordereau CSV ou XLSX suffit.",
       href: "/app/import",
       cta: "Importer un bordereau",
     };
@@ -151,11 +150,11 @@ export function nextAction(state: DashboardState): NextAction {
   if (state.canSell && state.portfolioCount > 0) {
     return {
       tone: "action",
-      title: "Publiez une annonce",
+      title: "Proposez votre portefeuille à la vente",
       detail:
-        "Votre portefeuille est prêt. L’annonce paraît sous alias, sans raison sociale ni commune.",
+        "Soumettez votre dossier : notre équipe réalise l’étude, fixe le prix, puis met l’annonce en ligne sous alias.",
       href: "/app/annonces/nouvelle",
-      cta: "Créer une annonce",
+      cta: "Soumettre mon dossier",
     };
   }
 

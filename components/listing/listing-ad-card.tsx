@@ -48,7 +48,7 @@ export function ListingAdCard({ item }: { item: PublicListingCard }) {
             <p className="tabular text-[18px] font-bold text-ink">
               {formatEuroWhole(item.askingPrice)}
             </p>
-            <p className="mt-0.5 text-[12px] text-muted">Prix demandé</p>
+            <p className="mt-0.5 text-[12px] text-muted">Prix</p>
           </div>
         </div>
         {!item.sold && item.offerCount ? (

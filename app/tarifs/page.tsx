@@ -44,8 +44,7 @@ const COMPARE_ROWS: {
   verified: string;
 }[] = [
   { label: "Publication sous alias", simple: "oui", verified: "oui" },
-  { label: "Numéro ORIAS contrôlé à l’inscription", simple: "oui", verified: "oui" },
-  { label: "Paiement via séquestre", simple: "oui", verified: "oui" },
+  { label: "Paiement sécurisé", simple: "oui", verified: "oui" },
   { label: "Kbis et existence réelle de la société", simple: "non", verified: "oui" },
   { label: "Pièce d’identité du représentant", simple: "non", verified: "oui" },
   { label: "Justificatif ORIAS du dossier", simple: "non", verified: "oui" },
@@ -61,7 +60,7 @@ const VERIFIED_PILLS = [
   "États de portefeuille",
   "Bordereaux de commissions",
   "Revue interne compagnies et mix",
-  "Séquestre jusqu’à la prise de possession",
+  "Paiement sécurisé jusqu’au transfert",
 ];
 
 const VERIFY_BLOCKS = [
@@ -112,7 +111,7 @@ const FAQ = [
   },
   {
     q: "Quand le vendeur est-il identifié ?",
-    a: `Après un dépôt de ${INTEREST_DEPOSIT_LABEL} du prix demandé. Avant cela, le cédant reste sous alias, même si vous êtes abonné, et même si le portefeuille est certifié.`,
+    a: `Après un dépôt de ${INTEREST_DEPOSIT_LABEL} du prix de l’annonce. Avant cela, le cédant reste sous alias, même si vous êtes abonné, et même si le portefeuille est certifié.`,
   },
   {
     q: "Combien coûte une vente ?",
@@ -120,7 +119,7 @@ const FAQ = [
   },
   {
     q: "Quand l’argent est-il débloqué ?",
-    a: "Les fonds de cession restent sous séquestre jusqu’à ce que l’acquéreur ait le portefeuille en sa possession. Si la vente n’aboutit pas, le dépôt d’intérêt et les fonds consignés sont restitués. L’abonnement annuel de 250 € HT se règle par Stripe.",
+    a: "L’argent de la cession reste sur un compte sécurisé jusqu’à ce que l’acquéreur ait le portefeuille. Si la vente n’aboutit pas, le dépôt et le prix lui sont rendus. L’abonnement annuel de 250 € HT se règle par Stripe.",
   },
 ];
 
@@ -391,7 +390,7 @@ export default async function TarifsPage({
               lede="Ce versement révèle le cédant. Ce n’est pas le contrôle des pièces."
               price={INTEREST_DEPOSIT_LABEL}
               items={[
-                "Calculé sur le prix demandé",
+                "Calculé sur le prix de l’annonce",
                 "Dévoile les coordonnées du cédant",
                 "Messagerie anonyme avant le dépôt",
                 "Même un portefeuille certifié reste sous alias jusqu’ici",
@@ -405,20 +404,20 @@ export default async function TarifsPage({
                 "Mise en vente gratuite",
                 "Pas de Kbis, pièce d’identité ni bordereaux contrôlés",
                 "Statut non certifié en salle de marché",
-                "Paiement via séquestre, comme l’option 2",
+                "Paiement sécurisé, comme l’option 2",
               ]}
               href="/ceder"
               cta="Choisir l’annonce simple"
             />
             <ServiceCard
-              title="Séquestre Trustap"
-              lede="Les fonds de cession ne transitent pas par La bourse du portefeuille."
+              title="Paiement sécurisé"
+              lede="La bourse du portefeuille ne garde jamais l’argent de la cession."
               price="Inclus"
               items={[
-                "Consignation jusqu’à la remise du portefeuille",
-                "Prix entier consigné, dépôt déduit, libéré à l’accord des compagnies",
-                "Restitution à l’acquéreur si la vente n’aboutit pas",
-                "Aucun frais de séquestre en plus des honoraires",
+                "Le prix reste sur un compte sécurisé jusqu’au transfert",
+                "Il est versé au cédant dès l’accord des compagnies",
+                "Il est rendu à l’acquéreur si la vente n’aboutit pas",
+                "Aucun frais en plus des honoraires",
               ]}
             />
           </div>

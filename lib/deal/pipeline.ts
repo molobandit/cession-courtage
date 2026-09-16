@@ -42,7 +42,7 @@ export const SALE_PIPELINE: PipelineStep[] = [
   {
     key: "TRANSFER",
     label: "Paiement et transfert",
-    summary: "Prix au séquestre, attestations envoyées, accord des compagnies : les fonds sont libérés au cédant.",
+    summary: "Prix sur le compte sécurisé, attestations envoyées, accord des compagnies : le prix est versé au cédant.",
   },
 
   {
@@ -115,8 +115,8 @@ export function nextPipelineAction(
     case "TRANSFER":
     case "RETENTION":
       return seller
-        ? { title: "Envoyer les attestations aux compagnies", body: "Dès que le prix est au séquestre. Les fonds vous sont libérés à l’accord des compagnies." }
-        : { title: "Verser le prix au séquestre, puis confirmer le transfert", body: "Le prix, dépôt déduit, reste au séquestre jusqu’à l’accord des compagnies." };
+        ? { title: "Envoyer les attestations aux compagnies", body: "Dès que le prix est sur le compte sécurisé. Il vous est versé à l’accord des compagnies." }
+        : { title: "Verser le prix, puis confirmer le transfert", body: "Le prix, dépôt déduit, reste sur un compte sécurisé jusqu’à l’accord des compagnies." };
     case "CLOSED":
       return {
         title: "Cession close",

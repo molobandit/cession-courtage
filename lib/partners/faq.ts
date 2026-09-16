@@ -5,11 +5,11 @@ export const PAYMENT_FAQ_ANCHOR = "paiement-et-signatures";
 export const PAYMENT_FAQ: { q: string; a: string }[] = [
   {
     q: "Pourquoi un dépôt avant de voir qui vend ?",
-    a: `Le dépôt de ${INTEREST_DEPOSIT_LABEL} du prix demandé sert d’engagement. Il protège le cédant contre une curiosité sans suite. Si la vente se conclut, ce montant s’impute sur le prix à consigner. Il n’est pas un honoraire de la plateforme.`,
+    a: `Le dépôt de ${INTEREST_DEPOSIT_LABEL} du prix sert d’engagement. Il protège le cédant contre une curiosité sans suite. Si la vente se conclut, ce montant s’impute sur le prix à consigner. Il n’est pas un honoraire de la plateforme.`,
   },
   {
     q: "Où va l’argent du prix de vente ?",
-    a: "Pas sur les comptes de La bourse du portefeuille. Le prix est conçu pour transiter par Trustap, le séquestre. L’acquéreur y consigne le prix entier, dépôt déduit, après la signature. Les fonds sortent quand il confirme l’accord des compagnies sur le transfert. Tant que le contrat Trustap n’est pas validé, l’étape est enregistrée sur le dossier sans mouvement réel.",
+    a: "Pas sur les comptes de La bourse du portefeuille. Après la signature, l’acquéreur verse le prix, dépôt déduit, sur un compte sécurisé. L’argent est versé au cédant dès que les compagnies ont accepté le transfert. Le paiement en ligne ouvre prochainement : d’ici là, l’étape est suivie dans le dossier.",
   },
   {
     q: "À quoi sert Stripe alors ?",
@@ -25,7 +25,7 @@ export const PAYMENT_FAQ: { q: string; a: string }[] = [
   },
   {
     q: "Qui vérifie que j’existe vraiment ?",
-    a: "L’ORIAS à l’inscription. Puis Ondorse, dès validation du contrat, pour l’identité du cabinet et du représentant. Les noms d’assurés n’entrent jamais dans ce contrôle.",
+    a: "Ondorse, dès validation du contrat, vérifie l’identité du cabinet et de son représentant.",
   },
   {
     q: "Mon plafond carte ne passe pas. Que faire ?",

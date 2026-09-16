@@ -316,8 +316,8 @@ export default async function PublicListingPage({
             <section className="rounded-3xl border border-indigo-line bg-indigo-soft p-6">
               <h2 className="text-xl font-semibold text-ink">Dossier de cession ouvert</h2>
               <p className="mt-2 text-[15px] leading-relaxed text-muted">
-                Le parcours continue jusqu’à la clôture : vérifications, signature, prix au séquestre,
-                accord des compagnies et libération des fonds.
+                Le parcours continue jusqu’à la clôture : vérifications, signature, paiement sécurisé,
+                accord des compagnies et versement du prix au cédant.
               </p>
               <Button asChild variant="primary" className="mt-4">
                 <Link href={`/app/dossiers/${myDeal.id}`}>Ouvrir le dossier</Link>
@@ -332,7 +332,7 @@ export default async function PublicListingPage({
             <>
               <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-muted">
                 Un compte investisseur, sans ORIAS, permet de déposer {INTEREST_DEPOSIT_LABEL} du
-                prix demandé ({formatEuroWhole(deposit)}) pour ouvrir les coordonnées du cabinet
+                prix de l’annonce ({formatEuroWhole(deposit)}) pour ouvrir les coordonnées du cabinet
                 cédant. Les assurés restent anonymes. {CESSION_FUNDS_DISCLAIMER}
               </p>
               <div className="mt-5 flex flex-wrap gap-3">
@@ -364,7 +364,7 @@ export default async function PublicListingPage({
             <>
               <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-muted">
                 Le cabinet reste sous alias tant que rien ne vous engage. Un dépôt de{" "}
-                {INTEREST_DEPOSIT_LABEL} du prix demandé, soit {formatEuroWhole(deposit)}, ouvre
+                {INTEREST_DEPOSIT_LABEL} du prix de l’annonce, soit {formatEuroWhole(deposit)}, ouvre
                 ses coordonnées. Les assurés du portefeuille ne sont jamais nominatifs.{" "}
                 {CESSION_FUNDS_DISCLAIMER}
               </p>
@@ -423,7 +423,7 @@ export default async function PublicListingPage({
             <>
               <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-muted">
                 Le cédant reste anonyme tant que rien ne vous engage. Un dépôt de{" "}
-                {INTEREST_DEPOSIT_LABEL} du prix demandé, soit{" "}
+                {INTEREST_DEPOSIT_LABEL} du prix de l’annonce, soit{" "}
                 <span className="tabular font-medium text-ink">
                   {formatEuroWhole(deposit)}
                 </span>

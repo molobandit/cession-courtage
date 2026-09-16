@@ -90,7 +90,7 @@ export async function notifyDealStage(
       : `Dossier n° ${c.numero} · ${etape?.label ?? deal.stage}`;
   const corps =
     deal.stage === "CLOSED"
-      ? "La cession est close. Les fonds séquestrés sont libérés."
+      ? "La cession est close. Le prix est versé au cédant."
       : `Le dossier passe à l’étape « ${etape?.label ?? deal.stage} ». ${etape?.summary ?? ""}`.trim();
   const tous = options.notifyActor === true;
 

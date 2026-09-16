@@ -27,7 +27,7 @@ export default async function AgreementsPage({ searchParams }: { searchParams: P
       <DeskPageHeader
         back={{ href: "/app/profil", label: "Mon compte" }}
         kicker="Engagements"
-        title={statut.valid ? "Vos engagements sont signés" : "Signez une fois, pour toute la durée de votre ORIAS"}
+        title={statut.valid ? "Vos engagements sont signés" : "Signez vos engagements"}
         subtitle={
           <>
             Confidentialité et contrat d’intermédiation : les mêmes pour toutes vos annonces, prises de position et

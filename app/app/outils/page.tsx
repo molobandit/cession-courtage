@@ -20,22 +20,22 @@ export default async function OutilsPage() {
       ? [
           {
             title: "Céder",
-            detail: "Importer, valoriser, publier.",
+            detail: "Importer, soumettre, suivre.",
             tools: [
               {
                 href: "/app/import",
                 title: "Importer un bordereau",
-                detail: "CSV ou XLSX. Les colonnes nominatives de clients sont refusées.",
+                detail: "Un fichier CSV ou XLSX suffit.",
               },
               {
                 href: "/app/annonces/nouvelle",
-                title: "Publier une annonce",
-                detail: "Alias numéroté, fenêtre d’offres, séquestre à la vente.",
+                title: "Proposer un portefeuille à la vente",
+                detail: "Notre équipe réalise l’étude, fixe le prix et met l’annonce en ligne sous alias.",
               },
               {
-                href: "/valoriser",
-                title: "Estimer un portefeuille",
-                detail: "Fourchette de valeur, pas un prix unique. Chaque poste est chiffré.",
+                href: "/etude-portefeuille",
+                title: "L’étude de portefeuille",
+                detail: "Ce que notre équipe regarde avant de mettre une annonce en ligne.",
               },
             ],
           },

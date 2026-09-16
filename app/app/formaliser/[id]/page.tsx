@@ -32,9 +32,9 @@ import { formatEuroWhole } from "@/lib/format/number";
 import { formatDate } from "@/lib/format/fr";
 
 const ESCROW_STAGE_LABEL: Record<string, string> = {
-  NONE: "Aucun fonds bloqué",
-  FUNDS_HELD: "Fonds bloqués sur le compte séquestre",
-  RELEASED: "Fonds libérés au cédant",
+  NONE: "Prix pas encore versé",
+  FUNDS_HELD: "Prix sur le compte sécurisé",
+  RELEASED: "Prix versé au cédant",
 };
 
 export const metadata = { title: "Dossier de gré à gré" };

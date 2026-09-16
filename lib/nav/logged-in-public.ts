@@ -11,7 +11,6 @@ const EXACT = new Set([
   "/acquerir",
   "/faq",
   "/journal",
-  "/valoriser",
   "/certification",
 ]);
 

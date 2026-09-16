@@ -62,7 +62,7 @@ export const SERVICE_ENTRIES: ServiceEntry[] = [
     filter: "transactions",
     slug: "transactions-securisees",
     title: "Transaction Sécurisée",
-    tagline: "Paiement via compte séquestre",
+    tagline: "Paiement sécurisé",
     heading: "Créez votre paiement sécurisé",
     listTitle: "Transactions Sécurisées",
     listLede: "Voir et gérer toutes vos transactions sécurisées",
@@ -70,9 +70,9 @@ export const SERVICE_ENTRIES: ServiceEntry[] = [
     createLabel: "Créer une transaction sécurisée",
     emptyTitle: "Pas de transactions sécurisées",
     emptyText:
-      "Vous n’avez pas encore de transactions sécurisées. Créez votre première transaction pour bloquer le prix en toute sécurité.",
+      "Vous n’avez pas encore de transactions sécurisées. Créez votre première transaction pour sécuriser le prix.",
     emptyShort: "Pas encore de transactions sécurisées",
-    pitch: "Le prix est bloqué sur un compte séquestre, libéré à la clôture.",
+    pitch: "Le prix reste sur un compte sécurisé, puis il est versé au cédant à la clôture.",
   },
   {
     key: "attestations",

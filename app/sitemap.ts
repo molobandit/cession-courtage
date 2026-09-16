@@ -5,7 +5,7 @@ const PUBLIC_ROUTES = [
   { path: "/", priority: 1 },
   { path: "/ceder", priority: 0.9 },
   { path: "/acquerir", priority: 0.9 },
-  { path: "/valoriser", priority: 0.9 },
+  { path: "/etude-portefeuille", priority: 0.9 },
   { path: "/annonces", priority: 0.8 },
   { path: "/annonces/demandes", priority: 0.7 },
   { path: "/annonces/demandes/nouvelle", priority: 0.6 },

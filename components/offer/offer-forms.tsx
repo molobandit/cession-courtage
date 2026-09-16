@@ -54,7 +54,7 @@ export function SubmitOfferForm({
         <div className="grid gap-1">
           <Label htmlFor="amount">Votre prix (€)</Label>
           <Input id="amount" name="amount" defaultValue={asking} inputMode="decimal" required />
-          <p className="text-[12px] text-muted">Payé au séquestre, dépôt déduit, libéré à la signature et à l’accord des compagnies.</p>
+          <p className="text-[12px] text-muted">Payé sur un compte sécurisé, dépôt déduit, puis versé au cédant à l’accord des compagnies.</p>
         </div>
         <div className="grid gap-1">
           <Label htmlFor="effectiveDate">Date d’effet souhaitée</Label>

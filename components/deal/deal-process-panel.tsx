@@ -185,7 +185,7 @@ function TaskAction({ p, task, side, escrowLive }: { p: DealProcess; task: Task;
         <p className="text-[14px] text-ink">
           Prix {formatEuro(Number(deal.upfrontAmount))}
           {depot > 0 ? ` − dépôt de garantie déjà versé ${formatEuro(depot)}` : ""} ={" "}
-          <span className="tabular font-bold">{formatEuro(aVerser)} à verser au séquestre</span>
+          <span className="tabular font-bold">{formatEuro(aVerser)} à verser sur le compte sécurisé</span>
         </p>
         <EscrowForm dealId={id} amountLabel={formatEuro(aVerser)} live={escrowLive} />
       </div>
@@ -226,7 +226,7 @@ function TaskAction({ p, task, side, escrowLive }: { p: DealProcess; task: Task;
         <CommitForm
           dealId={id}
           action={confirmCarrierTransferAction}
-          consentLabel="Les compagnies ont accepté le transfert et rattaché les contrats et les commissions à mon code. J’informe les clients avec le courrier fourni. Le séquestre est libéré au cédant."
+          consentLabel="Les compagnies ont accepté le transfert et rattaché les contrats et les commissions à mon code. J’informe les clients avec le courrier fourni. Le prix est alors versé au cédant."
           submitLabel="Confirmer l’accord des compagnies"
         />
       </div>
@@ -265,7 +265,7 @@ export function DealProcessPanel({ p, side, escrowLive }: { p: DealProcess; side
         <p className="text-[12px] font-semibold uppercase tracking-wide text-ok">Cession close</p>
         <h2 className="mt-1 text-xl font-semibold text-ink">Le portefeuille a changé de mains.</h2>
         <p className="mt-2 text-[15px] leading-relaxed text-muted">
-          Prix {formatEuro(Number(deal.agreedPrice))}. Séquestre libéré au cédant après l’accord des compagnies. Toutes les
+          Prix {formatEuro(Number(deal.agreedPrice))}. Prix versé au cédant après l’accord des compagnies. Toutes les
           pièces restent consultables dans l’onglet Documents.
         </p>
       </section>

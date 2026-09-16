@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 export const metadata: Metadata = {
   title: "Investisseurs",
   description:
-    "Investisseurs privés et family offices : suivez des dossiers sous alias, sans donnée nominative de client final.",
+    "Investisseurs privés et family offices : suivez des dossiers de cession sous alias.",
   alternates: { canonical: "/investisseurs" },
 };
 
@@ -38,7 +38,6 @@ export default function InvestisseursPage() {
             <li>Le dépôt de 2,5 % du prix de cession marque un intérêt qualifié sur le dossier.</li>
             <li>Les coordonnées du cabinet cédant s’ouvrent après ce dépôt, pas avant.</li>
             <li>Les dossiers restent sous alias jusqu’à ce dépôt.</li>
-            <li>Aucune donnée nominative de client final n’est communiquée.</li>
           </ul>
         </div>
         <div className="rounded-xl border border-line bg-paper p-7">

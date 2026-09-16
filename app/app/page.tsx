@@ -123,7 +123,7 @@ export default async function MemberHomePage() {
             lede="Nous menons la cession de bout en bout : aucun service à ajouter, tout est compris."
           >
             {vendeur ? (
-              <ActionTile href={annonceHref} icon="bag" tone="sell" title="Vendre" subtitle="Mettre votre portefeuille en séance" />
+              <ActionTile href={annonceHref} icon="bag" tone="sell" title="Vendre" subtitle="Soumettre votre portefeuille à notre équipe" />
             ) : null}
             {acheteur ? (
               <ActionTile href="/annonces" icon="search" tone="buy" title="Acheter" subtitle="Prendre position en salle de marché" />
@@ -147,7 +147,7 @@ export default async function MemberHomePage() {
               />
             ))}
             {vendeur ? (
-              <ActionTile href={annonceHref} icon="megaphone" tone="listing" title="Créer une annonce" subtitle="Mettre en vente" />
+              <ActionTile href={annonceHref} icon="megaphone" tone="listing" title="Proposer à la vente" subtitle="Étude et prix fixés par notre équipe" />
             ) : null}
             {acheteur ? (
               <ActionTile href="/app/mandats" icon="cart" tone="wanted" title="Annonce d’achat" subtitle="Décrire le portefeuille recherché" />

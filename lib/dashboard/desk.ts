@@ -79,7 +79,7 @@ export async function loadDesk(actor: Actor) {
     if (state.key === "POSITION") {
       aFaire.push({ key: `t-${position.id}`, href, icon: "shield", title: `Verser le dépôt de garantie · N° ${l.publicNumber}`, detail: "Il ouvre les coordonnées du cédant et vous permet de faire une offre.", cta: "Verser" });
     } else if (state.key === "DEPOSIT") {
-      aFaire.push({ key: `t-${position.id}`, href, icon: "megaphone", title: `Déposer votre offre · N° ${l.publicNumber}`, detail: `Prix demandé ${formatEuroWhole(Number(l.askingPrice))} · ${multiple}`, cta: "Faire une offre", urgent: true });
+      aFaire.push({ key: `t-${position.id}`, href, icon: "megaphone", title: `Déposer votre offre · N° ${l.publicNumber}`, detail: `Prix ${formatEuroWhole(Number(l.askingPrice))} · ${multiple}`, cta: "Faire une offre", urgent: true });
     } else if (deal && deal.stage !== "CLOSED") {
       const suite = nextPipelineAction(deal.stage, "buyer");
       aFaire.push({ key: `t-${position.id}`, href: `/app/dossiers/${deal.id}`, icon: "briefcase", title: `${suite.title} · N° ${l.publicNumber}`, detail: suite.body, cta: "Avancer", urgent: deal.stage === "DATA_ROOM" || deal.stage === "SIGNATURE" });
@@ -89,7 +89,9 @@ export async function loadDesk(actor: Actor) {
   // Ventes : une ligne par annonce, avec son dossier le plus avancé ou ses candidats.
   for (const annonce of annonces) {
     const cotation = marketStatus({ status: annonce.status, offerWindowClosesAt: annonce.offerWindowClosesAt });
-    const multiple = formatMultiple(listingMultiple(Number(annonce.askingPrice), commissionsCedees(annonce, lots)));
+    // Avant la mise en ligne, le prix n'est pas encore fixé par l'équipe : on ne l'affiche pas.
+    const prixFixe = annonce.publishedAt !== null;
+    const multiple = prixFixe ? formatMultiple(listingMultiple(Number(annonce.askingPrice), commissionsCedees(annonce, lots))) : "";
     const dossiers = dealsVendeur.filter((d) => d.listing.publicNumber === annonce.publicNumber);
     const plusAvance = [...dossiers].sort((a, b) => pipelineProgressPercent(b.stage) - pipelineProgressPercent(a.stage))[0];
     const liste = candidats.get(annonce.id) ?? [];
@@ -125,18 +127,18 @@ export async function loadDesk(actor: Actor) {
       libelle: annonce.portfolio.label,
       etape:
         annonce.status === "DRAFT"
-          ? "Brouillon, non publié"
+          ? "Dossier à soumettre"
           : `${cotation.label} · ${liste.length} candidat${liste.length > 1 ? "s" : ""}${offres.length ? ` · ${offres.length} offre${offres.length > 1 ? "s" : ""}` : ""}`,
       percent: liste.length ? Math.max(...liste.map((c) => c.state.percent)) : null,
-      montant: formatEuroWhole(Number(annonce.askingPrice)),
+      montant: prixFixe ? formatEuroWhole(Number(annonce.askingPrice)) : "Prix à venir",
       multiple,
       issue: "active",
     });
     if (annonce.status === "DRAFT") {
-      aFaire.push({ key: `t-draft-${annonce.id}`, href: `/app/annonces/${annonce.id}`, icon: "megaphone", title: `${annonce.reviewNote ? "Corriger" : "Soumettre"} l’annonce · N° ${annonce.publicNumber}`, detail: annonce.reviewNote ? `L’équipe l’a renvoyée : ${annonce.reviewNote.replace(/[.\s]+$/, "")}.` : "Gratuit : notre équipe la relit, puis la met en ligne.", cta: annonce.reviewNote ? "Corriger" : "Soumettre" });
+      aFaire.push({ key: `t-draft-${annonce.id}`, href: `/app/annonces/${annonce.id}`, icon: "megaphone", title: `${annonce.reviewNote ? "Compléter" : "Soumettre"} votre dossier · N° ${annonce.publicNumber}`, detail: annonce.reviewNote ? `Notre équipe vous l’a renvoyé : ${annonce.reviewNote.replace(/[.\s]+$/, "")}.` : "Notre équipe réalise l’étude du portefeuille, fixe le prix, puis met l’annonce en ligne.", cta: annonce.reviewNote ? "Compléter" : "Soumettre" });
     } else if (offres.length) {
       const meilleure = Math.max(...offres.map((o) => Number(o.offer?.amount ?? 0)));
-      aFaire.push({ key: `t-offres-${annonce.id}`, href: `/app/annonces/${annonce.id}/offres`, icon: "megaphone", title: `${offres.length} offre${offres.length > 1 ? "s" : ""} ${scelle ? "en séance" : "à examiner"} · N° ${annonce.publicNumber}`, detail: `Meilleure offre ${formatEuroWhole(meilleure)} pour ${formatEuroWhole(Number(annonce.askingPrice))} demandés`, cta: "Comparer", urgent: true });
+      aFaire.push({ key: `t-offres-${annonce.id}`, href: `/app/annonces/${annonce.id}/offres`, icon: "megaphone", title: `${offres.length} offre${offres.length > 1 ? "s" : ""} ${scelle ? "en séance" : "à examiner"} · N° ${annonce.publicNumber}`, detail: `Meilleure offre ${formatEuroWhole(meilleure)} pour ${formatEuroWhole(Number(annonce.askingPrice))} affichés`, cta: "Comparer", urgent: true });
     }
   }
 

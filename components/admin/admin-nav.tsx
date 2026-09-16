@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 
 const LINKS = [
   { href: "/admin/orias", label: "Validation ORIAS" },
-  { href: "/admin/annonces", label: "Annonces à relire" },
+  { href: "/admin/annonces", label: "Dossiers à étudier" },
   { href: "/admin/dossiers", label: "Suivi des cessions" },
   { href: "/admin/agenda", label: "Agenda" },
   { href: "/admin/investisseurs", label: "Investisseurs" },

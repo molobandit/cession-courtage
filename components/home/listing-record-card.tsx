@@ -21,7 +21,7 @@ export function ListingRecordCard({ item }: { item: PublicListingCard }) {
       <p className="mt-2 tabular text-[12px] text-muted">Dossier n° {item.publicNumber}</p>
       <dl className="mt-5 space-y-3">
         <div>
-          <dt className="text-[12px] text-muted">Prix demandé</dt>
+          <dt className="text-[12px] text-muted">Prix</dt>
           <dd className="tabular mt-0.5 text-[22px] font-bold tracking-tight text-ink">
             {formatEuroWhole(item.askingPrice)}
           </dd>

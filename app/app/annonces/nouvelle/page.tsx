@@ -31,8 +31,8 @@ export default async function NewListingPage({
   if (!selected) {
     return (
       <main className="mx-auto max-w-3xl px-4 py-6 sm:px-6 sm:py-8">
-        <MemberPageHeader title="Mettre un portefeuille en séance">
-          Commencez par importer votre bordereau : la valorisation se calcule, puis l’annonce part en séance sous alias, sans frais.
+        <MemberPageHeader title="Proposer un portefeuille à la vente">
+          Commencez par importer votre bordereau. Notre équipe réalise ensuite l’étude du portefeuille, puis met l’annonce en ligne sous alias.
         </MemberPageHeader>
         <Link
           href="/app/import"
@@ -43,8 +43,6 @@ export default async function NewListingPage({
       </main>
     );
   }
-  const mid = selected.valuations[0] ? Number(selected.valuations[0].midValue) : Number(selected.annualCommissions) * 2.5;
-  const asking = Math.min(200000, Math.max(2000, Math.round(mid)));
   const firm = actor.firmId
     ? await prisma.firm.findUnique({ where: { id: actor.firmId }, select: { profileJson: true } })
     : null;
@@ -57,11 +55,10 @@ export default async function NewListingPage({
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-6 sm:px-6 sm:py-8">
-      <MemberPageHeader title="Mettre un portefeuille en séance">
-        {selected.label} · commissions {formatEuro(selected.annualCommissions)} / an
-        {selected.valuations[0] ? ` · médiane ${formatEuro(selected.valuations[0].midValue)}` : ""}
-        . Le profil de votre cabinet pré-remplit l’organisation et la conformité : vérifiez, complétez,
-        enregistrez. Les PDF du cabinet se déposent ensuite sur la fiche.
+      <MemberPageHeader title="Proposer un portefeuille à la vente">
+        {selected.label} · commissions {formatEuro(selected.annualCommissions)} / an. Le profil de votre cabinet
+        pré-remplit l’organisation et la conformité : vérifiez, complétez, enregistrez. Notre équipe réalise
+        ensuite l’étude du portefeuille et fixe le prix de mise en ligne.
       </MemberPageHeader>
       {portfolios.length > 1 ? (
         <p className="mt-2 text-sm">
@@ -75,7 +72,6 @@ export default async function NewListingPage({
       <div className="mt-4">
         <CreateListingForm
           portfolioId={selected.id}
-          defaultAsking={String(asking)}
           defaultCertify={certifier === "1"}
           defaults={profil}
           qualityDefaults={{

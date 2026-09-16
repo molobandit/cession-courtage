@@ -64,8 +64,8 @@ export const DIRECT_STEPS: DirectStep[] = [
   },
   {
     key: "ESCROW",
-    label: "Fonds séquestrés",
-    summary: "Le prix est bloqué, puis libéré en deux temps.",
+    label: "Paiement sécurisé",
+    summary: "Le prix est versé sur un compte sécurisé, puis au cédant en deux temps.",
     requires: "escrow",
   },
   {

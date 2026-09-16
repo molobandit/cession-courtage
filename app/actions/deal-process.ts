@@ -400,12 +400,12 @@ export async function fundEscrowAction(_prev: DealProcessState, formData: FormDa
     });
     await afterFact(dealId, actor.id, {
       key: "escrow-funded",
-      title: "Comptant séquestré",
-      body: "Le comptant est bloqué chez le tiers de séquestre. Envoyez les attestations signées aux compagnies.",
+      title: "Prix versé sur le compte sécurisé",
+      body: "Le prix est sur le compte sécurisé. Envoyez les attestations signées aux compagnies.",
     });
-    return { ok: "Comptant séquestré." };
+    return { ok: "Prix versé sur le compte sécurisé." };
   } catch (error) {
-    return fail(error, "Séquestre impossible pour le moment.");
+    return fail(error, "Versement impossible pour le moment.");
   }
 }
 

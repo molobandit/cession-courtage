@@ -188,7 +188,7 @@ export default async function PositionPage({ params }: { params: Promise<{ id: s
           tone: state.outcome === "closed" ? "closed" : state.outcome === "lost" || state.outcome === "withdrawn" ? "lost" : "active",
         }}
         figures={[
-          { label: "Prix demandé", value: formatEuroWhole(prix) },
+          { label: "Prix", value: formatEuroWhole(prix) },
           { label: "Commissions / an", value: formatEuroWhole(commissions) },
           {
             label: "Multiple",
@@ -247,7 +247,7 @@ export default async function PositionPage({ params }: { params: Promise<{ id: s
             <h2 className="text-[15px] font-semibold text-ink">Portefeuille</h2>
             <dl className="mt-3 grid gap-2 text-[14px]">
               <div className="flex justify-between gap-3">
-                <dt className="text-muted">Prix demandé</dt>
+                <dt className="text-muted">Prix</dt>
                 <dd className="tabular font-semibold text-ink">{formatEuroWhole(prix)}</dd>
               </div>
               <div className="flex justify-between gap-3">

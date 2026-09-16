@@ -3,6 +3,7 @@ import {
   idSchema,
   investorInquirySchema,
   listingCreateSchema,
+  listingPriceSchema,
   offerSchema,
   retentionReportSchema,
 } from "@/lib/validations/actions";
@@ -61,20 +62,26 @@ describe("offerSchema", () => {
   });
 });
 
+describe("listingPriceSchema", () => {
+  it("arrondit le prix fixé par l'équipe à l'euro entier", () => {
+    expect(listingPriceSchema.safeParse("45 000,60")).toEqual({ success: true, data: 45001 });
+  });
+
+  it("refuse un prix hors fourchette", () => {
+    expect(listingPriceSchema.safeParse("500").success).toBe(false);
+    expect(listingPriceSchema.safeParse("250 000").success).toBe(false);
+  });
+});
+
 describe("listingCreateSchema", () => {
-  it("arrondit le prix demande a l'euro entier", () => {
-    const parsed = listingCreateSchema.safeParse({
-      portfolioId: "pf_01",
-      askingPrice: "45 000,60",
-      sellerSupportMonths: 6,
-      precompte: "no",
-    });
+  it("ne demande aucun prix au cédant", () => {
+    const parsed = listingCreateSchema.safeParse({ portfolioId: "pf_01", sellerSupportMonths: 6, precompte: "no" });
     expect(parsed.success).toBe(true);
-    if (parsed.success) expect(parsed.data.askingPrice).toBe(45001);
+    if (parsed.success) expect("askingPrice" in parsed.data).toBe(false);
   });
 
   it("exige de dire si les commissions sont linéaires ou en précompte", () => {
-    const base = { portfolioId: "pf_01", askingPrice: "45 000", sellerSupportMonths: 3 };
+    const base = { portfolioId: "pf_01", sellerSupportMonths: 3 };
     const sans = listingCreateSchema.safeParse(base);
     expect(sans.success).toBe(false);
     if (!sans.success) expect(sans.error.issues[0]!.message).toContain("linéaires ou en précompte");
@@ -85,7 +92,6 @@ describe("listingCreateSchema", () => {
   it("refuse un accompagnement aberrant", () => {
     const parsed = listingCreateSchema.safeParse({
       portfolioId: "pf_01",
-      askingPrice: "45 000",
       sellerSupportMonths: 99,
     });
     expect(parsed.success).toBe(false);

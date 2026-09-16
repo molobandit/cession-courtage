@@ -97,7 +97,7 @@ export default function ConditionsGeneralesPage() {
           messages), l’acquéreur souscrit un abonnement de{" "}
           {GROWTH_PLAN_ANNUAL_EUR} € hors taxes par an. Le cédant demeure
           anonyme jusqu’au versement d’un dépôt de {INTEREST_DEPOSIT_LABEL} du
-          prix demandé. L’éditeur n’encaisse pas le prix de cession. Les
+          prix de l’annonce. L’éditeur n’encaisse pas le prix de cession. Les
           modalités de paiement et de signature figurent à l’article 10.
         </p>
         <p>
@@ -128,8 +128,8 @@ export default function ConditionsGeneralesPage() {
 
       <LegalSection title="8. Responsabilité">
         <p>
-          Les valorisations sont indicatives et reposent sur les données déposées par
-          le cédant. Elles ne constituent ni une garantie de prix, ni un audit, ni
+          Les études de portefeuille et les prix des annonces sont indicatifs et
+          reposent sur les données déposées par le cédant. Elles ne constituent ni une garantie de prix, ni un audit, ni
           une évaluation opposable aux tiers. Il appartient à l’acquéreur de conduire
           ses propres vérifications préalables.
         </p>

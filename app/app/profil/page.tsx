@@ -274,10 +274,10 @@ export default async function ProfilPage({
       <section id="engagements" className={card}>
         <h2 className="text-lg font-semibold text-ink">Engagements</h2>
         <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-muted">
-          Confidentialité et contrat d’intermédiation, signés une fois pour la durée de votre ORIAS.
+          Confidentialité et contrat d’intermédiation, valables pour toutes vos annonces et cessions.
         </p>
         <p className={`mt-3 text-[15px] font-semibold ${engagements.valid ? "text-ok" : "text-warn"}`}>
-          {engagements.valid ? "✓ Signés, valables pour toutes vos annonces et cessions" : "À signer avant de vous engager ou de publier"}
+          {engagements.valid ? "✓ Signés, valables pour toutes vos annonces et cessions" : "À signer avant de soumettre un dossier ou de faire une offre"}
         </p>
         <Link href="/app/engagements" className="mt-2 inline-block text-[14px] font-medium text-indigo-dark underline-offset-2 hover:underline">
           {engagements.valid ? "Relire mes engagements" : "Signer mes engagements"}
@@ -298,8 +298,8 @@ export default async function ProfilPage({
       <section id="verification" className={card}>
         <h2 className="text-lg font-semibold text-ink">Compte vérifié</h2>
         <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-muted">
-          Une seule fois pour toutes vos cessions : ces pièces permettent de signer et de séquestrer les fonds en
-          règle avec la lutte contre le blanchiment. Seule la plateforme les consulte.
+          Ces pièces permettent de signer et de sécuriser le paiement, en règle avec la lutte contre le blanchiment.
+          Seule la plateforme les consulte.
         </p>
         <div className="mt-5">
           <VerificationPanel

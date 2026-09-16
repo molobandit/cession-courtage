@@ -11,6 +11,7 @@ import { disposePlatformProxy } from "./setup/prisma-test";
 import { connecterUtilisateur } from "./setup/auth-stub";
 import { signAgreementsAction } from "@/app/actions/agreements";
 import { reviewListingAction } from "@/app/actions/listing-review";
+import { formatEuroWhole } from "@/lib/format/number";
 import { publishListingAction, updateListingAction } from "@/app/actions/listings";
 import { getListingByPublicNumber } from "@/lib/authz";
 import { listingQuotes } from "@/lib/offer/quote";
@@ -73,15 +74,15 @@ describe("engagements signés une fois", () => {
   });
 });
 
-describe("mise en vente gratuite, relue avant publication", () => {
-  it("passe en cotation, invisible du public jusqu’à la décision", async () => {
+describe("mise en vente gratuite, étudiée par l’équipe avant la mise en ligne", () => {
+  it("passe en étude, invisible du public jusqu’à la décision", async () => {
     connecterUtilisateur(cedant);
     expect(await publishListingAction({}, form({ listingId: LISTING }))).toEqual({});
     const l = await prisma.listing.findUniqueOrThrow({ where: { id: LISTING }, select: { status: true, publicNumber: true, submittedForReviewAt: true } });
     expect(l.status).toBe(ListingStatus.PENDING_REVIEW);
     expect(l.submittedForReviewAt).not.toBeNull();
     expect(await getListingByPublicNumber(l.publicNumber, null)).toBeNull();
-    expect(await prisma.notification.count({ where: { userId: admin, title: { startsWith: "Annonce à relire" }, createdAt: { gte: debut } } })).toBeGreaterThan(0);
+    expect(await prisma.notification.count({ where: { userId: admin, title: { startsWith: "Dossier à étudier" }, createdAt: { gte: debut } } })).toBeGreaterThan(0);
   });
 
   it("un renvoi exige un motif et rend l’annonce au cédant", async () => {
@@ -97,31 +98,35 @@ describe("mise en vente gratuite, relue avant publication", () => {
 
   it("renvoyée, elle se corrige ; en relecture, elle ne se modifie plus", async () => {
     connecterUtilisateur(cedant);
+    const avant = await prisma.listing.findUniqueOrThrow({ where: { id: LISTING }, select: { askingPrice: true } });
+    // Le cédant ne fixe pas le prix : un prix glissé dans le formulaire est ignoré.
     const correction = form({ listingId: LISTING, askingPrice: "12 500", presentation: "Portefeuille santé en agence, sans nom de cabinet.", negotiable: "yes", sellerSupportMonths: "3", precompte: "no" });
     await expect(updateListingAction({}, correction)).rejects.toThrow(/NEXT_REDIRECT/);
     const l = await prisma.listing.findUniqueOrThrow({ where: { id: LISTING }, select: { status: true, askingPrice: true, presentation: true } });
     expect(l.status).toBe(ListingStatus.DRAFT);
-    expect(Number(l.askingPrice)).toBe(12500);
+    expect(Number(l.askingPrice)).toBe(Number(avant.askingPrice));
     expect(l.presentation).toContain("sans nom de cabinet");
-    expect((await updateListingAction({}, form({ listingId: LISTING, askingPrice: "500" }))).error).toContain("prix");
 
     expect(await publishListingAction({}, form({ listingId: LISTING }))).toEqual({});
-    expect((await updateListingAction({}, form({ listingId: LISTING, askingPrice: "13 000" }))).error).toContain("brouillon");
+    expect((await updateListingAction({}, form({ listingId: LISTING, precompte: "no", sellerSupportMonths: "3" }))).error).toContain("brouillon");
     connecterUtilisateur(admin);
     expect((await reviewListingAction({}, form({ listingId: LISTING, decision: "reject", note: "Précisez la part du récurrent." }))).ok).toBeTruthy();
   });
 
-  it("publiée, elle ouvre sa séance de 21 jours et prévient le cédant", async () => {
+  it("mise en ligne au prix fixé par l’équipe, elle ouvre sa séance de 21 jours et prévient le cédant", async () => {
     connecterUtilisateur(cedant);
     await publishListingAction({}, form({ listingId: LISTING }));
     connecterUtilisateur(admin);
-    expect((await reviewListingAction({}, form({ listingId: LISTING, decision: "approve" }))).ok).toBeTruthy();
-    const l = await prisma.listing.findUniqueOrThrow({ where: { id: LISTING }, select: { status: true, offerWindowClosesAt: true, publicNumber: true } });
+    expect((await reviewListingAction({}, form({ listingId: LISTING, decision: "approve" }))).error).toContain("prix");
+    expect((await reviewListingAction({}, form({ listingId: LISTING, decision: "approve", price: "500" }))).error).toContain("prix");
+    expect((await reviewListingAction({}, form({ listingId: LISTING, decision: "approve", price: "14 200" }))).ok).toBeTruthy();
+    const l = await prisma.listing.findUniqueOrThrow({ where: { id: LISTING }, select: { status: true, offerWindowClosesAt: true, publicNumber: true, askingPrice: true } });
     expect(l.status).toBe(ListingStatus.OFFERS_OPEN);
+    expect(Number(l.askingPrice)).toBe(14200);
     const jours = (l.offerWindowClosesAt!.getTime() - Date.now()) / 86_400_000;
     expect(jours).toBeGreaterThan(20.9);
     expect(await getListingByPublicNumber(l.publicNumber, null)).not.toBeNull();
-    expect(await prisma.notification.count({ where: { userId: cedant, title: { startsWith: "Annonce en ligne" }, createdAt: { gte: debut } } })).toBe(1);
+    expect(await prisma.notification.count({ where: { userId: cedant, title: { startsWith: "Annonce en ligne" }, body: { contains: formatEuroWhole(14200) }, createdAt: { gte: debut } } })).toBe(1);
   });
 });
 

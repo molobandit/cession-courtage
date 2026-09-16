@@ -199,7 +199,7 @@ export async function renderCompanyPresentationPdf(p: CompanyPresentation): Prom
   cartesChiffres(ctx, [
     { label: "Commissions / an", value: euro(p.portfolio.annualCommissions) },
     { label: "Contrats", value: p.portfolio.contractCount.toLocaleString("fr-FR"), note: `${p.portfolio.clientCount.toLocaleString("fr-FR")} clients` },
-    { label: "Prix demandé", value: euro(p.sale.askingPrice), note: p.sale.negotiable ? "Négociable" : "Ferme" },
+    { label: "Prix", value: euro(p.sale.askingPrice), note: p.sale.negotiable ? "Négociable" : "Ferme" },
     { label: "Multiple", value: p.sale.multiple ? `x${p.sale.multiple.toLocaleString("fr-FR", { maximumFractionDigits: 2 })}` : "-", note: "Prix / commissions" },
   ]);
 

@@ -61,7 +61,7 @@ export const HERO_PROOFS = [
   "Le prix de marché est établi avant la mise en vente",
   "La capacité financière des acquéreurs est vérifiée",
   `Les dossiers certifiés passent ${CERTIFICATION_POINTS_LABEL}`,
-  "Les contrats sont contrôlés par nos avocats, le paiement séquestré",
+  "Les contrats sont contrôlés par nos avocats, le paiement sécurisé",
   "Votre nom n’est révélé qu’à un acquéreur qui a engagé un dépôt",
 ] as const;
 
@@ -137,8 +137,8 @@ export const BUY_REASSURANCE =
 
 export const SELL_PILLARS = [
   {
-    title: "Le juste prix, établi d’abord",
-    body: "Une évaluation du portefeuille pour vous positionner au juste prix du marché.",
+    title: "Une étude du portefeuille, d’abord",
+    body: "Nous étudions votre portefeuille pour mettre en évidence ses éléments et ses caractéristiques, puis nous fixons le prix de l’annonce.",
   },
   {
     title: "Des acquéreurs dont l’argent est vérifié",
@@ -149,23 +149,23 @@ export const SELL_PILLARS = [
     body: `${SALE_SPEED_CLAIM}*`,
   },
   {
-    title: "Rien ne se règle sans séquestre ni avocat",
-    body: "Contrats contrôlés par nos avocats et paiement sécurisé via un Trust. Nous accompagnons la transaction jusqu’au transfert des contrats.",
+    title: "Un paiement sécurisé, des contrats contrôlés",
+    body: "Vos contrats sont contrôlés par nos avocats et le paiement est sécurisé. Nous vous accompagnons jusqu’au transfert des contrats.",
   },
 ] as const;
 
 export const BUY_POINTS = [
   `Accès à des portefeuilles certifiés avec ${CERTIFICATION_POINTS_LABEL}.`,
-  "Valorisation indépendante du portefeuille pour vérifier la cohérence du prix demandé.",
+  "Une étude de chaque portefeuille par notre équipe, avant sa mise en ligne.",
   "Accès aux informations essentielles avant de se positionner.",
   "Contrôle juridique des contrats par nos avocats.",
-  "Paiement sécurisé via un Trust.",
+  "Paiement sécurisé.",
   "Accompagnement de la transaction jusqu’au transfert effectif des contrats.",
   "Processus encadré permettant de réduire le risque transactionnel.",
 ] as const;
 
 export const ACCESS_MARKET_POINTS = [
   "Accès à toutes les opportunités de portefeuille.",
-  "Évaluation de votre portefeuille.",
+  "Étude de votre portefeuille.",
   "Encadrement de la transaction de A à Z.",
 ] as const;

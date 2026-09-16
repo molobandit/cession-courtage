@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { RankedBars } from "@/components/charts/ranked-bars";
 import { MaturityColumns } from "@/components/charts/maturity-columns";
 import { CarrierCodesPanel } from "@/components/portfolio/carrier-codes-panel";
-import { MarketPositionCard } from "@/components/charts/concentration-meter";
 import { RecalculateValuationButton } from "@/components/valuation/recalculate-button";
 import {
   canSell,
@@ -13,7 +12,7 @@ import {
   isOriasVerified,
   listPortfolioLines,
 } from "@/lib/authz";
-import { formatDate, formatEuro, formatPercent } from "@/lib/format/fr";
+import { formatDate, formatPercent } from "@/lib/format/fr";
 import { formatCount, formatEuroWhole } from "@/lib/format/number";
 import {
   SEGMENT_LABELS,
@@ -23,8 +22,6 @@ import {
 } from "@/lib/labels";
 import {
   breakdownBy,
-  dominantSegment,
-  marketPosition,
   maturitySchedule,
   type AnalyticsLine,
 } from "@/lib/portfolio/analytics";
@@ -36,6 +33,12 @@ import { parseValuationBreakdown } from "@/lib/valuation/parse";
 import { prisma } from "@/lib/prisma";
 
 export const metadata = { title: "Portefeuille" };
+
+/** Leviers présentés au cédant, sans montant : l'étude ne chiffre pas son portefeuille devant lui. */
+const LEVIER_DETAILS: Record<string, string> = {
+  "Maîtriser la résiliation": "Un taux de résiliation élevé sur douze mois pèse sur l’intérêt des acquéreurs. Le réduire renforce le dossier.",
+  "Proposer un accompagnement": "Accompagner l’acquéreur quelques mois après la cession rassure et facilite la reprise de la clientèle.",
+};
 
 export default async function PortfolioPage({ params }: { params: Promise<{ id: string }> }) {
   const actor = await getActor();
@@ -77,13 +80,6 @@ export default async function PortfolioPage({ params }: { params: Promise<{ id: 
   const byDepartment = breakdownBy(lines, (l) => `Département ${l.department}`, 6);
 
   const schedule = maturitySchedule(lines, new Date());
-  const position = valuation
-    ? marketPosition(
-        Number(valuation.midValue),
-        Number(portfolio.annualCommissions),
-        dominantSegment(lines),
-      )
-    : null;
 
   const knownCodes = await prisma.carrierCode.findMany({
     where: { portfolioId: portfolio.id },
@@ -125,7 +121,7 @@ export default async function PortfolioPage({ params }: { params: Promise<{ id: 
           <RecalculateValuationButton portfolioId={portfolio.id} />
           <Button asChild variant="primary">
             <Link href={`/app/annonces/nouvelle?portfolio=${portfolio.id}`}>
-              Créer une annonce
+              Proposer à la vente
             </Link>
           </Button>
         </div>
@@ -141,108 +137,33 @@ export default async function PortfolioPage({ params }: { params: Promise<{ id: 
         ))}
       </section>
 
-      {/* Valorisation */}
-      {valuation ? (
-        <section className="mt-10">
-          <h2 className="text-2xl font-semibold text-ink">Valorisation</h2>
-          <p className="mt-1.5 text-[15px] text-muted">
-            Score de qualité {valuation.qualityScore} sur 100 · algorithme{" "}
-            {valuation.algorithmVersion} · calculée le {formatDate(valuation.computedAt)}
-          </p>
-
-          <div className="mt-5 grid gap-5 lg:grid-cols-[1.4fr_1fr]">
-            <div className="rounded-3xl border border-indigo-line bg-indigo-soft p-6">
-              <p className="text-[13px] font-medium uppercase tracking-[0.14em] text-indigo-dark">
-                Fourchette
-              </p>
-              <div className="mt-4 grid grid-cols-3 gap-4">
-                <div>
-                  <p className="text-sm text-muted">Basse</p>
-                  <p className="tabular mt-1 text-xl font-semibold text-ink">
-                    {formatEuroWhole(Number(valuation.lowValue))}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-indigo-dark">Médiane</p>
-                  <p className="tabular mt-1 text-3xl font-semibold text-ink">
-                    {formatEuroWhole(Number(valuation.midValue))}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm text-muted">Haute</p>
-                  <p className="tabular mt-1 text-xl font-semibold text-ink">
-                    {formatEuroWhole(Number(valuation.highValue))}
-                  </p>
-                </div>
-              </div>
-              <p className="mt-5 border-t border-indigo-line pt-4 text-[15px] leading-relaxed text-muted">
-                Valeur brute issue des multiples par branche :{" "}
-                {formatEuroWhole(Number(valuation.grossValue))}, corrigée par les sept
-                coefficients ci-dessous.
-              </p>
-            </div>
-
-            {position ? <MarketPositionCard position={position} /> : null}
-          </div>
-        </section>
-      ) : (
-        <p className="mt-8 rounded-3xl border border-line bg-paper p-6 text-[15px] text-muted">
-          Pas encore de valorisation. Lancez le calcul pour obtenir la fourchette et le
-          détail des correctifs.
+      {/* Étude du portefeuille : le cédant voit ses caractéristiques, jamais un prix. */}
+      <section className="mt-10">
+        <h2 className="text-2xl font-semibold text-ink">Étude du portefeuille</h2>
+        <p className="mt-1.5 max-w-3xl text-[15px] text-muted">
+          L’étude met en évidence les éléments et les caractéristiques de votre portefeuille. Notre équipe s’appuie sur elle
+          pour fixer le prix de mise en ligne.
+          {valuation ? ` Score de qualité ${valuation.qualityScore} sur 100, étude du ${formatDate(valuation.computedAt)}.` : ""}
         </p>
-      )}
-
-      {/* Cascade */}
-      {breakdown ? (
-        <section className="mt-10">
-          <h2 className="text-2xl font-semibold text-ink">
-            Le détail de la cascade
-          </h2>
-          <p className="mt-1.5 max-w-3xl text-[15px] text-muted">
-            Chaque coefficient est appliqué à la suite du précédent. La colonne impact
-            indique ce que ce poste vous coûte ou vous rapporte, en euros.
+        {breakdown ? (
+          <ul className="mt-5 grid gap-3 sm:grid-cols-2">
+            {breakdown.adjustments.map((row) => {
+              const effet = row.factor > 1 ? "Point fort" : row.factor < 1 ? "Point à améliorer" : "Dans la moyenne";
+              const ton = row.factor > 1 ? "text-ok" : row.factor < 1 ? "text-danger" : "text-muted";
+              return (
+                <li key={row.key} className="flex items-center justify-between gap-4 rounded-2xl border border-line bg-paper px-5 py-4">
+                  <span className="text-[15px] text-ink">{row.label}</span>
+                  <span className={`shrink-0 text-[13px] font-semibold ${ton}`}>{effet}</span>
+                </li>
+              );
+            })}
+          </ul>
+        ) : (
+          <p className="mt-5 rounded-3xl border border-line bg-paper p-6 text-[15px] text-muted">
+            L’étude n’est pas encore faite. Lancez-la pour voir les éléments de votre portefeuille.
           </p>
-          <div className="mt-5 overflow-x-auto rounded-3xl border border-line bg-paper">
-            <table className="w-full min-w-[34rem] border-collapse text-left">
-              <thead>
-                <tr className="border-b border-line">
-                  <th scope="col" className="px-6 py-4 text-[15px] font-semibold text-ink">
-                    Correctif
-                  </th>
-                  <th scope="col" className="px-4 py-4 text-right text-[15px] font-semibold text-ink">
-                    Coefficient
-                  </th>
-                  <th scope="col" className="px-6 py-4 text-right text-[15px] font-semibold text-ink">
-                    Impact
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {breakdown.adjustments.map((row) => (
-                  <tr key={row.key} className="border-b border-line last:border-b-0">
-                    <th scope="row" className="px-6 py-4 text-[15px] font-normal text-ink">
-                      {row.label}
-                    </th>
-                    <td className="tabular px-4 py-4 text-right text-[15px] text-muted">
-                      {row.factor.toLocaleString("fr-FR", { minimumFractionDigits: 2 })}
-                    </td>
-                    <td
-                      className={
-                        row.impactEur < 0
-                          ? "tabular px-6 py-4 text-right text-[15px] font-medium text-danger"
-                          : "tabular px-6 py-4 text-right text-[15px] font-medium text-ok"
-                      }
-                    >
-                      {row.impactEur > 0 ? "+" : ""}
-                      {formatEuro(row.impactEur)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
-      ) : null}
+        )}
+      </section>
 
       {/* Composition */}
       <section className="mt-10">
@@ -273,7 +194,7 @@ export default async function PortfolioPage({ params }: { params: Promise<{ id: 
           <RankedBars
             title="Répartition par clientèle"
             unit={["profil", "profils"]}
-            subtitle="La clientèle dominante détermine la fourchette de multiple applicable."
+            subtitle="Les acquéreurs regardent d’abord la clientèle dominante."
             shares={bySegment}
           />
           <RankedBars
@@ -298,18 +219,12 @@ export default async function PortfolioPage({ params }: { params: Promise<{ id: 
       {/* Leviers */}
       {breakdown && breakdown.actions.length > 0 ? (
         <section className="mt-10">
-          <h2 className="text-2xl font-semibold text-ink">
-            Ce qui relèverait votre valorisation
-          </h2>
-          <p className="mt-1.5 max-w-3xl text-[15px] text-muted">
-            Chaque levier est chiffré à partir de votre propre cascade. Douze mois de
-            préparation valent souvent davantage que six mois de négociation.
-          </p>
+          <h2 className="text-2xl font-semibold text-ink">Ce qui renforcerait votre dossier</h2>
           <ul className="mt-5 grid gap-5 lg:grid-cols-2">
             {breakdown.actions.map((action) => (
               <li key={action.title} className="rounded-3xl border border-line bg-paper p-6">
                 <h3 className="text-lg font-semibold text-ink">{action.title}</h3>
-                <p className="mt-2 text-[15px] leading-relaxed text-muted">{action.detail}</p>
+                <p className="mt-2 text-[15px] leading-relaxed text-muted">{LEVIER_DETAILS[action.title] ?? "Un point que les acquéreurs regardent de près."}</p>
               </li>
             ))}
           </ul>
@@ -334,7 +249,7 @@ export default async function PortfolioPage({ params }: { params: Promise<{ id: 
                     {LISTING_STATUS_LABELS[listing.status]}
                   </span>
                   <span className="tabular text-[15px] text-ink">
-                    {formatEuroWhole(Number(listing.askingPrice))}
+                    {listing.publishedAt ? formatEuroWhole(Number(listing.askingPrice)) : "Prix à venir"}
                   </span>
                 </Link>
               </li>

@@ -45,7 +45,7 @@ import { PartnerHomeMarquee } from "@/components/partners/partner-logos";
 export const metadata: Metadata = {
   title: HERO_TITLE,
   description:
-    "Salle de marché pour acheter ou vendre un portefeuille d’assurance. Valorisation, certification, transaction sécurisée.",
+    "Salle de marché pour acheter ou vendre un portefeuille d’assurance. Étude du portefeuille, certification, paiement sécurisé.",
   alternates: { canonical: "/" },
 };
 

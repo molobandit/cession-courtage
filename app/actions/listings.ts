@@ -9,7 +9,7 @@ import { ForbiddenError, UnauthenticatedError } from "@/lib/authz/errors";
 import { displayedZoneFor } from "@/lib/geo";
 import { rematchListing } from "@/lib/matching/run";
 import { prisma } from "@/lib/prisma";
-import { OFFER_WINDOW_DAYS } from "@/lib/listing/constants";
+import { ASKING_MAX, ASKING_MIN, OFFER_WINDOW_DAYS } from "@/lib/listing/constants";
 import { nextListingPublicNumber } from "@/lib/listing/next-public-number";
 import { persistListingBriefFields } from "@/lib/listing/brief-fields";
 import { firstIssue, listingCreateSchema } from "@/lib/validations/actions";
@@ -41,7 +41,6 @@ function parseListingForm(formData: FormData) {
   return listingCreateSchema.safeParse({
     ...texte,
     portfolioId: formData.get("portfolioId"),
-    askingPrice: formData.get("askingPrice"),
     sellerSupportMonths: formData.get("sellerSupportMonths") ?? 0,
     negotiable: formData.get("negotiable") ?? "yes",
     certificationRequested: formData.get("certificationRequested"),
@@ -107,6 +106,21 @@ async function saveBrief(listingId: string, data: ListingFormData) {
   });
 }
 
+/**
+ * Prix de travail d'un brouillon. Le cédant ne fixe pas le prix : l'équipe le
+ * détermine à la relecture. En attendant, la colonne (obligatoire) porte le
+ * point médian de l'étude, que l'équipe voit comme proposition.
+ */
+async function provisionalPrice(portfolioId: string, annualCommissions: number): Promise<number> {
+  const etude = await prisma.valuation.findFirst({
+    where: { portfolioId },
+    orderBy: { computedAt: "desc" },
+    select: { midValue: true },
+  });
+  const milieu = etude ? Number(etude.midValue) : annualCommissions * 2.5;
+  return Math.min(ASKING_MAX, Math.max(ASKING_MIN, Math.round(milieu)));
+}
+
 export async function createListingAction(
   _prev: ListingFormState,
   formData: FormData,
@@ -116,8 +130,9 @@ export async function createListingAction(
     const actor = await requireSellerActor();
     const parsed = parseListingForm(formData);
     if (!parsed.success) return { error: firstIssue(parsed.error) };
-    const { portfolioId, askingPrice: asking } = parsed.data;
+    const { portfolioId } = parsed.data;
     const portfolio = await getMyPortfolio(portfolioId, actor);
+    const asking = await provisionalPrice(portfolio.id, Number(portfolio.annualCommissions));
 
     const lines = await prisma.contractLine.findMany({
       where: { portfolioId: portfolio.id },
@@ -173,12 +188,11 @@ export async function updateListingAction(
     if (!parsed.success) return { error: firstIssue(parsed.error) };
 
     await saveFinancials(listing.portfolioId, parsed.data);
-    const prixChange = Number(listing.askingPrice) !== parsed.data.askingPrice;
     await prisma.listing.update({
       where: { id: listing.id },
-      data: { askingPrice: parsed.data.askingPrice.toFixed(2), sellerSupportMonths: supportMonths(parsed.data) },
+      data: { sellerSupportMonths: supportMonths(parsed.data) },
     });
-    if (prixChange || listing.sellerSupportMonths !== supportMonths(parsed.data)) {
+    if (listing.sellerSupportMonths !== supportMonths(parsed.data)) {
       await valuePortfolio(listing.portfolioId, listing.id);
     }
     await saveBrief(listing.id, parsed.data);
@@ -200,15 +214,15 @@ export async function publishListingAction(
     const listing = await findMyListing(String(formData.get("listingId") ?? ""), actor);
     if (!listing) return { error: "Annonce introuvable." };
     if (listing.status !== ListingStatus.DRAFT && listing.status !== ListingStatus.WITHDRAWN) {
-      return { error: "Cette annonce ne peut plus être publiée ainsi." };
+      return { error: "Ce dossier ne peut plus être soumis ainsi." };
     }
     const engagements = await loadAgreementsStatus(actor);
     if (!engagements.valid) return { error: AGREEMENTS_REQUIRED_MESSAGE };
 
     /*
-     * La mise en vente est gratuite, et relue avant publication : l'équipe
-     * vérifie que l'annonce est sincère et anonyme avant qu'un acquéreur ne la
-     * voie. Le cédant est prévenu dès la décision.
+     * Le cédant soumet son dossier ; il ne publie pas. L'équipe réalise
+     * l'étude, fixe le prix et met l'annonce en ligne. Le cédant est prévenu
+     * dès la décision.
      */
     await prisma.listing.update({
       where: { id: listing.id },
@@ -219,7 +233,7 @@ export async function publishListingAction(
     revalidatePath("/admin/annonces");
     return {};
   } catch (error) {
-    return { error: error instanceof Error ? error.message : "Publication impossible." };
+    return { error: error instanceof Error ? error.message : "Envoi impossible." };
   }
 }
 

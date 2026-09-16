@@ -35,7 +35,6 @@ const TEXT_FIELDS = [
 export function CreateListingForm({
   portfolioId,
   listingId,
-  defaultAsking,
   defaultCertify = false,
   qualityDefaults,
   defaults = {},
@@ -44,7 +43,6 @@ export function CreateListingForm({
   /** Présent : le formulaire corrige ce brouillon au lieu d'en créer un. */
   listingId?: string;
   defaults?: ListingFormDefaults;
-  defaultAsking: string;
   defaultCertify?: boolean;
   qualityDefaults?: {
     commissionsYear1: string;
@@ -94,14 +92,13 @@ export function CreateListingForm({
             </select>
           </div>
         </div>
-        <div className="grid gap-1">
-          <Label htmlFor="askingPrice">Prix demandé (€)</Label>
-          <Input id="askingPrice" name="askingPrice" defaultValue={defaultAsking} required className="mt-1.5 h-11 rounded-xl" />
-          <p className="text-[13px] text-muted">Entre 2 000 et 200 000 €. Fourchette possible via la négociation.</p>
-        </div>
+        <p className="rounded-xl bg-indigo-soft px-4 py-3 text-[14px] leading-relaxed text-ink">
+          Vous n’avez pas de prix à fixer. Notre équipe réalise l’étude de votre portefeuille, détermine sa valeur,
+          puis met l’annonce en ligne avec le prix correspondant.
+        </p>
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="grid gap-1">
-            <Label htmlFor="negotiable">Négociable</Label>
+            <Label htmlFor="negotiable">Prix négociable</Label>
             <select id="negotiable" name="negotiable" className={selectClass} defaultValue={d.negotiable ?? "yes"}>
               <option value="yes">Oui</option>
               <option value="no">Non</option>
@@ -110,7 +107,7 @@ export function CreateListingForm({
           <div className="grid gap-1">
             <Label htmlFor="sellerSupportMonths">Accompagnement</Label>
             <select id="sellerSupportMonths" name="sellerSupportMonths" defaultValue={d.sellerSupportMonths ?? "3"} className={selectClass}>
-              <option value="0">Aucun (malus valorisation)</option>
+              <option value="0">Aucun</option>
               <option value="3">3 mois</option>
               <option value="6">6 mois ou plus</option>
             </select>
@@ -343,7 +340,7 @@ export function CreateListingForm({
         />
         <span>
           Faire certifier mon portefeuille (vérification de la société et des
-          pièces). Sinon l’annonce reste simple, avec séquestre. Les honoraires
+          pièces). Sinon l’annonce reste simple, avec paiement sécurisé. Les honoraires
           sont précisés dans le contrat d’intermédiation.
         </span>
       </label>
@@ -385,7 +382,7 @@ function TinyForm({
 }
 
 export function PublishListingButton({ listingId }: { listingId: string }) {
-  return <TinyForm action={publishListingAction} listingId={listingId} label="Soumettre pour publication" pendingLabel="Envoi…" />;
+  return <TinyForm action={publishListingAction} listingId={listingId} label="Soumettre mon dossier à l’équipe" pendingLabel="Envoi…" />;
 }
 
 export function OpenOffersButton({ listingId }: { listingId: string }) {

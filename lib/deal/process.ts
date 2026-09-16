@@ -250,8 +250,8 @@ export function stageTasks(s: ProcessSnapshot): Task[] {
       return [
         task({
           key: "escrow-fund",
-          label: "Verser le prix au séquestre",
-          detail: "Le prix, dépôt de garantie déduit, bloqué chez le tiers de séquestre jusqu’à l’accord des compagnies. Origine des fonds déclarée.",
+          label: "Verser le prix sur le compte sécurisé",
+          detail: "Le prix, dépôt de garantie déduit, reste sur un compte sécurisé jusqu’à l’accord des compagnies. Origine des fonds déclarée.",
           owner: "buyer",
           done: verse,
         }),
@@ -263,12 +263,12 @@ export function stageTasks(s: ProcessSnapshot): Task[] {
           done: Boolean(envoyees),
           doneAt: envoyees?.createdAt ?? null,
           available: verse,
-          waitingReason: verse ? undefined : "En attente du versement au séquestre.",
+          waitingReason: verse ? undefined : "En attente du versement du prix.",
         }),
         task({
           key: "transfer-confirm",
           label: "Confirmer l’accord des compagnies",
-          detail: "Quand les compagnies ont rattaché les contrats et les commissions au code de l’acquéreur : le séquestre est alors libéré au cédant et la cession close.",
+          detail: "Quand les compagnies ont rattaché les contrats et les commissions au code de l’acquéreur : le prix est alors versé au cédant et la cession close.",
           owner: "buyer",
           done: Boolean(confirme),
           doneAt: confirme?.createdAt ?? null,
@@ -312,6 +312,6 @@ export function tasksFor(s: ProcessSnapshot, side: Side) {
 export const STAGE_INTRO: Partial<Record<DealStage, string>> = {
   DATA_ROOM: "L’acquéreur examine les pièces du cabinet et confirme son prix. Les deux comptes sont vérifiés une fois pour toutes, le cédant renseigne ses codes courtier.",
   SIGNATURE: "Les deux représentants signent le protocole et les attestations de transfert, en un geste chacun.",
-  TRANSFER: "L’acquéreur verse le prix au séquestre, le cédant envoie les attestations signées, l’acquéreur confirme l’accord des compagnies : les fonds sont libérés au cédant.",
+  TRANSFER: "L’acquéreur verse le prix sur un compte sécurisé, le cédant envoie les attestations signées, l’acquéreur confirme l’accord des compagnies : le prix est alors versé au cédant.",
   CLOSED: "La cession est close.",
 };

@@ -21,8 +21,8 @@ export function ReadinessChecklist({ readiness }: { readiness: EngagementReadine
     <ul className="grid gap-2 rounded-xl border border-warn/30 bg-warn/5 px-4 py-3 text-[14px] text-ink">
       {!readiness.agreements ? (
         <li>
-          <span className="font-semibold">Engagements à signer.</span> Confidentialité et contrat d’intermédiation, une seule
-          fois pour la durée de votre ORIAS.{" "}
+          <span className="font-semibold">Engagements à signer.</span> Confidentialité et contrat d’intermédiation, valables pour
+          toutes vos annonces et cessions.{" "}
           <a href={`/app/engagements?next=${encodeURIComponent(readiness.returnTo)}`} className="font-semibold text-indigo-dark underline-offset-2 hover:underline">
             Signer maintenant
           </a>

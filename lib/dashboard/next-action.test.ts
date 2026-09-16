@@ -26,12 +26,12 @@ describe("nextAction", () => {
     expect(action.tone).toBe("action");
   });
 
-  it("propose la valorisation avant la publication", () => {
+  it("propose l'étude du portefeuille avant la mise en vente", () => {
     const action = nextAction({ ...base, portfolioCount: 1, unvaluedPortfolioCount: 1 });
-    expect(action.cta).toBe("Lancer la valorisation");
+    expect(action.cta).toBe("Lancer l’étude");
   });
 
-  it("propose de publier une fois le portefeuille valorise", () => {
+  it("propose de soumettre le dossier une fois le portefeuille étudié", () => {
     const action = nextAction({ ...base, portfolioCount: 1 });
     expect(action.href).toBe("/app/annonces/nouvelle");
   });
@@ -107,7 +107,7 @@ describe("l'action suivante mene quelque part", () => {
     expect(a.href).toBe("/annonces/10042");
   });
 
-  it("envoie la valorisation sur le portefeuille concerne", () => {
+  it("envoie l'étude sur le portefeuille concerné", () => {
     const a = nextAction({ ...base, unvaluedPortfolioCount: 1, unvaluedPortfolio: { id: "pf_7" } });
     expect(a.href).toBe("/app/portefeuilles/pf_7");
   });

@@ -96,14 +96,18 @@ function optionalText(max: number) {
     .transform((v) => (v && v.length > 0 ? v : undefined));
 }
 
+/**
+ * Prix de mise en ligne, fixé par l'équipe à l'issue de l'étude du
+ * portefeuille : le cédant ne le saisit pas. Euros entiers.
+ */
+export const listingPriceSchema = frenchAmount
+  .transform((v) => Math.round(v))
+  .refine((v) => v >= ASKING_MIN && v <= ASKING_MAX, {
+    message: `Le prix doit être compris entre ${ASKING_MIN.toLocaleString("fr-FR")} et ${ASKING_MAX.toLocaleString("fr-FR")} €.`,
+  });
+
 export const listingCreateSchema = z.object({
   portfolioId: idSchema,
-  // Le prix demandé s'exprime en euros entiers.
-  askingPrice: frenchAmount
-    .transform((v) => Math.round(v))
-    .refine((v) => v >= ASKING_MIN && v <= ASKING_MAX, {
-      message: `Le prix demandé doit être compris entre ${ASKING_MIN.toLocaleString("fr-FR")} et ${ASKING_MAX.toLocaleString("fr-FR")} €.`,
-    }),
   sellerSupportMonths: z.coerce
     .number()
     .int("Durée d’accompagnement invalide.")

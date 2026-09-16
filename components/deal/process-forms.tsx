@@ -261,13 +261,12 @@ export function EscrowForm({ dealId, amountLabel, live }: { dealId: string; amou
       </label>
       {!live ? (
         <p className="rounded-xl border border-warn/30 bg-warn/5 px-3 py-2 text-[13px] text-ink">
-          Le compte séquestre Trustap n’est pas encore branché : le versement est enregistré dans le dossier, sans
-          mouvement d’argent.
+          Le paiement en ligne n’est pas encore ouvert : le versement est enregistré dans le dossier.
         </p>
       ) : null}
       <label className="flex items-start gap-3 text-[14px] leading-relaxed text-ink">
         <input type="checkbox" name="consent" checked={coche} onChange={(e) => setCoche(e.target.checked)} className="mt-1 h-4 w-4 shrink-0 accent-[#2563eb]" />
-        <span>Je verse {amountLabel} sur le compte séquestre. Les fonds restent bloqués jusqu’à la clôture.</span>
+        <span>Je verse {amountLabel} sur le compte sécurisé. L’argent y reste jusqu’à l’accord des compagnies.</span>
       </label>
       <div>
         <Button type="submit" disabled={pending || !coche || !origine}>

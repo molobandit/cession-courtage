@@ -51,8 +51,8 @@ export const COMMISSION_TYPE_LABELS: Record<CommissionType, string> = {
  * « ouverte », pas « close ».
  */
 export const LISTING_STATUS_LABELS: Record<ListingStatus, string> = {
-  DRAFT: "Brouillon",
-  PENDING_REVIEW: "En cours de cotation",
+  DRAFT: "Dossier à soumettre",
+  PENDING_REVIEW: "Étude en cours",
   PUBLISHED: "Offres ouvertes",
   OFFERS_OPEN: "Séance en cours",
   OFFERS_CLOSED: "Offres ouvertes",
@@ -89,11 +89,11 @@ export const MATCH_STATUS_LABELS: Record<MatchStatus, string> = {
 };
 
 export const ESCROW_STAGE_LABELS: Record<EscrowStage, string> = {
-  NONE: "Aucun",
-  FUNDS_HELD: "Fonds séquestrés",
-  PARTIAL_RELEASE: "Libération partielle",
-  RELEASED: "Libérés",
-  REFUNDED: "Remboursés",
+  NONE: "Pas encore versé",
+  FUNDS_HELD: "Sur le compte sécurisé",
+  PARTIAL_RELEASE: "Versé en partie au cédant",
+  RELEASED: "Versé au cédant",
+  REFUNDED: "Remboursé",
 };
 
 export const DISTRIBUTION_LABELS: Record<DistributionMode, string> = {

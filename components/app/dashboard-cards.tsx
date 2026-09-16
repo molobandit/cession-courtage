@@ -54,7 +54,7 @@ export function CompactListingCard({ item }: { item: PublicListingCard }) {
             </dd>
           </div>
           <div>
-            <dt className="text-[12px] text-muted">Prix demandé</dt>
+            <dt className="text-[12px] text-muted">Prix</dt>
             <dd className="tabular mt-0.5 text-[15px] font-semibold text-ink">
               {formatEuroWhole(item.askingPrice)}
             </dd>
@@ -306,8 +306,8 @@ export function PublishBanner({ href }: { href: string }) {
       className="flex items-center justify-between gap-3 rounded-2xl bg-indigo-soft px-4 py-3 text-[14px] text-indigo-dark hover:bg-indigo-line/40 sm:px-5"
     >
       <span>
-        <span className="font-semibold">Publier une annonce est gratuit.</span>{" "}
-        L’alias masque le cabinet jusqu’au dépôt.
+        <span className="font-semibold">Proposez votre portefeuille à la vente.</span>{" "}
+        Notre équipe l’étudie, fixe le prix et met l’annonce en ligne sous alias.
       </span>
       <span className="hidden shrink-0 font-semibold sm:inline">Déposer</span>
     </Link>
