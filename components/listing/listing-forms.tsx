@@ -12,6 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PRICE_RULE } from "@/lib/copy/market";
 
 const initial: ListingFormState = {};
 const selectClass =
@@ -93,8 +94,7 @@ export function CreateListingForm({
           </div>
         </div>
         <p className="rounded-xl bg-indigo-soft px-4 py-3 text-[14px] leading-relaxed text-ink">
-          Vous n’avez pas de prix à fixer. Notre équipe réalise l’étude de votre portefeuille, détermine sa valeur,
-          puis met l’annonce en ligne avec le prix correspondant.
+          {PRICE_RULE}
         </p>
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="grid gap-1">

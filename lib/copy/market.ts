@@ -135,10 +135,20 @@ export const BUY_LEDE =
 export const BUY_REASSURANCE =
   "Chaque dossier reste anonyme jusqu’à votre engagement : vous jugez les chiffres, pas une enseigne.";
 
+/** Fiche « Demandes de modification » : phrases reprises à la lettre. */
+export const STUDY_SENTENCE =
+  "Nous réalisons une étude du portefeuille afin de mettre en évidence ses différents éléments et caractéristiques.";
+export const PRICE_RULE_SENTENCES = [
+  "Ce n’est pas le vendeur qui fixe le prix ni qui publie l’annonce.",
+  "Nous réalisons d’abord l’étude du portefeuille.",
+  "Une fois la valeur déterminée, l’annonce est mise en ligne avec le prix correspondant.",
+] as const;
+export const PRICE_RULE = PRICE_RULE_SENTENCES.join(" ");
+
 export const SELL_PILLARS = [
   {
     title: "Une étude du portefeuille, d’abord",
-    body: "Nous étudions votre portefeuille pour mettre en évidence ses éléments et ses caractéristiques, puis nous fixons le prix de l’annonce.",
+    body: STUDY_SENTENCE,
   },
   {
     title: "Des acquéreurs dont l’argent est vérifié",

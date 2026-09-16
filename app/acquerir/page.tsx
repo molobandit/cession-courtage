@@ -3,7 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { PageIntro } from "@/components/page-intro";
-import { BUY_POINTS, CTA_BROWSE, MARKET_ACCESS, NAV_BUY } from "@/lib/copy/market";
+import { BUY_POINTS, CTA_BROWSE, MARKET_ACCESS, NAV_BUY, PRICE_RULE_SENTENCES, STUDY_SENTENCE } from "@/lib/copy/market";
 import { canBuy, getActor, isOriasVerified } from "@/lib/authz";
 import { GROWTH_PLAN_ANNUAL_EUR, INTEREST_DEPOSIT_LABEL } from "@/lib/billing/rates";
 import { CESSION_FUNDS_DISCLAIMER } from "@/lib/partners/catalog";
@@ -31,7 +31,7 @@ const SAFEGUARDS = [
   },
   {
     title: "Chaque portefeuille est étudié",
-    body: "Avant sa mise en ligne, notre équipe étudie chaque portefeuille pour mettre en évidence ses éléments et ses caractéristiques, puis fixe le prix de l’annonce.",
+    body: `${STUDY_SENTENCE} ${PRICE_RULE_SENTENCES[2]}`,
   },
   {
     title: "Votre identité reste confidentielle",

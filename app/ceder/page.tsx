@@ -7,7 +7,9 @@ import {
   MARKET_ACCESS,
   NAV_SELL,
   NO_FEE_LABEL,
+  PRICE_RULE,
   SELL_PILLARS,
+  STUDY_SENTENCE,
 } from "@/lib/copy/market";
 import { INTEREST_DEPOSIT_LABEL } from "@/lib/billing/rates";
 import { OFFER_WINDOW_DAYS } from "@/lib/listing/constants";
@@ -48,11 +50,11 @@ const TIMELINE = [
   },
   {
     title: "Étude du portefeuille",
-    body: "Nous réalisons une étude de votre portefeuille pour mettre en évidence ses différents éléments et caractéristiques.",
+    body: STUDY_SENTENCE,
   },
   {
     title: "Mise en ligne de l’annonce",
-    body: "Une fois la valeur déterminée par notre équipe, l’annonce est mise en ligne avec le prix correspondant, sous un numéro de dossier. Vous n’avez ni prix à fixer, ni annonce à publier.",
+    body: PRICE_RULE,
   },
   {
     title: "Séance d’offres",
@@ -72,7 +74,7 @@ export default function CederPage() {
   return (
     <main>
       <PageIntro kicker="Vendre" title={NAV_SELL}>
-        Nous étudions votre portefeuille, nous fixons le prix, et nous vous accompagnons jusqu’à la cession.
+        {STUDY_SENTENCE}
       </PageIntro>
 
       <section className="mx-auto max-w-6xl px-4 py-12">

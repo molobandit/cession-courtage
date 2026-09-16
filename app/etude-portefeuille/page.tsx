@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { PRICE_RULE, PRICE_RULE_SENTENCES, STUDY_SENTENCE } from "@/lib/copy/market";
 
 export const metadata: Metadata = {
   title: "Étude de portefeuille",
   description:
-    "Avant toute mise en ligne, notre équipe réalise l’étude de votre portefeuille de courtage : ses éléments, ses caractéristiques, puis le prix de l’annonce.",
+    "Nous réalisons une étude du portefeuille afin de mettre en évidence ses différents éléments et caractéristiques.",
 };
 
 /**
@@ -41,9 +42,9 @@ const ELEMENTS = [
 
 const ETAPES = [
   { title: "Vous déposez votre bordereau", body: "Un fichier CSV ou XLSX de votre portefeuille." },
-  { title: "Nous réalisons l’étude", body: "Nous mettons en évidence les éléments et les caractéristiques du portefeuille." },
-  { title: "Nous déterminons la valeur", body: "Le prix de l’annonce est fixé par notre équipe, à l’issue de l’étude." },
-  { title: "L’annonce est mise en ligne", body: "Sous un numéro de dossier, avec le prix correspondant." },
+  { title: "Nous réalisons l’étude", body: STUDY_SENTENCE },
+  { title: "Nous déterminons la valeur", body: PRICE_RULE_SENTENCES[0] },
+  { title: "L’annonce est mise en ligne", body: PRICE_RULE_SENTENCES[2] },
 ];
 
 export default function EtudePortefeuillePage() {
@@ -56,8 +57,7 @@ export default function EtudePortefeuillePage() {
             Nous étudions votre portefeuille avant sa mise en ligne
           </h1>
           <p className="mt-5 max-w-2xl text-lg text-muted">
-            L’étude met en évidence les éléments et les caractéristiques de votre portefeuille. C’est sur cette base que
-            notre équipe fixe le prix de l’annonce.
+            {STUDY_SENTENCE} {PRICE_RULE}
           </p>
         </div>
       </section>

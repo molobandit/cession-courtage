@@ -31,6 +31,7 @@ import { valuePortfolio } from "@/lib/valuation/run";
 import { ALGORITHM_VERSION } from "@/lib/valuation/types";
 import { parseValuationBreakdown } from "@/lib/valuation/parse";
 import { prisma } from "@/lib/prisma";
+import { PRICE_RULE_SENTENCES, STUDY_SENTENCE } from "@/lib/copy/market";
 
 export const metadata = { title: "Portefeuille" };
 
@@ -141,8 +142,7 @@ export default async function PortfolioPage({ params }: { params: Promise<{ id: 
       <section className="mt-10">
         <h2 className="text-2xl font-semibold text-ink">Étude du portefeuille</h2>
         <p className="mt-1.5 max-w-3xl text-[15px] text-muted">
-          L’étude met en évidence les éléments et les caractéristiques de votre portefeuille. Notre équipe s’appuie sur elle
-          pour fixer le prix de mise en ligne.
+          {STUDY_SENTENCE} {PRICE_RULE_SENTENCES[2]}
           {valuation ? ` Score de qualité ${valuation.qualityScore} sur 100, étude du ${formatDate(valuation.computedAt)}.` : ""}
         </p>
         {breakdown ? (

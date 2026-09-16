@@ -1,3 +1,5 @@
+import { STUDY_SENTENCE } from "@/lib/copy/market";
+
 /**
  * Determine l'action suivante a proposer dans l'espace membre.
  *
@@ -118,7 +120,7 @@ export function nextAction(state: DashboardState): NextAction {
       tone: "action",
       title: "Un portefeuille attend son étude",
       detail:
-        "L’étude met en évidence les éléments et les caractéristiques de votre portefeuille.",
+        STUDY_SENTENCE,
       href: state.unvaluedPortfolio
         ? `/app/portefeuilles/${state.unvaluedPortfolio.id}`
         : "/app",
