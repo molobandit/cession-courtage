@@ -156,6 +156,16 @@ export function PublicListingDetail({
     defaultTab,
   } = model;
 
+  /*
+   * La fourchette de valorisation, dite comme le dossier de présentation :
+   * en années de commissions annuelles nettes, jamais en euros seuls.
+   */
+  const fois = (v: number) =>
+    (v / annualCommissions).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const fourchette =
+    valuation && annualCommissions > 0
+      ? { low: fois(valuation.low), high: fois(valuation.high) }
+      : null;
 
   const information = (
         <div className="grid gap-6">
@@ -267,53 +277,152 @@ export function PublicListingDetail({
         </p>
 
         <div className="mt-5 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
-          <div className="overflow-hidden rounded-3xl border border-line bg-paper p-6 shadow-sm sm:p-8">
-            <div className="flex flex-wrap items-center gap-2">
-              {sold ? <MarketStamp kind="sold" size="lg" /> : null}
-              {certified ? <MarketStamp kind="certified" size="lg" /> : null}
-              {!certified ? <span className="text-[12px] text-muted">{UNCERTIFIED_LABEL}</span> : null}
-              <MarketBadge label={statusLabel} tone={marketTone} />
+          <div className="min-w-0">
+            <div className="overflow-hidden rounded-3xl border border-line bg-paper p-6 shadow-sm sm:p-8">
+              <div className="flex flex-wrap items-center gap-2">
+                {sold ? <MarketStamp kind="sold" size="lg" /> : null}
+                {certified ? <MarketStamp kind="certified" size="lg" /> : null}
+                {!certified ? <span className="text-[12px] text-muted">{UNCERTIFIED_LABEL}</span> : null}
+                <MarketBadge label={statusLabel} tone={marketTone} />
+              </div>
+              <h1 className="mt-4 text-3xl font-bold tracking-tight text-ink">Dossier n° {publicNumber}</h1>
+              <p className="mt-2 text-[16px] font-medium text-ink">{title}</p>
+              <p className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[14px] text-muted">
+                <span className="inline-flex items-center gap-1.5">
+                  <PinIcon />
+                  {zone}
+                </span>
+                {dataCutoff ? <span>Données arrêtées au {formatDateLong(dataCutoff)}</span> : null}
+                {updatedAt ? <span>Mis à jour le {formatDateLong(updatedAt)}</span> : null}
+              </p>
+
+              {/* Les quatre repères de « L'essentiel du dossier », dans le même ordre. */}
+              <dl className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                {[
+                  { value: formatEuroWhole(annualCommissions), label: "commissions / an" },
+                  { value: formatCount(contractCount), label: "contrats" },
+                  {
+                    value: averageAgeMonths > 0 ? `${Math.round(averageAgeMonths)} mois` : "n.c.",
+                    label: "ancienneté",
+                  },
+                  { value: formatEuroWhole(annualCommissions / 12), label: "par mois" },
+                ].map((tile) => (
+                  <div key={tile.label} className="rounded-2xl bg-surface-alt px-4 py-4">
+                    <dd className="tabular text-[20px] font-bold text-ink">{tile.value}</dd>
+                    <dt className="mt-1 text-[12px] text-muted">{tile.label}</dt>
+                  </div>
+                ))}
+              </dl>
+
+              <p className="mt-5 text-[14px] leading-relaxed text-muted">
+                {supplierCount} compagnie{supplierCount > 1 ? "s" : ""}
+                {topCarrierShare !== null
+                  ? `, la première à ${Math.round(topCarrierShare * 100)} %`
+                  : ""}
+                {" · "}
+                {precompteLine}
+              </p>
             </div>
-            <h1 className="mt-4 text-3xl font-bold tracking-tight text-ink">Dossier n° {publicNumber}</h1>
-            <p className="mt-2 text-[16px] font-medium text-ink">{title}</p>
-            <p className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[14px] text-muted">
-              <span className="inline-flex items-center gap-1.5">
-                <PinIcon />
-                {zone}
-              </span>
-              {dataCutoff ? <span>Données arrêtées au {formatDateLong(dataCutoff)}</span> : null}
-              {updatedAt ? <span>Mis à jour le {formatDateLong(updatedAt)}</span> : null}
-            </p>
 
-            {/* Les quatre repères de « L'essentiel du dossier », dans le même ordre. */}
-            <dl className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-              {[
-                { value: formatEuroWhole(annualCommissions), label: "commissions / an" },
-                { value: formatCount(contractCount), label: "contrats" },
-                {
-                  value: averageAgeMonths > 0 ? `${Math.round(averageAgeMonths)} mois` : "n.c.",
-                  label: "ancienneté",
-                },
-                { value: formatEuroWhole(annualCommissions / 12), label: "par mois" },
-              ].map((tile) => (
-                <div key={tile.label} className="rounded-2xl bg-surface-alt px-4 py-4">
-                  <dd className="tabular text-[20px] font-bold text-ink">{tile.value}</dd>
-                  <dt className="mt-1 text-[12px] text-muted">{tile.label}</dt>
-                </div>
-              ))}
-            </dl>
 
-            <p className="mt-5 text-[14px] leading-relaxed text-muted">
-              {supplierCount} compagnie{supplierCount > 1 ? "s" : ""}
-              {topCarrierShare !== null
-                ? `, la première à ${Math.round(topCarrierShare * 100)} %`
-                : ""}
-              {" · "}
-              {precompteLine}
-            </p>
+          <div className="mt-3 flex flex-wrap gap-3">
+            <Link
+              href={studyHref}
+              className="inline-flex h-11 items-center rounded-full border border-indigo-line bg-indigo-soft px-5 text-[14px] font-semibold text-indigo-dark hover:bg-indigo-soft/70"
+            >
+              Ouvrir le dossier de présentation (PDF)
+            </Link>
+            <SectionTabLink
+              href={interestHref}
+              className="inline-flex h-11 items-center rounded-full border border-line bg-paper px-5 text-[14px] font-medium text-ink hover:bg-surface-alt"
+            >
+              Poser une question au cédant
+            </SectionTabLink>
           </div>
 
-          <aside className="h-fit rounded-3xl bg-deep-soft p-6 text-white shadow-sm lg:sticky lg:top-6">
+          {/* Le cadre : les quatre étapes, dites comme dans le dossier de présentation. */}
+          <section className="mt-6 rounded-3xl border border-line bg-paper p-6 shadow-sm">
+            <h2 className="text-lg font-semibold text-ink">Le cadre</h2>
+            <ol className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {SALE_PIPELINE.map((step) => (
+                <li key={step.key} className="rounded-2xl border border-line p-4">
+                  <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-indigo-dark">
+                    {step.num} · {step.label}
+                  </p>
+                  <p className="mt-2 text-[13px] leading-relaxed text-muted">{step.summary}</p>
+                </li>
+              ))}
+            </ol>
+          </section>
+
+          {manageHref ? (
+            <Link
+              href={manageHref}
+              className="mt-3 block rounded-2xl border border-line bg-paper px-4 py-3 text-center text-[14px] font-medium text-ink hover:bg-surface-alt"
+            >
+              Gérer cette annonce
+            </Link>
+          ) : null}
+
+          <section className="mt-6 rounded-3xl border border-line bg-paper p-6 shadow-sm">
+            <h2 className="flex items-center gap-2 text-lg font-semibold text-ink">
+              <PinIcon /> Couverture géographique
+            </h2>
+            <div className="mt-3 rounded-2xl bg-indigo-soft px-5 py-4">
+              <p className="font-semibold text-ink">{coverageTitle}</p>
+              <p className="mt-1 text-[14px] text-muted">{coverageDetail}</p>
+            </div>
+          </section>
+
+          <section className="mt-6 rounded-3xl border border-line bg-paper p-6 shadow-sm">
+            <h2 className="text-lg font-semibold text-ink">Types de risques</h2>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {riskChips.map((chip) => (
+                <span
+                  key={chip}
+                  className="rounded-full border border-ok/30 bg-ok/10 px-3 py-1 text-[13px] font-medium text-ink"
+                >
+                  {chip}
+                </span>
+              ))}
+            </div>
+          </section>
+
+          <section className="mt-6 rounded-3xl border border-line bg-paper p-6 shadow-sm">
+            <h2 className="text-lg font-semibold text-ink">Clientèle cible</h2>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {segmentChips.map((chip) => (
+                <span
+                  key={chip}
+                  className="rounded-full border border-line bg-surface-alt px-3 py-1 text-[13px] font-medium text-ink"
+                >
+                  {chip}
+                </span>
+              ))}
+            </div>
+          </section>
+
+          <div id="interesse" className="mt-8">
+            {/*
+             * La clé suit l'onglet par défaut : après un dépôt ou une offre, la
+             * fiche revient sur « Position » au lieu de rester sur l'onglet d'avant.
+             */}
+            <SectionTabs key={defaultTab ?? "informations"} defaultId={defaultTab ?? "informations"}>
+              <SectionTab id="informations" label="Informations">
+                {information}
+
+              </SectionTab>
+              <SectionTab id="documents" label="Documents">
+                {documents}
+              </SectionTab>
+              <SectionTab id="position" label="Position">
+                {position}
+              </SectionTab>
+            </SectionTabs>
+          </div>
+          </div>
+
+          <aside className="h-fit rounded-3xl bg-deep-soft p-6 text-white shadow-sm lg:sticky lg:top-20">
             <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/70">
               Montant de l’annonce, net vendeur
             </p>
@@ -322,10 +431,12 @@ export function PublicListingDetail({
               {multiple
                 ? `${multiple.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} fois les commissions`
                 : "Montant arrêté après l’étude"}
-              {valuation
-                ? ` · fourchette de ${formatEuroWhole(valuation.low)} à ${formatEuroWhole(valuation.high)}`
-                : ""}
             </p>
+            {fourchette ? (
+              <p className="tabular mt-1 text-[13px] leading-relaxed text-white/70">
+                fourchette {fourchette.low} à {fourchette.high}
+              </p>
+            ) : null}
 
             <div className="mt-5">
               {sold ? (
@@ -383,102 +494,6 @@ export function PublicListingDetail({
               </Link>
             ) : null}
           </aside>
-        </div>
-
-        <div className="mt-3 flex flex-wrap gap-3">
-          <Link
-            href={studyHref}
-            className="inline-flex h-11 items-center rounded-full border border-indigo-line bg-indigo-soft px-5 text-[14px] font-semibold text-indigo-dark hover:bg-indigo-soft/70"
-          >
-            Ouvrir le dossier de présentation (PDF)
-          </Link>
-          <SectionTabLink
-            href={interestHref}
-            className="inline-flex h-11 items-center rounded-full border border-line bg-paper px-5 text-[14px] font-medium text-ink hover:bg-surface-alt"
-          >
-            Poser une question au cédant
-          </SectionTabLink>
-        </div>
-
-        {/* Le cadre : les quatre étapes, dites comme dans le dossier de présentation. */}
-        <section className="mt-6 rounded-3xl border border-line bg-paper p-6 shadow-sm">
-          <h2 className="text-lg font-semibold text-ink">Le cadre</h2>
-          <ol className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {SALE_PIPELINE.map((step) => (
-              <li key={step.key} className="rounded-2xl border border-line p-4">
-                <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-indigo-dark">
-                  {step.num} · {step.label}
-                </p>
-                <p className="mt-2 text-[13px] leading-relaxed text-muted">{step.summary}</p>
-              </li>
-            ))}
-          </ol>
-        </section>
-
-        {manageHref ? (
-          <Link
-            href={manageHref}
-            className="mt-3 block rounded-2xl border border-line bg-paper px-4 py-3 text-center text-[14px] font-medium text-ink hover:bg-surface-alt"
-          >
-            Gérer cette annonce
-          </Link>
-        ) : null}
-
-        <section className="mt-6 rounded-3xl border border-line bg-paper p-6 shadow-sm">
-          <h2 className="flex items-center gap-2 text-lg font-semibold text-ink">
-            <PinIcon /> Couverture géographique
-          </h2>
-          <div className="mt-3 rounded-2xl bg-indigo-soft px-5 py-4">
-            <p className="font-semibold text-ink">{coverageTitle}</p>
-            <p className="mt-1 text-[14px] text-muted">{coverageDetail}</p>
-          </div>
-        </section>
-
-        <section className="mt-6 rounded-3xl border border-line bg-paper p-6 shadow-sm">
-          <h2 className="text-lg font-semibold text-ink">Types de risques</h2>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {riskChips.map((chip) => (
-              <span
-                key={chip}
-                className="rounded-full border border-ok/30 bg-ok/10 px-3 py-1 text-[13px] font-medium text-ink"
-              >
-                {chip}
-              </span>
-            ))}
-          </div>
-        </section>
-
-        <section className="mt-6 rounded-3xl border border-line bg-paper p-6 shadow-sm">
-          <h2 className="text-lg font-semibold text-ink">Clientèle cible</h2>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {segmentChips.map((chip) => (
-              <span
-                key={chip}
-                className="rounded-full border border-line bg-surface-alt px-3 py-1 text-[13px] font-medium text-ink"
-              >
-                {chip}
-              </span>
-            ))}
-          </div>
-        </section>
-
-        <div id="interesse" className="mt-8">
-          {/*
-           * La clé suit l'onglet par défaut : après un dépôt ou une offre, la
-           * fiche revient sur « Position » au lieu de rester sur l'onglet d'avant.
-           */}
-          <SectionTabs key={defaultTab ?? "informations"} defaultId={defaultTab ?? "informations"}>
-            <SectionTab id="informations" label="Informations">
-              {information}
-
-            </SectionTab>
-            <SectionTab id="documents" label="Documents">
-              {documents}
-            </SectionTab>
-            <SectionTab id="position" label="Position">
-              {position}
-            </SectionTab>
-          </SectionTabs>
         </div>
       </div>
     </main>

@@ -18,6 +18,9 @@ const initial: DepositFormState = {};
  * versement déclenche, et demande d'accepter l'engagement de confidentialité.
  * Le droit est vérifié par l'action serveur ; cet écran n'est qu'un garde-fou
  * pour celui qui s'engage.
+ *
+ * `rappelPrerequis` reste à faux quand l'écran dit déjà, au-dessus, ce qu'il
+ * faut avoir signé et justifié : le lire deux fois ne l'apprend pas mieux.
  */
 export function DepositForm({
   listingId,
@@ -26,6 +29,7 @@ export function DepositForm({
   amountEur,
   listingAmountLabel,
   readiness,
+  rappelPrerequis = true,
 }: {
   listingId: string;
   publicNumber?: number;
@@ -33,6 +37,7 @@ export function DepositForm({
   amountEur?: number;
   listingAmountLabel: string;
   readiness: EngagementReadiness;
+  rappelPrerequis?: boolean;
 }) {
   const [state, action, pending] = useActionState(placeInterestDepositAction, initial);
   const [methode, setMethode] = usePaymentMethod();
@@ -43,7 +48,7 @@ export function DepositForm({
   return (
     <form onSubmit={keepFormSubmit(action)} className="mt-5 grid gap-4">
       <input type="hidden" name="listingId" value={listingId} />
-      <ReadinessChecklist readiness={readiness} />
+      {rappelPrerequis ? <ReadinessChecklist readiness={readiness} /> : null}
       <ul className="grid gap-1.5 rounded-xl border border-line bg-surface-alt px-4 py-3 text-[13px] leading-relaxed text-ink">
         {depositTerms(amountLabel, amountEur).map((regle) => (
           <li key={regle}>{regle}</li>

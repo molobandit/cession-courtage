@@ -105,6 +105,7 @@ export default async function PositionPage({ params }: { params: Promise<{ id: s
             amountEur={depot}
             listingAmountLabel={formatEuroWhole(prix)}
             readiness={readiness!}
+            rappelPrerequis={false}
           />
         </section>
       </div>
