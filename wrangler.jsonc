@@ -16,7 +16,11 @@
     "enabled": true
   },
   "vars": {
-    "DEMO_INBOX": "true",
+    // Boite de demonstration : fermee sur le worker deploye.
+    // isDemoInboxEnabled exige deja un hote local, mais le verrou ne doit pas
+    // tenir a cette seule verification : en ligne, la variable dit non.
+    // Le poste de developpement garde sa boite par DEMO_INBOX dans .env.
+    "DEMO_INBOX": "false",
     "AUTH_TRUST_HOST": "true"
   },
   // Fichiers deposes : bordereaux d'import et pieces de salle de donnees.
