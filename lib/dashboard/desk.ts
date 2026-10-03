@@ -2,7 +2,6 @@ import "server-only";
 import type { PositionRow, TodoItem } from "@/components/app/desk";
 import { canBuy, canSell, listMyDeals, listMyListings, listMyMandates } from "@/lib/authz";
 import type { Actor } from "@/lib/authz/actor";
-import { isOfferWindowSealed } from "@/lib/authz/policies";
 import { SALE_PIPELINE, nextPipelineAction, pipelineProgressPercent } from "@/lib/deal/pipeline";
 import { listMyDirectDeals } from "@/lib/direct/load";
 import { stepByKey, type DirectStage } from "@/lib/direct/stages";
@@ -12,7 +11,7 @@ import { bestDeals } from "@/lib/listing/filter";
 import { loadPublicListingCards } from "@/lib/listing/load-public-cards";
 import { commissionsCedees, listingLotTotals } from "@/lib/listing/lot-totals";
 import { listMyProposalsAsSeller } from "@/lib/mandate/proposals";
-import { formatMultiple, listingMultiple, marketIndices, quoteBoard } from "@/lib/market/indices";
+import { formatMultiple, listingMultiple, marketIndices } from "@/lib/market/indices";
 import { listListingPositions, listMyPositions, positionSnapshot } from "@/lib/position/load";
 import { prisma } from "@/lib/prisma";
 
@@ -41,8 +40,6 @@ export async function loadDesk(actor: Actor) {
   ]);
 
   const indices = marketIndices(cartes);
-  const cote = quoteBoard(cartes, 6);
-  const bandeau = cartes.filter((c) => c.marketTone === "open" || c.marketTone === "sealed").slice(0, 16);
 
   const [candidatsParAnnonce, suivisPropositions] = await Promise.all([
     Promise.all(annonces.map(async (a) => [a.id, await listListingPositions(a.id)] as const)),
@@ -95,7 +92,6 @@ export async function loadDesk(actor: Actor) {
     const dossiers = dealsVendeur.filter((d) => d.listing.publicNumber === annonce.publicNumber);
     const plusAvance = [...dossiers].sort((a, b) => pipelineProgressPercent(b.stage) - pipelineProgressPercent(a.stage))[0];
     const liste = candidats.get(annonce.id) ?? [];
-    const scelle = isOfferWindowSealed(annonce);
 
     if (plusAvance) {
       const etape = SALE_PIPELINE.find((s) => s.key === plusAvance.stage)?.label ?? plusAvance.stage;
@@ -118,17 +114,18 @@ export async function loadDesk(actor: Actor) {
       continue;
     }
 
-    const offres = liste.filter((c) => c.state.key === "OFFER");
+    // Positionnés : ceux qui ont versé leur dépôt, pas ceux qui regardent.
+    const positionnes = liste.filter((c) => c.state.key !== "POSITION" && c.state.outcome === "active");
     lignes.push({
       key: `vente-${annonce.id}`,
-      href: liste.length ? `/app/annonces/${annonce.id}/offres` : `/app/annonces/${annonce.id}`,
+      href: `/app/annonces/${annonce.id}`,
       side: "Vente",
       numero: String(annonce.publicNumber),
       libelle: annonce.portfolio.label,
       etape:
         annonce.status === "DRAFT"
           ? "Dossier à soumettre"
-          : `${cotation.label} · ${liste.length} candidat${liste.length > 1 ? "s" : ""}${offres.length ? ` · ${offres.length} offre${offres.length > 1 ? "s" : ""}` : ""}`,
+          : `${cotation.label} · ${liste.length} candidat${liste.length > 1 ? "s" : ""}${positionnes.length ? ` · ${positionnes.length} positionné${positionnes.length > 1 ? "s" : ""}` : ""}`,
       percent: liste.length ? Math.max(...liste.map((c) => c.state.percent)) : null,
       montant: prixFixe ? formatEuroWhole(Number(annonce.askingPrice)) : "Montant à venir",
       multiple,
@@ -136,9 +133,16 @@ export async function loadDesk(actor: Actor) {
     });
     if (annonce.status === "DRAFT") {
       aFaire.push({ key: `t-draft-${annonce.id}`, href: `/app/annonces/${annonce.id}`, icon: "megaphone", title: `${annonce.reviewNote ? "Compléter" : "Soumettre"} votre dossier · N° ${annonce.publicNumber}`, detail: annonce.reviewNote ? `Notre équipe vous l’a renvoyé : ${annonce.reviewNote.replace(/[.\s]+$/, "")}.` : "Notre équipe réalise l’étude du portefeuille, détermine le montant, puis met l’annonce en ligne.", cta: annonce.reviewNote ? "Compléter" : "Soumettre" });
-    } else if (offres.length) {
-      const meilleure = Math.max(...offres.map((o) => Number(o.offer?.amount ?? 0)));
-      aFaire.push({ key: `t-offres-${annonce.id}`, href: `/app/annonces/${annonce.id}/offres`, icon: "megaphone", title: `${offres.length} offre${offres.length > 1 ? "s" : ""} ${scelle ? "en séance" : "à examiner"} · N° ${annonce.publicNumber}`, detail: `Meilleure offre ${formatEuroWhole(meilleure)} pour ${formatEuroWhole(Number(annonce.askingPrice))} affichés`, cta: "Comparer", urgent: true });
+    } else if (positionnes.length) {
+      aFaire.push({
+        key: `t-positionnes-${annonce.id}`,
+        href: `/app/annonces/${annonce.id}`,
+        icon: "megaphone",
+        title: `${positionnes.length} acquéreur${positionnes.length > 1 ? "s" : ""} positionné${positionnes.length > 1 ? "s" : ""} · n° ${annonce.publicNumber}`,
+        detail: "Le dépôt de positionnement est versé : la procédure de cession est lancée.",
+        cta: "Ouvrir",
+        urgent: true,
+      });
     }
   }
 
@@ -193,8 +197,6 @@ export async function loadDesk(actor: Actor) {
     vendeur,
     acheteur,
     indices,
-    cote,
-    bandeau,
     /** Les portefeuilles achetables au multiple le plus bas, hors les siens. */
     demandesAchat,
     correspondances,

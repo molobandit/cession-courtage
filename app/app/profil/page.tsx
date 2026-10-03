@@ -264,7 +264,7 @@ export default async function ProfilPage({
           Confidentialité et contrat d’intermédiation.
         </p>
         <p className={`mt-3 text-[15px] font-semibold ${engagements.valid ? "text-ok" : "text-warn"}`}>
-          {engagements.valid ? "✓ Signés" : "À signer avant de soumettre un dossier ou de faire une offre"}
+          {engagements.valid ? "✓ Signés" : "À signer avant de confier un portefeuille ou de vous positionner"}
         </p>
         <Link href="/app/engagements" className="mt-2 inline-block text-[14px] font-medium text-indigo-dark underline-offset-2 hover:underline">
           {engagements.valid ? "Relire mes engagements" : "Signer mes engagements"}

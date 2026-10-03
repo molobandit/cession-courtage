@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { LegalLayout, LegalSection } from "@/components/legal/legal-page";
-import { GROWTH_PLAN_ANNUAL_EUR, INTEREST_DEPOSIT_LABEL } from "@/lib/billing/rates";
+import { INTEREST_DEPOSIT_LABEL } from "@/lib/billing/rates";
 import { ASKING_MAX, ASKING_MIN } from "@/lib/listing/constants";
 import { formatEuroWhole } from "@/lib/format/number";
 
@@ -40,10 +40,9 @@ export default function ConditionsGeneralesPage() {
           transaction, et n’exerce aucune activité d’intermédiation en assurance.
         </p>
         <p>
-          La plateforme n’adjuge jamais. Elle recueille des propositions ; le cédant
-          décide seul et demeure libre de refuser la proposition la plus élevée sans
-          avoir à motiver sa décision. Aucun mécanisme de surenchère en direct ni de
-          prolongation automatique n’est mis en œuvre.
+          La plateforme n’organise aucune vente aux enchères. Le montant de
+          l’annonce est arrêté par l’éditeur à l’issue de l’étude du portefeuille,
+          et l’acquéreur se positionne à ce montant, sans surenchère.
         </p>
       </LegalSection>
 
@@ -75,18 +74,19 @@ export default function ConditionsGeneralesPage() {
         </p>
       </LegalSection>
 
-      <LegalSection title="5. Fenêtre d’offres">
+      <LegalSection title="5. Dépôt de positionnement">
         <p>
-          Lorsque le cédant ouvre une fenêtre d’offres, celle-ci court à compter
-          de la publication. Pendant cette période, aucun candidat n’a
-          connaissance des propositions des autres, et le cédant n’a accès ni aux
-          montants ni aux identités.
+          Ce n’est pas le vendeur qui fixe le montant de l’annonce ni qui la
+          publie. L’étude du portefeuille est réalisée d’abord ; une fois la
+          valeur déterminée, l’annonce est mise en ligne avec le montant
+          correspondant, compris entre {formatEuroWhole(ASKING_MIN)} et{" "}
+          {formatEuroWhole(ASKING_MAX)}.
         </p>
         <p>
-          Les propositions sont révélées simultanément à la clôture. Une offre peut
-          être retirée par son auteur tant qu’elle n’a pas été retenue. Le montant
-          demandé est compris entre {formatEuroWhole(ASKING_MIN)} et{" "}
-          {formatEuroWhole(ASKING_MAX)}.
+          Dès que l’acquéreur se positionne, il verse un dépôt de{" "}
+          {INTEREST_DEPOSIT_LABEL} du montant de l’annonce dans un trust. Ce dépôt
+          lance la procédure de cession, et l’identité du cédant lui est alors
+          révélée. Si la cession aboutit, il vient en déduction de la transaction.
         </p>
       </LegalSection>
 

@@ -184,7 +184,7 @@ function TaskAction({ p, task, side, escrowLive }: { p: DealProcess; task: Task;
       <div className="grid gap-2">
         <p className="text-[14px] text-ink">
           Montant {formatEuro(Number(deal.upfrontAmount))}
-          {depot > 0 ? ` − dépôt de garantie déjà versé ${formatEuro(depot)}` : ""} ={" "}
+          {depot > 0 ? ` moins le dépôt de positionnement déjà versé, ${formatEuro(depot)}` : ""} ={" "}
           <span className="tabular font-bold">{formatEuro(aVerser)} à verser sur le compte sécurisé</span>
         </p>
         <EscrowForm dealId={id} amountLabel={formatEuro(aVerser)} live={escrowLive} />

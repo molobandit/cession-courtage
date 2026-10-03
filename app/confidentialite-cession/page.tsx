@@ -3,7 +3,7 @@ import { buildConfidentialityAgreement, type DocumentParty } from "@/lib/direct/
 
 export const metadata = {
   title: "Engagement de confidentialité",
-  description: "L’engagement accepté par l’acquéreur à son dépôt et par le cédant quand il retient l’offre.",
+  description: "L’engagement accepté par les deux parties au moment du dépôt de positionnement.",
 };
 
 const PARTIE: DocumentParty = {

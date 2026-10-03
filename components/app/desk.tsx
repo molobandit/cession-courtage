@@ -1,42 +1,44 @@
 import Link from "next/link";
 import { ToolIcon, type ToolIconName } from "@/components/app/toolbox";
-import { formatEuroWhole } from "@/lib/format/number";
-import type { PublicListingCard } from "@/lib/listing/public-card";
-import { formatMultiple, listingMultiple } from "@/lib/market/indices";
 import { cn } from "@/lib/utils";
 
 /**
- * Poste de marché : les briques de l'espace membre.
+ * Les briques de l'espace membre.
  *
- * Chiffres en grand, pastilles de cotation, bande des titres en séance : la
- * grammaire de l'accueil, pour que l'intérieur du site se lise comme la salle
- * qu'il promet.
+ * Un en-tête de page avec ses chiffres, un panneau et une table de positions :
+ * la grammaire commune aux écrans qui suivent un dossier.
  */
 
-/**
- * Encadré simple : fond blanc, bord fin.
- *
- * Le grand bandeau en dégradé a été retiré à la demande du propriétaire, qui
- * veut un intérieur aussi simple qu'assurdeal ou le bon coin : on lit le titre
- * et les chiffres, rien ne détourne l'œil.
- */
-export function DeskBand({ children }: { children: React.ReactNode }) {
-  return <section className="rounded-2xl border border-line bg-paper">{children}</section>;
-}
+export type TodoItem = {
+  key: string;
+  href: string;
+  icon: ToolIconName;
+  title: string;
+  detail: string;
+  cta: string;
+  urgent?: boolean;
+};
 
-export function LivePill({ label = "En séance" }: { label?: string }) {
-  return (
-    <span className="inline-flex items-center gap-2 rounded-full border border-indigo-line bg-paper px-3 py-1 text-[12px] font-semibold text-ink">
-      <span className="relative flex h-2 w-2">
-        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-60 motion-reduce:hidden" />
-        <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
-      </span>
-      {label}
-    </span>
-  );
-}
+export type PositionRow = {
+  key: string;
+  href: string;
+  side: "Achat" | "Vente" | "Demande";
+  numero: string;
+  libelle: string;
+  etape: string;
+  percent: number | null;
+  montant: string;
+  multiple: string;
+  issue?: "active" | "closed" | "lost" | "withdrawn";
+};
 
-/** Indice ou compteur du bandeau. */
+const SIDE: Record<PositionRow["side"], string> = {
+  Achat: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  Vente: "bg-rose-50 text-rose-700 border-rose-200",
+  Demande: "bg-indigo-soft text-indigo-dark border-indigo-line",
+};
+
+/** Tableau des positions : une ligne par dossier, lue comme un carnet d'ordres. */
 export function DeskKpi({
   label,
   value,
@@ -76,114 +78,7 @@ export function DeskKpi({
  * aucune variation inventée : un portefeuille n'a pas de cours minute par
  * minute, et en simuler un ruinerait la confiance que le reste du site gagne.
  */
-export function MarketTicker({ items }: { items: PublicListingCard[] }) {
-  if (items.length === 0) return null;
-  const ligne = (suffixe: string) =>
-    items.map((item) => (
-      <Link
-        key={`${item.id}-${suffixe}`}
-        href={`/annonces/${item.publicNumber}`}
-        className="flex shrink-0 items-center gap-2 px-5 text-[13px] text-ink hover:text-indigo-dark"
-        tabIndex={suffixe === "b" ? -1 : undefined}
-      >
-        <span className="font-semibold">N° {item.publicNumber}</span>
-        <span className="text-muted">{item.riskTypes[0] ?? "Portefeuille"}</span>
-        <span className="tabular font-semibold">{formatEuroWhole(item.askingPrice)}</span>
-        <span className="tabular text-indigo-dark">{formatMultiple(listingMultiple(item.askingPrice, item.annualCommissions))}</span>
-        <span className={cn("text-[12px] font-semibold", item.marketTone === "sealed" ? "text-indigo-dark" : "text-ok")}>
-          {item.marketTone === "sealed" ? (item.marketDetail ?? item.statusLabel) : item.statusLabel}
-        </span>
-        <span className="text-indigo-line">│</span>
-      </Link>
-    ));
-  return (
-    <div className="relative overflow-hidden border-t border-white/60 bg-white/85 py-2.5" aria-label="Titres en séance">
-      <div className="market-ticker-track flex w-max">
-        {ligne("a")}
-        <span aria-hidden="true" className="flex">
-          {ligne("b")}
-        </span>
-      </div>
-    </div>
-  );
-}
 
-export type TodoItem = {
-  key: string;
-  href: string;
-  icon: ToolIconName;
-  title: string;
-  detail: string;
-  cta: string;
-  urgent?: boolean;
-};
-
-/** Ce qui attend l'utilisateur, dans l'ordre où il doit le faire. */
-export function TodoList({ items, waiting = 0 }: { items: TodoItem[]; waiting?: number }) {
-  if (items.length === 0) {
-    return (
-      <div className="flex items-center gap-3 rounded-2xl border border-line bg-paper p-5 text-[15px] text-muted">
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-ok/10 text-ok">✓</span>
-        {waiting > 0
-          ? `Rien à faire de votre côté : ${waiting} offre${waiting > 1 ? "s attendent" : " attend"} la réponse du cédant. Vous serez prévenu.`
-          : "Rien ne vous attend. Parcourez la salle de marché ou mettez un portefeuille en vente."}
-      </div>
-    );
-  }
-  return (
-    <ul className="grid gap-2">
-      {items.map((item) => (
-        <li key={item.key}>
-          <Link
-            href={item.href}
-            className={cn(
-              "group flex items-center gap-4 rounded-2xl border bg-paper p-4 transition hover:border-indigo hover:shadow-sm",
-              item.urgent ? "border-indigo-line" : "border-line",
-            )}
-          >
-            <span
-              className={cn(
-                "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl",
-                item.urgent ? "bg-indigo text-white" : "bg-indigo-soft text-indigo-dark",
-              )}
-            >
-              <ToolIcon name={item.icon} className="h-5 w-5" />
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block text-[15px] font-semibold text-ink">{item.title}</span>
-              <span className="block truncate text-[13px] text-muted">{item.detail}</span>
-            </span>
-            <span className="hidden shrink-0 items-center gap-1 text-[14px] font-semibold text-indigo-dark sm:inline-flex">
-              {item.cta}
-              <ToolIcon name="arrow-right" className="h-4 w-4 transition group-hover:translate-x-0.5" />
-            </span>
-          </Link>
-        </li>
-      ))}
-    </ul>
-  );
-}
-
-export type PositionRow = {
-  key: string;
-  href: string;
-  side: "Achat" | "Vente" | "Demande";
-  numero: string;
-  libelle: string;
-  etape: string;
-  percent: number | null;
-  montant: string;
-  multiple: string;
-  issue?: "active" | "closed" | "lost" | "withdrawn";
-};
-
-const SIDE: Record<PositionRow["side"], string> = {
-  Achat: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  Vente: "bg-rose-50 text-rose-700 border-rose-200",
-  Demande: "bg-indigo-soft text-indigo-dark border-indigo-line",
-};
-
-/** Tableau des positions : une ligne par dossier, lue comme un carnet d'ordres. */
 export function PositionsTable({ rows, empty }: { rows: PositionRow[]; empty: React.ReactNode }) {
   if (rows.length === 0) return <div className="px-5 py-10 text-center text-[15px] text-muted">{empty}</div>;
   return (
@@ -248,52 +143,6 @@ export function PositionsTable({ rows, empty }: { rows: PositionRow[]; empty: Re
   );
 }
 
-/** Cote de la salle : les titres à surveiller, avec leur multiple et leur statut. */
-export function QuoteTable({ items }: { items: PublicListingCard[] }) {
-  if (items.length === 0) {
-    return <div className="px-5 py-10 text-center text-[15px] text-muted">Aucun portefeuille en séance pour le moment.</div>;
-  }
-  return (
-    <ul className="divide-y divide-line">
-      {items.map((item) => (
-        <li key={item.id}>
-          <Link href={`/annonces/${item.publicNumber}`} className="flex items-center gap-3 px-5 py-3 hover:bg-surface-alt/60">
-            <span className="min-w-0 flex-1">
-              <span className="flex items-center gap-1.5">
-                <span className="whitespace-nowrap font-semibold text-ink">N° {item.publicNumber}</span>
-                {item.certified ? (
-                  <span title="Portefeuille certifié" className="text-indigo-dark">
-                    <ToolIcon name="shield" className="h-4 w-4" />
-                  </span>
-                ) : null}
-                <span className="truncate text-[12px] text-muted">{item.riskTypes[0] ?? "Portefeuille"}</span>
-              </span>
-              <span className="mt-0.5 flex items-center gap-1.5 text-[12px]">
-                <span
-                  className={cn(
-                    "h-1.5 w-1.5 shrink-0 rounded-full",
-                    item.marketTone === "sealed" ? "bg-indigo" : "bg-ok",
-                  )}
-                />
-                <span className={cn("truncate font-medium", item.marketTone === "sealed" ? "text-indigo-dark" : "text-ok")}>
-                  {item.marketTone === "sealed" ? item.marketDetail : "Offres ouvertes"}
-                </span>
-              </span>
-            </span>
-            <span className="shrink-0 text-right">
-              <span className="tabular block font-bold text-ink">{formatEuroWhole(item.askingPrice)}</span>
-              <span className="tabular block text-[12px] text-indigo-dark">
-                {formatMultiple(listingMultiple(item.askingPrice, item.annualCommissions))}
-              </span>
-            </span>
-          </Link>
-        </li>
-      ))}
-    </ul>
-  );
-}
-
-/** Carte blanche à en-tête, pour les blocs du poste. */
 export function DeskPanel({
   title,
   subtitle,

@@ -65,7 +65,7 @@ export default function ConfidentialitePage() {
           />
           <LegalRow
             label="Données de transaction"
-            value="Annonces, mandats, offres, étapes de dossier, documents déposés"
+            value="Annonces, mandats, positionnements, étapes de dossier, documents déposés"
           />
           <LegalRow
             label="Journalisation"
@@ -84,7 +84,7 @@ export default function ConfidentialitePage() {
         <div>
           <LegalRow
             label="Exécution du contrat"
-            value="Compte, annonces, mandats, offres, suivi de dossier"
+            value="Compte, annonces, mandats, positionnements, suivi de dossier"
           />
           <LegalRow
             label="Obligation légale"

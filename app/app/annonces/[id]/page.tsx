@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { OpenOffersButton, PublishListingButton, WithdrawListingButton } from "@/components/listing/listing-forms";
+import { PublishListingButton, WithdrawListingButton } from "@/components/listing/listing-forms";
 import { OfferChat } from "@/components/chat/offer-chat";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,8 +11,7 @@ import {
   listListingMailboxRecipients,
   listListingMessages,
 } from "@/lib/authz";
-import { isOfferWindowSealed } from "@/lib/authz/policies";
-import { formatDate, formatDateTime, formatEuro } from "@/lib/format/fr";
+import { formatDateTime, formatEuro } from "@/lib/format/fr";
 import { DeskPageHeader } from "@/components/app/desk";
 import { MarketBadge } from "@/components/listing/market-badge";
 import { marketStatus } from "@/lib/listing/market-status";
@@ -38,28 +37,33 @@ export default async function SellerListingPage({
   const listing = await findMyListing(id, actor);
   if (!listing) notFound();
 
-  const sealed = isOfferWindowSealed(listing);
   const messages = await listListingMessages(id, actor);
   const recipients = await listListingMailboxRecipients(id, actor);
   const companyDocs = await listCompanyDocs(id);
   const candidats = await listListingPositions(listing.id);
-  const offres = candidats.filter((c) => c.offer && c.offer.status === "SUBMITTED").length;
+  // Un acquéreur positionné est un candidat qui a versé son dépôt de positionnement.
+  const positionnes = candidats.filter((c) => c.deposit).length;
   const cotation = marketStatus({ status: listing.status, offerWindowClosesAt: listing.offerWindowClosesAt });
 
   return (
     <main className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 sm:py-8">
       <DeskPageHeader
-        back={{ href: "/app/cessions", label: "Mes cessions" }}
+        back={{ href: "/app/cessions", label: "Mes ventes" }}
         kicker="Mon annonce"
         badge={<MarketBadge label={cotation.label} tone={cotation.tone} detail={cotation.detail} />}
-        title={`Dossier N° ${listing.publicNumber}`}
-        subtitle={<>{listing.portfolio.label} · {listing.displayedZone}{listing.offerWindowClosesAt ? ` · séance ${sealed ? "ouverte jusqu’au" : "close depuis le"} ${formatDate(listing.offerWindowClosesAt)}` : ""}</>}
+        title={`Dossier n° ${listing.publicNumber}`}
+        subtitle={<>{listing.portfolio.label} · {listing.displayedZone}</>}
         figures={[
           listing.publishedAt
             ? { label: "Montant de mise en ligne", value: formatEuro(listing.askingPrice), note: "Fixé par notre équipe après l’étude" }
             : { label: "Montant", value: "À venir", note: "Fixé par notre équipe après l’étude du portefeuille" },
-          { label: "Candidats", value: String(candidats.length), note: "Acquéreurs ayant pris position" },
-          { label: "Offres", value: String(offres), note: sealed ? "À retenir à la clôture de la séance" : "À comparer et retenir", accent: offres > 0 },
+          { label: "Candidats", value: String(candidats.length), note: "Acquéreurs qui suivent le dossier" },
+          {
+            label: "Acquéreurs positionnés",
+            value: String(positionnes),
+            note: "Dépôt de positionnement versé",
+            accent: positionnes > 0,
+          },
         ]}
         actions={
           <>
@@ -74,19 +78,12 @@ export default async function SellerListingPage({
                 </Link>
               </>
             ) : null}
-            {listing.status === "PUBLISHED" ? <OpenOffersButton listingId={listing.id} /> : null}
             <a
               href={`/annonces/${listing.publicNumber}/etude`}
               className="inline-flex h-10 items-center rounded-full border border-line bg-paper px-4 text-[14px] font-semibold text-ink hover:bg-surface-alt"
             >
               Télécharger l’étude
             </a>
-            <Link
-              href={`/app/annonces/${listing.id}/offres`}
-              className="inline-flex h-10 items-center rounded-full bg-indigo px-4 text-[14px] font-semibold !text-white hover:bg-indigo-dark"
-            >
-              Carnet d’offres
-            </Link>
             <Link
               href={`/annonces/${listing.publicNumber}`}
               className="inline-flex h-10 items-center rounded-full border border-indigo bg-paper px-4 text-[14px] font-semibold !text-indigo-dark hover:bg-indigo-soft"

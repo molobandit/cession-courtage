@@ -42,13 +42,13 @@ export function ListingAdCard({ item }: { item: PublicListingCard }) {
           <Repere label="Contrats" value={formatCount(item.contractCount)} />
           <Repere
             label="Ancienneté"
-            value={item.averageAgeMonths > 0 ? `${Math.round(item.averageAgeMonths)} mois` : "—"}
+            value={item.averageAgeMonths > 0 ? `${Math.round(item.averageAgeMonths)} mois` : "n.c."}
           />
         </dl>
 
         <dl className="mt-4 grid grid-cols-2 gap-3 border-t border-line pt-4">
           <Repere label="Montant" value={formatEuroWhole(item.askingPrice)} fort />
-          <Repere label="Multiple" value={multiple ? multiple.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "—"} fort />
+          <Repere label="Multiple" value={multiple ? multiple.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "n.c."} fort />
         </dl>
 
         <span className="mt-auto pt-5">

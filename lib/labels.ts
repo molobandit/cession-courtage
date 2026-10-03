@@ -51,12 +51,12 @@ export const COMMISSION_TYPE_LABELS: Record<CommissionType, string> = {
  * « ouverte », pas « close ».
  */
 export const LISTING_STATUS_LABELS: Record<ListingStatus, string> = {
-  DRAFT: "Dossier à soumettre",
+  DRAFT: "Dossier à envoyer",
   PENDING_REVIEW: "Étude en cours",
-  PUBLISHED: "Offres ouvertes",
-  OFFERS_OPEN: "Séance en cours",
-  OFFERS_CLOSED: "Offres ouvertes",
-  UNDER_NEGOTIATION: "En négociation",
+  PUBLISHED: "Disponible",
+  OFFERS_OPEN: "Disponible",
+  OFFERS_CLOSED: "Disponible",
+  UNDER_NEGOTIATION: "Acquéreur positionné",
   SOLD: "Vendu",
   WITHDRAWN: "Retiré du marché",
 };

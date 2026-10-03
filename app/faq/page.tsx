@@ -7,12 +7,18 @@ import {
 import { ASKING_MAX, ASKING_MIN } from "@/lib/listing/constants";
 import { formatEuroWhole } from "@/lib/format/number";
 import { PAYMENT_FAQ, PAYMENT_FAQ_ANCHOR } from "@/lib/partners/faq";
-import { FAQ_PORTFOLIO_TRANSFER_A, FAQ_PORTFOLIO_TRANSFER_Q } from "@/lib/copy/market";
+import {
+  FAQ_PORTFOLIO_TRANSFER_A,
+  FAQ_PORTFOLIO_TRANSFER_Q,
+  RETENTION_TRUST_BODY,
+  RETENTION_TRUST_TITLE,
+  TRANSACTION_SECURE_BODY,
+} from "@/lib/copy/market";
 
 export const metadata: Metadata = {
   title: "Questions fréquentes",
   description:
-    "Confidentialité, étude du portefeuille, séance d’offres, tarifs, transaction et transfert : les réponses aux questions que se posent les courtiers.",
+    "Confidentialité, étude du portefeuille, positionnement, honoraires, transaction et transfert : les réponses aux questions que se posent les courtiers.",
   alternates: { canonical: "/faq" },
 };
 
@@ -59,30 +65,30 @@ const SECTIONS: Section[] = [
         a: "En maîtrisant les résiliations et en proposant à l’acquéreur un accompagnement de quelques mois après la cession.",
       },
       {
-        q: "Le montant de l’annonce engage-t-il l’acquéreur ?",
-        a: "Non. C’est le montant auquel l’annonce est mise en ligne. L’acquéreur fait son offre, et la vérification préalable reste indispensable.",
+        q: "Le montant de l’annonce se négocie-t-il ?",
+        a: "Non. Il est arrêté par notre équipe à l’issue de l’étude, et c’est à ce montant que l’acquéreur se positionne.",
       },
     ],
   },
   {
-    title: "Offres et négociation",
-    intro: "Ce qui se passe pendant la séance, et après.",
+    title: "Le positionnement",
+    intro: "Comment un acquéreur s’engage, et ce que cela déclenche.",
     questions: [
       {
-        q: "Comment fonctionne la séance d’offres ?",
-        a: `La meilleure offre et le nombre d’offres s’affichent en direct sur la fiche, sans jamais l’identité des acquéreurs : chacun sait où en est la cote avant de s’engager. Le cédant suit les offres et en retient une à la clôture.`,
+        q: "Comment un acquéreur se positionne-t-il ?",
+        a: `Il ne propose pas de prix : il verse un dépôt de positionnement de ${INTEREST_DEPOSIT_LABEL} du montant de l’annonce dans un trust. C’est ce dépôt qui lance la procédure de cession et qui lui révèle le nom du cabinet cédant.`,
       },
       {
-        q: "Pourquoi le cédant attend-il la clôture pour retenir une offre ?",
-        a: "Pour laisser à chaque acquéreur le temps d’examiner le dossier et de se positionner. Retenir la première offre venue priverait le cédant d’une meilleure proposition arrivée le lendemain.",
+        q: "Que devient ce dépôt ?",
+        a: "Si la cession aboutit, il vient en déduction de la transaction : il n’est pas remboursé à part. Tant que le dossier suit son cours, il reste dans le trust.",
       },
       {
-        q: "Suis-je obligé d’accepter la meilleure offre ?",
-        a: "Non. La plateforme n’adjuge jamais. Vous décidez seul et vous restez libre de refuser la proposition la plus élevée sans avoir à vous justifier. Vous pouvez aussi ne retenir aucune offre.",
+        q: "À quoi sert le trust ?",
+        a: TRANSACTION_SECURE_BODY,
       },
       {
-        q: "Un acquéreur peut-il retirer son offre ?",
-        a: "Oui, tant qu’elle n’a pas été retenue. Une fois l’offre acceptée, un dossier s’ouvre et le parcours contractuel commence.",
+        q: RETENTION_TRUST_TITLE,
+        a: RETENTION_TRUST_BODY,
       },
       {
         q: "Dans quelle fourchette les annonces sont-elles mises en ligne ?",
@@ -103,8 +109,8 @@ const SECTIONS: Section[] = [
         a: FAQ_PORTFOLIO_TRANSFER_A,
       },
       {
-        q: "Puis-je ne céder qu’une partie de mon portefeuille ?",
-        a: "Oui. Vous sélectionnez les lignes concernées et la fourchette est recalculée sur ce sous-ensemble uniquement.",
+        q: "Mon identité est-elle protégée jusqu’au bout ?",
+        a: "Votre annonce est publiée sous un simple numéro de dossier. Votre nom n’est communiqué qu’à l’acquéreur qui a versé son dépôt de positionnement, et les assurés du portefeuille restent anonymes du début à la fin.",
       },
       {
         q: "Le transfert ORIAS est-il pris en charge ?",
@@ -121,7 +127,7 @@ const SECTIONS: Section[] = [
         a: "Ils sont précisés dans le contrat d’intermédiation que vous signez sur la plateforme, et ne sont dus que si la vente aboutit. Dans tous les cas, le numéro ORIAS est contrôlé à l’inscription et la transaction passe par un trust.",
       },
       {
-        q: "Un acquéreur doit-il s’abonner ?",
+        q: "Que paie l’acquéreur, et quand ?",
         a: `Consulter la salle de marché est libre. Dès que l’acquéreur se positionne, il verse ${INTEREST_DEPOSIT_LABEL} du montant de l’annonce dans un trust pour lancer la procédure de cession. Les honoraires ne sont dus que si la vente aboutit.`,
       },
     ],
