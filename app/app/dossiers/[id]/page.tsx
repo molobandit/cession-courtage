@@ -94,7 +94,7 @@ export default async function DealPage({ params }: { params: Promise<{ id: strin
         </div>
         <div>
           <dt className="text-[12px] uppercase tracking-wide text-muted">Date d’effet</dt>
-          <dd className="mt-1 text-[15px] font-semibold">{p.deal.loiEffectiveDate ? formatDate(p.deal.loiEffectiveDate) : "Fixée par la lettre d’intention"}</dd>
+          <dd className="mt-1 text-[15px] font-semibold">{p.deal.loiEffectiveDate ? formatDate(p.deal.loiEffectiveDate) : "Fixée au contrat"}</dd>
         </div>
         <div>
           <dt className="text-[12px] uppercase tracking-wide text-muted">Montant à sécuriser</dt>

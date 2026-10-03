@@ -39,7 +39,7 @@ export async function takePositionAction(
     return { error: "C’est votre propre annonce : suivez les candidats depuis « Mes cessions »." };
   }
   if (!(await hasContactSubscription(actor))) {
-    redirect(`/tarifs?next=${encodeURIComponent(fiche)}#abonnements`);
+    redirect(fiche);
   }
 
   // Une position déjà prise se rouvre, même si l'annonce ne reçoit plus d'offres.

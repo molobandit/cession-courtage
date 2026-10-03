@@ -190,7 +190,7 @@ export function studyFromLines(input: {
 /** Fourchette affichée, arrondie à la centaine comme un dossier de place. */
 export function roundedRange(low: number, high: number): { low: number; high: number } {
   const round = (n: number) => Math.max(0, Math.round(n / 100) * 100);
-  let a = round(low);
+  const a = round(low);
   let b = round(high);
   if (b < a) b = a;
   return { low: a, high: b };

@@ -124,14 +124,14 @@ export default function ConfidentialitePage() {
         <p>
           Les données ne sont ni vendues, ni louées, ni transmises à des fins
           publicitaires. L’identité d’un cédant n’est communiquée à un acquéreur
-          qu’à la signature de la lettre d’intention, et jamais avant.
+          qu’au versement du dépôt de positionnement, et jamais avant.
         </p>
         <p>
           Les prestataires prévus (Stripe, Trustap, Yousign ou DocuSign, Ondorse,
           CrediPro) ne reçoivent des données que lorsque leur contrat est validé
           et que le rail correspondant est actif. Avant cela, aucune pièce
           d’identité ni aucun fonds de cession ne leur est transmis. Stripe,
-          lorsqu’il est configuré, traite le règlement de l’abonnement. Aucune
+          lorsqu’il est configuré, traite le règlement du dépôt de positionnement. Aucune
           coordonnée bancaire complète n’est stockée par l’éditeur.
         </p>
       </LegalSection>

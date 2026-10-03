@@ -104,9 +104,14 @@ export const DISTRIBUTION_LABELS: Record<DistributionMode, string> = {
 };
 
 export const DOCUMENT_TYPE_LABELS: Record<string, string> = {
-  NDA: "Accord de confidentialité",
-  LOI: "Lettre d’intention",
-  DEED: "Acte de cession",
+  NDA: "Engagement de confidentialité",
+  /*
+   * La lettre d'intention n'existe plus dans le modèle : l'engagement se
+   * prend en versant le dépôt de positionnement. Les pièces déjà signées
+   * sous ce type restent lisibles, sous le nom de ce qu'elles contiennent.
+   */
+  LOI: "Engagement de reprise",
+  DEED: "Contrat de cession",
   TRANSFER_CERTIFICATE: "Attestation de transfert",
   OTHER: "Autre pièce",
 };

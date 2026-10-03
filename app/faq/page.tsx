@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
-  GROWTH_PLAN_ANNUAL_EUR,
   INTEREST_DEPOSIT_LABEL,
 } from "@/lib/billing/rates";
 import { ASKING_MAX, ASKING_MIN } from "@/lib/listing/constants";
@@ -31,7 +30,7 @@ const SECTIONS: Section[] = [
       },
       {
         q: "À quel moment mon identité est-elle révélée ?",
-        a: `Dès que l’acquéreur se positionne, il verse un dépôt de ${INTEREST_DEPOSIT_LABEL} dans un trust, pour lancer la procédure de cession. C’est à ce moment que votre identité lui est ouverte, jamais avant. L’abonnement ouvre le contact et les messages, sans dévoiler votre nom.`,
+        a: `Dès que l’acquéreur se positionne, il verse un dépôt de ${INTEREST_DEPOSIT_LABEL} dans un trust, pour lancer la procédure de cession. C’est à ce moment que votre identité lui est ouverte, jamais avant.`,
       },
       {
         q: "Puis-je savoir qui a consulté mon dossier ?",
@@ -97,7 +96,7 @@ const SECTIONS: Section[] = [
     questions: [
       {
         q: "Quelles sont les étapes ?",
-        a: "Accord de confidentialité, salle de données, lettre d’intention, vérification d’identité, acte, signature, transaction sécurisée, transfert des contrats, puis période de rétention. Les étapes se suivent dans cet ordre et ne peuvent pas être sautées.",
+        a: "L’étude du portefeuille, la mise en ligne de l’annonce, le positionnement de l’acquéreur avec son dépôt de 2,5 % dans un trust, puis la signature : contrats contrôlés par nos avocats, fonds libérés par le trust et transfert des contrats. Les étapes se suivent dans cet ordre et ne peuvent pas être sautées.",
       },
       {
         q: FAQ_PORTFOLIO_TRANSFER_Q,
@@ -123,7 +122,7 @@ const SECTIONS: Section[] = [
       },
       {
         q: "Un acquéreur doit-il s’abonner ?",
-        a: `Consulter le catalogue ne nécessite pas d’abonnement. Un abonnement de ${GROWTH_PLAN_ANNUAL_EUR.toLocaleString("fr-FR")} € HT par an est obligatoire pour accéder au détail de l’offre (contact, messages). Dès que l’acquéreur se positionne, il verse ${INTEREST_DEPOSIT_LABEL} dans un trust pour lancer la procédure de cession. L’abonnement passe par Stripe dès que ce rail est ouvert.`,
+        a: `Consulter la salle de marché est libre. Dès que l’acquéreur se positionne, il verse ${INTEREST_DEPOSIT_LABEL} du montant de l’annonce dans un trust pour lancer la procédure de cession. Les honoraires ne sont dus que si la vente aboutit.`,
       },
     ],
   },

@@ -30,7 +30,7 @@ export type ProfileSection = {
 export const FIRM_PROFILE_SECTIONS: ProfileSection[] = [
   {
     key: "positionnement",
-    title: "Positionnement",
+    title: "Activité",
     lede: "Votre démarche commerciale au quotidien.",
     fields: [
       { key: "risques", label: "Branches travaillées", type: "many", options: ["Vie et épargne", "Santé et prévoyance", "Emprunteur", "IARD particuliers", "IARD professionnels et entreprises"] },
@@ -43,7 +43,7 @@ export const FIRM_PROFILE_SECTIONS: ProfileSection[] = [
   },
   {
     key: "organisation",
-    title: "Organisation",
+    title: "Équipe",
     lede: "L’équipe, les locaux et les outils qui font tourner le cabinet.",
     fields: [
       { key: "effectif", label: "Effectif", type: "one", options: ["Seul", "2 à 5", "6 à 20", "Plus de 20"] },
@@ -56,7 +56,7 @@ export const FIRM_PROFILE_SECTIONS: ProfileSection[] = [
   },
   {
     key: "conformite",
-    title: "Conformité",
+    title: "Obligations",
     lede: "Ce qu’un acquéreur vérifie avant de s’engager.",
     fields: [
       { key: "orias", label: "Catégories ORIAS", type: "many", options: ["COA", "MIA", "AGA", "MA", "IOBSP"] },
@@ -70,7 +70,7 @@ export const FIRM_PROFILE_SECTIONS: ProfileSection[] = [
   },
   {
     key: "strategie",
-    title: "Stratégie",
+    title: "Projet",
     lede: "Où va le cabinet, et à quel rythme.",
     fields: [
       { key: "projet", label: "Projet", type: "many", options: ["Céder tout le portefeuille", "Céder une partie", "Acquérir", "Croître par rachats", "Transmettre à un proche"] },

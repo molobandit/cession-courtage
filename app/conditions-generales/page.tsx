@@ -65,7 +65,7 @@ export default function ConditionsGeneralesPage() {
       <LegalSection title="4. Confidentialité et dévoilement par paliers">
         <p>
           Les annonces sont publiées sous alias. L’identité du cédant n’est révélée
-          qu’à la signature de la lettre d’intention. Chaque palier de dévoilement
+          qu’au versement du dépôt de positionnement. Chaque palier de dévoilement
           est journalisé.
         </p>
         <p>
@@ -92,12 +92,10 @@ export default function ConditionsGeneralesPage() {
 
       <LegalSection title="6. Honoraires et transaction">
         <p>
-          La consultation du catalogue et la publication d’une annonce sont
-          fournies sans frais. Pour accéder au détail d’une offre (contact,
-          messages), l’acquéreur souscrit un abonnement de{" "}
-          {GROWTH_PLAN_ANNUAL_EUR} € hors taxes par an. Dès que l’acquéreur se
-          positionne, il verse un dépôt de {INTEREST_DEPOSIT_LABEL} du montant de
-          l’annonce dans un trust, pour lancer la procédure de cession.
+          La consultation de la salle de marché et la mise en ligne d’une annonce
+          sont fournies sans frais. Dès que l’acquéreur se positionne, il verse un
+          dépôt de {INTEREST_DEPOSIT_LABEL} du montant de l’annonce dans un trust,
+          pour lancer la procédure de cession.
           L’éditeur n’encaisse pas les fonds de la cession. Les
           modalités de transaction et de signature figurent à l’article 10.
         </p>
@@ -157,7 +155,7 @@ export default function ConditionsGeneralesPage() {
           L’éditeur ne détient, ne reçoit ni ne conserve les fonds de la cession. Les
           opérations financières et les signatures électroniques sont conçues pour
           être réalisées par des prestataires indépendants. Stripe encaisse
-          l’abonnement d’accès et les dépôts d’intérêt inférieurs à 999 euros.
+          les dépôts de positionnement inférieurs à 999 euros.
           Trustap conserve les fonds de la cession et les versements à partir de 999
           euros. Yousign, ou DocuSign, porte la signature électronique. Ondorse
           porte la vérification d’identité professionnelle. CrediPro porte le

@@ -132,7 +132,7 @@ function PiecesAttendues({ titre, pieces, href }: { titre: string; pieces: reado
 /** Valeurs de départ du formulaire : l'annonce à corriger, ou le profil du cabinet. */
 export type ListingFormDefaults = Partial<Record<(typeof TEXT_FIELDS)[number], string>>;
 
-const TEXT_FIELDS = [
+const TEXT_FIELDS: readonly string[] = [
   "portfolioKind", "branchActivity", "desiredCessionDate", "cessionMotive", "negotiable", "sellerSupportMonths",
   "precompte", "precompteAmount", "transferVehicle", "oriasCategories", "distribution", "distanceShare",
   "complianceDema", "rcProInsurer", "employeeCount", "introducersCount", "softwareStack", "socialCommitments",

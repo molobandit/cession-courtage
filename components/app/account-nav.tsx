@@ -1,14 +1,14 @@
 const LINKS = [
   { href: "#identite", label: "Identité" },
   { href: "#cabinet", label: "Cabinet" },
-  { href: "#profil-cabinet", label: "Profil du cabinet" },
+  { href: "#profil-cabinet", label: "Le cabinet" },
   { href: "#engagements", label: "Engagements" },
   { href: "#recherche", label: "Recherche" },
   { href: "#verification", label: "Compte vérifié" },
   { href: "#mot-de-passe", label: "Mot de passe" },
   { href: "#notifications", label: "Notifications" },
-  { href: "#factures", label: "Factures" },
-  { href: "#pieces", label: "Pièces signées" },
+  { href: "#factures", label: "Dépôts" },
+  { href: "#pieces", label: "Engagements signés" },
   { href: "#securite", label: "Sécurité" },
 ];
 

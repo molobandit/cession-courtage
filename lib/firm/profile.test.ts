@@ -21,6 +21,6 @@ describe("profil du cabinet", () => {
 
   it("donne des lignes lisibles pour la présentation", () => {
     const p = readFirmProfile({ positionnement: { reseaux: ["LinkedIn", "Facebook"] } });
-    expect(profileFacts(p)).toEqual([{ section: "Positionnement", rows: [{ label: "Réseaux sociaux actifs", value: "LinkedIn, Facebook" }] }]);
+    expect(profileFacts(p)).toEqual([{ section: "Activité", rows: [{ label: "Réseaux sociaux actifs", value: "LinkedIn, Facebook" }] }]);
   });
 });

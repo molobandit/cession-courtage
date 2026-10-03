@@ -4,7 +4,6 @@ import { revalidatePath } from "next/cache";
 import { canBuy, getActor, isOriasVerified } from "@/lib/authz/actor";
 import { ForbiddenError, UnauthenticatedError } from "@/lib/authz/errors";
 import { isTradableListingStatus, ownsFirm } from "@/lib/authz/policies";
-import { hasContactSubscription } from "@/lib/billing/contact-access";
 import { redirect } from "next/navigation";
 import { AGREEMENTS_REQUIRED_MESSAGE, loadAgreementsStatus } from "@/lib/account/agreements-load";
 import { isDepositMethod, startDepositPayment } from "@/lib/billing/deposit-checkout";
@@ -34,12 +33,6 @@ export async function placeInterestDepositAction(
     if (!actor) throw new UnauthenticatedError();
     if (!isOriasVerified(actor)) throw new ForbiddenError("ORIAS non validé.");
     if (!canBuy(actor)) throw new ForbiddenError("Réservé aux acquéreurs.");
-
-    if (!(await hasContactSubscription(actor))) {
-      return {
-        error: "Un abonnement annuel est requis avant de déposer un engagement.",
-      };
-    }
 
     const parsed = idSchema.safeParse(formData.get("listingId"));
     if (!parsed.success) return { error: "Annonce introuvable." };

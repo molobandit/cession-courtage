@@ -12,7 +12,6 @@ import { loadAgreementsStatus } from "@/lib/account/agreements-load";
 import { profileCompletion, readFirmProfile } from "@/lib/firm/profile";
 import { missingPartyFields } from "@/lib/direct/documents";
 import { loadDocumentParty } from "@/lib/direct/parties";
-import { SubscribeButton } from "@/components/billing/subscribe-button";
 import { confirmGrowthCheckout } from "@/app/actions/billing";
 import { codesDeSecoursRestants, secondFacteurActif } from "@/lib/auth/second-facteur";
 import { canBuy, getActor, isInvestor, isOriasVerified } from "@/lib/authz";
@@ -74,7 +73,7 @@ export default async function ProfilPage({
     deuxFacteursActif,
     codesRestants,
     phoneRow,
-    subscriptions,
+    _subscriptions,
     deposits,
     investorPositions,
     signedDocs,
@@ -180,16 +179,9 @@ export default async function ProfilPage({
   const searchPrefs = parseSearchPrefs(phoneRow?.searchPrefs);
 
   const invoices: Array<{ id: string; label: string; date: Date | null; amount: string; status: string }> = [
-    ...subscriptions.map((item) => ({
-      id: item.id,
-      label: item.plan === "GROWTH" ? "Abonnement annuel" : "Sans frais",
-      date: item.renewsAt,
-      amount: item.plan === "GROWTH" ? formatEuroWhole(GROWTH_PLAN_ANNUAL_EUR) : formatEuroWhole(0),
-      status: item.status === "ACTIVE" ? "Active" : item.status === "CANCELLED" ? "Résiliée" : "Expirée",
-    })),
     ...deposits.map((item) => ({
       id: item.id,
-      label: `Dépôt ${INTEREST_DEPOSIT_LABEL} · dossier n° ${item.listing.publicNumber}`,
+      label: `Dépôt de positionnement ${INTEREST_DEPOSIT_LABEL} · dossier n° ${item.listing.publicNumber}`,
       date: item.placedAt,
       amount: formatEuroPrecise(item.amount),
       status: "Engagement (démo)",
@@ -223,11 +215,6 @@ export default async function ProfilPage({
           </div>
         </div>
         <AccountNav />
-        {checkoutConfirmed ? (
-          <p className="mt-5 rounded-2xl bg-white px-4 py-3 text-[15px] font-medium text-ink">
-            Abonnement confirmé. L’abonnement 250 € HT est actif.
-          </p>
-        ) : null}
       </section>
 
       <section className={card}>
@@ -334,10 +321,9 @@ export default async function ProfilPage({
       </section>
 
       <section id="factures" className={card}>
-        <h2 className="text-lg font-semibold text-ink">Factures et engagements</h2>
+        <h2 className="text-lg font-semibold text-ink">Dépôts et engagements</h2>
         <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-muted">
-          Abonnement annuel {formatEuroWhole(GROWTH_PLAN_ANNUAL_EUR)} HT, réglé par carte via Stripe.
-          {CESSION_FUNDS_DISCLAIMER}
+          Vos dépôts de positionnement, versés dans un trust. {CESSION_FUNDS_DISCLAIMER}
         </p>
         {invoices.length > 0 ? (
           <ul className="mt-5 divide-y divide-line">
@@ -356,13 +342,6 @@ export default async function ProfilPage({
         ) : (
           <p className="mt-4 text-[15px] text-muted">Aucune ligne pour le moment.</p>
         )}
-        {subscribed ? (
-          <p className="mt-4 text-[15px] text-ink">Abonnement actif.</p>
-        ) : isInvestor(actor) ? null : (
-          <div className="mt-5 max-w-sm">
-            <SubscribeButton label={`Régler ${GROWTH_PLAN_ANNUAL_EUR} € HT`} next={next ?? undefined} />
-          </div>
-        )}
       </section>
 
       <section id="pieces" className={card}>
@@ -378,7 +357,7 @@ export default async function ProfilPage({
           </li>
           {ndas.map((item) => (
             <li key={item.id} className="py-3">
-              <p className="text-[15px] font-medium text-ink">Accord de confidentialité</p>
+              <p className="text-[15px] font-medium text-ink">Engagement de confidentialité</p>
               <p className="text-[13px] text-muted">
                 Dossier n° {item.listing.publicNumber}
                 {item.ndaAcceptedAt ? ` · ${formatDate(item.ndaAcceptedAt)}` : ""}

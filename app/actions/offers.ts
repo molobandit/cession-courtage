@@ -49,7 +49,7 @@ export async function submitOfferAction(
     if (!(await hasContactSubscription(actor))) {
       return {
         error:
-          "Un abonnement annuel est requis pour accéder au détail de l’offre, au contact et à la messagerie.",
+          "Cette annonce ne reçoit plus d’offres : le montant est celui de l’annonce.",
       };
     }
     const parsed = offerSchema.safeParse({

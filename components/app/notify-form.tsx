@@ -7,11 +7,16 @@ import type { NotifyPrefs } from "@/lib/account/notify-prefs";
 
 const initial: ProfileFormState = {};
 
+/*
+ * Quatre alertes, celles du modèle. Les clés « offers » et « billing »
+ * restent en base pour les comptes déjà enregistrés, mais ne se règlent plus
+ * ici : il n'y a ni offre ni abonnement.
+ */
 const OPTIONS: Array<{ key: keyof NotifyPrefs; label: string; hint: string }> = [
   { key: "messages", label: "Messages", hint: "Un acquéreur ou un cédant vous écrit." },
-  { key: "offers", label: "Offres", hint: "Offre reçue, retenue ou retirée." },
-  { key: "deals", label: "Dossiers", hint: "Avancement du dossier : confidentialité, lettre d’intention, transaction, transfert." },
-  { key: "billing", label: "Facturation", hint: "Abonnement et dépôts d’intérêt." },
+  { key: "offers", label: "Dépôt de positionnement reçu", hint: "Un acquéreur verse son dépôt sur l’un de vos dossiers." },
+  { key: "deals", label: "Avancement du dossier", hint: "Chaque étape franchie, de l’étude à la signature." },
+  { key: "billing", label: "Fonds libérés par le trust", hint: "Le trust libère les fonds après contrôle." },
 ];
 
 export function NotifyForm({ prefs }: { prefs: NotifyPrefs }) {

@@ -45,7 +45,7 @@ export function PublicListingList({
   });
   const [sort, setSort] = useState<SortKey>(initialSort);
 
-  const { zone, carrier, risk, segment, maxPrice, q, openOnly, certifiedOnly } = filters;
+  const { zone, carrier, risk, segment, maxPrice, q, certifiedOnly } = filters;
   const patch = (change: Partial<CatalogueFilters>) =>
     setFilters((current) => ({ ...current, ...change }));
 
