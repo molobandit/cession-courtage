@@ -42,5 +42,17 @@ export const INVESTORS_PROTECTION = [
 ] as const;
 
 export const INVESTORS_CLOSING_TITLE = "Parlons de votre projet";
-export const INVESTORS_SIGNATURE =
-  "Djesi Bayeye, fondateur · 15 ans de courtage en France et en Suisse";
+/*
+ * Le bloc d'entretien, sur la page investisseurs et sur le tableau de bord.
+ *
+ * Deux pièges évités. Nommer le fondateur à côté du bouton promettait de
+ * l'avoir au bout du fil, ce que personne ne peut tenir. Et mettre ses années
+ * de courtage à la place laissait un état de service suspendu sous un conseiller
+ * anonyme. La ligne dit donc à quoi sert l'appel, ce qui est la seule chose que
+ * le lecteur se demande avant de cliquer.
+ */
+export const ADVISOR_TITLE = "Un conseiller vous répond";
+export const ADVISOR_INVESTORS_LINE =
+  "Trente minutes pour cadrer ce que vous cherchez : taille de dossier, branches, zone.";
+export const ADVISOR_MEMBER_LINE = "Trente minutes, sur le dossier de votre choix.";
+export const INVESTORS_SIGNATURE = ADVISOR_INVESTORS_LINE;

@@ -10,6 +10,7 @@ import {
   type Tuile,
 } from "@/lib/dashboard/home";
 import { ACCESS_PRICE_LINE, ADVISOR_BOOKING_HREF, CTA_ADVISOR } from "@/lib/copy/market";
+import { ADVISOR_MEMBER_LINE, ADVISOR_TITLE } from "@/lib/copy/investors";
 import { formatCount, formatEuroWhole } from "@/lib/format/number";
 import { formatDate } from "@/lib/format/fr";
 
@@ -183,10 +184,8 @@ export default async function MemberHomePage() {
 
       <section className="mt-4 flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-indigo-soft px-5 py-5 sm:px-7">
         <div className="min-w-0">
-          <h2 className="text-[18px] font-semibold text-ink">Un conseiller vous répond</h2>
-          <p className="mt-1 text-[15px] leading-relaxed text-muted">
-            Djesi Bayeye, fondateur, 15 ans de courtage en France et en Suisse.
-          </p>
+          <h2 className="text-[18px] font-semibold text-ink">{ADVISOR_TITLE}</h2>
+          <p className="mt-1 text-[15px] leading-relaxed text-muted">{ADVISOR_MEMBER_LINE}</p>
         </div>
         <Button asChild variant="primary">
           <Link href={ADVISOR_BOOKING_HREF}>{CTA_ADVISOR}</Link>
