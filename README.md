@@ -82,7 +82,7 @@ Vitest : `lib/valuation/compute.test.ts` (cascade + facteurs), `lib/matching/sco
 ## En ligne
 
 - **GitHub** : https://github.com/molobandit/cession-courtage
-- **Cloudflare Workers** : https://cession-courtage.molobandit.workers.dev
+- **Cloudflare Workers** : https://site.labourseduportefeuille.workers.dev
 
 Déploiement : `npm run deploy` (OpenNext + Wrangler). Secrets Cloudflare : `AUTH_SECRET`, `AUTH_URL` / `NEXTAUTH_URL`. La base est le binding D1 `DB` (pas de `DATABASE_URL` sur le Worker).
 

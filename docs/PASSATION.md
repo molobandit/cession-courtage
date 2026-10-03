@@ -41,7 +41,7 @@ Ressources déjà créées, déclarées dans `wrangler.jsonc` :
 | Base D1 | `cession-courtage` | `98d5a611-8101-42ef-9cf5-033fff64ca65` |
 | Bucket R2 | `cession-courtage-uploads` | binding `UPLOADS` |
 
-Site en ligne : **https://cession-courtage.molobandit.workers.dev**
+Site en ligne : **https://site.labourseduportefeuille.workers.dev**
 
 ### Variables d'environnement
 
@@ -123,7 +123,7 @@ lignes piloté par le navigateur, dans `components/import/import-progress.tsx`.
 publique avant la lettre d'intention. Contrôle rapide :
 
 ```bash
-curl -s https://cession-courtage.molobandit.workers.dev/annonces \
+curl -s https://site.labourseduportefeuille.workers.dev/annonces \
   | grep -E "Parisienne de Courtage|Nord Assur Pro" && echo FUITE || echo OK
 ```
 
@@ -211,7 +211,7 @@ Puis contrôler en production : les pages publiques répondent 200, `/app` répo
 307, et les six en-têtes de sécurité sont présents.
 
 ```bash
-curl -sI https://cession-courtage.molobandit.workers.dev/ \
+curl -sI https://site.labourseduportefeuille.workers.dev/ \
   | grep -icE "content-security-policy|x-frame-options|strict-transport|referrer-policy|x-content-type|permissions-policy"
 # doit afficher 6
 ```

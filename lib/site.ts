@@ -1,11 +1,11 @@
-const FALLBACK = "https://cession-courtage.molobandit.workers.dev";
+const FALLBACK = "https://site.labourseduportefeuille.workers.dev";
 
 /**
  * Dénomination sociale et nom d'enseigne, désormais confondus.
  *
  * Enseignes successives : « Le Bon Portefeuille », puis « Le marché du
- * portefeuille ». Le dépôt git et le sous-domaine de déploiement restent
- * historiques (cession-courtage) : les renommer casserait les liens.
+ * portefeuille ». Le dépôt git garde son nom historique, cession-courtage ;
+ * le worker et son sous-domaine, eux, portent l'enseigne actuelle.
  */
 export const COMPANY_LEGAL_NAME = "La bourse du portefeuille";
 
