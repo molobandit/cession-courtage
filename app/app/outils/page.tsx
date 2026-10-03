@@ -78,7 +78,7 @@ export default async function OutilsPage() {
         {
           href: "/tarifs",
           title: "Accès au marché",
-          detail: "Sans frais pour vendre. Honoraires dus uniquement si la vente aboutit.",
+          detail: "Sans frais pour vendre. Accès au marché pour se positionner à l’achat.",
         },
       ],
     },

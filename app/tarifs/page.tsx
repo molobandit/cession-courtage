@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import {
-  INTEREST_DEPOSIT_LABEL,
-  SUCCESS_FEE_FLOOR_EUR,
-  VERIFIED_FEE_RANGE_LABEL,
-} from "@/lib/billing/rates";
+import { SubscribeButton } from "@/components/billing/subscribe-button";
+import { getActor, isOriasVerified } from "@/lib/authz";
+import { hasContactSubscription } from "@/lib/billing/contact-access";
+import { GROWTH_PLAN_ANNUAL_EUR, INTEREST_DEPOSIT_LABEL } from "@/lib/billing/rates";
+import { safeInternalPath } from "@/lib/nav/safe-next";
 import { formatEuroWhole } from "@/lib/format/number";
 import { CESSION_FUNDS_DISCLAIMER } from "@/lib/partners/catalog";
 import { CERTIFIED_BADGE, CERTIFIED_LABEL } from "@/lib/site";
@@ -13,6 +13,7 @@ import { presentPartners } from "@/lib/partners/status";
 import { PartnerStrip } from "@/components/partners/partner-grid";
 import {
   ACCESS_MARKET_POINTS,
+  ACCESS_PRICE_LINE,
   COMPANY_SOCIETY_CHECKS,
   CTA_BROWSE,
   CTA_SELL,
@@ -34,16 +35,16 @@ import {
 
 export const metadata: Metadata = {
   title: MARKET_ACCESS,
-  description: `Mettre en vente : ${NO_FEE_LABEL.toLowerCase()}. Honoraires dus uniquement si la vente aboutit.`,
+  description: `Mettre en vente : ${NO_FEE_LABEL.toLowerCase()}. Accès au marché ${ACCESS_PRICE_LINE}.`,
 };
 
 
 const PLAN_ROWS: { label: string; free: boolean; paid: boolean }[] = [
   { label: "Consulter la salle de marché", free: true, paid: true },
   { label: "Mettre un portefeuille en vente", free: true, paid: true },
-  { label: "Détail pour se positionner", free: true, paid: true },
-  { label: "Contact et messages", free: true, paid: true },
-  { label: "Dépôt de positionnement", free: true, paid: true },
+  { label: "Détail pour se positionner", free: false, paid: true },
+  { label: "Contact et messages", free: false, paid: true },
+  { label: "Dépôt de positionnement", free: false, paid: true },
 ];
 
 const COMPARE_ROWS: {
@@ -103,12 +104,25 @@ const VERIFY_BLOCKS = [
 
 const FAQ = [
   {
+    q: "Que donne l’accès au marché ?",
+    a: `${formatEuroWhole(GROWTH_PLAN_ANNUAL_EUR)} HT par an, réglés par carte via Stripe. ${ACCESS_MARKET_POINTS[0]} ${ACCESS_MARKET_POINTS[1]} ${ACCESS_MARKET_POINTS[2]} Ce n’est pas une vérification du portefeuille, et le cédant reste anonyme jusqu’au dépôt de positionnement.`,
+  },
+  {
     q: FAQ_PORTFOLIO_TRANSFER_Q,
     a: FAQ_PORTFOLIO_TRANSFER_A,
   },
 ];
 
-export default async function TarifsPage() {
+export default async function TarifsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string }>;
+}) {
+  const actor = await getActor();
+  const { next: nextRaw } = await searchParams;
+  const next = safeInternalPath(nextRaw);
+  const subscribed = Boolean(actor && (await hasContactSubscription(actor)));
+  const canPay = Boolean(actor && isOriasVerified(actor) && !subscribed);
   const partners = presentPartners();
 
   return (
@@ -126,7 +140,7 @@ export default async function TarifsPage() {
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             <a
-              href="#honoraires"
+              href="#abonnements"
               className="rounded-full border border-line bg-surface px-5 py-2.5 text-[14px] font-medium text-ink shadow-sm hover:border-indigo"
             >
               {MARKET_ACCESS}
@@ -164,13 +178,13 @@ export default async function TarifsPage() {
         </div>
       </section>
 
-      <section id="honoraires" className="bg-page pb-6 pt-4">
+      <section id="abonnements" className="bg-page pb-6 pt-4">
         <div className="mx-auto max-w-6xl px-4 py-10 text-center">
           <p className="inline-flex rounded-full bg-indigo-soft px-3.5 py-1 text-[12px] font-semibold text-indigo">
-            Honoraires
+            Plans
           </p>
           <h2 className="mt-4 text-3xl font-bold tracking-tight text-ink sm:text-4xl">
-            Vous ne payez que si la vente aboutit
+            {MARKET_ACCESS}
           </h2>
           <p className="mx-auto mt-3 max-w-xl text-[15px] text-muted">
             {ACCESS_MARKET_POINTS[0]} {ACCESS_MARKET_POINTS[1]}
@@ -195,21 +209,46 @@ export default async function TarifsPage() {
           </article>
 
           <article className="relative flex flex-col rounded-3xl border-2 border-indigo bg-indigo-soft/60 p-8 shadow-sm">
-            <h3 className="text-center text-xl font-bold text-ink">Portefeuille certifié</h3>
-            <p className="tabular mt-4 text-center text-4xl font-bold tracking-tight text-indigo">
-              {VERIFIED_FEE_RANGE_LABEL}
+            <p className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-indigo px-3 py-1 text-[12px] font-semibold text-white">
+              Recommandé
             </p>
-            <p className="mt-1 text-center text-[13px] text-muted">
-              Minimum {formatEuroWhole(SUCCESS_FEE_FLOOR_EUR)} HT, dus uniquement si la vente aboutit.
+            <h3 className="text-center text-xl font-bold text-ink">{MARKET_ACCESS}</h3>
+            <p className="tabular mt-4 text-center text-5xl font-bold tracking-tight text-indigo">
+              {GROWTH_PLAN_ANNUAL_EUR.toLocaleString("fr-FR")}
+              <span className="ml-1 text-[1.35rem]">€</span>
+              <span className="ml-1 align-top text-base font-semibold text-indigo/70">HT</span>
             </p>
+            <p className="mt-1 text-center text-[13px] text-muted">{ACCESS_PRICE_LINE}</p>
             <ul className="mt-8 flex-1 space-y-3">
-              {COMPARE_ROWS.map((row) => (
-                <PlanRow key={row.label} label={row.label} on={row.verified !== "non"} accent />
+              {PLAN_ROWS.map((row) => (
+                <PlanRow key={row.label} label={row.label} on={row.paid} accent />
               ))}
             </ul>
-            <p className="mt-6 rounded-2xl bg-paper px-4 py-3 text-center text-[13px] leading-relaxed text-ink">
-              Côté acquéreur : un dépôt de positionnement de {INTEREST_DEPOSIT_LABEL} du montant de l’annonce,
-              versé dans un trust, lance la procédure de cession.
+            {subscribed ? (
+              <Button asChild variant="primary" className="mt-8 w-full" size="lg">
+                <Link href="/app/profil#factures">Accès au marché actif</Link>
+              </Button>
+            ) : canPay ? (
+              <SubscribeButton className="mt-8" label={`Régler ${ACCESS_PRICE_LINE}`} next={next ?? undefined} />
+            ) : (
+              <Button asChild variant="primary" className="mt-8 w-full" size="lg">
+                <Link
+                  href={
+                    actor
+                      ? isOriasVerified(actor)
+                        ? next
+                          ? `/app/profil?next=${encodeURIComponent(next)}#factures`
+                          : "/app/profil#factures"
+                        : "/en-attente-orias"
+                      : `/connexion?next=${encodeURIComponent(next ? `/tarifs?next=${encodeURIComponent(next)}#abonnements` : "/tarifs#abonnements")}`
+                  }
+                >
+                  {actor ? "Continuer vers l’accès au marché" : "Se connecter pour y accéder"}
+                </Link>
+              </Button>
+            )}
+            <p className="mt-3 text-center text-[12px] text-muted">
+              Réglé par carte via Stripe. {ACCESS_PRICE_LINE}. Renouvellement annuel.
             </p>
           </article>
         </div>
@@ -225,7 +264,7 @@ export default async function TarifsPage() {
               Ce que nous contrôlons, et ce que nous ne contrôlons pas
             </h2>
             <p className="mx-auto mt-3 max-w-2xl text-[15px] text-muted">
-              La mise en ligne n’est pas une vérification. L’annonce simple n’est
+              L’accès au marché n’est pas une vérification. L’annonce simple n’est
               pas certifiée : les données du portefeuille ne sont pas vérifiées
               par La bourse du portefeuille. Le portefeuille certifié : tous les
               éléments sont contrôlés.
@@ -418,8 +457,9 @@ export default async function TarifsPage() {
               votre annonce, puis la publie en salle de marché sous alias.
             </p>
             <p className="rounded-2xl border border-line bg-paper px-5 py-4 text-[15px] leading-relaxed text-muted">
-              <span className="font-semibold text-ink">Vous achetez.</span> Vous vous positionnez en versant
-              un dépôt de {INTEREST_DEPOSIT_LABEL} du montant de l’annonce dans un trust.
+              <span className="font-semibold text-ink">Vous achetez.</span> L’accès au marché ouvre le
+              détail des portefeuilles et la messagerie avec les cédants. Vous vous positionnez ensuite en
+              versant un dépôt de {INTEREST_DEPOSIT_LABEL} du montant de l’annonce dans un trust.
             </p>
             <p className="rounded-2xl border border-line bg-paper px-5 py-4 text-[15px] leading-relaxed text-muted">
               <span className="font-semibold text-ink">La transaction est sécurisée.</span> {CESSION_FUNDS_DISCLAIMER}

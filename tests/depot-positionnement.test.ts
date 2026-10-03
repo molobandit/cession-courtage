@@ -46,12 +46,14 @@ beforeAll(async () => {
       oriasVerifiedAt: { not: null },
       erasedAt: null,
       firmId: { not: listing.portfolio.firmId },
+      // L'accès au marché est requis avant de verser : on prend un abonné.
+      subscriptions: { some: { status: "ACTIVE", plan: "GROWTH" } },
       offers: { none: { listingId: LISTING } },
       deposits: { none: { listingId: LISTING } },
     },
     select: { id: true },
   });
-  if (!candidat) throw new Error("Aucun acquéreur disponible pour lst_03.");
+  if (!candidat) throw new Error("Aucun acquéreur abonné disponible pour lst_03.");
   acheteur = candidat.id;
   statutInitial = (await prisma.listing.findUniqueOrThrow({ where: { id: LISTING }, select: { status: true } })).status;
   sauvegarde = await sauvegarder([acheteur]);

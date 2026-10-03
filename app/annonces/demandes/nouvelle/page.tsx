@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { SubscribeButton } from "@/components/billing/subscribe-button";
 import { MandateForm } from "@/components/mandate/mandate-form";
 import { canBuy, getActor, isOriasVerified } from "@/lib/authz";
 import { hasContactSubscription } from "@/lib/billing/contact-access";
+import { ACCESS_PRICE_LINE } from "@/lib/copy/market";
 import { ACQUISITION_REQUEST_PATH } from "@/lib/nav/acquisition";
 
 export const metadata: Metadata = {
@@ -26,11 +28,17 @@ export default async function NewAcquisitionRequestPage() {
           Accès au marché
         </p>
         <h1 className="mt-3 text-3xl font-bold tracking-tight text-ink">
-          Compte vérifié pour déposer une demande
+          L’accès au marché ouvre le dépôt d’une demande
         </h1>
         <p className="mt-4 text-[16px] leading-relaxed text-muted">
-          Votre compte doit être vérifié pour déposer une demande d’acquisition.
+          L’accès au marché, {ACCESS_PRICE_LINE}, ouvre le dépôt d’une demande
+          d’acquisition. Après le règlement, vous revenez sur ce formulaire.
         </p>
+        <SubscribeButton
+          className="mt-8"
+          label={`Régler ${ACCESS_PRICE_LINE}`}
+          next={ACQUISITION_REQUEST_PATH}
+        />
       </main>
     );
   }

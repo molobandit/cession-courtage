@@ -8,15 +8,15 @@ import type { NotifyPrefs } from "@/lib/account/notify-prefs";
 const initial: ProfileFormState = {};
 
 /*
- * Quatre alertes, celles du modèle. Les clés « offers » et « billing »
- * restent en base pour les comptes déjà enregistrés, mais ne se règlent plus
- * ici : il n'y a ni offre ni abonnement.
+ * Quatre alertes, celles du modèle. La clé « offers » reste en base pour les
+ * comptes déjà enregistrés : elle porte désormais le dépôt de positionnement,
+ * puisqu'il n'y a plus d'offre.
  */
 const OPTIONS: Array<{ key: keyof NotifyPrefs; label: string; hint: string }> = [
   { key: "messages", label: "Messages", hint: "Un acquéreur ou un cédant vous écrit." },
   { key: "offers", label: "Dépôt de positionnement reçu", hint: "Un acquéreur verse son dépôt sur l’un de vos dossiers." },
   { key: "deals", label: "Avancement du dossier", hint: "Chaque étape franchie, de l’étude à la signature." },
-  { key: "billing", label: "Fonds libérés par le trust", hint: "Le trust libère les fonds après contrôle." },
+  { key: "billing", label: "Facturation", hint: "Accès au marché et dépôts de positionnement." },
 ];
 
 export function NotifyForm({ prefs }: { prefs: NotifyPrefs }) {
