@@ -1,6 +1,11 @@
-# Cession de portefeuilles de courtage
+# La bourse du portefeuille
 
-Place de marché B2B (France) pour céder ou acquérir un portefeuille de courtage d'assurance, réservée aux intermédiaires immatriculés à l'ORIAS. Tickets 2 000–200 000 €. Concurrent d'Assurdeal, sans paiement réel et sans PII nominative de client final (grain max = code postal).
+Place de marché pour céder, acquérir ou financer un portefeuille de courtage d'assurance,
+en France et en Suisse, pour tous les portefeuilles, petits, moyens et gros.
+
+**Référence fonctionnelle** : les deux dossiers de `docs/reference/` font foi sur tout le site
+(`Dossier_presentation_10412.pdf` pour l'achat et la vente, `Dossier_investisseurs.pdf`
+pour l'investissement). Le site reprend ce qu'ils disent, et rien d'autre.
 
 ## Prérequis
 
@@ -55,12 +60,15 @@ Le code n'utilise pas le préfixe `(dashboard)` du brief : l'espace membre est s
 | import CSV | `/app/import` |
 | admin ORIAS | `/admin/orias` |
 
-## Différenciateurs
+## Le modèle
 
-1. Valorisation en cascade (`ALGORITHM_VERSION = cascade-1.0`) — fourchette, jamais un prix unique.
-2. Anonymat jusqu'à la LOI (alias `Portefeuille #NNNNN` / `Cédant #…`).
-3. Offres scellées 21 jours : le code teste `offerWindowClosesAt`, pas seulement le statut. Un GET clôture en `OFFERS_CLOSED` si la date est passée (Claire 10005 reste `OFFERS_OPEN` en seed pour tester la règle temporelle).
-4. Tunnel NDA → salle de données → LOI → KYC → acte → signature → séquestre → transfert → rétention.
+1. **L'étude** : l'équipe étudie le portefeuille (plus de 50 points de contrôle) et fixe le montant de l'annonce.
+2. **La mise en ligne** : annonce publiée avec son montant, sous un numéro de dossier, cédant anonyme, dossier de présentation PDF.
+3. **Le positionnement** : dépôt de 2,5 % dans un trust, qui lance la procédure et révèle l'identité du cédant.
+4. **La signature** : contrats contrôlés par les avocats, signature en ligne, fonds libérés par le trust, transfert des contrats.
+
+Séquestre de conservation : 20 % du montant, rendu à l'acquéreur au prorata si la déperdition dépasse 10 %.
+Honoraires : portefeuille certifié, 12,5 à 15 % HT, minimum 900 € HT, dus uniquement si la vente aboutit.
 
 ## Tests
 
@@ -86,26 +94,8 @@ Workers n'a pas de système de fichiers. Les bordereaux d'import et les pièces 
 salle de données passent par un bucket **Cloudflare R2**, exposé par le binding
 `UPLOADS`.
 
-**R2 n'est pas encore activé sur le compte.** Tant que c'est le cas, le dépôt de
-fichier renvoie un message explicite (`StorageUnavailableError`) au lieu d'échouer
-sur une erreur système. Mise en service, une seule fois :
-
-```bash
-# 1. Activer R2 depuis le tableau de bord Cloudflare (acceptation des conditions)
-# 2. Créer le bucket
-npx wrangler r2 bucket create cession-courtage-uploads
-```
-
-Puis déclarer le binding dans `wrangler.jsonc` :
-
-```jsonc
-"r2_buckets": [
-  { "binding": "UPLOADS", "bucket_name": "cession-courtage-uploads" }
-]
-```
-
-Le reste du code est déjà en place : `lib/storage/objects.ts`.
+Bucket : `cession-courtage-uploads`, déclaré dans `wrangler.jsonc`. Code : `lib/storage/objects.ts`.
 
 ## Hors périmètre
 
-Pas de Stripe. Pas de Playwright. Pas d'e-mail SMTP.
+Pas de Playwright. Pas d'e-mail SMTP.

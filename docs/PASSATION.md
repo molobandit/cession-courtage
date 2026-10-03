@@ -131,7 +131,7 @@ curl -s https://cession-courtage.molobandit.workers.dev/annonces \
 deviné ne doit rien rendre. Toute lecture passe par `lib/authz/`. Les tests
 `tests/authz-access.test.ts` le vérifient sur la vraie base.
 
-**Offres scellées.** Pendant la fenêtre, le cédant ne reçoit **aucune ligne**, pas
+**Offres scellées (ancien modèle, à retirer, voir `docs/reference/`).** Pendant la fenêtre, le cédant ne reçoit **aucune ligne**, pas
 même un compteur. Le filtrage est fait dans la requête, dans
 `lib/authz/offers.ts`.
 
@@ -150,8 +150,7 @@ particuliers doit donner **72 675 / 85 500 / 98 325 €**. Verrouillé par
 
 ## 5. Charte visuelle actuelle
 
-Attention : `CLAUDE.md` décrit encore l'ancienne charte, charbon et or. **Elle a
-été remplacée** sur demande, par une palette indigo sur fond clair, inspirée
+L'ancienne charte, charbon et or, **a été remplacée** sur demande, par une palette indigo sur fond clair, inspirée
 d'assurdeal.fr. Les valeurs font foi dans `app/globals.css`.
 
 | Rôle | Valeur | Contraste vérifié |
@@ -182,10 +181,9 @@ transfert des codes de courtage, bordereau de pièces, import par lots.
 
 **Reste à faire**, dans l'ordre discuté avec le fondateur :
 
-1. **Mur d'abonnement** : un non-abonné voit la liste des annonces mais pas le
-   détail. Le modèle `Subscription` existe déjà et ne verrouille rien.
-2. **Dépôt de 2,5 %** qui déclenche l'échange des coordonnées entre cédant et
-   acquéreur, à la place de la lettre d'intention.
+1. **Alignement sur les deux PDF de `docs/reference/`** : retirer ce qui n'y figure pas
+   (abonnement annuel, offres scellées, lettre d'intention, logos partenaires).
+2. **Dépôt de 2,5 %** dans le trust, qui lève l'anonymat du cédant.
 3. **Paiement réel et séquestre.** Point bloquant : encaisser des fonds pour le
    compte d'un tiers est un service de paiement réglementé en France. Il faut un
    prestataire agréé (Lemonway, MangoPay, Stripe Connect, Trustap), et

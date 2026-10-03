@@ -68,3 +68,7 @@ worker-configuration.d.ts
 
 .deploy.auth_secret
 .deploy.database_url
+
+# Local workstation notes
+CLAUDE.md
+.claude/
