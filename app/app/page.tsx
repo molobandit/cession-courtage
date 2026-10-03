@@ -1,45 +1,19 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import {
-  DeskPanel,
-  MarketHero,
-  PositionsTable,
-  QuoteTable,
-  TodoList,
-} from "@/components/app/desk";
-import {
-  ActionGroup,
-  ActionTile,
-  GlanceCounter,
-  DossierCard,
-  RecentPanel,
-  SectionHeading,
-} from "@/components/app/toolbox";
-import { DirectDealCard } from "@/components/direct/direct-deal-card";
-import { getActor, isOriasVerified, listMyPortfolios } from "@/lib/authz";
-import { loadDesk } from "@/lib/dashboard/desk";
-import { loadMemberDossiers } from "@/lib/dashboard/member-dossiers";
-import {
-  SERVICE_ENTRIES,
-  countByFilter,
-  matchesFilter,
-  serviceCreateHref,
-  serviceListHref,
-} from "@/lib/direct/services";
-import { formatCount } from "@/lib/format/number";
+import { Button } from "@/components/ui/button";
+import { getActor, isOriasVerified } from "@/lib/authz";
+import { loadHome, type Acteur, type LigneAchat, type VenteParEtape } from "@/lib/dashboard/home";
+import { ADVISOR_BOOKING_HREF, CTA_ADVISOR } from "@/lib/copy/market";
+import { formatCount, formatEuroWhole } from "@/lib/format/number";
 
-export const metadata = { title: "Tableau de bord" };
-
-const TONE_SERVICE = { kit: "kit", escrow: "escrow", attestations: "attestations" } as const;
-const ICON_SERVICE = { kit: "clipboard", escrow: "shield", attestations: "file-check" } as const;
+export const metadata = { title: "Accueil" };
 
 /**
- * Poste de marché du courtier.
+ * Accueil de l'espace membre.
  *
- * Le tableau de bord se lit comme l'écran d'une salle de marché : en tête les
- * indices et ce qui défile en séance, puis ce qui vous attend, puis vos
- * positions ligne à ligne et la cote du jour. Rien à chercher : chaque ligne
- * mène à l'écran où l'on agit.
+ * Une seule question à la fois : ce qu'il faut faire maintenant, puis où en
+ * sont les ventes et les achats, sur les quatre étapes du dossier de
+ * présentation. Rien d'autre : ni cote, ni compteurs, ni services à la carte.
  */
 export default async function MemberHomePage() {
   const actor = await getActor();
@@ -47,204 +21,186 @@ export default async function MemberHomePage() {
   if (!isOriasVerified(actor)) redirect("/en-attente-orias");
   if (actor.role === "INVESTOR") redirect("/app/mes-dossiers");
 
-  const [desk, portfolios] = await Promise.all([loadDesk(actor), listMyPortfolios(actor)]);
-  const { cessions, achats } = await loadMemberDossiers(actor);
-  const { vendeur, acheteur, indices, cote, aFaire, lignes, compteurs, directs, enAttenteDuCedant, demandesAchat, correspondances } = desk;
-
-  const annonceHref = portfolios.length > 0 ? "/app/annonces/nouvelle" : "/app/import";
-  const directCounts = countByFilter(directs);
-  const prenom = actor.fullName?.split(" ")[0] ?? null;
+  const { prenom, vendeur, acheteur, action, ventes, ventesTotal, achats, marche } = await loadHome(actor);
 
   return (
-    <main className="mx-auto w-full max-w-7xl px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
-      <header className="border-b border-line pb-5">
-        <h1 className="text-[1.75rem] font-bold tracking-tight text-[#004fda] sm:text-[2rem]">Tableau de bord courtier</h1>
-        <p className="mt-1 text-[16px] text-muted">
-          {prenom ? `Bonjour ${prenom}, bienvenue sur votre tableau de bord` : "Bienvenue sur votre tableau de bord"}
-        </p>
+    <main className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+      <header>
+        <h1 className="text-[1.75rem] font-bold tracking-tight text-ink sm:text-[2rem]">
+          {prenom ? `Bonjour ${prenom}` : "Bonjour"}
+        </h1>
+        <p className="mt-1 text-[16px] text-muted">Voici où en sont vos dossiers.</p>
       </header>
 
-      <div className="mt-6">
-        <MarketHero
-          tiles={[
-            { label: "Portefeuilles", value: formatCount(indices.enSeance), href: "/annonces", icon: "folder" },
-            { label: "Demandes d’achat", value: formatCount(demandesAchat), href: "/annonces/demandes", icon: "megaphone" },
-            acheteur
-              ? { label: "Recommandations", value: formatCount(correspondances), href: "/app/opportunites", icon: "bolt" }
-              : { label: "Mes annonces en ligne", value: formatCount(compteurs.annoncesEnSeance), href: "/app/cessions", icon: "bag" },
-          ]}
-        />
-      </div>
-
-      <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
-        <div className="grid min-w-0 content-start gap-6">
-          <DeskPanel title="À faire maintenant" subtitle="Le plus urgent en premier. Chaque ligne ouvre l’écran où agir.">
-            <div className="p-4">
-              <TodoList items={aFaire} waiting={enAttenteDuCedant} />
-            </div>
-          </DeskPanel>
-
-          <div id="positions" className="scroll-mt-24">
-            <DeskPanel
-              title="Mes positions"
-              subtitle="Achats, ventes et demandes, du plus actif au plus ancien."
-              action={{ href: "/app/achats", label: "Tout voir" }}
-            >
-              <PositionsTable
-                rows={lignes}
-                empty={
-                  <>
-                    Aucune position pour le moment.{" "}
-                    <Link href="/annonces" className="font-semibold text-indigo-dark">
-                      Parcourez la salle de marché
-                    </Link>{" "}
-                    et prenez position sur un portefeuille.
-                  </>
-                }
-              />
-            </DeskPanel>
+      <section
+        aria-labelledby="prochaine-action"
+        className="mt-6 rounded-2xl border border-indigo-line bg-indigo-soft p-5 sm:p-6"
+      >
+        <p className="text-[12px] font-semibold uppercase tracking-[0.14em] text-indigo-dark">
+          Prochaine action
+        </p>
+        <div className="mt-2 flex flex-wrap items-end justify-between gap-4">
+          <div className="min-w-0">
+            <h2 id="prochaine-action" className="text-[18px] font-semibold text-ink">
+              {action.title}
+            </h2>
+            <p className="mt-1 max-w-2xl text-[15px] leading-relaxed text-muted">{action.detail}</p>
           </div>
-        </div>
-
-        <aside className="grid content-start gap-6">
-          <DeskPanel title="Cote de la salle" subtitle="Les séances qui ferment en premier." action={{ href: "/annonces", label: "Toute la salle" }}>
-            <QuoteTable items={cote} />
-          </DeskPanel>
-        </aside>
-      </div>
-
-      <section className="mt-10 scroll-mt-24" id="actions-rapides" aria-labelledby="titre-actions-rapides">
-        <SectionHeading icon="bolt" title="Actions rapides" id="titre-actions-rapides" />
-        <div className="mt-5 grid items-start gap-5 lg:grid-cols-2">
-          <ActionGroup
-            icon="briefcase"
-            iconColor="#6d5dd3"
-            title="Parcours intermédié toutes options, avec assistance bout en bout"
-            lede="Nous menons la cession de bout en bout : aucun service à ajouter, tout est compris."
-          >
-            {vendeur ? (
-              <ActionTile href={annonceHref} icon="bag" tone="sell" title="Vendre" subtitle="Soumettre votre portefeuille à notre équipe" />
-            ) : null}
-            {acheteur ? (
-              <ActionTile href="/annonces" icon="search" tone="buy" title="Acheter" subtitle="Prendre position en salle de marché" />
-            ) : null}
-          </ActionGroup>
-
-          <ActionGroup
-            icon="tools"
-            iconColor="#3f8c61"
-            title="Boîte à malice des services à la carte en toute autonomie"
-            lede="Vous avez trouvé votre contrepartie ? Prenez seulement ce qui vous manque, avec le même niveau de sécurité."
-          >
-            {SERVICE_ENTRIES.map((entry) => (
-              <ActionTile
-                key={entry.key}
-                href={serviceCreateHref(entry)}
-                icon={ICON_SERVICE[entry.key]}
-                tone={TONE_SERVICE[entry.key]}
-                title={entry.title}
-                subtitle={entry.tagline}
-              />
-            ))}
-            {vendeur ? (
-              <ActionTile href={annonceHref} icon="megaphone" tone="listing" title="Proposer à la vente" subtitle="Étude et montant déterminés par notre équipe" />
-            ) : null}
-            {acheteur ? (
-              <ActionTile href="/app/mandats" icon="cart" tone="wanted" title="Annonce d’achat" subtitle="Décrire le portefeuille recherché" />
-            ) : null}
-          </ActionGroup>
+          <Button asChild variant="primary">
+            <Link href={action.href}>{action.cta}</Link>
+          </Button>
         </div>
       </section>
 
-      <section className="mt-10" aria-labelledby="vos-dossiers">
-        <SectionHeading icon="chart" title="Vos dossiers en un coup d’œil" id="vos-dossiers" />
-        <ul className="mt-5 grid grid-cols-1 gap-3 min-[420px]:grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
-          <GlanceCounter
-            href="/app/cessions"
-            icon="bag"
-            tone="sell"
-            value={cessions.length}
-            badge={cessions.filter((c) => c.active).length}
-            label="Mes cessions"
-          />
-          <GlanceCounter
-            href="/app/achats"
-            icon="search"
-            tone="buy"
-            value={achats.length}
-            badge={achats.filter((c) => c.active).length}
-            label="Mes achats"
-          />
-          {SERVICE_ENTRIES.map((entry) => (
-            <GlanceCounter
-              key={entry.key}
-              href={serviceListHref(entry)}
-              icon={ICON_SERVICE[entry.key]}
-              tone={TONE_SERVICE[entry.key]}
-              value={directCounts[entry.filter]}
-              label={entry.listTitle}
+      {vendeur ? (
+        <section aria-labelledby="mes-ventes" className="mt-8">
+          <div className="flex flex-wrap items-baseline justify-between gap-3">
+            <h2 id="mes-ventes" className="text-[20px] font-semibold text-ink">
+              Mes ventes
+            </h2>
+            <Link href="/app/cessions" className="text-[14px] font-medium text-indigo-dark">
+              Tout voir
+            </Link>
+          </div>
+          {ventesTotal > 0 ? (
+            <ol className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {ventes.map((etape) => (
+                <EtapeVente key={etape.step.key} etape={etape} />
+              ))}
+            </ol>
+          ) : (
+            <EcranVide
+              titre="Vous n’avez pas encore de vente"
+              texte="Confiez votre portefeuille à notre équipe : nous réalisons l’étude, déterminons la valeur et publions l’annonce sous un numéro de dossier."
+              href="/app/annonces/nouvelle"
+              cta="Confier mon portefeuille"
             />
-          ))}
-        </ul>
-      </section>
+          )}
+        </section>
+      ) : null}
 
-      {/*
-       * Dossiers récents, présentés comme sur les plateformes que les courtiers
-       * connaissent : un bloc par famille, les trois derniers dossiers en cartes,
-       * et « Voir tout » pour la liste complète.
-       */}
-      <section className="mt-10" aria-labelledby="dossiers-recents">
-        <SectionHeading icon="doc" title="Dossiers récents" id="dossiers-recents" />
-        <div className="mt-5 grid gap-5">
-          <RecentPanel
-            icon="bag"
-            tone="sell"
-            title="Mes cessions"
-            count={cessions.length}
-            href="/app/cessions"
-            emptyText="Pas encore de cessions"
-          >
-            {cessions.length > 0
-              ? cessions.slice(0, 3).map(({ key, active: _active, ...item }) => <DossierCard key={key} {...item} />)
-              : null}
-          </RecentPanel>
+      {acheteur ? (
+        <section aria-labelledby="mes-achats" className="mt-8">
+          <div className="flex flex-wrap items-baseline justify-between gap-3">
+            <h2 id="mes-achats" className="text-[20px] font-semibold text-ink">
+              Mes achats
+            </h2>
+            <Link href="/app/achats" className="text-[14px] font-medium text-indigo-dark">
+              Tout voir
+            </Link>
+          </div>
+          {achats.length > 0 ? (
+            <ul className="mt-4 grid gap-3">
+              {achats.map((ligne) => (
+                <LigneAchatCarte key={ligne.positionId} ligne={ligne} />
+              ))}
+            </ul>
+          ) : (
+            <EcranVide
+              titre="Vous ne suivez aucun dossier"
+              texte="Chaque portefeuille de la salle de marché a été étudié et chiffré avant sa mise en ligne. Le montant affiché est celui de l’annonce."
+              href="/annonces"
+              cta="Voir les portefeuilles"
+            />
+          )}
+        </section>
+      ) : null}
 
-          <RecentPanel
-            icon="search"
-            tone="buy"
-            title="Mes achats"
-            count={achats.length}
-            href="/app/achats"
-            emptyText="Pas encore d’achats"
-          >
-            {achats.length > 0
-              ? achats.slice(0, 3).map(({ key, active: _active, ...item }) => <DossierCard key={key} {...item} />)
-              : null}
-          </RecentPanel>
+      <section className="mt-8 grid gap-4 lg:grid-cols-2">
+        <div className="rounded-2xl border border-line bg-paper p-5 sm:p-6">
+          <h2 className="text-[18px] font-semibold text-ink">Salle de marché</h2>
+          <p className="mt-2 text-[15px] text-muted">
+            {formatCount(marche.total)} portefeuille{marche.total > 1 ? "s" : ""} en ligne, dont{" "}
+            {formatCount(marche.certifies)} certifié{marche.certifies > 1 ? "s" : ""}.
+          </p>
+          <Button asChild variant="outline" className="mt-5">
+            <Link href="/annonces">Voir les portefeuilles</Link>
+          </Button>
+        </div>
 
-          {SERVICE_ENTRIES.map((entry) => {
-            const liste = directs.filter((d) => matchesFilter(d, entry.filter));
-            return (
-              <RecentPanel
-                key={entry.key}
-                icon={ICON_SERVICE[entry.key]}
-                tone={TONE_SERVICE[entry.key]}
-                title={entry.listTitle}
-                count={liste.length}
-                href={serviceListHref(entry)}
-                emptyText={entry.emptyShort}
-              >
-                {liste.length > 0
-                  ? liste.slice(0, 3).map((d) => (
-                      <DirectDealCard key={d.id} deal={d} viewerId={actor.id} tone={TONE_SERVICE[entry.key]} />
-                    ))
-                  : null}
-              </RecentPanel>
-            );
-          })}
+        <div className="rounded-2xl bg-deep-soft p-5 text-white sm:p-6">
+          <h2 className="text-[18px] font-semibold">Un conseiller vous répond</h2>
+          <p className="mt-2 text-[15px] leading-relaxed text-white/80">
+            Djesi Bayeye, fondateur, 15 ans de courtage en France et en Suisse.
+          </p>
+          <Button asChild variant="outline" className="mt-5 border-white/40 bg-white text-deep-soft hover:bg-white/90">
+            <Link href={ADVISOR_BOOKING_HREF}>{CTA_ADVISOR}</Link>
+          </Button>
         </div>
       </section>
-
     </main>
+  );
+}
+
+/** Une étape de vente : son numéro, son nom, ce qu'elle contient, qui doit agir. */
+function EtapeVente({ etape }: { etape: VenteParEtape }) {
+  const actif = etape.count > 0;
+  return (
+    <li
+      className={`rounded-2xl border p-4 ${actif ? "border-indigo-line bg-paper" : "border-line bg-surface-alt"}`}
+    >
+      <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-indigo-dark">
+        {etape.step.num} · {etape.step.label}
+      </p>
+      <p className="mt-3 text-[15px] text-ink">
+        <span className="tabular text-[22px] font-semibold">{formatCount(etape.count)}</span>{" "}
+        {etape.count > 1 ? "dossiers" : "dossier"}
+      </p>
+      {etape.detail ? <p className="mt-1 text-[13px] text-muted">{etape.detail}</p> : null}
+      {actif && etape.acteur ? <Pastille acteur={etape.acteur} /> : null}
+    </li>
+  );
+}
+
+function LigneAchatCarte({ ligne }: { ligne: LigneAchat }) {
+  return (
+    <li className="rounded-2xl border border-line bg-paper p-4">
+      <Link href={`/app/positions/${ligne.positionId}`} className="flex flex-wrap items-center gap-x-4 gap-y-2">
+        <span className="text-[15px] font-semibold text-ink">Dossier n° {ligne.numero}</span>
+        <span className="min-w-0 flex-1 truncate text-[14px] text-muted">{ligne.libelle}</span>
+        <span className="rounded-full bg-indigo-soft px-3 py-1 text-[13px] font-medium text-indigo-dark">
+          {ligne.index >= 0 ? `0${ligne.index + 1} · ${ligne.etape}` : ligne.etape}
+        </span>
+        <span className="tabular text-[15px] font-semibold text-ink">{formatEuroWhole(ligne.montant)}</span>
+        {ligne.acteur ? <Pastille acteur={ligne.acteur} /> : null}
+      </Link>
+    </li>
+  );
+}
+
+/** Qui doit agir, dit en un mot. */
+function Pastille({ acteur }: { acteur: Acteur }) {
+  const mien = acteur === "À vous";
+  return (
+    <span
+      className={`mt-3 inline-block rounded-full px-3 py-1 text-[12px] font-semibold ${
+        mien ? "bg-indigo text-white" : "bg-surface-alt text-muted"
+      }`}
+    >
+      {acteur}
+    </span>
+  );
+}
+
+/** Un écran vide dit quoi faire, et le bouton pour le faire. */
+function EcranVide({
+  titre,
+  texte,
+  href,
+  cta,
+}: {
+  titre: string;
+  texte: string;
+  href: string;
+  cta: string;
+}) {
+  return (
+    <div className="mt-4 rounded-2xl border border-line bg-paper p-8 text-center">
+      <p className="text-[17px] font-semibold text-ink">{titre}</p>
+      <p className="mx-auto mt-2 max-w-xl text-[15px] leading-relaxed text-muted">{texte}</p>
+      <Button asChild variant="primary" className="mt-5">
+        <Link href={href}>{cta}</Link>
+      </Button>
+    </div>
   );
 }

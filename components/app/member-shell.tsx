@@ -15,7 +15,6 @@ export type MemberShellProps = {
   canSell: boolean;
   canBuy: boolean;
   isInvestor?: boolean;
-  subscribed: boolean;
   /** Notifications non lues : prises de position, offres, étapes de dossier, messages. */
   unread?: number;
   children: React.ReactNode;
@@ -28,7 +27,6 @@ export function MemberShell({
   canSell,
   canBuy,
   isInvestor = false,
-  subscribed,
   unread = 0,
   children,
 }: MemberShellProps) {
@@ -123,12 +121,6 @@ export function MemberShell({
                     {alias.replace(/^#/, "")}
                   </>
                 )}
-                {subscribed ? (
-                  <>
-                    <span className="mx-1.5 text-muted">·</span>
-                    Abonnement actif
-                  </>
-                ) : null}
               </p>
               <MemberNav
                 canSell={canSell}

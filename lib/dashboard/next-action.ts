@@ -3,15 +3,16 @@ import { STUDY_SENTENCE } from "@/lib/copy/market";
 /**
  * Determine l'action suivante a proposer dans l'espace membre.
  *
- * Un courtier qui arrive sur son tableau ne doit pas avoir a deduire ce qu'il
- * lui reste a faire. Fonction pure : la page se contente de lui passer un etat.
+ * Un courtier qui arrive sur son accueil ne doit pas avoir a deduire ce qu'il
+ * lui reste a faire : une seule action, la plus urgente, en haut de l'ecran.
+ * Fonction pure : la page se contente de lui passer un etat.
  */
 
 export type DashboardState = {
   canSell: boolean;
   canBuy: boolean;
   portfolioCount: number;
-  /** Portefeuilles importes mais jamais valorises. */
+  /** Portefeuilles importes mais jamais etudies. */
   unvaluedPortfolioCount: number;
   draftListing: { publicNumber: number; id: string } | null;
   /*
@@ -21,23 +22,16 @@ export type DashboardState = {
    * page ou l'on se trouve deja : le clic ne menait nulle part. Une action
    * suivante qui ne mene pas a l'action n'en est pas une.
    */
-  /** Dossier attendant un releve de retention. */
+  /** Dossier attendant un releve de deperdition. */
   retentionDeal: { id: string } | null;
-  /** Annonce dont la fenetre est close et dont les offres sont visibles. */
-  offersListing: { id: string } | null;
-  /** Dossier en cours le plus avance. */
+  /** Dossier de cession en cours le plus avance. */
   activeDeal: { id: string } | null;
-  /** Annonce dont la fenetre d'offres court encore. */
-  openWindowListing: { publicNumber: number } | null;
-  /** Portefeuille importe mais pas encore valorise. */
+  /** Portefeuille importe mais pas encore etudie. */
   unvaluedPortfolio: { id: string } | null;
-  /** Fenetre d'offres en cours : jours restants avant cloture. */
-  openWindowDaysLeft: number | null;
-  /** Offres a examiner sur une fenetre close. */
-  offersToReview: number;
+  /** Position prise sans depot de positionnement verse. */
+  positionToFund: { id: string; publicNumber: number } | null;
   activeDealCount: number;
-  mandateCount: number;
-  /** Releves de retention attendus. */
+  /** Releves de deperdition attendus. */
   retentionDue: number;
 };
 
@@ -53,25 +47,22 @@ export function nextAction(state: DashboardState): NextAction {
   if (state.retentionDue > 0) {
     return {
       tone: "action",
-      title: "Un relevé de rétention vous est demandé",
+      title: "Un relevé de déperdition vous est demandé",
       detail:
-        "Le montant différé est recalculé sur le taux constaté. Sans relevé, l’ajustement ne peut pas être arrêté.",
+        "Le séquestre de conservation est arrêté sur la déperdition constatée. Sans relevé, rien ne peut être tranché.",
       href: state.retentionDeal ? `/app/dossiers/${state.retentionDeal.id}/retention` : "/app",
       cta: "Saisir le relevé",
     };
   }
 
-  if (state.offersToReview > 0) {
+  if (state.positionToFund) {
     return {
       tone: "action",
-      title:
-        state.offersToReview === 1
-          ? "Une offre vous attend"
-          : `${state.offersToReview} offres vous attendent`,
+      title: `Dossier n° ${state.positionToFund.publicNumber} : versez votre dépôt de positionnement`,
       detail:
-        "Comparez les propositions : vous en retenez une à la clôture de la séance, ou aucune.",
-      href: state.offersListing ? `/app/annonces/${state.offersListing.id}/offres` : "/app",
-      cta: "Examiner les offres",
+        "Le dépôt de 2,5 % part dans un trust. Il lance la procédure de cession et vous donne le nom du cabinet cédant.",
+      href: `/app/positions/${state.positionToFund.id}`,
+      cta: "Se positionner",
     };
   }
 
@@ -88,30 +79,14 @@ export function nextAction(state: DashboardState): NextAction {
     };
   }
 
-  if (state.openWindowDaysLeft !== null) {
-    const jours = state.openWindowDaysLeft;
-    return {
-      tone: "attente",
-      title:
-        jours <= 0
-          ? "Votre fenêtre d’offres se clôture aujourd’hui"
-          : `Votre fenêtre d’offres se clôture dans ${jours} jour${jours > 1 ? "s" : ""}`,
-      detail:
-        "Les montants restent masqués jusqu’à la clôture, y compris pour vous. Rien à faire d’ici là.",
-      href: state.openWindowListing
-        ? `/annonces/${state.openWindowListing.publicNumber}`
-        : "/app",
-      cta: "Voir mon annonce",
-    };
-  }
-
   if (state.canSell && state.draftListing) {
     return {
       tone: "action",
-      title: `Votre dossier n° ${state.draftListing.publicNumber} n’est pas encore soumis`,
-      detail: "Soumettez-le : notre équipe réalise l’étude du portefeuille, détermine le montant, puis met l’annonce en ligne.",
+      title: `Votre dossier n° ${state.draftListing.publicNumber} n’est pas encore envoyé`,
+      detail:
+        "Envoyez-le à l’étude : notre équipe étudie le portefeuille, détermine la valeur, puis met l’annonce en ligne avec le montant correspondant.",
       href: `/app/annonces/${state.draftListing.id}`,
-      cta: "Compléter et soumettre",
+      cta: "Compléter et envoyer",
     };
   }
 
@@ -119,11 +94,8 @@ export function nextAction(state: DashboardState): NextAction {
     return {
       tone: "action",
       title: "Un portefeuille attend son étude",
-      detail:
-        STUDY_SENTENCE,
-      href: state.unvaluedPortfolio
-        ? `/app/portefeuilles/${state.unvaluedPortfolio.id}`
-        : "/app",
+      detail: STUDY_SENTENCE,
+      href: state.unvaluedPortfolio ? `/app/portefeuilles/${state.unvaluedPortfolio.id}` : "/app",
       cta: "Lancer l’étude",
     };
   }
@@ -138,34 +110,22 @@ export function nextAction(state: DashboardState): NextAction {
     };
   }
 
-  if (state.canBuy && state.mandateCount === 0) {
-    return {
-      tone: "action",
-      title: "Déposez un mandat d’achat",
-      detail:
-        "Décrivez une fois ce que vous cherchez. Les dossiers correspondants vous seront présentés automatiquement.",
-      href: "/app/mandats",
-      cta: "Déposer un mandat",
-    };
-  }
-
   if (state.canSell && state.portfolioCount > 0) {
     return {
       tone: "action",
-      title: "Proposez votre portefeuille à la vente",
+      title: "Confiez votre portefeuille à l’étude",
       detail:
-        "Soumettez votre dossier : notre équipe réalise l’étude, détermine le montant, puis met l’annonce en ligne sous alias.",
+        "Notre équipe réalise l’étude, détermine la valeur, puis met l’annonce en ligne sous un simple numéro de dossier.",
       href: "/app/annonces/nouvelle",
-      cta: "Soumettre mon dossier",
+      cta: "Confier mon portefeuille",
     };
   }
 
   return {
     tone: "calme",
     title: "Rien ne vous attend pour le moment",
-    detail:
-      "Vous serez prévenu dès qu’un dossier correspondant à vos critères est mis en ligne.",
+    detail: "Vous serez prévenu dès qu’un portefeuille correspondant à vos critères est mis en ligne.",
     href: "/annonces",
-    cta: "Parcourir les annonces",
+    cta: "Voir les portefeuilles",
   };
 }
