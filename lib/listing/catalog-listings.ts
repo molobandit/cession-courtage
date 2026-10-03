@@ -106,8 +106,9 @@ export type CatalogListingRow = {
   isPartial: boolean;
   isNationwide: boolean;
   sellerSupportMonths: number;
+  /** Statut public : disponible, acquéreur positionné, vendu. */
+  status: "OFFERS_OPEN" | "UNDER_NEGOTIATION" | "SOLD";
   publishedAt: string;
-  offerWindowClosesAt: string;
   departmentsJson: string;
   regionsJson: string;
   certificationStatus: "NONE" | "CERTIFIED";
@@ -133,73 +134,79 @@ export function buildCatalogListings(): CatalogListingRow[] {
     const pad = pad2(i);
     const zone = ZONES[(i - 1) % ZONES.length]!;
     const nationwide = i % 17 === 0;
-    const isPartial = i % 11 === 0;
-    const certified = i % 7 === 0;
+    // Deux tiers des dossiers certifiés : la certification est le cœur du modèle.
+    const certified = i % 3 !== 0;
     const support = [0, 3, 6][i % 3]!;
-    const contracts = 48 + ((i * 17) % 320);
-    const clients = Math.max(12, Math.round(contracts * 0.62));
+    // Un dossier vendu tous les treize, un acquéreur positionné tous les onze.
+    const status = i % 13 === 0 ? "SOLD" : i % 11 === 0 ? "UNDER_NEGOTIATION" : "OFFERS_OPEN";
     const commissions = 12_000 + ((i * 2_830) % 68_000);
-    const asking = Math.min(198_000, Math.max(8_000, Math.round(commissions * (2.15 + (i % 9) * 0.08))));
-    const roundedAsk = Math.round(asking / 500) * 500;
     const roundedComm = Math.round(commissions * 100) / 100;
+    const asking = Math.min(198_000, Math.max(8_000, Math.round(commissions * (1.75 + (i % 7) * 0.05))));
+    const roundedAsk = Math.round(asking / 500) * 500;
     const publishedAt = isoDaysFrom(CATALOG_NOW, -(i % 45));
-    const windowOpen = i % 5 !== 0;
-    const offerWindowClosesAt = isoDaysFrom(publishedAt, windowOpen ? 21 : -2);
 
-    const riskA = RISKS[(i - 1) % RISKS.length]!;
-    const riskB = RISKS[(i + 4) % RISKS.length]!;
-    const carrierA = CARRIERS[(i - 1) % CARRIERS.length]!;
-    const carrierB = CARRIERS[(i + 3) % CARRIERS.length]!;
-    const segmentA = SEGMENTS[i % SEGMENTS.length]!;
-    const segmentB = SEGMENTS[(i + 1) % SEGMENTS.length]!;
-    const commA = Math.round(roundedComm * 0.62 * 100) / 100;
-    const commB = Math.round((roundedComm - commA) * 100) / 100;
-    const rateA = 0.12 + (i % 8) * 0.01;
-    const rateB = 0.1 + (i % 6) * 0.01;
-
-    const departments = nationwide
-      ? ZONES.slice(0, 8).map((z) => z.department)
-      : [zone.department];
+    const departments = nationwide ? ZONES.slice(0, 8).map((z) => z.department) : [zone.department];
     const regionCodes = nationwide
       ? [...new Set(ZONES.slice(0, 8).map((z) => z.regionCode))]
       : [zone.regionCode];
-
     const displayedZone = nationwide ? "Couverture nationale" : zone.label;
 
-    const lines: CatalogContractLine[] = [
-      {
-        id: `cl_catalog_${pad}_a`,
-        carrier: carrierA,
-        riskType: riskA,
-        premium: (commA / rateA).toFixed(2),
-        commissionRate: rateA.toFixed(4),
-        annualCommission: commA.toFixed(2),
-        annualCommissionNumber: commA,
-        effectiveDate: isoDaysFrom(CATALOG_NOW, -400 - i),
-        renewalDate: isoDaysFrom(CATALOG_NOW, 20 + (i % 200)),
-        clientSegment: segmentA,
+    /*
+     * Une ligne de contrat par contrat annoncé.
+     *
+     * La carte affichait 241 contrats quand la fiche en détaillait deux : le
+     * nombre venait du portefeuille, le détail des lignes réellement
+     * enregistrées. Le catalogue génère désormais autant de lignes qu'il
+     * annonce de contrats, réparties sur trois branches et trois compagnies,
+     * et les commissions des lignes font exactement le total du portefeuille.
+     */
+    const contracts = 24 + ((i * 7) % 37);
+    const branches = [0, 4, 9].map((offset) => RISKS[(i - 1 + offset) % RISKS.length]!);
+    const carriers = [0, 3, 7].map((offset) => CARRIERS[(i - 1 + offset) % CARRIERS.length]!);
+    const poids = [0.52, 0.31, 0.17];
+
+    const lines: CatalogContractLine[] = [];
+    let reste = Math.round(roundedComm * 100);
+    for (let n = 0; n < contracts; n += 1) {
+      const groupe = n % 3;
+      const derniere = n === contracts - 1;
+      const parGroupe = Math.max(1, Math.round((contracts * poids[groupe]!) / 1));
+      const centimes = derniere
+        ? reste
+        : Math.max(
+            500,
+            Math.round((roundedComm * 100 * poids[groupe]!) / Math.max(1, parGroupe)),
+          );
+      const montant = Math.min(reste, centimes) / 100;
+      reste -= Math.round(montant * 100);
+      const taux = 0.1 + ((i + n) % 9) * 0.01;
+      const anciennete = 12 + ((i * 3 + n * 11) % 84);
+      lines.push({
+        id: `cl_catalog_${pad}_${pad2(n + 1)}`,
+        carrier: carriers[groupe]!,
+        riskType: branches[groupe]!,
+        premium: (montant / taux).toFixed(2),
+        commissionRate: taux.toFixed(4),
+        annualCommission: montant.toFixed(2),
+        annualCommissionNumber: montant,
+        // Antériorité étalée sur sept ans : les exercices passés ne sont jamais vides.
+        effectiveDate: isoDaysFrom(CATALOG_NOW, -30 * anciennete),
+        // Échéances réparties sur les douze mois à venir.
+        renewalDate: isoDaysFrom(CATALOG_NOW, 10 + ((i * 5 + n * 13) % 350)),
+        clientSegment: SEGMENTS[(i + n) % SEGMENTS.length]!,
         postalCode: zone.postal,
-        commissionType: i % 9 === 0 ? "ADVANCED" : "LINEAR",
-        clientKey: `ck_catalog_${pad}_a`,
-        department: zone.department,
-      },
-      {
-        id: `cl_catalog_${pad}_b`,
-        carrier: carrierB,
-        riskType: riskB,
-        premium: (commB / rateB).toFixed(2),
-        commissionRate: rateB.toFixed(4),
-        annualCommission: commB.toFixed(2),
-        annualCommissionNumber: commB,
-        effectiveDate: isoDaysFrom(CATALOG_NOW, -280 - i),
-        renewalDate: isoDaysFrom(CATALOG_NOW, 40 + (i % 180)),
-        clientSegment: segmentB,
-        postalCode: zone.postal,
-        commissionType: "LINEAR",
-        clientKey: `ck_catalog_${pad}_b`,
-        department: zone.department,
-      },
-    ];
+        commissionType: n % 23 === 0 ? "ADVANCED" : "LINEAR",
+        clientKey: `ck_catalog_${pad}_${pad2(Math.floor(n / 2) + 1)}`,
+        department: nationwide ? ZONES[(n % 8)]!.department : zone.department,
+      });
+    }
+
+    const totalLignes = lines.reduce((somme, l) => somme + l.annualCommissionNumber, 0);
+    const ancienneteMoyenne = Math.round(
+      lines.reduce((somme, l) => somme + (Date.parse(CATALOG_NOW) - Date.parse(l.effectiveDate)) / (30 * 86_400_000), 0) /
+        lines.length,
+    );
+    const clients = new Set(lines.map((l) => l.clientKey)).size;
 
     rows.push({
       pad,
@@ -208,18 +215,18 @@ export function buildCatalogListings(): CatalogListingRow[] {
       publicNumber: CATALOG_PUBLIC_NUMBER_START + i - 1,
       firmId: CATALOG_FIRM_ID,
       label: `Catalogue ${displayedZone} ${pad}`,
-      contractCount: contracts,
+      contractCount: lines.length,
       clientCount: clients,
-      annualCommissions: roundedComm.toFixed(2),
-      averageAgeMonths: 18 + (i % 40),
-      churnRate12m: (0.04 + (i % 10) * 0.004).toFixed(4),
+      annualCommissions: (Math.round(totalLignes * 100) / 100).toFixed(2),
+      averageAgeMonths: ancienneteMoyenne,
+      churnRate12m: (0.03 + (i % 10) * 0.004).toFixed(4),
       askingPrice: roundedAsk.toFixed(2),
       displayedZone,
-      isPartial,
+      isPartial: false,
       isNationwide: nationwide,
       sellerSupportMonths: support,
+      status,
       publishedAt,
-      offerWindowClosesAt,
       departmentsJson: JSON.stringify(departments),
       regionsJson: JSON.stringify(regionCodes),
       certificationStatus: certified ? "CERTIFIED" : "NONE",

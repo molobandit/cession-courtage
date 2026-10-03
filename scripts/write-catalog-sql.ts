@@ -3,7 +3,8 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { buildCatalogListings, CATALOG_FIRM, CATALOG_SELLER } from "../lib/listing/catalog-listings";
 
-function sql(value: string | number | boolean): string {
+function sql(value: string | number | boolean | null): string {
+  if (value === null) return "NULL";
   if (typeof value === "boolean") return value ? "1" : "0";
   if (typeof value === "number") return String(value);
   return `'${value.replaceAll("'", "''")}'`;
@@ -63,6 +64,12 @@ const lines: string[] = [
     CATALOG_FIRM.foundedAt,
     "NONE",
   ].map(sql).join(", ")};`,
+  /*
+   * Le cabinet est supprimé puis recréé à chaque exécution, ce qui détache le
+   * cédant (firmId passe à NULL). L'insertion au-dessus ne le rattrape pas,
+   * puisqu'elle ignore une ligne déjà présente : on le rattache ici.
+   */
+  `UPDATE User SET firmId = ${sql(CATALOG_FIRM.id)}, kycStatus = 'VERIFIED', oriasVerifiedAt = ${sql(CATALOG_FIRM.foundedAt)} WHERE id = ${sql(CATALOG_SELLER.id)};`,
   "",
 ];
 
@@ -108,10 +115,10 @@ for (const row of rows) {
       row.portfolioId,
       row.askingPrice,
       row.displayedZone,
-      "OFFERS_OPEN",
+      row.status,
       row.isPartial,
       row.publishedAt,
-      row.offerWindowClosesAt,
+      null,
       row.publicNumber,
       row.sellerSupportMonths,
       row.departmentsJson,
