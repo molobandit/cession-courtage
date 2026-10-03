@@ -3,6 +3,10 @@
  * Zone = departement ou region. Reference Dossier n° 10101+.
  */
 
+import { computeValuation } from "@/lib/valuation/compute";
+import { DEFAULT_MULTIPLES } from "@/lib/valuation/defaults";
+import { ASKING_MAX, ASKING_MIN } from "@/lib/listing/constants";
+
 export const CATALOG_FIRM_ID = "firm_catalog";
 
 /** Compte cédant du catalogue : celui qui retient les offres et mène les dossiers. */
@@ -167,7 +171,10 @@ export function buildCatalogListings(): CatalogListingRow[] {
     const support = [0, 3, 6][i % 3]!;
     // Un dossier vendu tous les treize, un acquéreur positionné tous les onze.
     const status = i % 13 === 0 ? "SOLD" : i % 11 === 0 ? "UNDER_NEGOTIATION" : "OFFERS_OPEN";
-    const commissions = 12_000 + ((i * 2_830) % 68_000);
+    // Plafonné pour que la valeur centrale de l'étude reste sous ASKING_MAX :
+    // un dossier dont le prix serait rogné par la borne sortirait de sa propre
+    // fourchette, et la fiche se contredirait.
+    const commissions = 12_000 + ((i * 2_830) % 52_000);
     const roundedComm = Math.round(commissions * 100) / 100;
     const publishedAt = isoDaysFrom(CATALOG_NOW, -(i % 45));
 
@@ -243,10 +250,31 @@ export function buildCatalogListings(): CatalogListingRow[] {
         lines.length,
     );
     const clients = new Set(lines.map((l) => l.clientKey)).size;
-    // Le montant de l'annonce part du total réel des lignes, dans la fourchette
-    // du dossier de présentation : de 1,75 à 2,05 fois les commissions.
+
+    /*
+     * Le montant de l'annonce sort de l'étude, comme sur la plateforme : c'est
+     * l'équipe qui le fixe après avoir valorisé le portefeuille, jamais un
+     * facteur arbitraire. On passe donc les lignes dans le même algorithme que
+     * la fiche, et on retient la valeur centrale. Le multiple affiché tombe
+     * ainsi toujours à l'intérieur de la fourchette.
+     */
+    const etude = computeValuation({
+      lines: lines.map((l) => ({
+        carrier: l.carrier,
+        riskType: l.riskType as Parameters<typeof computeValuation>[0]["lines"][number]["riskType"],
+        annualCommission: l.annualCommissionNumber,
+        commissionType: l.commissionType as Parameters<typeof computeValuation>[0]["lines"][number]["commissionType"],
+        clientKey: l.clientKey,
+        effectiveDate: new Date(l.effectiveDate),
+      })),
+      firm: { distributionMode: "REMOTE", complianceScore: 100 },
+      sellerSupportMonths: support,
+      churnRate12m: 0.03 + (i % 10) * 0.004,
+      averageAgeMonths: ancienneteMoyenne,
+      multiples: DEFAULT_MULTIPLES,
+    });
     const roundedAsk =
-      Math.round(Math.min(198_000, Math.max(8_000, totalLignes * (1.75 + (i % 7) * 0.05))) / 500) * 500;
+      Math.round(Math.min(ASKING_MAX, Math.max(ASKING_MIN, etude.midValue)) / 500) * 500;
 
     rows.push({
       pad,

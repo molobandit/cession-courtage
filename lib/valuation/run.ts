@@ -40,7 +40,14 @@ export async function persistValuation(input: {
   return created.id;
 }
 
-export async function valuePortfolio(portfolioId: string, listingId?: string | null) {
+/**
+ * Calcule la valorisation d'un portefeuille sans rien écrire en base.
+ *
+ * Les écrans publics ont besoin de la fourchette pour justifier le montant de
+ * l'annonce, y compris quand aucune étude n'a encore été enregistrée. Lire ne
+ * doit pas créer de ligne : `valuePortfolio` reste le seul chemin qui persiste.
+ */
+export async function computePortfolioValuation(portfolioId: string, listingId?: string | null) {
   const portfolio = await prisma.portfolio.findUnique({
     where: { id: portfolioId },
     include: {
@@ -100,6 +107,11 @@ export async function valuePortfolio(portfolioId: string, listingId?: string | n
     multiples,
   });
 
+  return breakdown;
+}
+
+export async function valuePortfolio(portfolioId: string, listingId?: string | null) {
+  const breakdown = await computePortfolioValuation(portfolioId, listingId);
   const valuationId = await persistValuation({
     portfolioId,
     listingId: listingId ?? null,

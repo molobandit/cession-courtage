@@ -43,7 +43,7 @@ export const SALE_PIPELINE: PipelineStep[] = [
     num: "03",
     label: "Le positionnement",
     summary:
-      "L’acquéreur verse un dépôt de positionnement de 2,5 % dans un trust. La procédure de cession démarre et l’identité du cédant lui est révélée.",
+      "L’acquéreur se positionne. La procédure de cession démarre et l’identité du cédant lui est révélée.",
   },
   {
     key: "SIGNATURE",

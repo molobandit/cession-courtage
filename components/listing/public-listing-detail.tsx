@@ -38,7 +38,6 @@ export type PublicListingDetailModel = {
   /** Fourchette de valorisation retenue à l'étude. */
   valuation: { low: number; high: number } | null;
   /** Dépôt de positionnement, 2,5 % du montant. */
-  depositAmount: number;
   /** Dossier de présentation en PDF. */
   studyHref: string;
   perceptionModeLine: string;
@@ -122,7 +121,6 @@ export function PublicListingDetail({
     topCarrierShare,
     precompteLine,
     valuation,
-    depositAmount,
     studyHref,
     perceptionModeLine,
     perceptionAmountLine,
@@ -465,7 +463,7 @@ export function PublicListingDetail({
               ) : positionListingId ? (
                 <TakePositionButton
                   listingId={positionListingId}
-                  label="Se positionner · 2,5 %"
+                  label="Se positionner"
                   className="flex h-12 w-full items-center justify-center rounded-full bg-white text-[15px] font-semibold text-deep-soft hover:bg-white/90 disabled:opacity-60"
                 />
               ) : (
@@ -473,17 +471,10 @@ export function PublicListingDetail({
                   href={interestHref}
                   className="flex h-12 items-center justify-center rounded-full bg-white text-[15px] font-semibold text-deep-soft hover:bg-white/90"
                 >
-                  Se positionner · 2,5 %
+                  Se positionner
                 </SectionTabLink>
               )}
             </div>
-
-            {!sold ? (
-              <p className="mt-3 text-[12.5px] leading-relaxed text-white/70">
-                Dépôt de {formatEuroWhole(depositAmount)} versé dans un trust. Il lance la procédure et vous
-                donne le nom du cabinet.
-              </p>
-            ) : null}
 
             {followHref && !sold ? (
               <Link

@@ -41,6 +41,7 @@ import { DepositForm } from "@/components/listing/deposit-form";
 import { loadEngagementReadiness } from "@/lib/buyer/readiness";
 import { breakdownBy, renewalYears, type AnalyticsLine } from "@/lib/portfolio/analytics";
 import { qualityFromPortfolio } from "@/lib/portfolio/quality";
+import { computePortfolioValuation } from "@/lib/valuation/run";
 
 export async function generateMetadata({
   params,
@@ -52,6 +53,23 @@ export async function generateMetadata({
 }
 
 const DAY_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * La fourchette d'un dossier qui n'a pas encore d'étude enregistrée.
+ *
+ * Même algorithme que l'étude, mais en lecture seule : une consultation de
+ * fiche ne crée pas de valorisation. Si le calcul échoue, la fiche se tait.
+ */
+async function estimerFourchette(portfolioId: string, listingId: string) {
+  try {
+    const breakdown = await computePortfolioValuation(portfolioId, listingId);
+    if (!(breakdown.lowValue > 0) || !(breakdown.highValue > 0)) return null;
+    return { low: Math.round(breakdown.lowValue), high: Math.round(breakdown.highValue) };
+  } catch (error) {
+    console.error("estimerFourchette", error);
+    return null;
+  }
+}
 
 export default async function PublicListingPage({
   params,
@@ -129,17 +147,21 @@ export default async function PublicListingPage({
 
   const deposit = interestDepositFor(askingPrice);
   /*
-   * Fourchette de l'étude : elle justifie le montant de l'annonce. Absente
-   * tant qu'aucune valorisation n'a été calculée, et la fiche n'en parle pas.
+   * Fourchette de l'étude : elle justifie le montant de l'annonce.
+   *
+   * On lit celle qu'une étude a déjà enregistrée. Quand il n'y en a pas, on la
+   * calcule avec le même algorithme, sans rien écrire en base : la fiche doit
+   * pouvoir montrer la fourchette de tout dossier en ligne.
    */
   const valorisation = await prisma.valuation.findFirst({
     where: { portfolioId: listing.portfolioId },
     orderBy: { computedAt: "desc" },
     select: { lowValue: true, highValue: true },
   });
+  const estimee = valorisation ? null : await estimerFourchette(listing.portfolioId, listing.id);
   const fourchette = valorisation
     ? { low: Math.round(Number(valorisation.lowValue)), high: Math.round(Number(valorisation.highValue)) }
-    : null;
+    : estimee;
   const myDeposit = actor && !isSeller && !isInvestor(actor) ? await findMyDeposit(listing.id, actor.id) : null;
   const readiness =
     actor && !isSeller && canBuy(actor)
@@ -235,7 +257,6 @@ export default async function PublicListingPage({
         topCarrierShare: byCarrier[0]?.share ?? null,
         precompteLine: perception.amountLine ?? perception.modeLine,
         valuation: fourchette,
-        depositAmount: deposit,
         studyHref: `/annonces/${listing.publicNumber}/etude`,
         perceptionModeLine: perception.modeLine,
         perceptionAmountLine: perception.amountLine,
