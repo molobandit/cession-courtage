@@ -17,6 +17,7 @@ const listingPublicInclude = {
   portfolio: {
     select: {
       firmId: true,
+      importedAt: true,
       annualCommissions: true,
       contractCount: true,
       clientCount: true,

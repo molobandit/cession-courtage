@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { SectionTab, SectionTabLink, SectionTabs } from "@/components/ui/section-tabs";
 import { MarketBadge } from "@/components/listing/market-badge";
+import { SALE_PIPELINE } from "@/lib/deal/pipeline";
 import type { MarketTone } from "@/lib/listing/market-status";
 import { TakePositionButton } from "@/components/listing/take-position-button";
 import { MarketStamp } from "@/components/listing/market-stamp";
@@ -26,10 +27,20 @@ export type PublicListingDetailModel = {
   isPartial: boolean;
   isNationwide: boolean;
   askingPrice: number;
-  /** Cote de la séance : meilleure offre et nombre d'offres déposées. */
-  bestOffer: number | null;
-  offerCount: number;
   annualCommissions: number;
+  /** Date d'arrêté des données du portefeuille, et dernière mise à jour de la fiche. */
+  dataCutoff: Date | null;
+  updatedAt: Date | null;
+  /** Poids de la première compagnie, de 0 à 1. */
+  topCarrierShare: number | null;
+  /** Une phrase sur le précompte, telle qu'elle est dite dans le dossier. */
+  precompteLine: string;
+  /** Fourchette de valorisation retenue à l'étude. */
+  valuation: { low: number; high: number } | null;
+  /** Dépôt de positionnement, 2,5 % du montant. */
+  depositAmount: number;
+  /** Dossier de présentation en PDF. */
+  studyHref: string;
   perceptionModeLine: string;
   perceptionAmountLine: string | null;
   contractCount: number;
@@ -100,21 +111,27 @@ export function PublicListingDetail({
     zone,
     statusLabel,
     marketTone,
-    marketDetail,
+    marketDetail: _marketDetail,
     certified,
     sold,
     isPartial,
     askingPrice,
-    bestOffer,
-    offerCount,
     annualCommissions,
+    dataCutoff,
+    updatedAt,
+    topCarrierShare,
+    precompteLine,
+    valuation,
+    depositAmount,
+    studyHref,
     perceptionModeLine,
     perceptionAmountLine,
     contractCount,
     clientCount,
+    averageAgeMonths,
     multiple,
     daysLeft: _daysLeft,
-    publishedAt,
+    publishedAt: _publishedAt,
     presentation,
     facts,
     byRisk,
@@ -172,7 +189,7 @@ export function PublicListingDetail({
                 ? "Commissions sur trois exercices, part du récurrent et prime gérée, distincte des commissions."
                 : "Commissions annuelles, par profil de clientèle et par branche."}
               {isPartial
-                ? " Cession partielle : commissions, contrats et clients sont ceux du lot cédé ; les exercices passés portent sur le portefeuille entier."
+                ? " Les commissions, contrats et clients sont ceux du lot cédé ; les exercices passés portent sur le portefeuille entier."
                 : ""}
             </p>
             <dl className="mt-5 divide-y divide-line">
@@ -249,140 +266,154 @@ export function PublicListingDetail({
           Dossier n° {publicNumber}
         </p>
 
-        <div className="mt-5 grid gap-6 lg:grid-cols-[minmax(0,1fr)_280px]">
+        <div className="mt-5 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
           <div className="overflow-hidden rounded-3xl border border-line bg-paper p-6 shadow-sm sm:p-8">
-            <div className="flex flex-wrap items-start justify-between gap-4">
-              <div>
-                <div className="flex flex-wrap items-center gap-2">
-                  {sold ? <MarketStamp kind="sold" size="lg" /> : null}
-                  {certified ? <MarketStamp kind="certified" size="lg" /> : null}
-                  {!certified ? (
-                    <span className="text-[12px] text-muted">{UNCERTIFIED_LABEL}</span>
-                  ) : null}
-                  <MarketBadge label={statusLabel} tone={marketTone} />
-                  <span className="rounded-full border border-line bg-surface-alt px-3 py-1 text-[12px] text-ink">
-                    {isPartial ? "Cession partielle" : "Cession totale"}
-                  </span>
-                </div>
-                <h1 className="mt-4 text-3xl font-bold tracking-tight text-ink">
-                  Dossier n° {publicNumber}
-                </h1>
-                <p className="mt-2 text-[16px] font-medium text-ink">{title}</p>
-                <p className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[14px] text-muted">
-                  <span className="inline-flex items-center gap-1.5">
-                    <PinIcon />
-                    {zone}
-                  </span>
-                  {publishedAt ? <span>Publié le {formatDateLong(publishedAt)}</span> : null}
-                  {marketDetail ? <span>{marketDetail}</span> : null}
-                </p>
-              </div>
-              <div className="text-right">
-                <p className="text-[12px] text-muted">Montant</p>
-                <p className="tabular text-3xl font-bold text-ok">{formatEuroWhole(askingPrice)}</p>
-                <p className="mt-2 text-[12px] text-muted">Commissions / an</p>
-                <p className="tabular text-lg font-semibold text-ink">
-                  {formatEuroWhole(annualCommissions)}
-                </p>
-                <p className="text-[13px] font-semibold text-ink">
-                  {perceptionModeLine.endsWith("Non précisé")
-                    ? "Linéaire ou précompte non précisé"
-                    : perceptionModeLine.replace("Mode de perception : ", "")}
-                </p>
-              </div>
+            <div className="flex flex-wrap items-center gap-2">
+              {sold ? <MarketStamp kind="sold" size="lg" /> : null}
+              {certified ? <MarketStamp kind="certified" size="lg" /> : null}
+              {!certified ? <span className="text-[12px] text-muted">{UNCERTIFIED_LABEL}</span> : null}
+              <MarketBadge label={statusLabel} tone={marketTone} />
             </div>
+            <h1 className="mt-4 text-3xl font-bold tracking-tight text-ink">Dossier n° {publicNumber}</h1>
+            <p className="mt-2 text-[16px] font-medium text-ink">{title}</p>
+            <p className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[14px] text-muted">
+              <span className="inline-flex items-center gap-1.5">
+                <PinIcon />
+                {zone}
+              </span>
+              {dataCutoff ? <span>Données arrêtées au {formatDateLong(dataCutoff)}</span> : null}
+              {updatedAt ? <span>Mis à jour le {formatDateLong(updatedAt)}</span> : null}
+            </p>
 
+            {/* Les quatre repères de « L'essentiel du dossier », dans le même ordre. */}
             <dl className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
               {[
-                { value: String(supplierCount), label: "Fournisseurs" },
-                { value: String(riskChips.length), label: "Types de risques" },
-                { value: String(segmentChips.length), label: "Clientèle" },
-                { value: "✓", label: "Couverture" },
+                { value: formatEuroWhole(annualCommissions), label: "commissions / an" },
+                { value: formatCount(contractCount), label: "contrats" },
+                {
+                  value: averageAgeMonths > 0 ? `${Math.round(averageAgeMonths)} mois` : "n.c.",
+                  label: "ancienneté",
+                },
+                { value: formatEuroWhole(annualCommissions / 12), label: "par mois" },
               ].map((tile) => (
-                <div
-                  key={tile.label}
-                  className="rounded-2xl bg-surface-alt px-4 py-4 text-center"
-                >
-                  <dd className="text-xl font-bold text-ink">{tile.value}</dd>
+                <div key={tile.label} className="rounded-2xl bg-surface-alt px-4 py-4">
+                  <dd className="tabular text-[20px] font-bold text-ink">{tile.value}</dd>
                   <dt className="mt-1 text-[12px] text-muted">{tile.label}</dt>
                 </div>
               ))}
             </dl>
+
+            <p className="mt-5 text-[14px] leading-relaxed text-muted">
+              {supplierCount} compagnie{supplierCount > 1 ? "s" : ""}
+              {topCarrierShare !== null
+                ? `, la première à ${Math.round(topCarrierShare * 100)} %`
+                : ""}
+              {" · "}
+              {precompteLine}
+            </p>
           </div>
 
-          <aside className="h-fit rounded-3xl border border-line bg-paper p-5 shadow-sm">
-            {!sold && (bestOffer !== null || offerCount > 0) ? (
-              <div className="mb-4 rounded-2xl border border-indigo-line bg-indigo-soft px-4 py-3">
-                {offerCount >= 2 || (bestOffer !== null && bestOffer >= askingPrice) ? (
-                  <p className="mb-1 inline-flex items-center gap-1.5 rounded-full bg-indigo px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-white">
-                    Opportunité chaude
+          <aside className="h-fit rounded-3xl bg-deep-soft p-6 text-white shadow-sm lg:sticky lg:top-6">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/70">
+              Montant de l’annonce, net vendeur
+            </p>
+            <p className="tabular mt-2 text-[32px] font-bold leading-none">{formatEuroWhole(askingPrice)}</p>
+            <p className="mt-3 text-[13px] leading-relaxed text-white/80">
+              {multiple
+                ? `${multiple.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} fois les commissions`
+                : "Montant arrêté après l’étude"}
+              {valuation
+                ? ` · fourchette de ${formatEuroWhole(valuation.low)} à ${formatEuroWhole(valuation.high)}`
+                : ""}
+            </p>
+
+            <div className="mt-5">
+              {sold ? (
+                <p className="text-center text-[15px] font-semibold">Ce portefeuille est vendu.</p>
+              ) : exclusive && !dealHref ? (
+                <>
+                  <p className="text-[13px] font-semibold">Acquéreur positionné</p>
+                  <p className="mt-2 text-[13px] leading-relaxed text-white/80">
+                    Un confrère a versé son dépôt de positionnement. Vous pouvez consulter la fiche.
                   </p>
-                ) : null}
-                {bestOffer !== null ? (
-                  <>
-                    <p className="tabular text-[26px] font-bold leading-tight text-ink">{formatEuroWhole(bestOffer)}</p>
-                    <p className="text-[13px] text-muted">Meilleure offre actuelle</p>
-                  </>
-                ) : null}
-                {offerCount > 0 ? (
-                  <p className="mt-1 text-[13px] font-semibold text-indigo-dark">
-                    {`${offerCount} offre${offerCount > 1 ? "s" : ""} déjà déposée${offerCount > 1 ? "s" : ""}`}
-                  </p>
-                ) : null}
-              </div>
-            ) : null}
-            {sold ? (
-              <p className="text-center text-[15px] font-semibold text-ink">
-                Ce portefeuille est cédé.
-              </p>
-            ) : exclusive && !dealHref ? (
-              <>
-                <p className="text-[13px] font-semibold text-ink">Négociation exclusive</p>
-                <p className="mt-2 text-[13px] leading-relaxed text-muted">
-                  Un confrère est déjà en dossier. Vous pouvez consulter la fiche, pas
-                  déposer une nouvelle offre.
-                </p>
-              </>
-            ) : dealHref ? (
-              <Link
-                href={dealHref}
-                className="flex h-12 items-center justify-center rounded-full bg-indigo text-[15px] font-semibold !text-white"
-              >
-                Continuer le dossier
-              </Link>
-            ) : (
-              positionHref ? (
+                </>
+              ) : dealHref ? (
+                <Link
+                  href={dealHref}
+                  className="flex h-12 items-center justify-center rounded-full bg-white text-[15px] font-semibold text-deep-soft hover:bg-white/90"
+                >
+                  Continuer le dossier
+                </Link>
+              ) : positionHref ? (
                 <Link
                   href={positionHref}
-                  className="flex h-12 items-center justify-center rounded-full bg-indigo text-[15px] font-semibold !text-white hover:bg-indigo-dark"
+                  className="flex h-12 items-center justify-center rounded-full bg-white text-[15px] font-semibold text-deep-soft hover:bg-white/90"
                 >
                   {positionLabel ?? "Suivre mon dossier"}
                 </Link>
               ) : positionListingId ? (
                 <TakePositionButton
                   listingId={positionListingId}
-                  className="flex h-12 w-full items-center justify-center rounded-full bg-indigo text-[15px] font-semibold !text-white hover:bg-indigo-dark disabled:opacity-60"
+                  label="Se positionner · 2,5 %"
+                  className="flex h-12 w-full items-center justify-center rounded-full bg-white text-[15px] font-semibold text-deep-soft hover:bg-white/90 disabled:opacity-60"
                 />
               ) : (
                 <SectionTabLink
                   href={interestHref}
-                  className="flex h-12 items-center justify-center rounded-full bg-indigo text-[15px] font-semibold !text-white hover:bg-indigo-dark"
+                  className="flex h-12 items-center justify-center rounded-full bg-white text-[15px] font-semibold text-deep-soft hover:bg-white/90"
                 >
-                  Prendre position
+                  Se positionner · 2,5 %
                 </SectionTabLink>
-              )
-            )}
+              )}
+            </div>
+
+            {!sold ? (
+              <p className="mt-3 text-[12.5px] leading-relaxed text-white/70">
+                Dépôt de {formatEuroWhole(depositAmount)} versé dans un trust. Il lance la procédure et vous
+                donne le nom du cabinet.
+              </p>
+            ) : null}
+
             {followHref && !sold ? (
               <Link
                 href={followHref}
-                className="mt-2 flex h-11 items-center justify-center rounded-full border border-line text-[14px] font-medium text-ink hover:bg-surface-alt"
+                className="mt-3 flex h-11 items-center justify-center rounded-full border border-white/40 text-[14px] font-medium text-white hover:bg-white/10"
               >
                 Suivre ce dossier
               </Link>
             ) : null}
-            {/* Abonnement, dépôt et séquestre s'expliquent au moment de prendre position, pas sur la fiche. */}
           </aside>
         </div>
+
+        <div className="mt-3 flex flex-wrap gap-3">
+          <Link
+            href={studyHref}
+            className="inline-flex h-11 items-center rounded-full border border-indigo-line bg-indigo-soft px-5 text-[14px] font-semibold text-indigo-dark hover:bg-indigo-soft/70"
+          >
+            Ouvrir le dossier de présentation (PDF)
+          </Link>
+          <SectionTabLink
+            href={interestHref}
+            className="inline-flex h-11 items-center rounded-full border border-line bg-paper px-5 text-[14px] font-medium text-ink hover:bg-surface-alt"
+          >
+            Poser une question au cédant
+          </SectionTabLink>
+        </div>
+
+        {/* Le cadre : les quatre étapes, dites comme dans le dossier de présentation. */}
+        <section className="mt-6 rounded-3xl border border-line bg-paper p-6 shadow-sm">
+          <h2 className="text-lg font-semibold text-ink">Le cadre</h2>
+          <ol className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {SALE_PIPELINE.map((step) => (
+              <li key={step.key} className="rounded-2xl border border-line p-4">
+                <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-indigo-dark">
+                  {step.num} · {step.label}
+                </p>
+                <p className="mt-2 text-[13px] leading-relaxed text-muted">{step.summary}</p>
+              </li>
+            ))}
+          </ol>
+        </section>
 
         {manageHref ? (
           <Link

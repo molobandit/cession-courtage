@@ -4,7 +4,6 @@ import { notFound } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { OfferChat } from "@/components/chat/offer-chat";
 import { PublicListingDetail } from "@/components/listing/public-listing-detail";
-import { SubmitOfferForm } from "@/components/offer/offer-forms";
 import { lotAvailability } from "@/lib/listing/lot-availability";
 import {
   canBuy,
@@ -15,14 +14,12 @@ import {
   isInvestor,
   listListingMailboxRecipients,
   listListingMessages,
-  listOffersForListing,
 } from "@/lib/authz";
 import { listingAcceptsOffers } from "@/lib/offer/acceptance";
 import { findPositionId } from "@/lib/position/load";
 import { marketStatus } from "@/lib/listing/market-status";
-import { isOfferWindowSealed, ownsFirm } from "@/lib/authz/policies";
-import { hasContactSubscription } from "@/lib/billing/contact-access";
-import { GROWTH_PLAN_ANNUAL_EUR, INTEREST_DEPOSIT_LABEL, interestDepositFor } from "@/lib/billing/rates";
+import { ownsFirm } from "@/lib/authz/policies";
+import { INTEREST_DEPOSIT_LABEL, interestDepositFor } from "@/lib/billing/rates";
 import { CESSION_FUNDS_DISCLAIMER } from "@/lib/partners/catalog";
 import { EMPTY_CELL, formatDateTime } from "@/lib/format/fr";
 import { formatEuroWhole } from "@/lib/format/number";
@@ -41,8 +38,6 @@ import { findMyInvestorPosition } from "@/lib/investor/positions";
 import { InvestorDepositForm } from "@/components/investor/placement-forms";
 import { listCertificationStatuses } from "@/lib/listing/certification";
 import { DepositForm } from "@/components/listing/deposit-form";
-import { depositTerms } from "@/lib/billing/deposit-fate";
-import { EMPTY_QUOTE, listingQuotes } from "@/lib/offer/quote";
 import { loadEngagementReadiness } from "@/lib/buyer/readiness";
 import { breakdownBy, renewalYears, type AnalyticsLine } from "@/lib/portfolio/analytics";
 import { qualityFromPortfolio } from "@/lib/portfolio/quality";
@@ -120,27 +115,9 @@ export default async function PublicListingPage({
   const verified = actor ? isOriasVerified(actor) : false;
   const investorMode = Boolean(voie === "investir" || (actor && isInvestor(actor)));
   const isSeller = Boolean(actor && ownsFirm(actor, listing.portfolio.firmId));
-  const sealed = isOfferWindowSealed(listing);
-  const cote = (await listingQuotes([listing.id])).get(listing.id) ?? EMPTY_QUOTE;
   // Lots du portefeuille : l'acquéreur peut ne reprendre qu'une partie des
   // fournisseurs, et ceux déjà engagés ailleurs doivent apparaître comme pris.
-  const { lots, available } = await lotAvailability(listing.id);
-  const subscribed = Boolean(actor && (await hasContactSubscription(actor)));
-  const canOffer = Boolean(
-    verified &&
-      actor &&
-      canBuy(actor) &&
-      subscribed &&
-      listingAcceptsOffers(listing.status) &&
-      !isSeller,
-  );
-
-  let ownOffer = null;
-  if (actor && verified) {
-    const result = await listOffersForListing(listing.id, actor).catch(() => null);
-    if (result?.access === "own") ownOffer = result.offers[0] ?? null;
-  }
-
+  const { lots } = await lotAvailability(listing.id);
   const mailboxOk = Boolean(actor && verified && (await isListingMailboxParty(actor, listing.id)));
   const messages = mailboxOk && actor ? await listListingMessages(listing.id, actor) : [];
   const recipients =
@@ -151,6 +128,18 @@ export default async function PublicListingPage({
     : null;
 
   const deposit = interestDepositFor(askingPrice);
+  /*
+   * Fourchette de l'étude : elle justifie le montant de l'annonce. Absente
+   * tant qu'aucune valorisation n'a été calculée, et la fiche n'en parle pas.
+   */
+  const valorisation = await prisma.valuation.findFirst({
+    where: { portfolioId: listing.portfolioId },
+    orderBy: { computedAt: "desc" },
+    select: { lowValue: true, highValue: true },
+  });
+  const fourchette = valorisation
+    ? { low: Math.round(Number(valorisation.lowValue)), high: Math.round(Number(valorisation.highValue)) }
+    : null;
   const myDeposit = actor && !isSeller && !isInvestor(actor) ? await findMyDeposit(listing.id, actor.id) : null;
   const readiness =
     actor && !isSeller && canBuy(actor)
@@ -196,7 +185,7 @@ export default async function PublicListingPage({
   const segments = bySegment.map((s) => s.label).join(", ") || EMPTY_CELL;
   const presentation =
     brief.presentation?.trim() ||
-    `Portefeuille de courtage en ${mainBranch.toLowerCase()}, zone ${zone}. ${contractCount.toLocaleString("fr-FR")} contrats pour ${clientCount.toLocaleString("fr-FR")} clients, commissions annuelles de ${formatEuroWhole(annualCommissions)}. ${listing.isPartial ? "Cession partielle." : "Cession totale."} Référence : dossier n° ${listing.publicNumber}.`;
+    `Portefeuille de courtage en ${mainBranch.toLowerCase()}, zone ${zone}. ${contractCount.toLocaleString("fr-FR")} contrats pour ${clientCount.toLocaleString("fr-FR")} clients, commissions annuelles de ${formatEuroWhole(annualCommissions)}. Référence : dossier n° ${listing.publicNumber}.`;
 
   const facts = [
     { label: "Localisation", value: zone },
@@ -204,7 +193,6 @@ export default async function PublicListingPage({
     { label: "Type de clientèle", value: segments },
     { label: "Branche principale", value: mainBranch },
     { label: "Raison de la vente", value: cessionMotiveLabel(brief.cessionMotive) || brief.cessionMotive?.trim() || EMPTY_CELL },
-    { label: "Montant", value: brief.negotiable ? "Négociable" : "Fermé" },
     ...(brief.desiredCessionDate
       ? [{ label: "Cession souhaitée", value: brief.desiredCessionDate }]
       : []),
@@ -213,11 +201,7 @@ export default async function PublicListingPage({
 
   const cotation = marketStatus({ status: listing.status, offerWindowClosesAt: listing.offerWindowClosesAt });
   const listingPath = `/annonces/${listing.publicNumber}`;
-  const interestHref = !actor
-    ? `/connexion?next=${encodeURIComponent(listingPath)}`
-    : subscribed
-      ? "#position"
-      : `/tarifs?next=${encodeURIComponent(listingPath)}#abonnements`;
+  const interestHref = actor ? "#position" : `/connexion?next=${encodeURIComponent(listingPath)}`;
   // Suivre en investisseur n'a de sens que pour un visiteur ou un investisseur :
   // pour un courtier, suivre un dossier, c'est prendre position.
   const followHref = !actor
@@ -228,7 +212,7 @@ export default async function PublicListingPage({
   const monDossier =
     actor && verified && !isSeller && !isInvestor(actor) ? await findPositionId(listing.id, actor.id) : null;
   const peutPrendrePosition = Boolean(
-    actor && verified && subscribed && canBuy(actor) && !isSeller && listingAcceptsOffers(listing.status),
+    actor && verified && canBuy(actor) && !isSeller && listingAcceptsOffers(listing.status),
   );
 
   return (
@@ -245,9 +229,14 @@ export default async function PublicListingPage({
         isPartial: listing.isPartial,
         isNationwide: listing.isNationwide,
         askingPrice,
-        bestOffer: cote.bestOffer,
-        offerCount: cote.offerCount,
         annualCommissions,
+        dataCutoff: listing.portfolio.importedAt ?? null,
+        updatedAt: listing.updatedAt ?? null,
+        topCarrierShare: byCarrier[0]?.share ?? null,
+        precompteLine: perception.amountLine ?? perception.modeLine,
+        valuation: fourchette,
+        depositAmount: deposit,
+        studyHref: `/annonces/${listing.publicNumber}/etude`,
         perceptionModeLine: perception.modeLine,
         perceptionAmountLine: perception.amountLine,
         contractCount,
@@ -270,7 +259,7 @@ export default async function PublicListingPage({
           : monDossier
             ? `/app/positions/${monDossier}`
             : null,
-        positionLabel: isSeller ? "Voir les candidats et les offres" : undefined,
+        positionLabel: isSeller ? "Voir les acquéreurs positionnés" : undefined,
         positionListingId: peutPrendrePosition ? listing.id : null,
         followHref,
         manageHref: isSeller ? `/app/annonces/${listing.id}` : null,
@@ -289,7 +278,7 @@ export default async function PublicListingPage({
           : "Zones au grain départemental, sans commune ni raison sociale.",
         exclusive: listing.status === "UNDER_NEGOTIATION" && !isSeller && !myDeal,
         dealHref: myDeal ? `/app/dossiers/${myDeal.id}` : null,
-        defaultTab: ownOffer || myDeal || myDeposit ? "position" : "informations",
+        defaultTab: myDeal || myDeposit ? "position" : "informations",
       }}
       /* Ce que l'acquéreur regarde en premier : où sont les commissions. */
       documents={
@@ -306,7 +295,7 @@ export default async function PublicListingPage({
       }
       position={
         <div className="grid gap-6">
-          <SalePipeline currentKey={myDeal?.stage ?? (ownOffer ? "POSITION" : "POSITION")} />
+          <SalePipeline currentKey={myDeal?.stage ?? "POSITION"} />
           {myDeal ? (
             <section className="rounded-3xl border border-indigo-line bg-indigo-soft p-6">
               <h2 className="text-xl font-semibold text-ink">Dossier de cession ouvert</h2>
@@ -374,12 +363,9 @@ export default async function PublicListingPage({
         <section className="rounded-3xl border border-indigo-line bg-indigo-soft p-7">
           <h2 className="text-2xl font-semibold text-ink">Je suis intéressé</h2>
           <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-muted">
-            La messagerie reste anonyme. Un abonnement de{" "}
-            {GROWTH_PLAN_ANNUAL_EUR.toLocaleString("fr-FR")} € HT par an ouvre le
-            détail de l’offre (contact, messages). Dès que vous vous
-            positionnez, un dépôt de {INTEREST_DEPOSIT_LABEL} (
-            {formatEuroWhole(deposit)}) est versé dans un trust pour lancer la
-            procédure de cession. {CESSION_FUNDS_DISCLAIMER}
+            La messagerie reste anonyme. Dès que vous vous positionnez, un dépôt de{" "}
+            {INTEREST_DEPOSIT_LABEL} ({formatEuroWhole(deposit)}) est versé dans un trust pour
+            lancer la procédure de cession. {CESSION_FUNDS_DISCLAIMER}
           </p>
           <div className="mt-5 flex flex-wrap gap-3">
             {!actor ? (
@@ -388,13 +374,9 @@ export default async function PublicListingPage({
                   Je suis intéressé
                 </Link>
               </Button>
-            ) : subscribed ? (
-              <Button asChild variant="primary">
-                <Link href="#offre">Continuer</Link>
-              </Button>
             ) : (
               <Button asChild variant="primary">
-                <Link href={`/tarifs?next=${encodeURIComponent(`/annonces/${listing.publicNumber}`)}#abonnements`}>S’abonner pour le détail de l’offre</Link>
+                <Link href="#position">Continuer</Link>
               </Button>
             )}
             <Button asChild variant="outline">
@@ -404,7 +386,7 @@ export default async function PublicListingPage({
         </section>
       ) : null}
 
-      {actor && !isSeller && canBuy(actor) && subscribed ? (
+      {actor && !isSeller && canBuy(actor) ? (
         <section id="depot" className="rounded-3xl border border-indigo-line bg-surface p-7">
           <h2 className="text-2xl font-semibold text-ink">Se positionner</h2>
           {myDeposit ? (
@@ -434,78 +416,11 @@ export default async function PublicListingPage({
         </section>
       ) : null}
 
-      {canOffer ? (
-        <section id="offre" className="rounded-3xl border border-indigo-line bg-indigo-soft p-7">
-          <h2 className="text-2xl font-semibold text-ink">Déposer une offre</h2>
-          <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-muted">
-            {sealed
-              ? "Séance en cours : la meilleure offre et le nombre d’offres sont affichés, jamais l’identité des acquéreurs. Le cédant retient une offre à la clôture."
-              : "La séance est close : votre offre est transmise tout de suite au cédant, qui peut la retenir sans attendre."}
-            {sealed && daysLeft !== null && daysLeft >= 0
-              ? ` Il reste ${daysLeft} jour${daysLeft > 1 ? "s" : ""}.`
-              : ""}
-          </p>
-          <div className="mt-6">
-            {ownOffer ? (
-              <p className="text-[15px] text-ink">
-                Votre offre de{" "}
-                <span className="tabular font-medium">
-                  {formatEuroWhole(Number(ownOffer.amount))}
-                </span>{" "}
-                est enregistrée. Posez vos questions au cédant dans l’échange ci-dessous.
-                Vous pouvez la retirer tant qu’elle n’a pas été retenue.
-              </p>
-            ) : !myDeposit ? (
-              /*
-               * Pas encore de dépôt : l'offre le pose en même temps, avec
-               * l'engagement de confidentialité. Un formulaire, un geste.
-               */
-              <SubmitOfferForm
-                listingId={listing.id}
-                asking={String(askingPrice)}
-                lots={lots}
-                availableCarriers={available}
-                needsDeposit
-                readiness={readiness!}
-                depositLabel={formatEuroWhole(deposit)}
-                depositTermsLines={depositTerms(formatEuroWhole(deposit), deposit)}
-              />
-            ) : (
-              <SubmitOfferForm
-                listingId={listing.id}
-                asking={String(askingPrice)}
-                lots={lots}
-                availableCarriers={available}
-                readiness={readiness!}
-              />
-            )}
-          </div>
-        </section>
-      ) : listing.status === "OFFERS_OPEN" && sealed ? (
-        <section className="rounded-3xl border border-line bg-paper p-7">
-          <h2 className="text-xl font-semibold text-ink">Séance d’offres en cours</h2>
-          <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-muted">
-            La meilleure offre et le nombre d’offres sont affichés en direct ; le
-            cédant retient une offre à la clôture.
-          </p>
-          {!actor ? (
-            <Button asChild variant="primary" className="mt-5">
-              <Link href="/connexion">Se connecter pour déposer une offre</Link>
-            </Button>
-          ) : !subscribed && canBuy(actor) && !isSeller ? (
-            <Button asChild variant="primary" className="mt-5">
-              <Link href={`/tarifs?next=${encodeURIComponent(`/annonces/${listing.publicNumber}`)}#abonnements`}>S’abonner pour le détail de l’offre</Link>
-            </Button>
-          ) : null}
-        </section>
-      ) : null}
-
       {mailboxOk && actor ? (
         <section id="echanges" className="mt-8">
           <h2 className="text-xl font-semibold text-ink">Échanges avec le cédant</h2>
           <p className="mt-1.5 text-[15px] text-muted">
-            Chat ouvert dès le dépôt d’offre. Un acquéreur ne voit jamais les messages
-            d’un autre. Les numéros de portable sont bloqués.
+            Vos questions ne sont visibles que du cédant. Les numéros de portable sont bloqués.
           </p>
           <div className="mt-4">
             <OfferChat
