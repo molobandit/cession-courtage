@@ -255,7 +255,7 @@ export default async function DealPage({ params }: { params: Promise<{ id: strin
         progress={{ percent: pipelineProgressPercent(etape), tone: deal.stage === "CLOSED" ? "closed" : "active" }}
         figures={[
           { label: "Montant convenu", value: formatEuro(agreed) },
-          { label: "Sur le compte sécurisé", value: formatEuro(auSequestre), note: depot > 0 ? `Dépôt de garantie de ${formatEuro(depot)} déduit` : "Montant convenu entier" },
+          { label: "Dans le trust", value: formatEuro(auSequestre), note: depot > 0 ? `Dépôt de positionnement de ${formatEuro(depot)} déduit` : "Montant convenu entier" },
           { label: "Versement au cédant", value: "Accord des compagnies", note: "Après la signature" },
           { label: "Transaction", value: ESCROW_STAGE_LABELS[deal.escrowStage as keyof typeof ESCROW_STAGE_LABELS] ?? deal.escrowStage },
         ]}

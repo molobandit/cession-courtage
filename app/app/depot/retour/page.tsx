@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { confirmDepositReturn } from "@/lib/billing/deposit-checkout";
 import { getActor, isOriasVerified } from "@/lib/authz";
 
-export const metadata = { title: "Dépôt de garantie" };
+export const metadata = { title: "Dépôt de positionnement" };
 
 /**
  * Retour du paiement du dépôt.

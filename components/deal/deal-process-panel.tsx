@@ -356,7 +356,7 @@ export function DealProcessPanel({ p, side, escrowLive }: { p: DealProcess; side
 
 const ARCHIVES: Record<string, string> = {
   "generated:confidentialite": "accord de confidentialité signé",
-  "generated:lettre-intention": "lettre d’intention (offre acceptée)",
+  "generated:lettre-intention": "engagement de reprise",
   "generated:protocole": "protocole de cession signé",
 };
 

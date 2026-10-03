@@ -113,36 +113,6 @@ export function CompactMandateCard({
   );
 }
 
-export function GlanceTiles({
-  items,
-}: {
-  items: { href: string; label: string; value: string }[];
-}) {
-  return (
-    <section aria-label="Vos dossiers en un coup d’œil">
-      <h2 className="text-xl font-bold tracking-tight text-ink">Vos dossiers en un coup d’œil</h2>
-      <ul
-        className={cn(
-          "mt-4 grid grid-cols-2 gap-3",
-          items.length > 4 ? "sm:grid-cols-3 lg:grid-cols-5" : "lg:grid-cols-4",
-        )}
-      >
-        {items.map((item) => (
-          <li key={item.label}>
-            <Link
-              href={item.href}
-              className="lift flex min-h-[6.25rem] flex-col justify-center rounded-[1.25rem] border border-line bg-paper px-4 py-4 hover:border-indigo"
-            >
-              <p className="tabular text-2xl font-bold tracking-tight text-ink">{item.value}</p>
-              <p className="mt-1 text-[13px] leading-snug text-muted">{item.label}</p>
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </section>
-  );
-}
-
 export function Panel({
   title,
   href,

@@ -13,7 +13,6 @@ import { presentPartners } from "@/lib/partners/status";
 import { PartnerStrip } from "@/components/partners/partner-grid";
 import {
   ACCESS_MARKET_POINTS,
-  ACCESS_PRICE_LINE,
   COMPANY_SOCIETY_CHECKS,
   CTA_BROWSE,
   CTA_SELL,
@@ -123,7 +122,7 @@ export default async function TarifsPage() {
             {TAKE_POSITION}
           </h1>
           <p className="mx-auto mt-4 max-w-2xl text-[16px] leading-relaxed text-muted">
-            Accès à toutes les opportunités de portefeuille. {ACCESS_PRICE_LINE}.
+            Accès libre à tous les portefeuilles. Les honoraires ne sont dus que si la vente aboutit.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             <a

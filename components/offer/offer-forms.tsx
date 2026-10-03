@@ -78,14 +78,14 @@ export function SubmitOfferForm({
           <label className="flex items-start gap-3 text-[14px] leading-relaxed text-ink">
             <input type="checkbox" name="engagement" checked={engagement} onChange={(e) => setEngagement(e.target.checked)} className="mt-1 h-4 w-4 shrink-0 accent-[#2563eb]" />
             <span>
-              Je verse le dépôt de garantie de {depositLabel}. Il vient en déduction de la transaction si la cession aboutit, et reste acquis
+              Je verse le dépôt de positionnement de {depositLabel}. Il vient en déduction de la transaction si la cession aboutit, et reste acquis
               au cédant si je me retire.
               {depositTermsLines.length ? <span className="mt-1 block text-[12px] text-muted">{depositTermsLines.join(" ")}</span> : null}
             </span>
           </label>
         </div>
       ) : null}
-      <p className="text-[13px] text-muted">Retenue par le cédant, votre offre vaut lettre d’intention : le dossier de cession s’ouvre aussitôt.</p>
+      <p className="text-[13px] text-muted">Retenue par le cédant, votre proposition ouvre le dossier de cession.</p>
       {state.error ? <p className="text-sm text-danger">{state.error}</p> : null}
       <Button type="submit" disabled={pending || !engagement || !pret}>
         {pending ? "Envoi…" : needsDeposit ? `Verser le dépôt et déposer mon offre` : "Déposer mon offre"}
@@ -102,7 +102,7 @@ export function WithdrawOfferButton({ offerId }: { offerId: string }) {
       onSubmit={(event) => {
         if (
           !window.confirm(
-            "Retirer votre offre est définitif : le dépôt de garantie déjà versé reste acquis au cédant. Retirer quand même ?",
+            "Retirer votre proposition est définitif. Retirer quand même ?",
           )
         ) {
           event.preventDefault();
@@ -126,7 +126,7 @@ export function AcceptOfferButton({ offerId }: { offerId: string }) {
       onSubmit={(event) => {
         if (
           !window.confirm(
-            "Retenir cette offre ouvre le dossier de cession : elle vaut lettre d’intention, les offres concurrentes sur le même lot sont écartées. Continuer ?",
+            "Retenir cette proposition ouvre le dossier de cession. Continuer ?",
           )
         ) {
           event.preventDefault();

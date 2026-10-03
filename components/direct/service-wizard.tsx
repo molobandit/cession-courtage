@@ -135,7 +135,7 @@ export function ServiceWizard({ service, title }: { service: ServiceKey; title: 
               <div className="grid gap-4">
                 <label className="flex items-center gap-3 text-[16px] text-ink">
                   <input type="checkbox" checked disabled className="h-4 w-4 accent-indigo" />
-                  Service Kit Contractuel
+                  Contrats de cession
                   <Aide texte={`Accord de confidentialité, protocole de cession, attestations de transfert, vérification des parties et signature électronique. ${KIT_LABEL}.`} />
                 </label>
                 <label className="flex cursor-pointer items-center gap-3 text-[16px] text-ink">

@@ -27,11 +27,6 @@ const ARTICLES = [
     body: "Du point de vue de l’acquéreur, la présentation du cédant à ses clients est ce qui décide de leur fidélité dans les premiers mois. Proposer un accompagnement après la cession est l’un des moyens les plus simples de renforcer un dossier.",
   },
   {
-    title: "Pourquoi la meilleure offre est affichée en séance",
-    lede: `Un acquéreur qui ne sait pas où en est la cote propose au hasard ; un cédant qui ne voit rien décide à l’aveugle.`,
-    body: `Pendant la séance, la fiche affiche la meilleure offre et le nombre d’offres déposées, comme la cote d’un titre, sans jamais révéler qui a offert. Chaque acquéreur se positionne en connaissance de cause, et un portefeuille recherché trouve son montant. Le cédant suit la séance et retient une offre à la clôture ; la plateforme n’adjuge pas, il reste libre de préférer une offre mieux financée à la plus élevée.`,
-  },
-  {
     title: RETENTION_TRUST_TITLE,
     lede: "Le trust conserve une part du montant, versée à l’acquéreur seulement en cas de déperdition réelle.",
     body: RETENTION_TRUST_BODY,

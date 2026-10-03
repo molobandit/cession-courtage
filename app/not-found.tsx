@@ -13,7 +13,7 @@ export default function NotFound() {
       <p className="mt-4 text-[15px] leading-relaxed text-muted">
         Un dossier non publié reste invisible pour tout le monde sauf son cédant.
         Si vous avez suivi un lien vers une annonce, il est possible qu’elle ait
-        été retirée ou que sa fenêtre d’offres soit close.
+        été retirée, ou que le portefeuille soit déjà vendu.
       </p>
       <div className="mt-8 flex flex-wrap gap-3">
         <Button asChild variant="primary">

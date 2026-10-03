@@ -255,11 +255,11 @@ export default async function PublicListingPage({
         quality: qualityFromPortfolio(listing.portfolio),
         interestHref,
         positionHref: isSeller
-          ? `/app/annonces/${listing.id}/offres`
+          ? `/app/annonces/${listing.id}`
           : monDossier
             ? `/app/positions/${monDossier}`
             : null,
-        positionLabel: isSeller ? "Voir les acquéreurs positionnés" : undefined,
+        positionLabel: isSeller ? "Gérer mon annonce" : undefined,
         positionListingId: peutPrendrePosition ? listing.id : null,
         followHref,
         manageHref: isSeller ? `/app/annonces/${listing.id}` : null,
