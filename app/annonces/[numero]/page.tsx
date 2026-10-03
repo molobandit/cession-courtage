@@ -410,7 +410,14 @@ export default async function PublicListingPage({
                 , est versé dans un trust pour lancer la procédure de cession.{" "}
                 {CESSION_FUNDS_DISCLAIMER}
               </p>
-              <DepositForm listingId={listing.id} amountLabel={formatEuroWhole(deposit)} amountEur={deposit} readiness={readiness!} />
+              <DepositForm
+                listingId={listing.id}
+                publicNumber={listing.publicNumber}
+                amountLabel={formatEuroWhole(deposit)}
+                amountEur={deposit}
+                listingAmountLabel={formatEuroWhole(askingPrice)}
+                readiness={readiness!}
+              />
             </>
           )}
         </section>

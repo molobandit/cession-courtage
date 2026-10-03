@@ -249,6 +249,41 @@ export const RETENTION_TRUST_ITEMS = [
 export const RETENTION_TRUST_BODY =
   "Le trust séquestre 20 % du montant du portefeuille. Cette part est versée au prorata à l’acquéreur uniquement si la déperdition dépasse 10 %.";
 
+/**
+ * Les cinq engagements de confidentialité, repris de la page 1 du dossier de
+ * présentation. Mêmes mots à l'écran et dans le PDF.
+ */
+export const CONFIDENTIALITY_POINTS = [
+  {
+    title: "Aucune communication",
+    body:
+      "Aucune communication, publique ou privée, portant sur ce portefeuille, sur votre intérêt pour son rachat ou sur le contenu de ce dossier ne peut être faite sans l’accord écrit préalable du cédant et de La bourse du portefeuille.",
+  },
+  {
+    title: "Non contact",
+    body:
+      "Vous acceptez de ne pas entrer en contact avec les compagnies partenaires, les collaborateurs ni les clients du cédant. Cet engagement s’étend à l’ensemble de vos collaborateurs et conseils.",
+  },
+  {
+    title: "Confidentialité des informations",
+    body:
+      "Les informations de ce dossier, celles permettant d’identifier le cédant, ses opérations et son profil financier, ainsi que vos propres analyses, sont strictement confidentielles.",
+  },
+  {
+    title: "Usage limité et restitution",
+    body:
+      "Ces éléments vous sont remis dans le seul but d’apprécier l’opportunité et de préparer votre positionnement. Les documents sont détruits ou restitués sur simple demande.",
+  },
+  {
+    title: "Absence de garantie",
+    body:
+      "La bourse du portefeuille ne pourra être tenue pour responsable de l’inexactitude éventuelle d’informations transmises tout au long du processus.",
+  },
+] as const;
 
-
-
+/** Ce que déclenche le versement du dépôt de positionnement. */
+export const DEPOSIT_CONSEQUENCES = [
+  "Le dépôt est versé dans un trust.",
+  "La procédure de cession démarre.",
+  "Le nom du cabinet cédant vous est révélé et ses pièces s’ouvrent.",
+] as const;
