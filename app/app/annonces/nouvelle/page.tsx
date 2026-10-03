@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { MemberPageHeader } from "@/components/app/member-page-header";
+import { STUDY_SENTENCE } from "@/lib/copy/market";
 import { CreateListingForm } from "@/components/listing/listing-forms";
 import { canSell, findMyPortfolio, getActor, isOriasVerified, listMyPortfolios } from "@/lib/authz";
 import { formatEuro } from "@/lib/format/fr";
@@ -31,8 +32,8 @@ export default async function NewListingPage({
   if (!selected) {
     return (
       <main className="mx-auto max-w-3xl px-4 py-6 sm:px-6 sm:py-8">
-        <MemberPageHeader title="Proposer un portefeuille à la vente">
-          Commencez par importer votre bordereau. Notre équipe réalise ensuite l’étude du portefeuille, puis met l’annonce en ligne sous alias.
+        <MemberPageHeader title="Confier votre portefeuille à l’étude">
+          Commencez par importer votre bordereau. {STUDY_SENTENCE}
         </MemberPageHeader>
         <Link
           href="/app/import"
@@ -55,10 +56,8 @@ export default async function NewListingPage({
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-6 sm:px-6 sm:py-8">
-      <MemberPageHeader title="Proposer un portefeuille à la vente">
-        {selected.label} · commissions {formatEuro(selected.annualCommissions)} / an. Le profil de votre cabinet
-        pré-remplit l’organisation et la conformité : vérifiez, complétez, enregistrez. Notre équipe réalise
-        ensuite l’étude du portefeuille et détermine le montant de mise en ligne.
+      <MemberPageHeader title="Confier votre portefeuille à l’étude">
+        {STUDY_SENTENCE} {selected.label} · commissions {formatEuro(selected.annualCommissions)} / an.
       </MemberPageHeader>
       {portfolios.length > 1 ? (
         <p className="mt-2 text-sm">

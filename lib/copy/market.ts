@@ -1,4 +1,9 @@
-import { GROWTH_PLAN_ANNUAL_EUR, INTEREST_DEPOSIT_LABEL } from "@/lib/billing/rates";
+import {
+  GROWTH_PLAN_ANNUAL_EUR,
+  INTEREST_DEPOSIT_LABEL,
+  SUCCESS_FEE_FLOOR_EUR,
+  VERIFIED_FEE_RANGE_LABEL,
+} from "@/lib/billing/rates";
 
 /** Marque affichée. */
 export { BRAND_NAME } from "@/lib/site";
@@ -287,3 +292,6 @@ export const DEPOSIT_CONSEQUENCES = [
   "La procédure de cession démarre.",
   "Le nom du cabinet cédant vous est révélé et ses pièces s’ouvrent.",
 ] as const;
+
+/** Ce que coûte la cession, dit comme dans le dossier de présentation. */
+export const CERTIFIED_FEE_LINE = `Portefeuille certifié : ${VERIFIED_FEE_RANGE_LABEL}, minimum ${SUCCESS_FEE_FLOOR_EUR.toLocaleString("fr-FR")} € HT. Honoraires dus uniquement si la vente aboutit.`;

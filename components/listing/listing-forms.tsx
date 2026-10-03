@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import {
   createListingAction,
   openOfferWindowAction,
@@ -12,7 +12,69 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PRICE_RULE } from "@/lib/copy/market";
+import { CERTIFIED_FEE_LINE, PRICE_RULE } from "@/lib/copy/market";
+
+/**
+ * Enregistrement automatique du brouillon, dans le navigateur.
+ *
+ * Un formulaire de cette longueur ne se remplit pas d'une traite. Les
+ * réponses sont conservées sur le poste du cédant et remises en place au
+ * retour ; l'heure du dernier enregistrement est affichée pour qu'il sache
+ * qu'il peut partir sans rien perdre.
+ */
+function useBrouillonLocal(formulaire: React.RefObject<HTMLFormElement | null>, cle: string) {
+  const [enregistreA, setEnregistreA] = useState<string | null>(null);
+
+  useEffect(() => {
+    const element = formulaire.current;
+    if (!element) return;
+    const stockage = `brouillon-annonce:${cle}`;
+
+    try {
+      const garde = window.localStorage.getItem(stockage);
+      if (garde) {
+        const valeurs = JSON.parse(garde) as Record<string, string>;
+        for (const [nom, valeur] of Object.entries(valeurs)) {
+          const champ = element.elements.namedItem(nom);
+          if (champ instanceof HTMLInputElement && champ.type !== "checkbox") champ.value = valeur;
+          if (champ instanceof HTMLTextAreaElement || champ instanceof HTMLSelectElement) champ.value = valeur;
+        }
+      }
+    } catch {
+      // Un stockage indisponible ne doit jamais empêcher de remplir le formulaire.
+    }
+
+    let minuteur: ReturnType<typeof setTimeout> | null = null;
+    const enregistrer = () => {
+      if (minuteur) clearTimeout(minuteur);
+      minuteur = setTimeout(() => {
+        try {
+          const data = new FormData(element);
+          const valeurs: Record<string, string> = {};
+          for (const [nom, valeur] of data.entries()) {
+            if (typeof valeur === "string" && valeur !== "") valeurs[nom] = valeur;
+          }
+          window.localStorage.setItem(stockage, JSON.stringify(valeurs));
+          setEnregistreA(
+            new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }).replace(":", " h "),
+          );
+        } catch {
+          // Idem : l'absence de stockage reste silencieuse.
+        }
+      }, 800);
+    };
+
+    element.addEventListener("input", enregistrer);
+    element.addEventListener("change", enregistrer);
+    return () => {
+      element.removeEventListener("input", enregistrer);
+      element.removeEventListener("change", enregistrer);
+      if (minuteur) clearTimeout(minuteur);
+    };
+  }, [formulaire, cle]);
+
+  return enregistreA;
+}
 
 const initial: ListingFormState = {};
 const selectClass =
@@ -21,6 +83,51 @@ const areaClass =
   "mt-1.5 w-full rounded-xl border border-line bg-surface-alt px-4 py-3 text-[15px] text-ink outline-none focus:border-indigo focus:ring-1 focus:ring-indigo";
 const fieldsetClass = "grid gap-4 rounded-[1.75rem] border border-line bg-paper p-5 shadow-sm sm:p-7";
 const legendClass = "text-[13px] font-medium uppercase tracking-[0.14em] text-indigo-dark";
+
+/** Les quatre étapes du dépôt, dans l'ordre où on les remplit. */
+const ETAPES = [
+  { num: "1", titre: "Le cabinet", detail: "Kbis, statuts, ORIAS, pièce d’identité" },
+  { num: "2", titre: "Le portefeuille", detail: "export des contrats, bordereaux, relevés" },
+  { num: "3", titre: "Le contexte", detail: "motif, accompagnement prévu" },
+  { num: "4", titre: "Envoi à l’étude", detail: "récapitulatif" },
+] as const;
+
+function FilAEtapes({ courante }: { courante: string }) {
+  return (
+    <ol className="grid gap-2 sm:grid-cols-4">
+      {ETAPES.map((etape) => (
+        <li
+          key={etape.num}
+          className={`rounded-2xl border p-3 ${
+            etape.num === courante ? "border-indigo bg-indigo-soft" : "border-line bg-paper"
+          }`}
+        >
+          <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-indigo-dark">
+            {etape.num} · {etape.titre}
+          </p>
+          <p className="mt-1 text-[12.5px] leading-snug text-muted">{etape.detail}</p>
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+/** Pièces attendues à une étape, avec le bouton qui les envoie. */
+function PiecesAttendues({ titre, pieces, href }: { titre: string; pieces: readonly string[]; href: string }) {
+  return (
+    <div className="rounded-xl border border-line bg-surface-alt px-4 py-3">
+      <p className="text-[13px] font-semibold text-ink">{titre}</p>
+      <ul className="mt-2 grid gap-1 text-[13px] text-muted">
+        {pieces.map((piece) => (
+          <li key={piece}>○ {piece}</li>
+        ))}
+      </ul>
+      <a href={href} className="mt-2 inline-block text-[13px] font-medium text-indigo-dark hover:underline">
+        Envoyer ces pièces après l’enregistrement
+      </a>
+    </div>
+  );
+}
 
 /** Valeurs de départ du formulaire : l'annonce à corriger, ou le profil du cabinet. */
 export type ListingFormDefaults = Partial<Record<(typeof TEXT_FIELDS)[number], string>>;
@@ -54,13 +161,21 @@ export function CreateListingForm({
   };
 }) {
   const [state, action, pending] = useActionState(listingId ? updateListingAction : createListingAction, initial);
+  const formulaire = useRef<HTMLFormElement>(null);
+  const enregistreA = useBrouillonLocal(formulaire, listingId ?? portfolioId);
   const d = defaults;
   return (
-    <form action={action} className="grid max-w-2xl gap-6">
+    <form ref={formulaire} action={action} className="grid max-w-2xl gap-6">
+      <FilAEtapes courante="1" />
       <input type="hidden" name="portfolioId" value={portfolioId} />
       {listingId ? <input type="hidden" name="listingId" value={listingId} /> : null}
       <fieldset className={fieldsetClass}>
-        <legend className={legendClass}>Informations générales</legend>
+        <legend className={legendClass}>2 · Le portefeuille</legend>
+        <PiecesAttendues
+          titre="Pièces du portefeuille"
+          pieces={["Export des contrats", "Bordereaux de commissions", "Relevés des compagnies", "États de production"]}
+          href="#pieces"
+        />
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="grid gap-1">
             <Label htmlFor="portfolioKind">Type de portefeuille</Label>
@@ -76,39 +191,10 @@ export function CreateListingForm({
             <Input id="branchActivity" name="branchActivity" defaultValue={d.branchActivity} placeholder="Santé, auto, IARD…" />
           </div>
         </div>
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div className="grid gap-1">
-            <Label htmlFor="desiredCessionDate">Date de cession souhaitée</Label>
-            <Input id="desiredCessionDate" name="desiredCessionDate" defaultValue={d.desiredCessionDate} placeholder="2026, T2 2027…" />
-          </div>
-          <div className="grid gap-1">
-            <Label htmlFor="cessionMotive">Motif de la cession</Label>
-            <select id="cessionMotive" name="cessionMotive" className={selectClass} defaultValue={d.cessionMotive ?? ""}>
-              <option value="">Non précisé</option>
-              <option value="retraite">Départ à la retraite</option>
-              <option value="recentrage">Recentrage d’activité</option>
-              <option value="cession_partielle">Cession partielle</option>
-              <option value="transmission">Transmission</option>
-              <option value="autre">Autre</option>
-            </select>
-          </div>
-        </div>
-        <p className="rounded-xl bg-indigo-soft px-4 py-3 text-[14px] leading-relaxed text-ink">
-          {PRICE_RULE}
-        </p>
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div className="grid gap-1">
-            <Label htmlFor="negotiable">Montant négociable</Label>
-            <select id="negotiable" name="negotiable" className={selectClass} defaultValue={d.negotiable ?? "yes"}>
-              <option value="yes">Oui</option>
-              <option value="no">Non</option>
-            </select>
-          </div>
-        </div>
         <input type="hidden" name="sellerSupportMonths" value={d.sellerSupportMonths ?? "0"} />
       </fieldset>
       <fieldset className={fieldsetClass}>
-        <legend className={legendClass}>Données financières</legend>
+        <legend className={legendClass}>2 · Le portefeuille, chiffres</legend>
         <p className="text-[13px] leading-relaxed text-muted">
           Trois exercices de commissions (montants, pas un pourcentage), la part
           du récurrent, et la prime annuelle gérée, distincte des commissions.
@@ -180,7 +266,12 @@ export function CreateListingForm({
         </div>
       </fieldset>
       <fieldset className={fieldsetClass}>
-        <legend className={legendClass}>Cadre juridique de la cession</legend>
+        <legend className={legendClass}>1 · Le cabinet</legend>
+        <PiecesAttendues
+          titre="Pièces du cabinet"
+          pieces={["Extrait Kbis", "Statuts", "Justificatif ORIAS", "Pièce d’identité du représentant"]}
+          href="#pieces"
+        />
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="grid gap-1">
             <Label htmlFor="transferVehicle">Objet de la cession</Label>
@@ -224,7 +315,24 @@ export function CreateListingForm({
         </div>
       </fieldset>
       <fieldset className={fieldsetClass}>
-        <legend className={legendClass}>Organisation du cabinet</legend>
+        <legend className={legendClass}>3 · Le contexte</legend>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-1">
+            <Label htmlFor="desiredCessionDate">Date de cession souhaitée</Label>
+            <Input id="desiredCessionDate" name="desiredCessionDate" defaultValue={d.desiredCessionDate} placeholder="2026, T2 2027…" />
+          </div>
+          <div className="grid gap-1">
+            <Label htmlFor="cessionMotive">Motif de la cession</Label>
+            <select id="cessionMotive" name="cessionMotive" className={selectClass} defaultValue={d.cessionMotive ?? ""}>
+              <option value="">Non précisé</option>
+              <option value="retraite">Départ à la retraite</option>
+              <option value="recentrage">Recentrage d’activité</option>
+              <option value="transmission">Transmission</option>
+              <option value="autre">Autre</option>
+            </select>
+          </div>
+        </div>
+
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="grid gap-1">
             <Label htmlFor="employeeCount">Effectif</Label>
@@ -263,7 +371,7 @@ export function CreateListingForm({
         </div>
       </fieldset>
       <fieldset className={fieldsetClass}>
-        <legend className={legendClass}>Conformité intermédiaire</legend>
+        <legend className={legendClass}>3 · Le contexte, conformité</legend>
         <p className="text-[14px] leading-relaxed text-muted">
           Ces éléments aident l’acquéreur à vérifier l’éligibilité de la reprise
           (DDA, LCB-FT, ORIAS). Aucun nom de client final.
@@ -311,7 +419,7 @@ export function CreateListingForm({
         </div>
       </fieldset>
       <fieldset className={fieldsetClass}>
-        <legend className={legendClass}>Présentation</legend>
+        <legend className={legendClass}>3 · Le contexte, présentation</legend>
         <div className="grid gap-1">
           <Label htmlFor="presentation">Présentez votre portefeuille</Label>
           <textarea
@@ -324,27 +432,42 @@ export function CreateListingForm({
           />
         </div>
       </fieldset>
-      <label className="flex items-start gap-2 text-sm text-ink">
-        <input
-          type="checkbox"
-          name="certificationRequested"
-          defaultChecked={defaultCertify}
-          className="mt-1"
-        />
-        <span>
-          Faire certifier mon portefeuille (vérification de la société et des
-          pièces). Sinon l’annonce reste simple, avec transaction sécurisée. Les honoraires
-          sont précisés dans le contrat d’intermédiation.
-        </span>
-      </label>
-      {state.error ? <p className="text-sm text-danger">{state.error}</p> : null}
-      <Button type="submit" disabled={pending}>
-        {pending ? "Enregistrement…" : listingId ? "Enregistrer les modifications" : "Enregistrer le brouillon"}
-      </Button>
-      <p className="text-[13px] leading-relaxed text-muted">
-        Après enregistrement, déposez les PDF du cabinet (Kbis, ORIAS, RC pro, présentation)
-        sur la fiche de l’annonce. L’acquéreur les voit après le dépôt de 2,5 % dans un trust, qui lance la procédure de cession.
-      </p>
+      <fieldset className={fieldsetClass}>
+        <legend className={legendClass}>4 · Envoi à l’étude</legend>
+        <label className="flex items-start gap-2 text-[14px] text-ink">
+          <input
+            type="checkbox"
+            name="certificationRequested"
+            defaultChecked={defaultCertify}
+            className="mt-1"
+          />
+          <span>
+            Faire certifier mon portefeuille : la société et les pièces sont vérifiées avant la mise en
+            ligne, et l’annonce porte le badge CERTIFIÉ.
+          </span>
+        </label>
+        <div className="rounded-xl border border-line bg-surface-alt px-4 py-3">
+          <p className="text-[14px] font-semibold text-ink">Ce que coûte la cession</p>
+          <p className="mt-1 text-[14px] leading-relaxed text-ink">{CERTIFIED_FEE_LINE}</p>
+        </div>
+        <div className="rounded-xl bg-indigo-soft px-4 py-3">
+          <p className="text-[14px] font-semibold text-ink">Et ensuite</p>
+          <p className="mt-1 text-[14px] leading-relaxed text-ink">{PRICE_RULE}</p>
+        </div>
+        {state.error ? <p className="text-sm text-danger">{state.error}</p> : null}
+        <div className="flex flex-wrap items-center gap-3">
+          <Button type="submit" disabled={pending}>
+            {pending ? "Envoi…" : listingId ? "Enregistrer les modifications" : "Continuer"}
+          </Button>
+          {enregistreA ? (
+            <span className="text-[13px] text-muted">Enregistré automatiquement à {enregistreA}</span>
+          ) : null}
+        </div>
+        <p id="pieces" className="text-[13px] leading-relaxed text-muted">
+          Après enregistrement, déposez les pièces du cabinet et du portefeuille sur la fiche du dossier.
+          L’acquéreur ne les voit qu’après avoir versé son dépôt de positionnement de 2,5 % dans un trust.
+        </p>
+      </fieldset>
     </form>
   );
 }
