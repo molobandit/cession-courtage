@@ -2,43 +2,53 @@ import "server-only";
 import type { DealStage, ListingStatus } from "@prisma/client";
 import { canBuy, canSell, listMyListings, listMyPortfolios } from "@/lib/authz";
 import type { Actor } from "@/lib/authz/actor";
-import { SALE_PIPELINE, type PipelineStep } from "@/lib/deal/pipeline";
+import { SALE_PIPELINE } from "@/lib/deal/pipeline";
 import { nextAction, type DashboardState, type NextAction } from "@/lib/dashboard/next-action";
 import { secondFacteurActif } from "@/lib/auth/second-facteur";
+import { interestDepositFor } from "@/lib/billing/rates";
 import { loadPublicListingCards } from "@/lib/listing/load-public-cards";
-import { listMyPositions } from "@/lib/position/load";
+import { listListingPositions, listMyPositions } from "@/lib/position/load";
 import { prisma } from "@/lib/prisma";
 
 /**
  * Tout ce que l'accueil de l'espace membre affiche, chargé en une fois.
  *
- * L'écran répond à deux questions, dans cet ordre : que dois-je faire
- * maintenant, et où en sont mes dossiers. Les ventes et les achats se lisent
- * sur les quatre mêmes étapes que le dossier de présentation, pour qu'un
- * dossier n'ait jamais deux lectures selon l'écran.
+ * L'écran répond à deux questions, dans cet ordre : où en sont mes affaires,
+ * et que dois-je faire maintenant. Les ventes et les achats se lisent sur les
+ * quatre mêmes étapes que le dossier de présentation, pour qu'un dossier n'ait
+ * jamais deux lectures selon l'écran.
  */
 
 /** Qui doit agir à cette étape. Dit en clair, jamais deviné par le lecteur. */
 export type Acteur = "À vous" | "À notre équipe" | "Aux acquéreurs" | "Au cédant";
 
-export type VenteParEtape = {
-  step: PipelineStep;
-  count: number;
-  /** Précision courte, par exemple « 2 en ligne ». */
-  detail: string | null;
-  acteur: Acteur | null;
-};
-
-export type LigneAchat = {
-  positionId: string;
-  numero: number;
+/** Une ligne de dossier, dans les blocs « Mes ventes » et « Mes achats ». */
+export type DossierLigne = {
+  key: string;
+  href: string;
+  /** Numéro de dossier, ou le nom du portefeuille tant qu'il n'en a pas. */
+  titre: string;
+  /** Branche et zone, dans cet ordre. */
   libelle: string;
-  /** Index de l'étape courante, de 0 à 3. */
+  /** Index de l'étape courante, de 0 à 3. Négatif si le dossier est clos. */
   index: number;
   etape: string;
+  detail: string | null;
   acteur: Acteur | null;
-  montant: number;
+  clos: boolean;
 };
+
+/** Un acquéreur positionné sur l'une de mes annonces. */
+export type PositionRecue = {
+  key: string;
+  href: string;
+  numero: number;
+  alias: string;
+  detail: string;
+  acteur: Acteur;
+};
+
+export type Tuile = { valeur: number; libelle: string; detail: string | null };
 
 export type HomeData = {
   prenom: string | null;
@@ -46,11 +56,18 @@ export type HomeData = {
   deuxFacteurs: boolean;
   vendeur: boolean;
   acheteur: boolean;
+  abonnement: { actif: boolean; jusquau: Date | null };
   action: NextAction;
-  ventes: VenteParEtape[];
-  ventesTotal: number;
-  achats: LigneAchat[];
-  marche: { total: number; certifies: number };
+  tuiles: Tuile[];
+  ventes: DossierLigne[];
+  achats: DossierLigne[];
+  recues: PositionRecue[];
+  marche: {
+    total: number;
+    certifies: number;
+    nouveaux: number;
+    dernier: { numero: number; commissions: number; montant: number } | null;
+  };
 };
 
 const EN_LIGNE: ListingStatus[] = ["PUBLISHED", "OFFERS_OPEN", "OFFERS_CLOSED"];
@@ -71,90 +88,234 @@ function acteurAcheteur(stage: DealStage | null, hasDeposit: boolean): Acteur | 
   return "Au cédant";
 }
 
+/** « Retraite, Paris » : la branche puis la zone, sans répéter l'une dans l'autre. */
+function brancheEtZone(label: string, zone: string | null): string {
+  const z = (zone ?? "").trim();
+  if (!z || label.toLocaleLowerCase("fr-FR").includes(z.toLocaleLowerCase("fr-FR"))) return label;
+  return `${label}, ${z}`;
+}
+
 export async function loadHome(actor: Actor): Promise<HomeData> {
   const vendeur = canSell(actor);
   const acheteur = canBuy(actor);
+  const depuisUneSemaine = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
-  const [annonces, dossiers, positions, portefeuilles, cartes, deuxFacteurs] = await Promise.all([
-    vendeur ? listMyListings(actor) : Promise.resolve([]),
-    prisma.deal.findMany({
-      where: { OR: [{ sellerId: actor.id }, { buyerId: actor.id }] },
-      orderBy: { createdAt: "desc" },
-      select: { id: true, stage: true, listingId: true, sellerId: true },
-    }),
-    acheteur ? listMyPositions(actor.id) : Promise.resolve([]),
-    vendeur ? listMyPortfolios(actor) : Promise.resolve([]),
-    loadPublicListingCards(),
-    secondFacteurActif(actor.id),
-  ]);
+  const [annonces, dossiers, positions, portefeuilles, cartes, deuxFacteurs, abonnement, messages, nouveaux] =
+    await Promise.all([
+      vendeur ? listMyListings(actor) : Promise.resolve([]),
+      prisma.deal.findMany({
+        where: { OR: [{ sellerId: actor.id }, { buyerId: actor.id }] },
+        orderBy: { createdAt: "desc" },
+        select: { id: true, stage: true, listingId: true, sellerId: true },
+      }),
+      acheteur ? listMyPositions(actor.id) : Promise.resolve([]),
+      vendeur ? listMyPortfolios(actor) : Promise.resolve([]),
+      loadPublicListingCards(),
+      secondFacteurActif(actor.id),
+      prisma.subscription.findFirst({
+        where: { userId: actor.id, status: "ACTIVE", plan: "GROWTH" },
+        select: { renewsAt: true },
+      }),
+      prisma.notification.findMany({
+        where: { userId: actor.id, readAt: null, type: "MESSAGE" },
+        select: { href: true },
+      }),
+      prisma.listing.count({
+        where: { status: { in: EN_LIGNE }, publishedAt: { gte: depuisUneSemaine } },
+      }),
+    ]);
 
   const dossiersParAnnonce = new Map(dossiers.map((d) => [d.listingId, d] as const));
-  const positionsParAnnonce = vendeur
-    ? await prisma.buyerPosition.groupBy({
-        by: ["listingId"],
-        where: { listingId: { in: annonces.map((a) => a.id) } },
-        _count: { _all: true },
-      })
-    : [];
-  const positionsConnues = new Map(positionsParAnnonce.map((p) => [p.listingId, p._count._all] as const));
+  const candidatsParAnnonce = vendeur
+    ? new Map(
+        await Promise.all(
+          annonces
+            .filter((a) => EN_LIGNE.includes(a.status) || a.status === "UNDER_NEGOTIATION")
+            .map(async (a) => [a.id, await listListingPositions(a.id)] as const),
+        ),
+      )
+    : new Map<string, Awaited<ReturnType<typeof listListingPositions>>>();
 
-  // Chaque annonce compte une seule fois, à l'étape la plus avancée qu'elle a atteinte.
+  // Mes ventes : une ligne par annonce, à l'étape la plus avancée qu'elle a atteinte.
+  const ventes: DossierLigne[] = [];
   const parEtape = [0, 0, 0, 0];
-  const acteurs: (Acteur | null)[] = [null, null, null, null];
   let aEtudier = 0;
   let enLigne = 0;
+  let positionnes = 0;
+  let dossierPositionne: number | null = null;
 
   for (const annonce of annonces) {
     const dossier = dossiersParAnnonce.get(annonce.id);
+    const titre = annonce.publicNumber ? `N° ${annonce.publicNumber}` : annonce.portfolio.label;
+    const libelle = brancheEtZone(annonce.portfolio.label, annonce.displayedZone);
+    const candidats = (candidatsParAnnonce.get(annonce.id) ?? []).filter(
+      (c) => c.state.key !== "POSITION" && c.state.outcome === "active",
+    );
+
     if (dossier && dossier.stage !== "CLOSED") {
       parEtape[3] += 1;
-      acteurs[3] = acteurVendeur(dossier.stage);
+      ventes.push({
+        key: annonce.id,
+        href: `/app/dossiers/${dossier.id}`,
+        titre,
+        libelle,
+        index: 3,
+        etape: SALE_PIPELINE[3].label,
+        detail: null,
+        acteur: acteurVendeur(dossier.stage),
+        clos: false,
+      });
       continue;
     }
-    if (dossier || annonce.status === "SOLD") continue;
-    if ((positionsConnues.get(annonce.id) ?? 0) > 0) {
+
+    if (dossier || annonce.status === "SOLD") {
+      ventes.push({
+        key: annonce.id,
+        href: dossier ? `/app/dossiers/${dossier.id}` : `/app/annonces/${annonce.id}`,
+        titre,
+        libelle,
+        index: -1,
+        etape: "Vendu",
+        detail: "séquestre de conservation 20 %",
+        acteur: null,
+        clos: true,
+      });
+      continue;
+    }
+
+    if (candidats.length > 0) {
       parEtape[2] += 1;
-      acteurs[2] = "Aux acquéreurs";
+      positionnes += candidats.length;
+      dossierPositionne ??= annonce.publicNumber;
+      ventes.push({
+        key: annonce.id,
+        href: `/app/annonces/${annonce.id}`,
+        titre,
+        libelle,
+        index: 2,
+        etape: SALE_PIPELINE[2].label,
+        detail: `${candidats.length} acquéreur${candidats.length > 1 ? "s" : ""} positionné${candidats.length > 1 ? "s" : ""}`,
+        acteur: "À notre équipe",
+        clos: false,
+      });
       continue;
     }
+
     if (EN_LIGNE.includes(annonce.status)) {
       parEtape[1] += 1;
-      acteurs[1] = "Aux acquéreurs";
       enLigne += 1;
+      ventes.push({
+        key: annonce.id,
+        href: `/app/annonces/${annonce.id}`,
+        titre,
+        libelle,
+        index: 1,
+        etape: SALE_PIPELINE[1].label,
+        detail: "en attente d’un positionnement",
+        acteur: "Aux acquéreurs",
+        clos: false,
+      });
       continue;
     }
+
     if (A_ETUDIER.includes(annonce.status)) {
       parEtape[0] += 1;
-      acteurs[0] = annonce.status === "DRAFT" ? "À vous" : "À notre équipe";
       aEtudier += 1;
+      ventes.push({
+        key: annonce.id,
+        href: `/app/annonces/${annonce.id}`,
+        titre,
+        libelle,
+        index: 0,
+        etape: SALE_PIPELINE[0].label,
+        detail: annonce.status === "DRAFT" ? "dossier à envoyer" : "étude en cours",
+        acteur: annonce.status === "DRAFT" ? "À vous" : "À notre équipe",
+        clos: false,
+      });
     }
   }
 
-  const ventes: VenteParEtape[] = SALE_PIPELINE.map((step, index) => ({
-    step,
-    count: parEtape[index] ?? 0,
-    detail:
-      index === 0 && aEtudier > 0
-        ? `${aEtudier} portefeuille${aEtudier > 1 ? "s" : ""}`
-        : index === 1 && enLigne > 0
-          ? `${enLigne} annonce${enLigne > 1 ? "s" : ""}`
-          : null,
-    acteur: acteurs[index] ?? null,
-  }));
+  // Mes achats : une ligne par position.
+  const achats: DossierLigne[] = positions.map(({ position, state, deal }) => {
+    const l = position.listing;
+    const clos = state.outcome === "lost" || state.outcome === "withdrawn" || state.outcome === "closed";
+    return {
+      key: position.id,
+      href: `/app/positions/${position.id}`,
+      titre: `N° ${l.publicNumber ?? ""}`.trim(),
+      libelle: brancheEtZone(l.portfolio.label, l.displayedZone),
+      index: clos ? -1 : deal ? 3 : 2,
+      etape: clos ? state.title : deal ? SALE_PIPELINE[3].label : SALE_PIPELINE[2].label,
+      detail:
+        state.key === "POSITION"
+          ? `dépôt de ${Math.round(interestDepositFor(Number(l.askingPrice))).toLocaleString("fr-FR")} € à verser`
+          : `${Math.round(Number(l.askingPrice)).toLocaleString("fr-FR")} €`,
+      acteur: acteurAcheteur(deal?.stage ?? null, state.key !== "POSITION"),
+      clos,
+    };
+  });
 
-  const achats: LigneAchat[] = positions.map(({ position, state, deal }) => ({
-    positionId: position.id,
-    numero: position.listing.publicNumber ?? 0,
-    libelle: position.listing.portfolio.label,
-    index: state.outcome === "lost" || state.outcome === "withdrawn" ? -1 : deal ? 3 : 2,
-    etape: state.title,
-    acteur: acteurAcheteur(deal?.stage ?? null, state.key !== "POSITION"),
-    montant: Number(position.listing.askingPrice),
-  }));
+  // Positionnements reçus sur mes annonces : qui s'est positionné, et ce qu'il a justifié.
+  const recues: PositionRecue[] = [];
+  for (const [listingId, candidats] of candidatsParAnnonce) {
+    const annonce = annonces.find((a) => a.id === listingId);
+    if (!annonce?.publicNumber) continue;
+    for (const c of candidats) {
+      if (c.state.key === "POSITION" || c.state.outcome !== "active") continue;
+      recues.push({
+        key: c.position.id,
+        href: `/app/annonces/${listingId}`,
+        numero: annonce.publicNumber,
+        alias: `Acquéreur ${c.position.buyer.publicAlias.replace(/^#/, "")}`,
+        detail: c.deposit ? "capacité financière vérifiée · dépôt versé" : "capacité financière vérifiée",
+        acteur: "À notre équipe",
+      });
+    }
+  }
+
+  const aVerser = positions.find(({ state }) => state.key === "POSITION" && state.outcome === "active");
+  const achatsActifs = achats.filter((a) => !a.clos).length;
+  const ventesActives = parEtape.reduce((somme, n) => somme + n, 0);
+
+  const tuiles: Tuile[] = [
+    {
+      valeur: ventesActives,
+      libelle: ventesActives > 1 ? "Ventes en cours" : "Vente en cours",
+      detail:
+        [
+          aEtudier ? `${aEtudier} à l’étude` : null,
+          enLigne ? `${enLigne} en ligne` : null,
+          parEtape[3] ? `${parEtape[3]} à la signature` : null,
+        ]
+          .filter(Boolean)
+          .join(" · ") || null,
+    },
+    {
+      valeur: positionnes,
+      libelle: positionnes > 1 ? "Acquéreurs positionnés" : "Acquéreur positionné",
+      detail: dossierPositionne ? `sur le dossier n° ${dossierPositionne}` : null,
+    },
+    {
+      valeur: achatsActifs,
+      libelle: achatsActifs > 1 ? "Achats en cours" : "Achat en cours",
+      detail: aVerser
+        ? `dépôt de ${Math.round(interestDepositFor(Number(aVerser.position.listing.askingPrice))).toLocaleString("fr-FR")} € à verser`
+        : null,
+    },
+    {
+      valeur: messages.length,
+      libelle: messages.length > 1 ? "Messages non lus" : "Message non lu",
+      detail: (() => {
+        const dossiersConcernes = new Set(messages.map((m) => m.href ?? "")).size;
+        return dossiersConcernes > 0
+          ? `sur ${dossiersConcernes} dossier${dossiersConcernes > 1 ? "s" : ""}`
+          : null;
+      })(),
+    },
+  ];
 
   const brouillon = annonces.find((a) => a.status === "DRAFT");
   const dossierActif = dossiers.find((d) => d.stage !== "CLOSED");
-  const aFinancer = positions.find(({ state }) => state.key === "POSITION" && state.outcome === "active");
   const sansEtude = portefeuilles.find((p) => p.valuations.length === 0);
 
   const etat: DashboardState = {
@@ -169,22 +330,37 @@ export async function loadHome(actor: Actor): Promise<HomeData> {
     retentionDeal: null,
     activeDeal: dossierActif ? { id: dossierActif.id } : null,
     unvaluedPortfolio: sansEtude ? { id: sansEtude.id } : null,
-    positionToFund: aFinancer
-      ? { id: aFinancer.position.id, publicNumber: aFinancer.position.listing.publicNumber ?? 0 }
+    positionToFund: aVerser
+      ? { id: aVerser.position.id, publicNumber: aVerser.position.listing.publicNumber ?? 0 }
       : null,
     activeDealCount: dossiers.filter((d) => d.stage !== "CLOSED").length,
     retentionDue: 0,
   };
+
+  const dernier = cartes[0] ?? null;
 
   return {
     prenom: actor.fullName?.split(" ")[0] ?? null,
     deuxFacteurs,
     vendeur,
     acheteur,
+    abonnement: { actif: Boolean(abonnement), jusquau: abonnement?.renewsAt ?? null },
     action: nextAction(etat),
+    tuiles,
     ventes,
-    ventesTotal: parEtape.reduce((somme, n) => somme + n, 0),
     achats,
-    marche: { total: cartes.length, certifies: cartes.filter((c) => c.certified).length },
+    recues,
+    marche: {
+      total: cartes.length,
+      certifies: cartes.filter((c) => c.certified).length,
+      nouveaux,
+      dernier: dernier
+        ? {
+            numero: dernier.publicNumber,
+            commissions: dernier.annualCommissions,
+            montant: dernier.askingPrice,
+          }
+        : null,
+    },
   };
 }

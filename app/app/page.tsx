@@ -2,18 +2,26 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { getActor, isOriasVerified } from "@/lib/authz";
-import { loadHome, type Acteur, type LigneAchat, type VenteParEtape } from "@/lib/dashboard/home";
-import { ADVISOR_BOOKING_HREF, CTA_ADVISOR } from "@/lib/copy/market";
+import {
+  loadHome,
+  type Acteur,
+  type DossierLigne,
+  type PositionRecue,
+  type Tuile,
+} from "@/lib/dashboard/home";
+import { ACCESS_PRICE_LINE, ADVISOR_BOOKING_HREF, CTA_ADVISOR } from "@/lib/copy/market";
 import { formatCount, formatEuroWhole } from "@/lib/format/number";
+import { formatDate } from "@/lib/format/fr";
 
 export const metadata = { title: "Accueil" };
 
 /**
  * Accueil de l'espace membre.
  *
- * Une seule question à la fois : ce qu'il faut faire maintenant, puis où en
- * sont les ventes et les achats, sur les quatre étapes du dossier de
- * présentation. Rien d'autre : ni cote, ni compteurs, ni services à la carte.
+ * Un bandeau en haut dit où en sont toutes les affaires du membre, et ce qu'il
+ * faut faire ensuite. En dessous, le détail dossier par dossier, sur les quatre
+ * étapes du dossier de présentation : l'étude, la mise en ligne, le
+ * positionnement, la signature. Rien d'autre : ni cote, ni services à la carte.
  */
 export default async function MemberHomePage() {
   const actor = await getActor();
@@ -21,7 +29,7 @@ export default async function MemberHomePage() {
   if (!isOriasVerified(actor)) redirect("/en-attente-orias");
   if (actor.role === "INVESTOR") redirect("/app/mes-dossiers");
 
-  const { prenom, deuxFacteurs, vendeur, acheteur, action, ventes, ventesTotal, achats, marche } =
+  const { prenom, deuxFacteurs, vendeur, acheteur, abonnement, action, tuiles, ventes, achats, recues, marche } =
     await loadHome(actor);
 
   return (
@@ -33,148 +41,244 @@ export default async function MemberHomePage() {
         <p className="mt-1 text-[16px] text-muted">Voici où en sont vos dossiers.</p>
       </header>
 
-      {deuxFacteurs ? null : (
-        <aside className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-line bg-paper px-5 py-4">
-          <p className="text-[14px] text-ink">
-            Protégez votre compte avec un code à six chiffres, en plus de votre mot de passe.
-          </p>
-          <Button asChild variant="outline">
-            <Link href="/app/profil#securite">Activer</Link>
-          </Button>
-        </aside>
-      )}
-
       <section
-        aria-labelledby="prochaine-action"
-        className="mt-6 rounded-2xl border border-indigo-line bg-indigo-soft p-5 sm:p-6"
+        aria-labelledby="affaires-en-cours"
+        className="mt-5 rounded-[1.5rem] bg-gradient-to-br from-[#4f46e5] to-[#4338ca] p-5 text-white sm:p-7"
       >
-        <p className="text-[12px] font-semibold uppercase tracking-[0.14em] text-indigo-dark">
-          Prochaine action
+        <h2 id="affaires-en-cours" className="text-[22px] font-bold tracking-tight sm:text-[26px]">
+          Vos affaires en cours
+        </h2>
+        <p className="mt-1 text-[14px] text-white/75">
+          Mis à jour à l’instant ·{" "}
+          {abonnement.actif ? (
+            <>
+              abonnement accès au marché actif
+              {abonnement.jusquau ? ` jusqu’au ${formatDate(abonnement.jusquau)}` : ""}
+            </>
+          ) : (
+            <>
+              sans abonnement ·{" "}
+              <Link href="/tarifs#abonnements" className="font-semibold text-white underline underline-offset-2">
+                accès au marché {ACCESS_PRICE_LINE}
+              </Link>
+            </>
+          )}
         </p>
-        <div className="mt-2 flex flex-wrap items-end justify-between gap-4">
-          <div className="min-w-0">
-            <h2 id="prochaine-action" className="text-[18px] font-semibold text-ink">
-              {action.title}
-            </h2>
-            <p className="mt-1 max-w-2xl text-[15px] leading-relaxed text-muted">{action.detail}</p>
-          </div>
+
+        <ul className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {tuiles.map((tuile) => (
+            <TuileChiffre key={tuile.libelle} tuile={tuile} />
+          ))}
+        </ul>
+
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-white px-5 py-4">
+          <p className="min-w-0 text-[15px] leading-relaxed text-ink">
+            <span className="font-semibold text-indigo-dark">Prochaine action</span> · {action.title} :{" "}
+            {action.detail}
+          </p>
           <Button asChild variant="primary">
             <Link href={action.href}>{action.cta}</Link>
           </Button>
         </div>
       </section>
 
-      {vendeur ? (
-        <section aria-labelledby="mes-ventes" className="mt-8">
-          <div className="flex flex-wrap items-baseline justify-between gap-3">
-            <h2 id="mes-ventes" className="text-[20px] font-semibold text-ink">
-              Mes ventes
-            </h2>
-            <Link href="/app/cessions" className="text-[14px] font-medium text-indigo-dark">
-              Tout voir
-            </Link>
+      {deuxFacteurs ? null : (
+        <aside className="mt-3 flex flex-wrap items-center justify-between gap-3 px-1 text-[13px] text-muted">
+          <p>Protégez votre compte avec un code à six chiffres, en plus de votre mot de passe.</p>
+          <Link href="/app/profil#securite" className="font-medium text-indigo-dark">
+            Activer la double authentification
+          </Link>
+        </aside>
+      )}
+
+      <div className="mt-6 grid gap-4 lg:grid-cols-2">
+        {vendeur ? (
+          <Bloc titre="Mes ventes" href="/app/cessions" lien="Tout voir">
+            {ventes.length > 0 ? (
+              <ul className="divide-y divide-line">
+                {ventes.map((ligne) => (
+                  <LigneDossier key={ligne.key} ligne={ligne} />
+                ))}
+              </ul>
+            ) : (
+              <Vide
+                texte="Confiez votre portefeuille à notre équipe : nous réalisons l’étude, déterminons la valeur et publions l’annonce sous un numéro de dossier."
+                href="/app/annonces/nouvelle"
+                cta="Confier mon portefeuille"
+              />
+            )}
+          </Bloc>
+        ) : null}
+
+        {acheteur ? (
+          <Bloc titre="Mes achats" href="/app/achats" lien="Tout voir">
+            {achats.length > 0 ? (
+              <ul className="divide-y divide-line">
+                {achats.map((ligne) => (
+                  <LigneDossier key={ligne.key} ligne={ligne} />
+                ))}
+              </ul>
+            ) : (
+              <Vide
+                texte="Chaque portefeuille de la salle de marché a été étudié et chiffré avant sa mise en ligne. Le montant affiché est celui de l’annonce."
+                href="/annonces"
+                cta="Voir les portefeuilles"
+              />
+            )}
+          </Bloc>
+        ) : null}
+
+        {vendeur ? (
+          <Bloc titre="Positionnements reçus" href="/app/cessions" lien="Tout voir">
+            {recues.length > 0 ? (
+              <>
+                <ul className="divide-y divide-line">
+                  {recues.map((ligne) => (
+                    <LignePosition key={ligne.key} ligne={ligne} />
+                  ))}
+                </ul>
+                <p className="px-5 py-4 text-[13px] leading-relaxed text-muted">
+                  Le nom de l’acquéreur vous est communiqué à l’ouverture de la procédure.
+                </p>
+              </>
+            ) : (
+              <p className="px-5 py-8 text-center text-[15px] leading-relaxed text-muted">
+                Aucun acquéreur ne s’est encore positionné. Un positionnement suppose un dépôt de 2,5 %
+                versé dans un trust et une capacité financière justifiée.
+              </p>
+            )}
+          </Bloc>
+        ) : null}
+
+        <Bloc titre="La salle de marché" href="/annonces" lien="Voir les portefeuilles">
+          <div className="px-5 py-4">
+            <p className="text-[15px] font-semibold text-ink">
+              {formatCount(marche.total)} portefeuille{marche.total > 1 ? "s" : ""} en ligne
+            </p>
+            <p className="mt-1 text-[13px] text-muted">
+              dont {formatCount(marche.certifies)} certifié{marche.certifies > 1 ? "s" : ""}
+              {marche.nouveaux > 0
+                ? ` · ${formatCount(marche.nouveaux)} nouveau${marche.nouveaux > 1 ? "x" : ""} cette semaine`
+                : ""}
+            </p>
           </div>
-          {ventesTotal > 0 ? (
-            <ol className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              {ventes.map((etape) => (
-                <EtapeVente key={etape.step.key} etape={etape} />
-              ))}
-            </ol>
-          ) : (
-            <EcranVide
-              titre="Vous n’avez pas encore de vente"
-              texte="Confiez votre portefeuille à notre équipe : nous réalisons l’étude, déterminons la valeur et publions l’annonce sous un numéro de dossier."
-              href="/app/annonces/nouvelle"
-              cta="Confier mon portefeuille"
-            />
-          )}
-        </section>
-      ) : null}
+          {marche.dernier ? (
+            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line px-5 py-4">
+              <div className="min-w-0">
+                <p className="text-[15px] font-semibold text-ink">
+                  Dernier publié · N° {marche.dernier.numero}
+                </p>
+                <p className="tabular mt-1 text-[13px] text-muted">
+                  {formatEuroWhole(marche.dernier.commissions)} de commissions ·{" "}
+                  {formatEuroWhole(marche.dernier.montant)}
+                </p>
+              </div>
+              <Button asChild variant="outline">
+                <Link href={`/annonces/${marche.dernier.numero}`}>Voir</Link>
+              </Button>
+            </div>
+          ) : null}
+        </Bloc>
+      </div>
 
-      {acheteur ? (
-        <section aria-labelledby="mes-achats" className="mt-8">
-          <div className="flex flex-wrap items-baseline justify-between gap-3">
-            <h2 id="mes-achats" className="text-[20px] font-semibold text-ink">
-              Mes achats
-            </h2>
-            <Link href="/app/achats" className="text-[14px] font-medium text-indigo-dark">
-              Tout voir
-            </Link>
-          </div>
-          {achats.length > 0 ? (
-            <ul className="mt-4 grid gap-3">
-              {achats.map((ligne) => (
-                <LigneAchatCarte key={ligne.positionId} ligne={ligne} />
-              ))}
-            </ul>
-          ) : (
-            <EcranVide
-              titre="Vous ne suivez aucun dossier"
-              texte="Chaque portefeuille de la salle de marché a été étudié et chiffré avant sa mise en ligne. Le montant affiché est celui de l’annonce."
-              href="/annonces"
-              cta="Voir les portefeuilles"
-            />
-          )}
-        </section>
-      ) : null}
-
-      <section className="mt-8 grid gap-4 lg:grid-cols-2">
-        <div className="rounded-2xl border border-line bg-paper p-5 sm:p-6">
-          <h2 className="text-[18px] font-semibold text-ink">Salle de marché</h2>
-          <p className="mt-2 text-[15px] text-muted">
-            {formatCount(marche.total)} portefeuille{marche.total > 1 ? "s" : ""} en ligne, dont{" "}
-            {formatCount(marche.certifies)} certifié{marche.certifies > 1 ? "s" : ""}.
-          </p>
-          <Button asChild variant="outline" className="mt-5">
-            <Link href="/annonces">Voir les portefeuilles</Link>
-          </Button>
-        </div>
-
-        <div className="rounded-2xl bg-deep-soft p-5 text-white sm:p-6">
-          <h2 className="text-[18px] font-semibold">Un conseiller vous répond</h2>
-          <p className="mt-2 text-[15px] leading-relaxed text-white/80">
+      <section className="mt-4 flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-indigo-soft px-5 py-5 sm:px-7">
+        <div className="min-w-0">
+          <h2 className="text-[18px] font-semibold text-ink">Un conseiller vous répond</h2>
+          <p className="mt-1 text-[15px] leading-relaxed text-muted">
             Djesi Bayeye, fondateur, 15 ans de courtage en France et en Suisse.
           </p>
-          <Button asChild variant="outline" className="mt-5 border-white/40 bg-white text-deep-soft hover:bg-white/90">
-            <Link href={ADVISOR_BOOKING_HREF}>{CTA_ADVISOR}</Link>
-          </Button>
         </div>
+        <Button asChild variant="primary">
+          <Link href={ADVISOR_BOOKING_HREF}>{CTA_ADVISOR}</Link>
+        </Button>
       </section>
     </main>
   );
 }
 
-/** Une étape de vente : son numéro, son nom, ce qu'elle contient, qui doit agir. */
-function EtapeVente({ etape }: { etape: VenteParEtape }) {
-  const actif = etape.count > 0;
+/** Une tuile du bandeau : le chiffre, ce qu'il compte, et sa précision. */
+function TuileChiffre({ tuile }: { tuile: Tuile }) {
   return (
-    <li
-      className={`rounded-2xl border p-4 ${actif ? "border-indigo-line bg-paper" : "border-line bg-surface-alt"}`}
-    >
-      <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-indigo-dark">
-        {etape.step.num} · {etape.step.label}
-      </p>
-      <p className="mt-3 text-[15px] text-ink">
-        <span className="tabular text-[22px] font-semibold">{formatCount(etape.count)}</span>{" "}
-        {etape.count > 1 ? "dossiers" : "dossier"}
-      </p>
-      {etape.detail ? <p className="mt-1 text-[13px] text-muted">{etape.detail}</p> : null}
-      {actif && etape.acteur ? <Pastille acteur={etape.acteur} /> : null}
+    <li className="rounded-2xl bg-white/12 p-4">
+      <p className="tabular text-[2rem] font-bold leading-none">{formatCount(tuile.valeur)}</p>
+      <p className="mt-2 text-[15px] font-medium">{tuile.libelle}</p>
+      {tuile.detail ? <p className="mt-1 text-[13px] text-white/70">{tuile.detail}</p> : null}
     </li>
   );
 }
 
-function LigneAchatCarte({ ligne }: { ligne: LigneAchat }) {
+/** Un bloc du milieu : son titre, son lien, son contenu. */
+function Bloc({
+  titre,
+  href,
+  lien,
+  children,
+}: {
+  titre: string;
+  href: string;
+  lien: string;
+  children: React.ReactNode;
+}) {
   return (
-    <li className="rounded-2xl border border-line bg-paper p-4">
-      <Link href={`/app/positions/${ligne.positionId}`} className="flex flex-wrap items-center gap-x-4 gap-y-2">
-        <span className="text-[15px] font-semibold text-ink">Dossier n° {ligne.numero}</span>
-        <span className="min-w-0 flex-1 truncate text-[14px] text-muted">{ligne.libelle}</span>
-        <span className="rounded-full bg-indigo-soft px-3 py-1 text-[13px] font-medium text-indigo-dark">
+    <section className="overflow-hidden rounded-2xl border border-line bg-paper">
+      <div className="flex flex-wrap items-baseline justify-between gap-3 px-5 py-4">
+        <h2 className="text-[18px] font-semibold text-ink">{titre}</h2>
+        <Link href={href} className="text-[14px] font-medium text-indigo-dark">
+          {lien}
+        </Link>
+      </div>
+      {children}
+    </section>
+  );
+}
+
+/** Une ligne de dossier : son numéro, sa branche, son étape sur quatre. */
+function LigneDossier({ ligne }: { ligne: DossierLigne }) {
+  return (
+    <li>
+      <Link href={ligne.href} className="block px-5 py-4 hover:bg-surface-alt/60">
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          <p className="min-w-0 text-[15px] text-ink">
+            <span className="font-semibold">{ligne.titre}</span>
+            <span className="text-muted"> · {ligne.libelle}</span>
+          </p>
+          {ligne.clos ? (
+            <span className="shrink-0 rounded-full bg-emerald-50 px-3 py-1 text-[12px] font-semibold text-emerald-700">
+              Clôturé
+            </span>
+          ) : ligne.acteur ? (
+            <Pastille acteur={ligne.acteur} />
+          ) : null}
+        </div>
+        <p className="mt-1 text-[13px] text-muted">
           {ligne.index >= 0 ? `0${ligne.index + 1} · ${ligne.etape}` : ligne.etape}
-        </span>
-        <span className="tabular text-[15px] font-semibold text-ink">{formatEuroWhole(ligne.montant)}</span>
-        {ligne.acteur ? <Pastille acteur={ligne.acteur} /> : null}
+          {ligne.detail ? ` · ${ligne.detail}` : ""}
+        </p>
+        {ligne.index >= 0 ? (
+          <span className="mt-2 block h-1.5 w-full max-w-[14rem] overflow-hidden rounded-full bg-surface-alt">
+            <span
+              className="block h-full rounded-full bg-indigo"
+              style={{ width: `${((ligne.index + 1) / 4) * 100}%` }}
+            />
+          </span>
+        ) : null}
+      </Link>
+    </li>
+  );
+}
+
+/** Un acquéreur positionné sur l'une de mes annonces. */
+function LignePosition({ ligne }: { ligne: PositionRecue }) {
+  return (
+    <li>
+      <Link href={ligne.href} className="block px-5 py-4 hover:bg-surface-alt/60">
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          <p className="text-[15px] font-semibold text-ink">N° {ligne.numero}</p>
+          <Pastille acteur={ligne.acteur} />
+        </div>
+        <p className="mt-1 text-[13px] text-muted">
+          {ligne.alias} · {ligne.detail}
+        </p>
       </Link>
     </li>
   );
@@ -185,8 +289,8 @@ function Pastille({ acteur }: { acteur: Acteur }) {
   const mien = acteur === "À vous";
   return (
     <span
-      className={`mt-3 inline-block rounded-full px-3 py-1 text-[12px] font-semibold ${
-        mien ? "bg-indigo text-white" : "bg-surface-alt text-muted"
+      className={`shrink-0 rounded-full px-3 py-1 text-[12px] font-semibold ${
+        mien ? "bg-indigo text-white" : "bg-indigo-soft text-indigo-dark"
       }`}
     >
       {acteur}
@@ -194,23 +298,12 @@ function Pastille({ acteur }: { acteur: Acteur }) {
   );
 }
 
-/** Un écran vide dit quoi faire, et le bouton pour le faire. */
-function EcranVide({
-  titre,
-  texte,
-  href,
-  cta,
-}: {
-  titre: string;
-  texte: string;
-  href: string;
-  cta: string;
-}) {
+/** Un bloc vide dit quoi faire, et le bouton pour le faire. */
+function Vide({ texte, href, cta }: { texte: string; href: string; cta: string }) {
   return (
-    <div className="mt-4 rounded-2xl border border-line bg-paper p-8 text-center">
-      <p className="text-[17px] font-semibold text-ink">{titre}</p>
-      <p className="mx-auto mt-2 max-w-xl text-[15px] leading-relaxed text-muted">{texte}</p>
-      <Button asChild variant="primary" className="mt-5">
+    <div className="px-5 pb-6 pt-2 text-center">
+      <p className="mx-auto max-w-sm text-[15px] leading-relaxed text-muted">{texte}</p>
+      <Button asChild variant="primary" className="mt-4">
         <Link href={href}>{cta}</Link>
       </Button>
     </div>
