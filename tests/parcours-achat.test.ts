@@ -4,16 +4,15 @@
  * Le tunnel du dossier est couvert ailleurs, à partir d'un dossier déjà
  * ouvert. Ici on part d'avant, par les deux portes d'entrée d'un acquéreur :
  *
- * 1. Il trouve une annonce au catalogue, dont la fenêtre de 21 jours est close,
- *    et prend position : dépôt, offre, le cédant retient, dossier, clôture.
+ * 1. Il trouve une annonce au catalogue et prend position : dépôt de
+ *    positionnement de 2,5 %, ouverture du dossier, clôture.
  * 2. Il publie une demande d'acquisition, un cédant lui propose un
  *    portefeuille, et il enchaîne sur le même parcours.
  *
  * Ce sont exactement les deux chemins qui s'arrêtaient net : « Prendre
- * position » ne menait à rien sur une annonce close, et une demande publiée
- * ne produisait rien. Les deux annonces viennent du catalogue de
- * démonstration, pour vérifier au passage qu'il a bien un cédant pour
- * retenir les offres.
+ * position » ne menait à rien, et une demande publiée ne produisait rien. Les
+ * deux annonces viennent du catalogue de démonstration, pour vérifier au
+ * passage qu'elles ont bien un cédant.
  *
  * Prérequis : `npm run db:migrate && npm run db:seed && npm run db:catalog`.
  */
@@ -25,7 +24,6 @@ import { connecterUtilisateur } from "./setup/auth-stub";
 import { placeInterestDepositAction } from "@/app/actions/deposits";
 import { createMandateAction } from "@/app/actions/mandates";
 import { proposeListingAction } from "@/app/actions/mandate-proposals";
-import { acceptOfferAction, submitOfferAction } from "@/app/actions/offers";
 import { takePositionAction } from "@/app/actions/positions";
 import { loadPosition } from "@/lib/position/load";
 import { fundEscrowAction } from "@/app/actions/deal-process";
@@ -73,8 +71,8 @@ async function compte(where: { id?: string; email?: string }): Promise<Compte> {
   return u;
 }
 
-/** Dépôt, offre, acceptation, puis tout le dossier jusqu'à la vente. */
-async function acheterJusquALaVente(listingId: string, acheteur: Compte, enUnGeste = false) {
+/** Position, dépôt de positionnement, puis tout le dossier jusqu'à la vente. */
+async function acheterJusquALaVente(listingId: string, acheteur: Compte, parPrelevement = false) {
   const listing = await prisma.listing.findUniqueOrThrow({
     where: { id: listingId },
     select: { publicNumber: true, askingPrice: true },
@@ -94,71 +92,43 @@ async function acheterJusquALaVente(listingId: string, acheteur: Compte, enUnGes
   // Reprendre position ne crée pas un second dossier.
   expect(await destination(takePositionAction({}, form({ listingId })))).toBe(versPosition);
 
-  // Avant les engagements signés, aucune offre.
-  const sansEngagements = await submitOfferAction(
-    {},
-    form({ listingId, amount: String(Number(listing.askingPrice)), paymentMethod: "CARD", engagement: "on" }),
-  );
+  // Avant les engagements signés, aucun dépôt.
+  const sansEngagements = await placeInterestDepositAction({}, form({ listingId, paymentMethod: "CARD" }));
   expect(sansEngagements.error).toContain("engagements");
   await signerEngagements(acheteur.id);
   connecterUtilisateur(acheteur.id);
-  // Puis, sans accord de principe bancaire, toujours aucune offre.
-  const sansFinancement = await submitOfferAction(
-    {},
-    form({ listingId, amount: String(Number(listing.askingPrice)), paymentMethod: "CARD", engagement: "on" }),
-  );
+  // Puis, sans accord de principe bancaire, toujours aucun dépôt.
+  const sansFinancement = await placeInterestDepositAction({}, form({ listingId, paymentMethod: "CARD" }));
   expect(sansFinancement.error).toContain("accord de principe");
   await declarerFinancement(acheteur.id, Number(listing.askingPrice) * 2);
   connecterUtilisateur(acheteur.id);
 
-  const sansDepot = await submitOfferAction(
-    {},
-    form({ listingId, amount: String(Number(listing.askingPrice)), upfrontPercent: "80", message: "Reprise complète envisagée." }),
-  );
-  expect(sansDepot.error).toContain("dépôt");
+  // Le dépôt se paie par carte ou prélèvement : il faut en choisir un.
+  expect((await placeInterestDepositAction({}, form({ listingId }))).error).toContain("prélèvement");
+  const methode = parPrelevement ? "SEPA" : "CARD";
+  expect(await placeInterestDepositAction({}, form({ listingId, paymentMethod: methode }))).toEqual({ placed: true });
 
-  let versFiche: string;
-  if (enUnGeste) {
-    // Engagement, confidentialité et offre, date d'effet comprise, en un seul formulaire.
-    const dateEffet = new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth() + 2, 1)).toISOString().slice(0, 10);
-    versFiche = await destination(
-      submitOfferAction({}, form({ listingId, amount: String(Number(listing.askingPrice)), effectiveDate: dateEffet, engagement: "on", paymentMethod: "SEPA" })),
-    );
-  } else {
-    // Le dépôt se paie par carte ou prélèvement : il faut en choisir un.
-    expect((await placeInterestDepositAction({}, form({ listingId }))).error).toContain("prélèvement");
-    expect(await placeInterestDepositAction({}, form({ listingId, paymentMethod: "CARD" }))).toEqual({ placed: true });
-    versFiche = await destination(
-      submitOfferAction(
-        {},
-        form({ listingId, amount: String(Number(listing.askingPrice)), upfrontPercent: "80", message: "Reprise complète envisagée." }),
-      ),
-    );
-  }
-  expect(versFiche).toBe(versPosition);
-  expect((await loadPosition(positionId))?.state.key).toBe("OFFER");
-
-  const offre = await prisma.offer.findUniqueOrThrow({
+  // Le versement lance la procédure : le dossier de cession est ouvert au montant de l'annonce.
+  expect((await loadPosition(positionId))?.state.key).toBe("DATA_ROOM");
+  const dossier = await prisma.deal.findUniqueOrThrow({
     where: { listingId_buyerId: { listingId, buyerId: acheteur.id } },
-    select: { id: true },
+    select: { id: true, agreedPrice: true },
   });
-
-  await signerEngagements(cedant.id);
-  connecterUtilisateur(cedant.id);
-  const versDossier = await destination(acceptOfferAction({}, form({ offerId: offre.id })));
-  expect(versDossier).toMatch(/^\/app\/dossiers\//);
-  const dealId = versDossier.split("/").pop()!;
+  expect(Number(dossier.agreedPrice)).toBe(Number(listing.askingPrice));
+  const dealId = dossier.id;
+  const versDossier = `/app/dossiers/${dealId}`;
 
   // Chaque partie agit à l'étape qui lui revient, pièces et signatures comprises.
+  await signerEngagements(cedant.id);
   await menerDossier(dealId, "CLOSED");
 
-  // L'acquéreur a été prévenu de l'offre retenue, puis de chaque étape du dossier.
+  // L'acquéreur a été prévenu du dépôt, puis de chaque étape du dossier.
   const avisAcheteur = await prisma.notification.findMany({
     where: { userId: acheteur.id, createdAt: { gte: debut } },
     select: { title: true, href: true },
   });
-  expect(avisAcheteur.some((n) => n.title.startsWith("Offre retenue") && n.href === versPosition)).toBe(true);
-  expect(avisAcheteur.some((n) => n.title.endsWith("· Signature"))).toBe(true);
+  expect(avisAcheteur.some((n) => n.title.startsWith("Dépôt de positionnement"))).toBe(true);
+  expect(avisAcheteur.some((n) => n.title.endsWith("· Signature des contrats"))).toBe(true);
   expect(avisAcheteur.some((n) => n.title.startsWith("Cession close") && n.href === versDossier)).toBe(true);
   const suivi = await loadPosition(positionId);
   expect(suivi?.state.percent).toBe(100);
@@ -184,7 +154,7 @@ async function acheterJusquALaVente(listingId: string, acheteur: Compte, enUnGes
     select: { outcome: true, paymentMethod: true },
   });
   expect(depot.outcome).toBe("DEDUCTED");
-  expect(depot.paymentMethod).toBe(enUnGeste ? "SEPA" : "CARD");
+  expect(depot.paymentMethod).toBe(methode);
 }
 
 beforeAll(async () => {

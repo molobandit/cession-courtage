@@ -117,8 +117,8 @@ describe("mise en vente gratuite, étudiée par l’équipe avant la mise en lig
     connecterUtilisateur(cedant);
     await publishListingAction({}, form({ listingId: LISTING }));
     connecterUtilisateur(admin);
-    expect((await reviewListingAction({}, form({ listingId: LISTING, decision: "approve" }))).error).toContain("prix");
-    expect((await reviewListingAction({}, form({ listingId: LISTING, decision: "approve", price: "500" }))).error).toContain("prix");
+    expect((await reviewListingAction({}, form({ listingId: LISTING, decision: "approve" }))).error).toContain("montant");
+    expect((await reviewListingAction({}, form({ listingId: LISTING, decision: "approve", price: "500" }))).error).toContain("montant");
     expect((await reviewListingAction({}, form({ listingId: LISTING, decision: "approve", price: "14 200" }))).ok).toBeTruthy();
     const l = await prisma.listing.findUniqueOrThrow({ where: { id: LISTING }, select: { status: true, offerWindowClosesAt: true, publicNumber: true, askingPrice: true } });
     expect(l.status).toBe(ListingStatus.OFFERS_OPEN);

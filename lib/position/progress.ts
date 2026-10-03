@@ -1,5 +1,5 @@
 import type { DealStage, ListingStatus, OfferStatus } from "@prisma/client";
-import { SALE_PIPELINE, pipelineIndex, pipelineProgressPercent } from "@/lib/deal/pipeline";
+import { PRE_DEAL_SHARE, SALE_PIPELINE, pipelineIndex, pipelineProgressPercent } from "@/lib/deal/pipeline";
 
 /**
  * Où en est une prise de position, vue par l'acquéreur ou par le cédant.
@@ -8,9 +8,9 @@ import { SALE_PIPELINE, pipelineIndex, pipelineProgressPercent } from "@/lib/dea
  * dossier, les cartes du tableau de bord, les notifications — afin qu'un même
  * dossier n'affiche jamais deux avancements différents.
  *
- * Avant l'acceptation, trois marches : la position, le dépôt, l'offre. Elles
- * pèsent peu (15 %) : l'essentiel du chemin reste à parcourir une fois l'offre
- * retenue. Ensuite, le dossier suit le tunnel de cession jusqu'à la clôture.
+ * Les quatre étapes du modèle servent de repère commun : l'étude et la mise en
+ * ligne sont franchies dès qu'une annonce existe, le positionnement court
+ * jusqu'au dépôt, la signature couvre tout le dossier de cession.
  *
  * Fonctions pures, testables sans base.
  */
@@ -38,20 +38,11 @@ export type PositionState = {
 
 export type PositionStep = { key: string; label: string };
 
-export const PRE_DEAL_STEPS: PositionStep[] = [
-  { key: "POSITION", label: "Prise de position" },
-  { key: "DEPOSIT", label: "Dépôt de garantie" },
-  { key: "OFFER", label: "Offre déposée" },
-];
-
-/** Toutes les étapes, de la position à la clôture, pour la frise du dossier. */
-export const POSITION_STEPS: PositionStep[] = [
-  ...PRE_DEAL_STEPS,
-  ...SALE_PIPELINE.filter((s) => s.key !== "POSITION").map((s) => ({
-    key: s.key,
-    label: s.label,
-  })),
-];
+/** Les quatre étapes affichées, identiques partout. */
+export const POSITION_STEPS: PositionStep[] = SALE_PIPELINE.map((s) => ({
+  key: s.key,
+  label: s.label,
+}));
 
 function dealPercent(stage: DealStage): number {
   return pipelineProgressPercent(stage);
@@ -60,7 +51,7 @@ function dealPercent(stage: DealStage): number {
 export function positionState(facts: PositionFacts): PositionState {
   if (facts.dealStage) {
     const stage = facts.dealStage;
-    const libelle = SALE_PIPELINE.find((s) => s.key === stage)?.label ?? stage;
+    const libelle = SALE_PIPELINE[pipelineIndex(stage)]?.label ?? stage;
     if (stage === "CLOSED") {
       return {
         key: stage,
@@ -68,8 +59,8 @@ export function positionState(facts: PositionFacts): PositionState {
         percent: 100,
         outcome: "closed",
         waitingFor: null,
-        buyerMessage: "Le portefeuille est à vous. Le dossier est clos, les fonds libérés.",
-        sellerMessage: "La cession est close. Les fonds sont libérés et l’annonce est cédée.",
+        buyerMessage: "Le portefeuille est à vous. Les contrats sont transférés et les fonds libérés.",
+        sellerMessage: "La cession est close. Les fonds sont libérés par le trust et l’annonce est vendue.",
       };
     }
     const libelleCourant = SALE_PIPELINE[pipelineIndex(stage)]?.label ?? libelle;
@@ -81,11 +72,11 @@ export function positionState(facts: PositionFacts): PositionState {
       waitingFor: "both",
       buyerMessage:
         stage === "DATA_ROOM" || stage === "NDA"
-          ? "Le cédant a retenu votre offre. Examinez les pièces du cabinet et confirmez votre prix."
+          ? "La procédure de cession est lancée. Les pièces du cabinet cédant vous sont ouvertes."
           : `Le dossier de cession avance : étape « ${libelleCourant} ».`,
       sellerMessage:
         stage === "DATA_ROOM" || stage === "NDA"
-          ? "Vous avez retenu cette offre. Complétez les pièces du cabinet et les codes courtier."
+          ? "Un acquéreur s’est positionné. Complétez les pièces du cabinet et les codes courtier."
           : `Le dossier de cession avance : étape « ${libelleCourant} ».`,
     };
   }
@@ -93,12 +84,12 @@ export function positionState(facts: PositionFacts): PositionState {
   if (facts.offerStatus === "WITHDRAWN") {
     return {
       key: "WITHDRAWN",
-      title: "Offre retirée",
-      percent: 10,
+      title: "Positionnement retiré",
+      percent: PRE_DEAL_SHARE,
       outcome: "withdrawn",
       waitingFor: null,
-      buyerMessage: "Vous avez retiré votre offre. Le dépôt reste acquis au cédant.",
-      sellerMessage: "L’acquéreur a retiré son offre. Son dépôt vous reste acquis.",
+      buyerMessage: "Vous vous êtes retiré de ce dossier.",
+      sellerMessage: "L’acquéreur s’est retiré de ce dossier.",
     };
   }
 
@@ -107,53 +98,55 @@ export function positionState(facts: PositionFacts): PositionState {
   if (facts.offerStatus === "DECLINED" || (pris && facts.offerStatus !== "ACCEPTED")) {
     return {
       key: "LOST",
-      title: "Le dossier est en négociation",
-      percent: 3,
+      title: "Un acquéreur s’est positionné",
+      percent: PRE_DEAL_SHARE,
       outcome: "lost",
       waitingFor: null,
       buyerMessage:
-        "Trop tard pour ce portefeuille : le cédant est entré en négociation avec un confrère. Bonne chance pour les prochaines opportunités.",
-      sellerMessage: "Vous avez retenu un autre acquéreur.",
+        "Un confrère s’est positionné le premier sur ce portefeuille. La salle de marché en présente d’autres.",
+      sellerMessage: "Un autre acquéreur s’est positionné sur ce dossier.",
     };
   }
 
   if (facts.offerStatus === "SUBMITTED" || facts.offerStatus === "ACCEPTED") {
     return {
       key: "OFFER",
-      title: "Offre déposée",
-      percent: 12,
+      title: "Le positionnement",
+      percent: PRE_DEAL_SHARE,
       outcome: "active",
       waitingFor: "seller",
-      buyerMessage: "Votre offre est transmise. Le cédant compare les propositions et vous répond ici.",
-      sellerMessage: "Une offre attend votre décision. Retenez-la pour ouvrir le dossier de cession.",
+      buyerMessage: "Votre positionnement est transmis. Notre équipe ouvre la procédure de cession.",
+      sellerMessage: "Un acquéreur s’est positionné sur votre portefeuille.",
     };
   }
 
   if (facts.hasDeposit) {
     return {
       key: "DEPOSIT",
-      title: "Dépôt de garantie versé",
-      percent: 8,
+      title: "Dépôt de positionnement versé",
+      percent: PRE_DEAL_SHARE,
       outcome: "active",
       waitingFor: "buyer",
-      buyerMessage: "Les coordonnées du cédant et ses PDF sont ouverts sur la fiche, onglet Documents. Déposez votre offre pour vous engager sur le prix.",
-      sellerMessage: "L’acquéreur a versé son dépôt : vos coordonnées lui sont ouvertes. Son offre suit.",
+      buyerMessage: "La procédure de cession est lancée. Le nom du cabinet cédant et ses pièces vous sont ouverts.",
+      sellerMessage: "L’acquéreur a versé son dépôt de positionnement : la procédure de cession est lancée.",
     };
   }
 
   return {
     key: "POSITION",
-    title: "Position prise",
-    percent: 3,
+    title: "Le positionnement",
+    percent: PRE_DEAL_SHARE,
     outcome: "active",
     waitingFor: "buyer",
     buyerMessage:
-      "Vous suivez ce portefeuille et pouvez écrire au cédant. Versez le dépôt de garantie pour ouvrir ses coordonnées et déposer une offre.",
-    sellerMessage: "Un acquéreur s’intéresse à votre portefeuille. Il peut vous écrire ; son dépôt et son offre suivront.",
+      "Vous suivez ce portefeuille et pouvez écrire au cédant. Versez le dépôt de positionnement pour lancer la procédure de cession.",
+    sellerMessage: "Un acquéreur suit votre portefeuille. Il peut vous écrire ; son dépôt de positionnement suivra.",
   };
 }
 
-/** Index de l'étape courante dans la frise, -1 pour une issue hors parcours. */
+/** Index de l'étape courante parmi les quatre, -1 pour une issue hors parcours. */
 export function positionStepIndex(state: PositionState): number {
-  return POSITION_STEPS.findIndex((s) => s.key === state.key);
+  if (state.outcome === "lost" || state.outcome === "withdrawn") return -1;
+  if (state.key === "POSITION" || state.key === "DEPOSIT" || state.key === "OFFER") return 2;
+  return 3;
 }

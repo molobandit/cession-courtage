@@ -176,16 +176,16 @@ describe("listingMessageWhere (fuite entre acquereurs)", () => {
 });
 
 describe("identitiesRevealedFor", () => {
-  it("leve l'anonymat des le depot, sans attendre la LOI", () => {
+  it("leve l'anonymat des le depot de positionnement", () => {
     expect(identitiesRevealedFor({ stage: "NDA", hasDeposit: true })).toBe(true);
     expect(identitiesRevealedFor({ stage: "DATA_ROOM", hasDeposit: true })).toBe(true);
   });
 
-  it("garde l'anonymat sans depot tant qu'aucune offre n'est retenue", () => {
-    expect(identitiesRevealedFor({ stage: "NDA", hasDeposit: false })).toBe(false);
+  it("leve l'anonymat des qu'un dossier de cession existe", () => {
+    expect(identitiesRevealedFor({ stage: "NDA", hasDeposit: false })).toBe(true);
   });
 
-  it("leve l'anonymat des l'offre retenue, qui vaut lettre d'intention", () => {
+  it("leve l'anonymat a chaque etape du dossier", () => {
     expect(identitiesRevealedFor({ stage: "DATA_ROOM", hasDeposit: false })).toBe(true);
     expect(identitiesRevealedFor({ stage: "SIGNATURE", hasDeposit: false })).toBe(true);
     expect(identitiesRevealedFor({ stage: "CLOSED", hasDeposit: false })).toBe(true);

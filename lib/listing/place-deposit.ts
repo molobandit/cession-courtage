@@ -1,15 +1,17 @@
 import "server-only";
+import { DealStage, ListingStatus } from "@prisma/client";
 import type { Actor } from "@/lib/authz/actor";
 import { INTEREST_DEPOSIT_LABEL, INTEREST_DEPOSIT_RATE, interestDepositFor } from "@/lib/billing/rates";
 import { ensurePosition } from "@/lib/position/load";
 import { prisma } from "@/lib/prisma";
 
 /**
- * Pose le dépôt d'engagement de 2,5 % et l'acceptation de confidentialité.
+ * Pose le dépôt de positionnement de 2,5 % et ouvre la procédure de cession.
  *
- * Partagé par le bouton « Déposer mon engagement » et par le formulaire
- * d'offre, qui fait les deux en un geste : l'acquéreur pressé ne remplit
- * qu'un formulaire, sans rien sauter de ce qui l'engage.
+ * C'est le seul geste d'engagement du modèle : l'acquéreur ne propose pas de
+ * prix, il verse 2,5 % du montant de l'annonce dans un trust. Ce versement
+ * lance la procédure, lui ouvre le nom du cabinet cédant et ses pièces, et
+ * retire l'annonce du marché.
  */
 export type DepositPayment = { method: "CARD" | "SEPA" | null; ref: string | null; status: "RECORDED" | "PROCESSING" | "PAID" };
 
@@ -48,6 +50,9 @@ export async function placeDeposit(
 
     const { findFirmSeller, notifyDepositPlaced } = await import("@/lib/notify/transactional");
     const seller = await findFirmSeller(listing.portfolio.firmId);
+
+    const deal = seller ? await openDeal(actor.id, seller.id, listing) : null;
+
     if (seller) {
       await notifyDepositPlaced({
         depositKey: deposit.id,
@@ -69,5 +74,73 @@ export async function placeDeposit(
       },
     });
 
-  return { deposit, position };
+  return { deposit, position, deal };
+}
+
+/**
+ * Ouvre le dossier de cession au montant de l'annonce.
+ *
+ * Le prix n'est pas négocié : c'est celui que notre équipe a arrêté à l'issue
+ * de l'étude. Le dossier démarre donc directement aux vérifications, avec la
+ * confidentialité déjà signée des deux côtés, et l'annonce quitte le marché.
+ *
+ * Chaque étape est rejouable : la contrainte unique (annonce, acquéreur)
+ * empêche tout doublon si l'appel est rejoué.
+ */
+async function openDeal(
+  buyerId: string,
+  sellerId: string,
+  listing: { id: string; askingPrice: unknown },
+) {
+  const existant = await prisma.deal.findUnique({
+    where: { listingId_buyerId: { listingId: listing.id, buyerId } },
+    select: { id: true },
+  });
+  if (existant) return existant;
+
+  const montant = Math.round(Number(listing.askingPrice) * 100) / 100;
+  const [acquereur, cedant] = await Promise.all([
+    prisma.user.findUnique({ where: { id: buyerId }, select: { publicAlias: true } }),
+    prisma.user.findUnique({ where: { id: sellerId }, select: { publicAlias: true } }),
+  ]);
+
+  const deal = await prisma.deal.upsert({
+    where: { listingId_buyerId: { listingId: listing.id, buyerId } },
+    update: {},
+    create: {
+      listingId: listing.id,
+      sellerId,
+      buyerId,
+      agreedPrice: montant.toFixed(2),
+      upfrontAmount: montant.toFixed(2),
+      deferredAmount: (0).toFixed(2),
+      stage: DealStage.DATA_ROOM,
+      sellerAlias: `Cédant ${cedant?.publicAlias ?? "C"}`,
+      buyerAlias: `Acquéreur ${acquereur?.publicAlias ?? "A"}`,
+    },
+    select: { id: true },
+  });
+
+  const { loadAgreementsStatus } = await import("@/lib/account/agreements-load");
+  for (const userId of [buyerId, sellerId]) {
+    const utilisateur = await prisma.user.findUnique({ where: { id: userId }, select: { id: true, oriasNumber: true } });
+    const engagements = utilisateur ? await loadAgreementsStatus(utilisateur) : null;
+    await prisma.dealSignoff.upsert({
+      where: { dealId_kind_userId: { dealId: deal.id, kind: "NDA_SIGNED", userId } },
+      update: {},
+      create: {
+        dealId: deal.id,
+        kind: "NDA_SIGNED",
+        userId,
+        createdAt: engagements?.signed.NDA?.signedAt ?? new Date(),
+      },
+    });
+  }
+
+  await prisma.listing.update({
+    where: { id: listing.id },
+    data: { status: ListingStatus.UNDER_NEGOTIATION },
+  });
+
+  return deal;
 }

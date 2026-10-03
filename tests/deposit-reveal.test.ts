@@ -72,17 +72,17 @@ async function placeDeposit() {
 }
 
 describe("depot d'interet et levee d'anonymat", () => {
-  it("revele les deux cabinets des l'ouverture du dossier, l'offre retenue valant lettre d'intention", async () => {
+  it("revele les deux cabinets des l'ouverture du dossier", async () => {
     // Pas de depot : c'est le dossier lui-meme qui ouvre les identites.
     const deal = await findMyDeal("deal_nda", buyer);
     expect(deal).not.toBeNull();
-    expect(deal!.stage).toBe("DATA_ROOM");
+    expect(deal!.stage).toBe("NDA");
     expect(deal!.identitiesRevealed).toBe(true);
     expect(deal!.seller.kind).toBe("identified");
     expect(JSON.stringify(deal!.seller)).toMatch(/@/);
   });
 
-  it("calcule le depot a 2,5 % du prix demande", async () => {
+  it("calcule le depot a 2,5 % du montant de l'annonce", async () => {
     const amount = await placeDeposit();
     const row = await prisma.interestDeposit.findUnique({
       where: { listingId_buyerId: { listingId, buyerId: buyer.id } },

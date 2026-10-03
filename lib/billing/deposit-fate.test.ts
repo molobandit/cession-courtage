@@ -63,7 +63,8 @@ describe("ce qui est dit avant le versement", () => {
     expect(regles.join(" ")).toContain("trust");
     expect(regles.join(" ")).toContain("prélèvement SEPA");
     expect(regles.join(" ")).toContain("déduction de la transaction");
-    expect(regles.join(" ")).toContain("indemnitaire");
+    expect(regles.join(" ")).toContain("procédure de cession");
+    expect(regles.join(" ")).not.toContain("indemnitaire");
   });
 
   it("reprend le montant exact", () => {

@@ -1,6 +1,7 @@
 import "server-only";
 import { NotificationType } from "@prisma/client";
-import { SALE_PIPELINE } from "@/lib/deal/pipeline";
+import { SALE_PIPELINE, pipelineIndex } from "@/lib/deal/pipeline";
+import { DEAL_STAGE_LABELS } from "@/lib/labels";
 import { findFirmSeller, notifyPositionEvent } from "@/lib/notify/transactional";
 import { ensurePosition } from "@/lib/position/load";
 import { prisma } from "@/lib/prisma";
@@ -83,15 +84,16 @@ export async function notifyDealStage(
   if (!deal) return;
   const c = await contexte(deal.listingId, deal.buyerId);
   if (!c) return;
-  const etape = SALE_PIPELINE.find((s) => s.key === deal.stage);
+  const etape = SALE_PIPELINE[pipelineIndex(deal.stage)];
+  const detail = DEAL_STAGE_LABELS[deal.stage];
   const titre =
     deal.stage === "CLOSED"
       ? `Cession close · dossier n° ${c.numero}`
-      : `Dossier n° ${c.numero} · ${etape?.label ?? deal.stage}`;
+      : `Dossier n° ${c.numero} · ${detail}`;
   const corps =
     deal.stage === "CLOSED"
-      ? "La cession est close. Le prix est versé au cédant."
-      : `Le dossier passe à l’étape « ${etape?.label ?? deal.stage} ». ${etape?.summary ?? ""}`.trim();
+      ? "La cession est close. Le montant est versé au cédant."
+      : `Étape « ${etape?.label ?? ""} » : ${detail.toLowerCase()}. ${etape?.summary ?? ""}`.trim();
   const tous = options.notifyActor === true;
 
   if (tous || actorId !== deal.buyerId) {

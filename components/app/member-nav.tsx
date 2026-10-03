@@ -23,12 +23,13 @@ function linkActive(path: string, item: NavLink) {
 }
 
 /**
- * Navigation de l'espace membre, réduite à six entrées comme chez assurdeal :
- * le tableau de bord, la salle, ses achats, ses cessions, les outils, le compte.
+ * Navigation de l'espace membre : un parcours par ligne, dans l'ordre du
+ * modèle. Accueil, la salle, ses ventes, ses achats, l'investissement, le
+ * compte.
  *
- * Les écrans secondaires restent à un clic depuis leur page : demandes
- * d'acquisition depuis la salle, mise en vente depuis les cessions, recherche
- * et recommandations depuis le tableau de bord, notifications par la cloche.
+ * Les écrans secondaires restent à un clic depuis leur page : mise en vente
+ * depuis les ventes, suivi d'un dossier depuis les achats, notifications par
+ * la cloche.
  */
 export function memberWorkspaceLinks(
   canSell: boolean,
@@ -43,9 +44,18 @@ export function memberWorkspaceLinks(
     ];
   }
   const links: NavLink[] = [
-    { href: "/app", label: "Tableau de bord", short: "Tableau", icon: "chart", exact: true },
+    { href: "/app", label: "Accueil", short: "Accueil", icon: "chart", exact: true },
     { href: "/annonces", label: "Salle de marché", short: "Salle", icon: "bolt" },
   ];
+  if (canSell) {
+    links.push({
+      href: "/app/cessions",
+      label: "Mes ventes",
+      short: "Ventes",
+      icon: "bag",
+      also: ["/app/dossiers", "/app/annonces", "/app/import", "/app/portefeuilles"],
+    });
+  }
   if (canBuy) {
     links.push({
       href: "/app/achats",
@@ -55,23 +65,8 @@ export function memberWorkspaceLinks(
       also: ["/app/positions", "/app/mandats", "/app/opportunites"],
     });
   }
-  if (canSell) {
-    links.push({
-      href: "/app/cessions",
-      label: "Mes cessions",
-      short: "Cessions",
-      icon: "bag",
-      also: ["/app/dossiers", "/app/annonces", "/app/import", "/app/portefeuilles"],
-    });
-  }
   links.push(
-    {
-      href: "/app/outils",
-      label: "Outils et services",
-      short: "Outils",
-      icon: "tools",
-      also: ["/app/services", "/app/formaliser"],
-    },
+    { href: "/investisseurs", label: "Investir", short: "Investir", icon: "chart" },
     {
       href: "/app/profil",
       label: "Mon compte",

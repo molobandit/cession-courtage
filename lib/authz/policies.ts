@@ -31,19 +31,19 @@ export function isDealParticipant(
 }
 
 /**
- * Un dossier n'existe que parce que le cédant a retenu l'offre, qui vaut
- * lettre d'intention : dès ce moment, les deux cabinets se connaissent.
+ * Un dossier n'existe que parce qu'un acquéreur a versé son dépôt de
+ * positionnement : dès son ouverture, les deux cabinets se connaissent.
  */
 export function identitiesRevealed(stage: DealStage): boolean {
-  return isStageAtLeast(stage, "DATA_ROOM");
+  return isStageAtLeast(stage, "NDA");
 }
 
 /**
  * Leve l'anonymat entre cedant et acquereur.
  *
- * Deux declencheurs, l'un ou l'autre : le depot d'interet de 2,5 %, qui est la
- * porte commerciale, et la LOI, qui reste le jalon juridique. Un dossier deja
- * engage avant l'existence du depot continue donc de fonctionner.
+ * Deux declencheurs, l'un ou l'autre : le depot de positionnement de 2,5 %,
+ * qui ouvre la procedure, et l'existence d'un dossier de cession. Un dossier
+ * ouvert avant l'existence du depot continue donc de fonctionner.
  */
 export function identitiesRevealedFor(input: {
   stage: DealStage;

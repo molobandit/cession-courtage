@@ -171,8 +171,8 @@ export async function notifyDepositPlaced(input: {
   href?: string;
 }): Promise<void> {
   const body = [
-    `Un dépôt de ${input.amountLabel} a été posé sur le dossier n° ${input.publicNumber}.`,
-    "Les coordonnées du cabinet cédant sont désormais ouvertes entre les parties.",
+    `Un dépôt de positionnement de ${input.amountLabel} a été versé sur le dossier n° ${input.publicNumber}.`,
+    "La procédure de cession démarre et les coordonnées du cabinet cédant sont ouvertes entre les parties.",
     "",
     `L’équipe ${BRAND_NAME}`,
   ].join("\n");
@@ -181,28 +181,28 @@ export async function notifyDepositPlaced(input: {
     to: input.seller.email,
     purpose: "DEPOSIT_PLACED",
     dedupeKey: `deposit:${input.depositKey}:seller`,
-    subject: `Dépôt posé · dossier n° ${input.publicNumber}`,
+    subject: `Dépôt de positionnement · dossier n° ${input.publicNumber}`,
     bodyText: body,
   });
   await sendMail({
     to: input.counterparty.email,
     purpose: "DEPOSIT_PLACED",
     dedupeKey: `deposit:${input.depositKey}:counterparty`,
-    subject: `Dépôt posé · dossier n° ${input.publicNumber}`,
+    subject: `Dépôt de positionnement · dossier n° ${input.publicNumber}`,
     bodyText: body,
   });
   await notifyInApp({
     userId: input.seller.userId,
     type: NotificationType.DEPOSIT_PLACED,
-    title: "Dépôt de 2,5 % posé",
-    body: `Dossier n° ${input.publicNumber}. Les coordonnées du cabinet sont ouvertes.`,
+    title: "Dépôt de positionnement versé",
+    body: `Dossier n° ${input.publicNumber}. La procédure de cession démarre.`,
     href: input.href ?? `/annonces/${input.publicNumber}`,
   });
   await notifyInApp({
     userId: input.counterparty.userId,
     type: NotificationType.DEPOSIT_PLACED,
-    title: "Dépôt de 2,5 % posé",
-    body: `Dossier n° ${input.publicNumber}. Les coordonnées du cabinet sont ouvertes.`,
+    title: "Dépôt de positionnement versé",
+    body: `Dossier n° ${input.publicNumber}. La procédure de cession démarre.`,
     href: input.href ?? `/annonces/${input.publicNumber}`,
   });
 }

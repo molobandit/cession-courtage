@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { PageIntro } from "@/components/page-intro";
 import { BUY_POINTS, CTA_BROWSE, MARKET_ACCESS, NAV_BUY, PRICE_RULE_SENTENCES, RETENTION_TRUST_BODY, RETENTION_TRUST_TITLE, STUDY_SENTENCE } from "@/lib/copy/market";
 import { canBuy, getActor, isOriasVerified } from "@/lib/authz";
-import { GROWTH_PLAN_ANNUAL_EUR, INTEREST_DEPOSIT_LABEL } from "@/lib/billing/rates";
+import { INTEREST_DEPOSIT_LABEL } from "@/lib/billing/rates";
 import { ACQUISITION_APP_PATH, acquisitionLoginHref } from "@/lib/nav/acquisition";
 
 export const metadata: Metadata = {
@@ -144,15 +144,12 @@ export default async function AcquerirPage() {
       <section className="mx-auto max-w-6xl px-4 py-16">
         <div className="rounded-3xl border border-line bg-paper p-8">
           <h2 className="font-bold tracking-tight text-2xl font-semibold text-ink">
-            L’abonnement ouvre le détail. La transaction passe par un trust.
+            La transaction passe par un trust
           </h2>
           <p className="mt-4 max-w-3xl text-[15px] leading-relaxed text-muted">
-            Le catalogue reste libre. Un abonnement de{" "}
-            {GROWTH_PLAN_ANNUAL_EUR.toLocaleString("fr-FR")} € HT par an est
-            obligatoire pour le contact et les messages. Dès que vous vous
-            positionnez, un dépôt de {INTEREST_DEPOSIT_LABEL} est versé
-            dans un trust, pour lancer la procédure de cession.{" "}
-            {CESSION_FUNDS_DISCLAIMER}
+            Le catalogue reste libre. Dès que vous vous positionnez, un dépôt de{" "}
+            {INTEREST_DEPOSIT_LABEL} du montant de l’annonce est versé dans un trust. Il lance la
+            procédure de cession et vous donne le nom du cabinet cédant.
           </p>
           <div className="mt-7 flex flex-wrap gap-3">
             <Button asChild variant="primary">

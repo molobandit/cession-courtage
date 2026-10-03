@@ -1,16 +1,15 @@
 
 /**
- * Sort du dépôt de garantie.
+ * Sort du dépôt de positionnement.
  *
  * Le dépôt n'est pas un droit d'entrée : c'est un engagement. Il sert à
  * protéger le cédant contre une rétractation d'opportunité, une fois qu'il a
  * ouvert ses pièces et arrêté de chercher d'autres repreneurs.
  *
- * D'où deux issues, et deux seulement. La cession aboutit : le dépôt vient en
- * déduction du prix, il n'est jamais remboursé à part — ce serait un
- * mouvement d'argent inutile dans les deux sens. L'acquéreur se retire : le
- * dépôt reste au cédant, à titre indemnitaire, en réparation du temps et de
- * l'exclusivité qu'il a donnés.
+ * Quand la cession aboutit, le dépôt vient en déduction du montant : il n'est
+ * jamais remboursé à part, ce serait un mouvement d'argent inutile dans les
+ * deux sens. Le sort du dépôt en cas de retrait de l'acquéreur n'est pas
+ * tranché : le code le calcule, l'interface ne l'annonce pas.
  *
  * Ces règles doivent être dites avant le versement, pas découvertes après :
  * `depositTerms` existe pour être affiché au moment où l'on s'engage.
@@ -68,10 +67,9 @@ export function depositOutcomeLabel(outcome: DepositOutcome): string {
  */
 export function depositTerms(amountLabel: string, _amountEur?: number): string[] {
   return [
-    `Vous versez ${amountLabel} dans un trust pour vous positionner et lancer la procédure de cession.`,
+    `Vous versez ${amountLabel} dans un trust. C’est ce dépôt qui lance la procédure de cession.`,
+    "Le nom du cabinet cédant vous est révélé et ses pièces s’ouvrent.",
     "Si la cession aboutit, ce montant vient en déduction de la transaction : il n’est pas remboursé à part.",
-    "Si vous vous retirez, il reste acquis au cédant à titre indemnitaire.",
-    "Tant que le dossier suit son cours, il n’est ni acquis ni rendu.",
     "Règlement par carte ou prélèvement SEPA, par un prestataire agréé : la plateforme ne détient jamais les fonds.",
   ];
 }

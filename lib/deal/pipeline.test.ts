@@ -2,24 +2,28 @@ import { describe, expect, it } from "vitest";
 import {
   ESCROW_UPFRONT_SHARE,
   nextPipelineAction,
+  pipelineIndex,
   pipelineProgressPercent,
   SALE_PIPELINE,
 } from "./pipeline";
 
 describe("sale pipeline", () => {
-  it("commence au positionnement et finit à la clôture", () => {
-    expect(SALE_PIPELINE[0]?.key).toBe("POSITION");
-    expect(SALE_PIPELINE.at(-1)?.key).toBe("CLOSED");
+  it("tient dans les quatre étapes du modèle", () => {
+    expect(SALE_PIPELINE.map((s) => s.key)).toEqual(["ETUDE", "ONLINE", "POSITION", "SIGNATURE"]);
+    expect(SALE_PIPELINE.map((s) => s.num)).toEqual(["01", "02", "03", "04"]);
+    expect(SALE_PIPELINE[2]?.label).toBe("Le positionnement");
   });
 
-  it("suit l’échelle de la prise de position, jusqu’à 100 % à la clôture", () => {
-    expect(pipelineProgressPercent("POSITION")).toBe(3);
-    expect(pipelineProgressPercent("NDA")).toBe(15);
+  it("place le positionnement en troisième étape et le dossier en quatrième", () => {
+    expect(pipelineIndex("POSITION")).toBe(2);
+    expect(pipelineIndex("DATA_ROOM")).toBe(3);
+    expect(pipelineProgressPercent("POSITION")).toBe(50);
+    expect(pipelineProgressPercent("SIGNATURE")).toBe(75);
     expect(pipelineProgressPercent("CLOSED")).toBe(100);
   });
 
-  it("tout le prix au séquestre, libéré à l’accord des compagnies", () => {
+  it("tout le montant passe par le trust, libéré après vérification", () => {
     expect(ESCROW_UPFRONT_SHARE).toBe(1);
-    expect(nextPipelineAction("TRANSFER", "buyer").body).toMatch(/compagnies/);
+    expect(nextPipelineAction("TRANSFER", "seller").body).toMatch(/trust/);
   });
 });

@@ -1,28 +1,30 @@
 /**
- * Le dépôt de garantie, de son versement à son sort, sur la vraie base D1.
+ * Le dépôt de positionnement, de son versement à son sort, sur la vraie base D1.
  *
- * Le dépôt est ce qui rend l'engagement réciproque : le cédant ouvre ses
- * pièces et cesse de chercher d'autres repreneurs, l'acquéreur met une somme
- * en jeu. Les deux règles qui comptent sont donc celles des deux issues, et
- * c'est ce que ce test tient : déduit du prix si la cession aboutit, acquis au
- * cédant si l'acquéreur se retire.
+ * C'est le cœur du modèle : l'acquéreur ne propose pas de prix, il verse
+ * 2,5 % du montant de l'annonce dans un trust. Ce versement lance la
+ * procédure de cession et lui ouvre le nom du cabinet cédant. Le test tient
+ * les trois règles : les prérequis avant de verser, le montant exact, et
+ * l'imputation du dépôt sur le prix à la clôture.
  *
  * Prérequis : `npm run db:migrate && npm run db:seed`.
  */
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { DealStage, OfferStatus } from "@prisma/client";
+import { DealStage } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 // Importés directement : l'alias de vitest ne vaut pas pour tsc.
 import { disposePlatformProxy } from "./setup/prisma-test";
 import { connecterUtilisateur } from "./setup/auth-stub";
-import { submitOfferAction, withdrawOfferAction } from "@/app/actions/offers";
+import { submitOfferAction } from "@/app/actions/offers";
+import { placeInterestDepositAction } from "@/app/actions/deposits";
+import { INTEREST_DEPOSIT_RATE, interestDepositFor } from "@/lib/billing/rates";
 import { confirmCarrierTransferAction } from "@/app/actions/deal-process";
 import { declarerFinancement, restaurer, sauvegarder, signerEngagements } from "./setup/engagements";
 
 const LISTING = "lst_03"; // fenêtre d'offres encore ouverte
 let acheteur: string;
 let depotCree = false;
-let offreCreee: string | null = null;
+let statutInitial: string | null = null;
 let sauvegarde: Awaited<ReturnType<typeof sauvegarder>>;
 
 function form(champs: Record<string, string>): FormData {
@@ -44,14 +46,14 @@ beforeAll(async () => {
       oriasVerifiedAt: { not: null },
       erasedAt: null,
       firmId: { not: listing.portfolio.firmId },
-      subscriptions: { some: { status: "ACTIVE", plan: "GROWTH" } },
       offers: { none: { listingId: LISTING } },
       deposits: { none: { listingId: LISTING } },
     },
     select: { id: true },
   });
-  if (!candidat) throw new Error("Aucun acquéreur abonné disponible pour lst_03.");
+  if (!candidat) throw new Error("Aucun acquéreur disponible pour lst_03.");
   acheteur = candidat.id;
+  statutInitial = (await prisma.listing.findUniqueOrThrow({ where: { id: LISTING }, select: { status: true } })).status;
   sauvegarde = await sauvegarder([acheteur]);
 });
 
@@ -59,95 +61,82 @@ beforeEach(() => connecterUtilisateur(acheteur));
 
 afterAll(async () => {
   connecterUtilisateur(null);
-  if (offreCreee) await prisma.offer.delete({ where: { id: offreCreee } }).catch(() => undefined);
   if (depotCree) {
     await prisma.interestDeposit
       .delete({ where: { listingId_buyerId: { listingId: LISTING, buyerId: acheteur } } })
+      .catch(() => undefined);
+    await prisma.dealSignoff
+      .deleteMany({ where: { deal: { listingId: LISTING, buyerId: acheteur } } })
+      .catch(() => undefined);
+    await prisma.deal
+      .deleteMany({ where: { listingId: LISTING, buyerId: acheteur } })
+      .catch(() => undefined);
+    await prisma.buyerPosition
+      .deleteMany({ where: { listingId: LISTING, buyerId: acheteur } })
+      .catch(() => undefined);
+  }
+  if (statutInitial) {
+    await prisma.listing
+      .update({ where: { id: LISTING }, data: { status: statutInitial as never } })
       .catch(() => undefined);
   }
   await restaurer(sauvegarde);
   await disposePlatformProxy();
 });
 
-describe("aucune offre sans engagement", () => {
-  it("refuse l’offre tant que les engagements ne sont pas signés", async () => {
-    const resultat = await submitOfferAction({}, form({ listingId: LISTING, amount: "40000", paymentMethod: "CARD", engagement: "on" }));
+describe("le dépôt de positionnement", () => {
+  it("refuse tant que les engagements ne sont pas signés", async () => {
+    const resultat = await placeInterestDepositAction({}, form({ listingId: LISTING, paymentMethod: "CARD" }));
     expect(resultat.error).toContain("engagements");
     expect(await prisma.interestDeposit.count({ where: { listingId: LISTING, buyerId: acheteur } })).toBe(0);
   });
 
-  it("refuse une offre que le financement déclaré ne couvre pas", async () => {
+  it("refuse tant que la capacité financière n’est pas justifiée", async () => {
     await signerEngagements(acheteur);
-    await declarerFinancement(acheteur, 30_000);
-    connecterUtilisateur(acheteur);
-    const resultat = await submitOfferAction({}, form({ listingId: LISTING, amount: "40000", paymentMethod: "CARD", engagement: "on" }));
-    expect(resultat.error).toContain("ne couvre pas");
-    await declarerFinancement(acheteur, 100_000);
-  });
-
-  it("refuse l’offre tant que le dépôt n’est pas versé", async () => {
-    const resultat = await submitOfferAction(
-      {},
-      form({
-        listingId: LISTING,
-        amount: "40000",
-        upfrontPercent: "70",
-        message: "Je souhaite me positionner sur ce dossier.",
-      }),
-    );
-    expect(resultat.error).toContain("dépôt de garantie");
-    const offres = await prisma.offer.count({ where: { listingId: LISTING, buyerId: acheteur } });
-    expect(offres).toBe(0);
-  });
-
-  it("accepte l’offre une fois le dépôt en place", async () => {
-    await prisma.interestDeposit.create({
-      data: { listingId: LISTING, buyerId: acheteur, amount: "1000.00", rate: "0.0250" },
+    await prisma.user.update({
+      where: { id: acheteur },
+      data: { financialCapacityEur: null, financialCapacityStatus: "NONE", financialCapacityAt: null },
     });
+    connecterUtilisateur(acheteur);
+    const resultat = await placeInterestDepositAction({}, form({ listingId: LISTING, paymentMethod: "CARD" }));
+    expect(resultat.error).toBeDefined();
+    expect(await prisma.interestDeposit.count({ where: { listingId: LISTING, buyerId: acheteur } })).toBe(0);
+  });
+
+  it("enregistre le dépôt de 2,5 % et prend la position", async () => {
+    await declarerFinancement(acheteur, 500_000);
+    connecterUtilisateur(acheteur);
+    const resultat = await placeInterestDepositAction({}, form({ listingId: LISTING, paymentMethod: "CARD" }));
+    expect(resultat.error).toBeUndefined();
+    expect(resultat.placed).toBe(true);
     depotCree = true;
 
-    // L'action se termine par une redirection vers l'annonce : c'est son succès.
-    await expect(
-      submitOfferAction(
-        {},
-        form({
-          listingId: LISTING,
-          amount: "40000",
-          upfrontPercent: "70",
-          message: "Je souhaite me positionner sur ce dossier.",
-        }),
-      ),
-    ).rejects.toThrow(/NEXT_REDIRECT/);
-
-    const offre = await prisma.offer.findUnique({
+    const annonce = await prisma.listing.findUniqueOrThrow({ where: { id: LISTING }, select: { askingPrice: true } });
+    const depot = await prisma.interestDeposit.findUniqueOrThrow({
       where: { listingId_buyerId: { listingId: LISTING, buyerId: acheteur } },
-      select: { id: true, status: true },
+      select: { amount: true, rate: true, outcome: true },
     });
-    expect(offre?.status).toBe(OfferStatus.SUBMITTED);
-    offreCreee = offre!.id;
-  });
-});
+    expect(Number(depot.rate)).toBe(INTEREST_DEPOSIT_RATE);
+    expect(Number(depot.amount)).toBe(interestDepositFor(Number(annonce.askingPrice)));
+    expect(depot.outcome).toBe("PENDING");
+    expect(await prisma.buyerPosition.count({ where: { listingId: LISTING, buyerId: acheteur } })).toBe(1);
 
-describe("le sort du dépôt", () => {
-  it("reste en attente tant que rien n’est tranché", async () => {
-    const depot = await prisma.interestDeposit.findUnique({
+    // Le dépôt lance la procédure : le dossier de cession existe, l'annonce quitte le marché.
+    const dossier = await prisma.deal.findUniqueOrThrow({
       where: { listingId_buyerId: { listingId: LISTING, buyerId: acheteur } },
-      select: { outcome: true, settledAt: true },
+      select: { stage: true, agreedPrice: true },
     });
-    expect(depot?.outcome).toBe("PENDING");
-    expect(depot?.settledAt).toBeNull();
+    expect(dossier.stage).toBe(DealStage.DATA_ROOM);
+    expect(Number(dossier.agreedPrice)).toBe(Number(annonce.askingPrice));
+    expect((await prisma.listing.findUniqueOrThrow({ where: { id: LISTING }, select: { status: true } })).status).toBe(
+      "UNDER_NEGOTIATION",
+    );
   });
 
-  it("reste acquis au cédant quand l’acquéreur retire son offre", async () => {
-    const resultat = await withdrawOfferAction({}, form({ offerId: offreCreee! }));
-    expect(resultat.error).toBeUndefined();
-
-    const depot = await prisma.interestDeposit.findUnique({
-      where: { listingId_buyerId: { listingId: LISTING, buyerId: acheteur } },
-      select: { outcome: true, settledAt: true },
-    });
-    expect(depot?.outcome).toBe("RETAINED");
-    expect(depot?.settledAt).not.toBeNull();
+  it("ne reçoit plus d’offres : le montant est celui de l’annonce", async () => {
+    const resultat = await submitOfferAction({}, form({ listingId: LISTING, amount: "40000", paymentMethod: "CARD" }));
+    expect(resultat.error).toContain("ne reçoit plus d’offres");
+    expect(await prisma.offer.count({ where: { listingId: LISTING, buyerId: acheteur } })).toBe(0);
   });
 });
 
