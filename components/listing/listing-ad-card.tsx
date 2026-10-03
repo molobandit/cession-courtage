@@ -3,12 +3,20 @@ import { MarketBadge } from "@/components/listing/market-badge";
 import { MarketStamp } from "@/components/listing/market-stamp";
 import { UNCERTIFIED_LABEL } from "@/lib/copy/market";
 import { formatCount, formatEuroWhole } from "@/lib/format/number";
-import { commissionPerceptionCopy, perceptionLabel } from "@/lib/listing/perception";
+import { listingMultiple } from "@/lib/market/indices";
 import type { PublicListingCard } from "@/lib/listing/public-card";
 
+/**
+ * Une carte de la salle de marché.
+ *
+ * Elle reprend les repères de « L'essentiel du dossier » : commissions,
+ * contrats, ancienneté, montant, multiple. Pas de meilleure offre ni de
+ * compte à rebours : le montant est arrêté après l'étude, et on se positionne
+ * en versant son dépôt.
+ */
 export function ListingAdCard({ item }: { item: PublicListingCard }) {
-  const perception = commissionPerceptionCopy(item);
-  const title = item.riskTypes[0] ?? "Portefeuille d’assurance";
+  const branches = item.riskTypes.slice(0, 2).join(", ") || "Portefeuille d’assurance";
+  const multiple = listingMultiple(item.askingPrice, item.annualCommissions);
 
   return (
     <li>
@@ -16,68 +24,50 @@ export function ListingAdCard({ item }: { item: PublicListingCard }) {
         href={`/annonces/${item.publicNumber}`}
         className="lift relative flex h-full flex-col overflow-hidden rounded-2xl border border-line bg-paper p-6"
       >
-        <div className="absolute right-3 top-3 z-10 flex flex-col items-end gap-2">
-          {item.sold ? <MarketStamp kind="sold" /> : null}
+        <div className="flex flex-wrap items-center gap-2">
           {item.certified ? <MarketStamp kind="certified" /> : null}
+          <MarketBadge label={item.statusLabel} tone={item.marketTone} detail={null} />
         </div>
 
-        <h3 className={`text-[17px] font-semibold leading-snug text-ink ${item.certified || item.sold ? "pr-24" : ""}`}>
-          {title}
+        <h3 className="mt-3 text-[17px] font-semibold leading-snug text-ink">
+          Dossier n° {item.publicNumber}
         </h3>
-        <MarketBadge
-          className="mt-2"
-          label={item.statusLabel}
-          tone={item.marketTone}
-          detail={item.marketTone === "sealed" ? item.marketDetail : null}
-        />
-        {item.certified ? null : (
-          <p className="mt-2 text-[12px] text-muted">{UNCERTIFIED_LABEL}</p>
-        )}
-
-        <div className="mt-5 grid grid-cols-2 border-t border-line pt-4">
-          <div className="pr-4">
-            <p className="tabular text-[18px] font-bold text-ink">
-              {formatEuroWhole(item.annualCommissions)}
-            </p>
-            <p className="mt-0.5 text-[12px] text-muted">Commissions / an</p>
-            <p className="mt-1 text-[13px] font-semibold text-ink">
-              {perception.mode === "UNSTATED" ? "Linéaire ou précompte non précisé" : perceptionLabel(perception.mode)}
-            </p>
-          </div>
-          <div className="border-l border-line pl-4">
-            <p className="tabular text-[18px] font-bold text-ink">
-              {formatEuroWhole(item.askingPrice)}
-            </p>
-            <p className="mt-0.5 text-[12px] text-muted">Montant</p>
-          </div>
-        </div>
-        {!item.sold && item.offerCount ? (
-          <p className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-xl bg-indigo-soft px-3 py-2 text-[13px] text-ink">
-            {item.offerCount >= 2 || (item.bestOffer ?? 0) >= item.askingPrice ? (
-              <span className="rounded-full bg-indigo px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">Opportunité chaude</span>
-            ) : null}
-            <span>
-              Meilleure offre <span className="tabular font-bold">{formatEuroWhole(item.bestOffer ?? 0)}</span>
-            </span>
-            <span className="text-muted">· {item.offerCount} offre{item.offerCount > 1 ? "s" : ""}</span>
-          </p>
-        ) : null}
-        {perception.amountLine ? (
-          <p className="mt-0.5 text-[13px] text-muted">{perception.amountLine}</p>
-        ) : null}
-
-        <p className="mt-4 text-[13px] leading-relaxed text-muted">
-          {formatCount(item.contractCount)} contrats
-          {" · "}
-          {item.isPartial ? "Cession partielle" : "Cession totale"}
-          . Référence : dossier n° {item.publicNumber}.
+        <p className="mt-1 text-[13px] leading-relaxed text-muted">
+          {branches} · {item.zone}
         </p>
+        {item.certified ? null : <p className="mt-1 text-[12px] text-muted">{UNCERTIFIED_LABEL}</p>}
+
+        <dl className="mt-5 grid grid-cols-3 gap-3 border-t border-line pt-4">
+          <Repere label="Commissions / an" value={formatEuroWhole(item.annualCommissions)} />
+          <Repere label="Contrats" value={formatCount(item.contractCount)} />
+          <Repere
+            label="Ancienneté"
+            value={item.averageAgeMonths > 0 ? `${Math.round(item.averageAgeMonths)} mois` : "—"}
+          />
+        </dl>
+
+        <dl className="mt-4 grid grid-cols-2 gap-3 border-t border-line pt-4">
+          <Repere label="Montant" value={formatEuroWhole(item.askingPrice)} fort />
+          <Repere label="Multiple" value={multiple ? multiple.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "—"} fort />
+        </dl>
+
         <span className="mt-auto pt-5">
           <span className="inline-flex h-10 w-full items-center justify-center rounded-full bg-indigo text-[14px] font-semibold !text-white">
-            {item.sold ? "Voir le dossier" : "Prendre position"}
+            Voir le dossier
           </span>
         </span>
       </Link>
     </li>
+  );
+}
+
+function Repere({ label, value, fort = false }: { label: string; value: string; fort?: boolean }) {
+  return (
+    <div className="min-w-0">
+      <dt className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted">{label}</dt>
+      <dd className={`tabular mt-1 truncate font-bold text-ink ${fort ? "text-[18px]" : "text-[15px]"}`}>
+        {value}
+      </dd>
+    </div>
   );
 }

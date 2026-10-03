@@ -5,24 +5,22 @@ import { PageIntro } from "@/components/page-intro";
 import { PublicListingList } from "@/components/listing/public-listing-list";
 import { parseSearchPrefs, searchPrefsToFilters } from "@/lib/account/search-prefs";
 import { canBuy, getActor, isOriasVerified } from "@/lib/authz";
-import { MARKET_HALL_TITLE } from "@/lib/copy/market";
+import { MARKET_HALL, MARKET_HALL_LEDE } from "@/lib/copy/market";
 import { loadPublicListingCards } from "@/lib/listing/load-public-cards";
 import { prisma } from "@/lib/prisma";
 
 export const metadata: Metadata = {
-  title: MARKET_HALL_TITLE,
+  title: MARKET_HALL,
   description:
     "Salle de marché : portefeuilles d’assurance disponibles à l’achat ou à la cession.",
   alternates: { canonical: "/annonces" },
 };
 
-export default async function PublicListingsPage({ searchParams }: { searchParams: Promise<{ tri?: string }> }) {
-  const { tri } = await searchParams;
-  const meilleures = tri === "meilleures";
+export default async function PublicListingsPage() {
   const cards = await loadPublicListingCards();
   const actor = await getActor();
-  const mandateHref =
-    actor && isOriasVerified(actor) && canBuy(actor) ? "/app/mandats" : "/acquerir";
+  const contactHref =
+    actor && isOriasVerified(actor) && canBuy(actor) ? "/app/profil#recherche" : "/acquerir";
   const showDetailedFilters = Boolean(actor);
   let initialFilters = {};
   if (actor) {
@@ -35,52 +33,25 @@ export default async function PublicListingsPage({ searchParams }: { searchParam
 
   return (
     <main>
-      <PageIntro title={meilleures ? "Meilleures affaires" : MARKET_HALL_TITLE}>
-        {meilleures
-          ? "Les portefeuilles encore achetables, du plus rentable au moins rentable pour le montant de l’annonce."
-          : "Tous les portefeuilles à vendre. Filtrez, comparez, prenez position."}
-      </PageIntro>
+      <PageIntro title={MARKET_HALL}>{MARKET_HALL_LEDE}</PageIntro>
       <div className="mx-auto max-w-6xl px-4 py-8">
-          <nav className="flex flex-wrap gap-2" aria-label="Type de dossier">
-            <Link
-              href="/annonces"
-              aria-current={meilleures ? undefined : "page"}
-              className={meilleures ? "rounded-full border border-line px-4 py-2 text-[14px] text-muted hover:border-indigo hover:text-indigo" : "rounded-full bg-indigo px-4 py-2 text-[14px] font-medium !text-white"}
-            >
-              Portefeuilles à vendre
-            </Link>
-            <Link
-              href="/annonces?tri=meilleures"
-              aria-current={meilleures ? "page" : undefined}
-              className={meilleures ? "rounded-full bg-indigo px-4 py-2 text-[14px] font-medium !text-white" : "rounded-full border border-line px-4 py-2 text-[14px] text-muted hover:border-indigo hover:text-indigo"}
-            >
-              Meilleures affaires
-            </Link>
-            <Link
-              href="/annonces/demandes"
-              className="rounded-full border border-line px-4 py-2 text-[14px] text-muted hover:border-indigo hover:text-indigo"
-            >
-              Demandes d’acquisition
-            </Link>
-          </nav>
         {cards.length === 0 ? (
           <div className="rounded-xl border border-line bg-paper p-8">
             <h2 className="text-xl font-semibold text-ink">
-              Aucun portefeuille publié pour le moment
+              Aucun portefeuille en ligne pour le moment
             </h2>
             <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-muted">
-              Déposez un mandat d’achat pour être prévenu dès qu’un dossier
-              correspondant est mis en ligne.
+              Chaque portefeuille est étudié et chiffré avant sa mise en ligne. Dites-nous ce que vous
+              cherchez : nous vous prévenons dès qu’un dossier y correspond.
             </p>
             <Button asChild variant="primary" className="mt-6">
-              <Link href={mandateHref}>Déposer un mandat</Link>
+              <Link href={contactHref}>Être prévenu des mises en ligne</Link>
             </Button>
           </div>
         ) : (
           <PublicListingList
-            key={meilleures ? "best" : "all"}
             listings={cards}
-            initialSort={meilleures ? "best" : "recent"}
+            initialSort="recent"
             initialFilters={initialFilters}
             showDetailedFilters={showDetailedFilters}
             accountHref={actor ? "/app/profil#recherche" : "/connexion?next=/annonces"}

@@ -16,7 +16,7 @@ import type { PublicListingCard } from "@/lib/listing/public-card";
 export type { PublicListingCard };
 
 const SORT_LABELS: Record<SortKey, string> = {
-  best: "Meilleures affaires",
+  best: "Multiple le plus bas",
   recent: "Les plus récentes",
   "price-asc": "Montant croissant",
   "price-desc": "Montant décroissant",
@@ -196,20 +196,11 @@ export function PublicListingList({
             <label className="flex items-center gap-2.5 text-[15px] text-ink">
               <input
                 type="checkbox"
-                checked={openOnly}
-                onChange={(e) => patch({ openOnly: e.target.checked })}
-                className="h-5 w-5 rounded border-line"
-              />
-              Fenêtre d’offres encore ouverte
-            </label>
-            <label className="flex items-center gap-2.5 text-[15px] text-ink">
-              <input
-                type="checkbox"
                 checked={certifiedOnly}
                 onChange={(e) => patch({ certifiedOnly: e.target.checked })}
                 className="h-5 w-5 rounded border-line"
               />
-              Portefeuilles certifiés
+              Portefeuilles certifiés uniquement
             </label>
           </div>
           <div className="flex items-center gap-4">
