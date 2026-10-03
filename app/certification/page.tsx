@@ -19,6 +19,7 @@ const STEPS = [
       "Justificatif d’identité du représentant légal",
       "Statuts ou documents juridiques pertinents",
       "Numéro ORIAS et justificatifs associés",
+      "Réputation du cabinet",
     ],
   },
   {
@@ -62,28 +63,28 @@ export default function CertificationPage() {
   return (
     <main>
       <PageIntro kicker="Due diligence" title="Faire certifier mon portefeuille">
-        Nous vérifions la société, les pièces d’identité et les documents du
-        portefeuille. Honoraires précisés au contrat, dus seulement si la vente
-        aboutit. La salle de marché affiche un cachet CERTIFIÉ. Plus de 50 points
-        de contrôle.
+        Nous vérifions la société, sa réputation, les pièces d’identité et les
+        documents du portefeuille. Honoraires précisés au contrat, dus seulement
+        si la vente aboutit. La salle de marché affiche un cachet CERTIFIÉ. Plus
+        de 50 points de contrôle.
       </PageIntro>
       <div className="mx-auto grid max-w-5xl gap-6 px-4 py-12 lg:grid-cols-2">
         <article className="rounded-2xl border border-line bg-paper p-7">
           <h2 className="text-2xl font-bold tracking-tight text-ink">Annonce simple</h2>
           <p className="mt-3 text-[15px] leading-relaxed text-muted">
-            Les informations sont celles que vous déclarez. Nous ne relisons pas
-            le Kbis, la pièce d’identité ni les bordereaux. Mise en vente
-            gratuite, paiement sécurisé.
+            Annonce non certifiée. Les données du portefeuille ne sont pas
+            vérifiées par La bourse du portefeuille. C’est à l’acquéreur
+            d’effectuer ses propres vérifications, notamment le Kbis, les
+            pièces d’identité et la capacité du vendeur. Transaction sécurisée.
           </p>
         </article>
         <article className="rounded-2xl border border-line bg-paper p-7">
           <h2 className="text-2xl font-bold tracking-tight text-ink">Certification</h2>
           <p className="mt-3 text-[15px] leading-relaxed text-muted">
-            Contrôle de la société (Kbis), de l’identité du représentant, du
-            justificatif ORIAS du dossier et des documents du portefeuille.
-            Honoraires précisés au contrat, dus seulement si la vente aboutit. Le
-            badge affiché est {CERTIFIED_LABEL}. Paiement sécurisé jusqu’au
-            transfert, sans frais supplémentaires.
+            Portefeuille certifié. Tous les éléments sont contrôlés. Les
+            données et les bordereaux de commission sont vérifiés, ainsi que le
+            reste du dossier. Honoraires précisés au contrat, dus seulement si
+            la vente aboutit. Transaction sécurisée.
           </p>
         </article>
       </div>

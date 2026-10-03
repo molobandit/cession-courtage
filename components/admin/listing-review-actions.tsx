@@ -15,7 +15,7 @@ export function ListingReviewActions({ listingId, suggestedPrice }: { listingId:
         <input type="hidden" name="listingId" value={listingId} />
         <input type="hidden" name="decision" value="approve" />
         <label className="grid gap-1 text-xs text-muted">
-          Prix fixé par l’équipe (€)
+          Montant fixé par l’équipe (€)
           <input
             name="price"
             defaultValue={String(suggestedPrice)}
@@ -25,7 +25,7 @@ export function ListingReviewActions({ listingId, suggestedPrice }: { listingId:
           />
         </label>
         <Button type="submit" size="sm" disabled={pending}>
-          Mettre en ligne à ce prix
+          Mettre en ligne à ce montant
         </Button>
       </form>
       <form action={action} className="flex flex-wrap items-end gap-2">

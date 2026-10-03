@@ -225,7 +225,7 @@ export default async function ProfilPage({
         <AccountNav />
         {checkoutConfirmed ? (
           <p className="mt-5 rounded-2xl bg-white px-4 py-3 text-[15px] font-medium text-ink">
-            Paiement confirmé. L’abonnement 250 € HT est actif.
+            Abonnement confirmé. L’abonnement 250 € HT est actif.
           </p>
         ) : null}
       </section>
@@ -298,7 +298,7 @@ export default async function ProfilPage({
       <section id="verification" className={card}>
         <h2 className="text-lg font-semibold text-ink">Compte vérifié</h2>
         <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-muted">
-          Ces pièces permettent de signer et de sécuriser le paiement, en règle avec la lutte contre le blanchiment.
+          Ces pièces permettent de signer et de sécuriser la transaction, en règle avec la lutte contre le blanchiment.
           Seule la plateforme les consulte.
         </p>
         <div className="mt-5">
@@ -360,7 +360,7 @@ export default async function ProfilPage({
           <p className="mt-4 text-[15px] text-ink">Abonnement actif.</p>
         ) : isInvestor(actor) ? null : (
           <div className="mt-5 max-w-sm">
-            <SubscribeButton label={`Payer ${GROWTH_PLAN_ANNUAL_EUR} € HT`} next={next ?? undefined} />
+            <SubscribeButton label={`Régler ${GROWTH_PLAN_ANNUAL_EUR} € HT`} next={next ?? undefined} />
           </div>
         )}
       </section>

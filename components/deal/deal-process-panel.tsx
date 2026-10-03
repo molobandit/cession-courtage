@@ -120,8 +120,8 @@ function TaskAction({ p, task, side, escrowLive }: { p: DealProcess; task: Task;
         <CommitForm
           dealId={id}
           action={confirmPriceAction}
-          consentLabel={`J’ai examiné les pièces du cabinet et je confirme mon prix de ${formatEuro(prix)}.`}
-          submitLabel="Confirmer mon prix"
+          consentLabel={`J’ai examiné les pièces du cabinet et je confirme mon montant de ${formatEuro(prix)}.`}
+          submitLabel="Confirmer mon montant"
         />
         <RevisePriceForm dealId={id} defaultPrice={String(prix)} />
       </div>
@@ -134,11 +134,11 @@ function TaskAction({ p, task, side, escrowLive }: { p: DealProcess; task: Task;
       <div className="grid gap-4">
         <dl className="grid gap-3 rounded-2xl bg-surface-alt p-4 sm:grid-cols-3">
           <div>
-            <dt className="text-[12px] uppercase tracking-wide text-muted">Prix révisé</dt>
+            <dt className="text-[12px] uppercase tracking-wide text-muted">Montant révisé</dt>
             <dd className="tabular text-[17px] font-bold text-ink">{formatEuro(r.price)}</dd>
           </div>
           <div>
-            <dt className="text-[12px] uppercase tracking-wide text-muted">Prix de l’offre</dt>
+            <dt className="text-[12px] uppercase tracking-wide text-muted">Montant de l’offre</dt>
             <dd className="tabular text-[15px] font-semibold text-ink">{formatEuro(p.snapshot.agreedPrice)}</dd>
           </div>
           <div>
@@ -183,7 +183,7 @@ function TaskAction({ p, task, side, escrowLive }: { p: DealProcess; task: Task;
     return (
       <div className="grid gap-2">
         <p className="text-[14px] text-ink">
-          Prix {formatEuro(Number(deal.upfrontAmount))}
+          Montant {formatEuro(Number(deal.upfrontAmount))}
           {depot > 0 ? ` − dépôt de garantie déjà versé ${formatEuro(depot)}` : ""} ={" "}
           <span className="tabular font-bold">{formatEuro(aVerser)} à verser sur le compte sécurisé</span>
         </p>
@@ -226,7 +226,7 @@ function TaskAction({ p, task, side, escrowLive }: { p: DealProcess; task: Task;
         <CommitForm
           dealId={id}
           action={confirmCarrierTransferAction}
-          consentLabel="Les compagnies ont accepté le transfert et rattaché les contrats et les commissions à mon code. J’informe les clients avec le courrier fourni. Le prix est alors versé au cédant."
+          consentLabel="Les compagnies ont accepté le transfert et rattaché les contrats et les commissions à mon code. J’informe les clients avec le courrier fourni. Les fonds sont alors libérés via le trust."
           submitLabel="Confirmer l’accord des compagnies"
         />
       </div>
@@ -265,7 +265,7 @@ export function DealProcessPanel({ p, side, escrowLive }: { p: DealProcess; side
         <p className="text-[12px] font-semibold uppercase tracking-wide text-ok">Cession close</p>
         <h2 className="mt-1 text-xl font-semibold text-ink">Le portefeuille a changé de mains.</h2>
         <p className="mt-2 text-[15px] leading-relaxed text-muted">
-          Prix {formatEuro(Number(deal.agreedPrice))}. Prix versé au cédant après l’accord des compagnies. Toutes les
+          Montant {formatEuro(Number(deal.agreedPrice))}. Fonds libérés via le trust après l’accord des compagnies. Toutes les
           pièces restent consultables dans l’onglet Documents.
         </p>
       </section>

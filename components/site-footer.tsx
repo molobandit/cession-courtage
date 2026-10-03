@@ -37,7 +37,7 @@ const COLUMNS = [
     title: "Comprendre",
     links: [
       { href: "/faq", label: "Questions fréquentes" },
-      { href: "/partenaires", label: "Paiement sécurisé" },
+      { href: "/partenaires", label: "Transaction sécurisée" },
       { href: "/financer", label: "Financer" },
       { href: "/journal", label: "Journal" },
     ],
@@ -87,16 +87,6 @@ export function SiteFooter() {
 
         <div className="mt-10 border-t border-white/15 pt-8">
           <PartnerFooterLogos />
-        </div>
-
-        <div className="mt-8 border-t border-white/15 pt-6">
-          <p className="text-[13px] leading-relaxed text-white/65">
-            La plateforme met en relation des professionnels. Elle n’est partie à
-            aucune transaction, n’exerce aucune activité d’intermédiation en
-            assurance et ne fournit aucun conseil en investissement. Les études
-            de portefeuille et les prix des annonces sont indicatifs et ne
-            constituent pas une garantie de prix.
-          </p>
         </div>
       </div>
     </footer>

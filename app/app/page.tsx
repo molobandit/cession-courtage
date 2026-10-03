@@ -147,7 +147,7 @@ export default async function MemberHomePage() {
               />
             ))}
             {vendeur ? (
-              <ActionTile href={annonceHref} icon="megaphone" tone="listing" title="Proposer à la vente" subtitle="Étude et prix fixés par notre équipe" />
+              <ActionTile href={annonceHref} icon="megaphone" tone="listing" title="Proposer à la vente" subtitle="Étude et montant déterminés par notre équipe" />
             ) : null}
             {acheteur ? (
               <ActionTile href="/app/mandats" icon="cart" tone="wanted" title="Annonce d’achat" subtitle="Décrire le portefeuille recherché" />

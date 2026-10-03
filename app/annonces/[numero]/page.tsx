@@ -27,7 +27,6 @@ import { CESSION_FUNDS_DISCLAIMER } from "@/lib/partners/catalog";
 import { EMPTY_CELL, formatDateTime } from "@/lib/format/fr";
 import { formatEuroWhole } from "@/lib/format/number";
 import { RISK_TYPE_LABELS, SEGMENT_LABELS } from "@/lib/labels";
-import { OFFER_WINDOW_DAYS } from "@/lib/listing/constants";
 import { commissionPerceptionCopy, precompteFromContracts } from "@/lib/listing/perception";
 import { loadListingBriefFields } from "@/lib/listing/brief-fields";
 import { cessionMotiveLabel, regulatoryFacts } from "@/lib/listing/brief-labels";
@@ -197,7 +196,7 @@ export default async function PublicListingPage({
   const segments = bySegment.map((s) => s.label).join(", ") || EMPTY_CELL;
   const presentation =
     brief.presentation?.trim() ||
-    `Portefeuille de courtage en ${mainBranch.toLowerCase()}, zone ${zone}. ${contractCount.toLocaleString("fr-FR")} contrats pour ${clientCount.toLocaleString("fr-FR")} clients, commissions annuelles de ${formatEuroWhole(annualCommissions)}. ${listing.isPartial ? "Cession partielle." : "Cession totale."}${listing.sellerSupportMonths > 0 ? ` Accompagnement prévu : ${listing.sellerSupportMonths} mois.` : ""} Référence : dossier n° ${listing.publicNumber}.`;
+    `Portefeuille de courtage en ${mainBranch.toLowerCase()}, zone ${zone}. ${contractCount.toLocaleString("fr-FR")} contrats pour ${clientCount.toLocaleString("fr-FR")} clients, commissions annuelles de ${formatEuroWhole(annualCommissions)}. ${listing.isPartial ? "Cession partielle." : "Cession totale."} Référence : dossier n° ${listing.publicNumber}.`;
 
   const facts = [
     { label: "Localisation", value: zone },
@@ -205,10 +204,7 @@ export default async function PublicListingPage({
     { label: "Type de clientèle", value: segments },
     { label: "Branche principale", value: mainBranch },
     { label: "Raison de la vente", value: cessionMotiveLabel(brief.cessionMotive) || brief.cessionMotive?.trim() || EMPTY_CELL },
-    { label: "Prix", value: brief.negotiable ? "Négociable" : "Fermé" },
-    ...(listing.sellerSupportMonths > 0
-      ? [{ label: "Accompagnement", value: `${listing.sellerSupportMonths} mois` }]
-      : []),
+    { label: "Montant", value: brief.negotiable ? "Négociable" : "Fermé" },
     ...(brief.desiredCessionDate
       ? [{ label: "Cession souhaitée", value: brief.desiredCessionDate }]
       : []),
@@ -257,7 +253,6 @@ export default async function PublicListingPage({
         contractCount,
         clientCount,
         averageAgeMonths: listing.portfolio.averageAgeMonths,
-        sellerSupportMonths: listing.sellerSupportMonths,
         multiple,
         daysLeft,
         publishedAt: listing.publishedAt,
@@ -316,8 +311,8 @@ export default async function PublicListingPage({
             <section className="rounded-3xl border border-indigo-line bg-indigo-soft p-6">
               <h2 className="text-xl font-semibold text-ink">Dossier de cession ouvert</h2>
               <p className="mt-2 text-[15px] leading-relaxed text-muted">
-                Le parcours continue jusqu’à la clôture : vérifications, signature, paiement sécurisé,
-                accord des compagnies et versement du prix au cédant.
+                Le parcours continue jusqu’à la clôture : vérifications, signature, transaction sécurisée,
+                accord des compagnies et libération des fonds via le trust.
               </p>
               <Button asChild variant="primary" className="mt-4">
                 <Link href={`/app/dossiers/${myDeal.id}`}>Ouvrir le dossier</Link>
@@ -331,8 +326,8 @@ export default async function PublicListingPage({
           {!actor ? (
             <>
               <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-muted">
-                Un compte investisseur, sans ORIAS, permet de déposer {INTEREST_DEPOSIT_LABEL} du
-                prix de l’annonce ({formatEuroWhole(deposit)}) pour ouvrir les coordonnées du cabinet
+                Un compte investisseur, sans ORIAS, permet de déposer {INTEREST_DEPOSIT_LABEL} de
+                l’annonce ({formatEuroWhole(deposit)}) pour ouvrir les coordonnées du cabinet
                 cédant. Les assurés restent anonymes. {CESSION_FUNDS_DISCLAIMER}
               </p>
               <div className="mt-5 flex flex-wrap gap-3">
@@ -363,9 +358,10 @@ export default async function PublicListingPage({
           ) : (
             <>
               <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-muted">
-                Le cabinet reste sous alias tant que rien ne vous engage. Un dépôt de{" "}
-                {INTEREST_DEPOSIT_LABEL} du prix de l’annonce, soit {formatEuroWhole(deposit)}, ouvre
-                ses coordonnées. Les assurés du portefeuille ne sont jamais nominatifs.{" "}
+                Dès que vous vous positionnez, un dépôt de{" "}
+                {INTEREST_DEPOSIT_LABEL} de l’annonce, soit {formatEuroWhole(deposit)},
+                est versé dans un trust pour lancer la procédure de cession. Les
+                assurés du portefeuille ne sont jamais nominatifs.{" "}
                 {CESSION_FUNDS_DISCLAIMER}
               </p>
               <InvestorDepositForm listingId={listing.id} amountLabel={formatEuroWhole(deposit)} amountEur={deposit} />
@@ -380,9 +376,10 @@ export default async function PublicListingPage({
           <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-muted">
             La messagerie reste anonyme. Un abonnement de{" "}
             {GROWTH_PLAN_ANNUAL_EUR.toLocaleString("fr-FR")} € HT par an ouvre le
-            détail de l’offre (contact, messages). Le vendeur reste anonyme
-            jusqu’au dépôt de {INTEREST_DEPOSIT_LABEL} (
-            {formatEuroWhole(deposit)}). {CESSION_FUNDS_DISCLAIMER}
+            détail de l’offre (contact, messages). Dès que vous vous
+            positionnez, un dépôt de {INTEREST_DEPOSIT_LABEL} (
+            {formatEuroWhole(deposit)}) est versé dans un trust pour lancer la
+            procédure de cession. {CESSION_FUNDS_DISCLAIMER}
           </p>
           <div className="mt-5 flex flex-wrap gap-3">
             {!actor ? (
@@ -409,25 +406,27 @@ export default async function PublicListingPage({
 
       {actor && !isSeller && canBuy(actor) && subscribed ? (
         <section id="depot" className="rounded-3xl border border-indigo-line bg-surface p-7">
-          <h2 className="text-2xl font-semibold text-ink">Lever l’anonymat</h2>
+          <h2 className="text-2xl font-semibold text-ink">Se positionner</h2>
           {myDeposit ? (
             <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-muted">
-              Votre engagement de{" "}
+              Votre dépôt de{" "}
               <span className="tabular font-medium text-ink">
                 {formatEuroWhole(Number(myDeposit.amount))}
               </span>{" "}
-              est enregistré. Les coordonnées du cédant et les PDF du cabinet sont
-              ouverts dans l’onglet Documents. Les assurés du portefeuille restent anonymes.
+              est enregistré dans un trust. La procédure de cession est lancée.
+              Les coordonnées du cédant et les PDF du cabinet sont ouverts dans
+              l’onglet Documents. Les assurés du portefeuille restent anonymes.
             </p>
           ) : (
             <>
               <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-muted">
-                Le cédant reste anonyme tant que rien ne vous engage. Un dépôt de{" "}
-                {INTEREST_DEPOSIT_LABEL} du prix de l’annonce, soit{" "}
+                Dès que vous vous positionnez, un dépôt de {INTEREST_DEPOSIT_LABEL}{" "}
+                de l’annonce, soit{" "}
                 <span className="tabular font-medium text-ink">
                   {formatEuroWhole(deposit)}
                 </span>
-                , ouvre l’échange des coordonnées entre vous et lui. {CESSION_FUNDS_DISCLAIMER}
+                , est versé dans un trust pour lancer la procédure de cession.{" "}
+                {CESSION_FUNDS_DISCLAIMER}
               </p>
               <DepositForm listingId={listing.id} amountLabel={formatEuroWhole(deposit)} amountEur={deposit} readiness={readiness!} />
             </>
@@ -441,7 +440,7 @@ export default async function PublicListingPage({
           <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-muted">
             {sealed
               ? "Séance en cours : la meilleure offre et le nombre d’offres sont affichés, jamais l’identité des acquéreurs. Le cédant retient une offre à la clôture."
-              : "La séance de 21 jours est close : votre offre est transmise tout de suite au cédant, qui peut la retenir sans attendre."}
+              : "La séance est close : votre offre est transmise tout de suite au cédant, qui peut la retenir sans attendre."}
             {sealed && daysLeft !== null && daysLeft >= 0
               ? ` Il reste ${daysLeft} jour${daysLeft > 1 ? "s" : ""}.`
               : ""}
@@ -486,7 +485,7 @@ export default async function PublicListingPage({
         <section className="rounded-3xl border border-line bg-paper p-7">
           <h2 className="text-xl font-semibold text-ink">Séance d’offres en cours</h2>
           <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-muted">
-            La séance dure {OFFER_WINDOW_DAYS} jours. La meilleure offre et le nombre d’offres sont affichés en direct ; le
+            La meilleure offre et le nombre d’offres sont affichés en direct ; le
             cédant retient une offre à la clôture.
           </p>
           {!actor ? (

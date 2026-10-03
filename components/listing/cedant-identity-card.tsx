@@ -15,7 +15,7 @@ export function CedantIdentityCard({ identity }: { identity: CedantIdentity }) {
     <section className="rounded-[1.75rem] border border-indigo-line bg-indigo-soft p-5 sm:p-7">
       <h2 className="text-lg font-bold tracking-tight text-ink">Coordonnées du cédant</h2>
       <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-muted">
-        Ouvertes par votre dépôt de {INTEREST_DEPOSIT_LABEL} du prix. Les assurés du
+        Ouvertes par votre dépôt de {INTEREST_DEPOSIT_LABEL}. Les assurés du
         portefeuille restent anonymes : aucun nom, courriel ni téléphone de client
         final n’est transmis à cette étape.
       </p>

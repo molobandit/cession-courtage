@@ -32,9 +32,9 @@ import { formatEuroWhole } from "@/lib/format/number";
 import { formatDate } from "@/lib/format/fr";
 
 const ESCROW_STAGE_LABEL: Record<string, string> = {
-  NONE: "Prix pas encore versé",
-  FUNDS_HELD: "Prix sur le compte sécurisé",
-  RELEASED: "Prix versé au cédant",
+  NONE: "Fonds pas encore versés",
+  FUNDS_HELD: "Fonds dans le trust",
+  RELEASED: "Fonds libérés",
 };
 
 export const metadata = { title: "Dossier de gré à gré" };
@@ -146,7 +146,7 @@ export default async function DirectDealPage({
         subtitle={<>Avec {deal.counterpartyEmail}. {stepByKey(etape).summary}</>}
         progress={{ percent: avancement, tone: etape === "CLOSED" ? "closed" : "active" }}
         figures={[
-          { label: "Prix", value: prix > 0 ? formatEuroWhole(prix) : "À définir" },
+          { label: "Montant", value: prix > 0 ? formatEuroWhole(prix) : "À définir" },
           { label: "Comptant", value: `${Number(deal.upfrontPercent)} %` },
           { label: "Honoraires", value: `${formatEuroWhole(totalHt)} HT`, note: deal.feesPaidAt ? "Réglés" : "À régler", accent: !deal.feesPaidAt && totalHt > 0 },
         ]}
@@ -154,7 +154,7 @@ export default async function DirectDealPage({
 
       {paiementConfirme ? (
         <p role="status" className="mt-4 rounded-xl border border-ok/30 bg-ok/10 px-4 py-3 text-[14px] text-ink">
-          Paiement reçu. Le dossier peut avancer.
+          Transaction reçue. Le dossier peut avancer.
         </p>
       ) : null}
 
@@ -284,7 +284,7 @@ export default async function DirectDealPage({
             ) : paiementOuvert ? (
               <span className="text-warn">À régler</span>
             ) : (
-              <span className="text-muted">Paiement en ligne bientôt ouvert</span>
+              <span className="text-muted">Règlement en ligne bientôt ouvert</span>
             )}
           </span>
         </div>

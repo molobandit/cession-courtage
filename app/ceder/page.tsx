@@ -3,21 +3,24 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { PageIntro } from "@/components/page-intro";
 import {
+  CERTIFIED_CONTROLLED_ELEMENTS,
   CTA_SELL,
   MARKET_ACCESS,
   NAV_SELL,
   NO_FEE_LABEL,
-  PRICE_RULE,
+  RETENTION_TRUST_BODY,
+  RETENTION_TRUST_TITLE,
   SELL_PILLARS,
   STUDY_SENTENCE,
+  TRANSACTION_SECURE_BODY,
+  TRANSACTION_SECURE_TITLE,
 } from "@/lib/copy/market";
 import { INTEREST_DEPOSIT_LABEL } from "@/lib/billing/rates";
-import { OFFER_WINDOW_DAYS } from "@/lib/listing/constants";
 
 export const metadata: Metadata = {
   title: "Céder un portefeuille de courtage",
   description:
-    "Le parcours du cédant : création du compte, import du portefeuille, étude par notre équipe, mise en ligne de l’annonce au prix fixé, séance d’offres, paiement sécurisé et transfert.",
+    "Le parcours du cédant : création du compte, import du portefeuille, étude par notre équipe, mise en ligne de l’annonce, séance d’offres, transaction sécurisée et transfert.",
 };
 
 const PROTECTIONS = [
@@ -27,7 +30,7 @@ const PROTECTIONS = [
   },
   {
     title: "Les candidats restent anonymes",
-    body: `Pendant les ${OFFER_WINDOW_DAYS} jours de la séance, les acquéreurs voient la meilleure offre et le nombre d’offres, jamais l’identité des autres candidats.`,
+    body: "Pendant la séance, les acquéreurs voient la meilleure offre et le nombre d’offres, jamais l’identité des autres candidats.",
   },
   {
     title: "Vous décidez à la clôture",
@@ -39,7 +42,7 @@ const PROTECTIONS = [
   },
 ];
 
-const TIMELINE = [
+const TIMELINE: { title: string; body: string; details?: string[] }[] = [
   {
     title: "Création du compte",
     body: "Vous créez votre compte cédant.",
@@ -54,11 +57,12 @@ const TIMELINE = [
   },
   {
     title: "Mise en ligne de l’annonce",
-    body: PRICE_RULE,
+    body: "Tous les éléments suivants sont contrôlés. Une fois la valeur déterminée, l’annonce est mise en ligne avec le montant correspondant.",
+    details: [...CERTIFIED_CONTROLLED_ELEMENTS],
   },
   {
     title: "Séance d’offres",
-    body: `La séance dure ${OFFER_WINDOW_DAYS} jours. Vous suivez les candidats et les offres qui arrivent.`,
+    body: "Vous suivez les candidats et les offres tout au long de la séance.",
   },
   {
     title: "Choix de l’acquéreur",
@@ -66,7 +70,7 @@ const TIMELINE = [
   },
   {
     title: "Signature et transfert",
-    body: `Les actes sont contrôlés par nos avocats et signés en ligne, puis les contrats sont transférés. Votre identité n’est révélée qu’à l’acquéreur qui a versé un dépôt de ${INTEREST_DEPOSIT_LABEL} du prix.`,
+    body: `Les actes sont contrôlés par nos avocats et signés en ligne, puis les contrats sont transférés. Dès que l’acquéreur se positionne, il verse un dépôt de ${INTEREST_DEPOSIT_LABEL} dans un trust, pour lancer la procédure de cession.`,
   },
 ];
 
@@ -98,9 +102,11 @@ export default function CederPage() {
                 <p className="text-[13px] font-semibold text-indigo">Option 1</p>
                 <h2 className="mt-2 text-2xl font-bold tracking-tight text-ink">Annonce simple</h2>
                 <p className="mt-3 text-[15px] leading-relaxed text-muted">
-                  Vous renseignez les informations principales. Nous ne
-                  contrôlons pas le Kbis, la pièce d’identité ni les bordereaux
-                  du dossier. Mise en vente gratuite, paiement sécurisé.
+                  Annonce non certifiée. Les données du portefeuille ne sont pas
+                  vérifiées par La bourse du portefeuille. C’est à l’acquéreur
+                  d’effectuer ses propres vérifications, notamment le Kbis, les
+                  pièces d’identité et la capacité du vendeur. Transaction
+                  sécurisée.
                 </p>
                 <Button asChild variant="primary" className="mt-6">
                   <Link href="/inscription?voie=annonce">Déposer une annonce</Link>
@@ -112,10 +118,11 @@ export default function CederPage() {
                   Certification
                 </h2>
                 <p className="mt-3 text-[15px] leading-relaxed text-muted">
-                  Nous contrôlons la société (Kbis), l’identité du représentant,
-                  le justificatif ORIAS du dossier et les documents du
-                  portefeuille. Honoraires précisés dans le contrat d’intermédiation, dus
-                  seulement si la vente aboutit. Paiement sécurisé jusqu’au transfert.
+                  Portefeuille certifié. Tous les éléments sont contrôlés. Les
+                  données et les bordereaux de commission sont vérifiés, ainsi
+                  que le reste du dossier. Honoraires précisés dans le contrat
+                  d’intermédiation, dus seulement si la vente aboutit. Transaction
+                  sécurisée.
                 </p>
                 <Button asChild variant="primary" className="mt-6">
                   <Link href="/inscription?voie=certifie">Faire certifier mon portefeuille</Link>
@@ -155,6 +162,15 @@ export default function CederPage() {
                 <div>
                   <h3 className="text-lg font-semibold text-ink">{item.title}</h3>
                   <p className="mt-2 text-[15px] leading-relaxed text-muted">{item.body}</p>
+                  {item.details ? (
+                    <ul className="mt-3 grid gap-1 text-[15px] leading-relaxed text-muted sm:grid-cols-2">
+                      {item.details.map((detail) => (
+                        <li key={detail} className="rounded-xl bg-page px-3 py-2 text-ink">
+                          {detail}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
                 </div>
               </li>
             ))}
@@ -168,11 +184,19 @@ export default function CederPage() {
             Après la signature
           </p>
           <h2 className="mt-3 text-2xl font-bold tracking-tight text-ink">
-            Un paiement sécurisé, du début à la fin
+            {TRANSACTION_SECURE_TITLE}
           </h2>
           <p className="mt-4 max-w-3xl text-[15px] leading-relaxed text-muted">
-            L’acquéreur paie le prix sur un compte sécurisé. L’argent vous est versé dès que les compagnies ont accepté le
-            transfert des contrats. La mise en vente est {NO_FEE_LABEL.toLowerCase()}.
+            {TRANSACTION_SECURE_BODY} La mise en vente est {NO_FEE_LABEL.toLowerCase()}.
+          </p>
+        </div>
+        <div className="mt-6 rounded-2xl border border-line bg-paper p-8">
+          <p className="text-[13px] font-semibold text-indigo">Conservation</p>
+          <h2 className="mt-3 text-2xl font-bold tracking-tight text-ink">
+            {RETENTION_TRUST_TITLE}
+          </h2>
+          <p className="mt-4 max-w-3xl text-[15px] leading-relaxed text-muted">
+            {RETENTION_TRUST_BODY}
           </p>
           <div className="mt-7 flex flex-wrap gap-3">
             <Button asChild variant="primary">

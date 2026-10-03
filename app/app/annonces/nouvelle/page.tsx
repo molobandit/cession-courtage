@@ -58,7 +58,7 @@ export default async function NewListingPage({
       <MemberPageHeader title="Proposer un portefeuille à la vente">
         {selected.label} · commissions {formatEuro(selected.annualCommissions)} / an. Le profil de votre cabinet
         pré-remplit l’organisation et la conformité : vérifiez, complétez, enregistrez. Notre équipe réalise
-        ensuite l’étude du portefeuille et fixe le prix de mise en ligne.
+        ensuite l’étude du portefeuille et détermine le montant de mise en ligne.
       </MemberPageHeader>
       {portfolios.length > 1 ? (
         <p className="mt-2 text-sm">

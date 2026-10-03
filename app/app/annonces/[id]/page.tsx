@@ -56,8 +56,8 @@ export default async function SellerListingPage({
         subtitle={<>{listing.portfolio.label} · {listing.displayedZone}{listing.offerWindowClosesAt ? ` · séance ${sealed ? "ouverte jusqu’au" : "close depuis le"} ${formatDate(listing.offerWindowClosesAt)}` : ""}</>}
         figures={[
           listing.publishedAt
-            ? { label: "Prix de mise en ligne", value: formatEuro(listing.askingPrice), note: "Fixé par notre équipe après l’étude" }
-            : { label: "Prix", value: "À venir", note: "Fixé par notre équipe après l’étude du portefeuille" },
+            ? { label: "Montant de mise en ligne", value: formatEuro(listing.askingPrice), note: "Fixé par notre équipe après l’étude" }
+            : { label: "Montant", value: "À venir", note: "Fixé par notre équipe après l’étude du portefeuille" },
           { label: "Candidats", value: String(candidats.length), note: "Acquéreurs ayant pris position" },
           { label: "Offres", value: String(offres), note: sealed ? "À retenir à la clôture de la séance" : "À comparer et retenir", accent: offres > 0 },
         ]}
@@ -75,6 +75,12 @@ export default async function SellerListingPage({
               </>
             ) : null}
             {listing.status === "PUBLISHED" ? <OpenOffersButton listingId={listing.id} /> : null}
+            <a
+              href={`/annonces/${listing.publicNumber}/etude`}
+              className="inline-flex h-10 items-center rounded-full border border-line bg-paper px-4 text-[14px] font-semibold text-ink hover:bg-surface-alt"
+            >
+              Télécharger l’étude
+            </a>
             <Link
               href={`/app/annonces/${listing.id}/offres`}
               className="inline-flex h-10 items-center rounded-full bg-indigo px-4 text-[14px] font-semibold !text-white hover:bg-indigo-dark"
@@ -94,12 +100,12 @@ export default async function SellerListingPage({
       {modifiee && (listing.status === "DRAFT" || listing.status === "WITHDRAWN") ? (
         <p className="mt-4 rounded-2xl border border-ok/30 bg-ok/5 px-4 py-3 text-[15px] text-ink">
           <span className="font-semibold">Modifications enregistrées.</span> Soumettez votre dossier quand il est prêt : notre
-          équipe réalise l’étude du portefeuille, fixe le prix, puis met l’annonce en ligne.
+          équipe réalise l’étude du portefeuille, détermine le montant, puis met l’annonce en ligne.
         </p>
       ) : null}
       {listing.status === "PENDING_REVIEW" ? (
         <p className="mt-4 rounded-2xl border border-indigo-line bg-indigo-soft px-4 py-3 text-[15px] text-ink">
-          <span className="font-semibold">Étude en cours.</span> Notre équipe étudie votre portefeuille, fixe le prix, puis met
+          <span className="font-semibold">Étude en cours.</span> Notre équipe étudie votre portefeuille, détermine le montant, puis met
           l’annonce en ligne. Vous êtes prévenu dès que c’est fait.
         </p>
       ) : listing.status === "DRAFT" && listing.reviewNote ? (

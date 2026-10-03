@@ -10,8 +10,8 @@ export const metadata: Metadata = {
 };
 
 /**
- * L'étude du portefeuille, expliquée au public. Aucune estimation chiffrée :
- * c'est l'équipe qui détermine la valeur, à l'issue de l'étude.
+ * L'étude du portefeuille, expliquée au public. Le chiffrage figure dans le
+ * PDF remis après import, pas sur cette page.
  */
 const ELEMENTS = [
   {
@@ -57,7 +57,8 @@ export default function EtudePortefeuillePage() {
             Nous étudions votre portefeuille avant sa mise en ligne
           </h1>
           <p className="mt-5 max-w-2xl text-lg text-muted">
-            {STUDY_SENTENCE} {PRICE_RULE}
+            {STUDY_SENTENCE} {PRICE_RULE} Après import du bordereau, le livrable est un dossier de
+            présentation et de valorisation, anonymisé, au format PDF.
           </p>
         </div>
       </section>

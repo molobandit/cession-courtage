@@ -15,7 +15,7 @@ export async function reviewListingAction(_prev: ListingReviewState, formData: F
   try {
     if (decision === "approve") {
       const saisi = String(formData.get("price") ?? "").trim();
-      if (!saisi) return { error: "Indiquez le prix de mise en ligne fixé par l’équipe." };
+      if (!saisi) return { error: "Indiquez le montant de mise en ligne fixé par l’équipe." };
       const prix = listingPriceSchema.safeParse(saisi);
       if (!prix.success) return { error: firstIssue(prix.error) };
       await approveListing(listingId, actor.id, prix.data);

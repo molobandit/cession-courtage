@@ -7,7 +7,7 @@ import { presentPartners } from "@/lib/partners/status";
 export const metadata: Metadata = {
   title: "Financer une acquisition",
   description:
-    "Préparer le prêt professionnel pour acheter un portefeuille de courtage, sans confondre financement et paiement.",
+    "Préparer le prêt professionnel pour acheter un portefeuille de courtage, sans confondre financement et transaction.",
   alternates: { canonical: "/financer" },
 };
 
@@ -25,8 +25,8 @@ export default function FinancerPage() {
             Financer l’achat d’un portefeuille
           </h1>
           <p className="mt-5 max-w-2xl text-lg leading-relaxed text-muted">
-            Le compte sécurisé conserve le prix. Le financement, lui, aide l’acquéreur à
-            réunir ce prix. {BRAND_NAME} ne prête pas et ne conseille pas un
+            Le trust conserve les fonds. Le financement, lui, aide l’acquéreur à
+            les réunir. {BRAND_NAME} ne prête pas et ne conseille pas un
             établissement de crédit.
           </p>
           {financing ? (
@@ -45,8 +45,8 @@ export default function FinancerPage() {
             contrat, monte le dossier de prêt, met les banques en concurrence et
             suit le déblocage. Deux cas : acheter avec un prêt, ou refinancer un
             achat déjà payé comptant pour dégager de la trésorerie. Rien de cela
-            ne remplace le paiement sécurisé : l’argent du prêt rejoint le compte
-            sécurisé comme le ferait un paiement comptant.
+            ne remplace la transaction sécurisée : les fonds du prêt rejoignent le
+            trust comme le ferait un versement comptant.
           </p>
         </article>
         <article className="mt-6 rounded-3xl border border-line bg-paper p-7">
@@ -61,7 +61,7 @@ export default function FinancerPage() {
               <Link href="/rendez-vous">Réserver un entretien de 30 min</Link>
             </Button>
             <Button asChild variant="outline">
-              <Link href="/partenaires">Voir le circuit de paiement</Link>
+              <Link href="/partenaires">Voir le circuit de transaction</Link>
             </Button>
           </div>
         </article>

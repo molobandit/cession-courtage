@@ -1,23 +1,20 @@
 import { INTEREST_DEPOSIT_LABEL } from "@/lib/billing/rates";
+import { TRANSACTION_SECURE_BODY } from "@/lib/copy/market";
 
 export const PAYMENT_FAQ_ANCHOR = "paiement-et-signatures";
 
 export const PAYMENT_FAQ: { q: string; a: string }[] = [
   {
     q: "Pourquoi un dépôt avant de voir qui vend ?",
-    a: `Le dépôt de ${INTEREST_DEPOSIT_LABEL} du prix sert d’engagement. Il protège le cédant contre une curiosité sans suite. Si la vente se conclut, ce montant s’impute sur le prix à consigner. Il n’est pas un honoraire de la plateforme.`,
+    a: `Dès que l’acquéreur se positionne, il verse un dépôt de ${INTEREST_DEPOSIT_LABEL} dans un trust, pour lancer la procédure de cession. Ce montant s’impute sur la transaction. Il n’est pas un honoraire de la plateforme.`,
   },
   {
-    q: "Où va l’argent du prix de vente ?",
-    a: "Pas sur les comptes de La bourse du portefeuille. Après la signature, l’acquéreur verse le prix, dépôt déduit, sur un compte sécurisé. L’argent est versé au cédant dès que les compagnies ont accepté le transfert. Le paiement en ligne ouvre prochainement : d’ici là, l’étape est suivie dans le dossier.",
+    q: "Où passent les fonds de la cession ?",
+    a: TRANSACTION_SECURE_BODY,
   },
   {
     q: "À quoi sert Stripe alors ?",
-    a: "Stripe règle l’abonnement annuel qui ouvre le contact et les messages. C’est le droit d’accès au marché, pas le prix du portefeuille. Les deux circuits sont séparés exprès : un incident sur l’abonnement ne touche pas la consignation de la cession.",
-  },
-  {
-    q: "Que se passe-t-il si la cession s’arrête ?",
-    a: "Le solde encore consigné revient à l’acquéreur. Un dépôt d’intérêt peut rester dû selon l’état du dossier, par exemple si l’engagement a déjà ouvert l’identité du cédant. Les honoraires de cession ne sont dus que si la vente aboutit, pour l’option certifié.",
+    a: "Stripe règle l’abonnement annuel qui ouvre le contact et les messages. C’est le droit d’accès au marché, pas la transaction de cession. Les deux circuits sont séparés exprès : un incident sur l’abonnement ne touche pas le trust.",
   },
   {
     q: "La signature sur le dossier est-elle déjà opposable ?",
@@ -29,7 +26,7 @@ export const PAYMENT_FAQ: { q: string; a: string }[] = [
   },
   {
     q: "Mon plafond carte ne passe pas. Que faire ?",
-    a: "Choisissez le prélèvement SEPA au moment de payer le dépôt de garantie : il n’a pas de plafond de carte et s’encaisse sous quelques jours. Le prix de cession, lui, va toujours au séquestre, jamais sur l’abonnement.",
+    a: "Choisissez le prélèvement SEPA au moment de régler le dépôt de garantie : il n’a pas de plafond de carte et s’encaisse sous quelques jours. Les fonds de la cession passent par le trust, jamais par l’abonnement.",
   },
   {
     q: "Puis-je emprunter pour acheter ?",

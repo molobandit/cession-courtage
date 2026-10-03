@@ -37,7 +37,7 @@ export default async function PublicListingsPage({ searchParams }: { searchParam
     <main>
       <PageIntro title={meilleures ? "Meilleures affaires" : MARKET_HALL_TITLE}>
         {meilleures
-          ? "Les portefeuilles encore achetables, du plus rentable au moins rentable pour le prix de l’annonce."
+          ? "Les portefeuilles encore achetables, du plus rentable au moins rentable pour le montant de l’annonce."
           : "Tous les portefeuilles à vendre. Filtrez, comparez, prenez position."}
       </PageIntro>
       <div className="mx-auto max-w-6xl px-4 py-8">

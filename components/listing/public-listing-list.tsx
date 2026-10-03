@@ -18,8 +18,8 @@ export type { PublicListingCard };
 const SORT_LABELS: Record<SortKey, string> = {
   best: "Meilleures affaires",
   recent: "Les plus récentes",
-  "price-asc": "Prix croissant",
-  "price-desc": "Prix décroissant",
+  "price-asc": "Montant croissant",
+  "price-desc": "Montant décroissant",
   "commissions-desc": "Commissions décroissantes",
 };
 

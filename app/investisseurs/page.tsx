@@ -33,11 +33,11 @@ export default function InvestisseursPage() {
       </section>
       <div className="mx-auto grid max-w-5xl gap-10 px-4 py-12 lg:grid-cols-[1fr_1.1fr] lg:items-start">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight text-ink">Règles pour les non-métiers</h2>
+          <h2 className="text-2xl font-bold tracking-tight text-ink">Pour les investisseurs</h2>
           <ul className="mt-5 space-y-4 text-[15px] leading-relaxed text-muted">
-            <li>Le dépôt de 2,5 % du prix de cession marque un intérêt qualifié sur le dossier.</li>
-            <li>Les coordonnées du cabinet cédant s’ouvrent après ce dépôt, pas avant.</li>
-            <li>Les dossiers restent sous alias jusqu’à ce dépôt.</li>
+            <li>Vous choisissez le montant que vous souhaitez investir.</li>
+            <li>Vous pouvez signer un mandat de gestion.</li>
+            <li>La bourse du portefeuille vous conseille et vous accompagne.</li>
           </ul>
         </div>
         <div className="rounded-xl border border-line bg-paper p-7">

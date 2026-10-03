@@ -41,8 +41,8 @@ export const SALE_PIPELINE: PipelineStep[] = [
   },
   {
     key: "TRANSFER",
-    label: "Paiement et transfert",
-    summary: "Prix sur le compte sécurisé, attestations envoyées, accord des compagnies : le prix est versé au cédant.",
+    label: "Transaction et transfert",
+    summary: "Fonds dans le trust, attestations envoyées, accord des compagnies : les fonds sont libérés via le trust.",
   },
 
   {

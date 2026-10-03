@@ -98,21 +98,14 @@ export function CreateListingForm({
         </p>
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="grid gap-1">
-            <Label htmlFor="negotiable">Prix négociable</Label>
+            <Label htmlFor="negotiable">Montant négociable</Label>
             <select id="negotiable" name="negotiable" className={selectClass} defaultValue={d.negotiable ?? "yes"}>
               <option value="yes">Oui</option>
               <option value="no">Non</option>
             </select>
           </div>
-          <div className="grid gap-1">
-            <Label htmlFor="sellerSupportMonths">Accompagnement</Label>
-            <select id="sellerSupportMonths" name="sellerSupportMonths" defaultValue={d.sellerSupportMonths ?? "3"} className={selectClass}>
-              <option value="0">Aucun</option>
-              <option value="3">3 mois</option>
-              <option value="6">6 mois ou plus</option>
-            </select>
-          </div>
         </div>
+        <input type="hidden" name="sellerSupportMonths" value={d.sellerSupportMonths ?? "0"} />
       </fieldset>
       <fieldset className={fieldsetClass}>
         <legend className={legendClass}>Données financières</legend>
@@ -340,7 +333,7 @@ export function CreateListingForm({
         />
         <span>
           Faire certifier mon portefeuille (vérification de la société et des
-          pièces). Sinon l’annonce reste simple, avec paiement sécurisé. Les honoraires
+          pièces). Sinon l’annonce reste simple, avec transaction sécurisée. Les honoraires
           sont précisés dans le contrat d’intermédiation.
         </span>
       </label>
@@ -350,7 +343,7 @@ export function CreateListingForm({
       </Button>
       <p className="text-[13px] leading-relaxed text-muted">
         Après enregistrement, déposez les PDF du cabinet (Kbis, ORIAS, RC pro, présentation)
-        sur la fiche de l’annonce. L’acquéreur les voit après le dépôt de 2,5 % du prix.
+        sur la fiche de l’annonce. L’acquéreur les voit après le dépôt de 2,5 % dans un trust, qui lance la procédure de cession.
       </p>
     </form>
   );
@@ -390,7 +383,7 @@ export function OpenOffersButton({ listingId }: { listingId: string }) {
     <TinyForm
       action={openOfferWindowAction}
       listingId={listingId}
-      label="Ouvrir les offres (21 jours)"
+      label="Ouvrir les offres"
       pendingLabel="Ouverture…"
     />
   );

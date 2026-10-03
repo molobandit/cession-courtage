@@ -89,7 +89,7 @@ export default async function DealPage({ params }: { params: Promise<{ id: strin
           <dd className="mt-1 text-[15px] text-ink">{counterpartyLabel}</dd>
         </div>
         <div>
-          <dt className="text-[12px] uppercase tracking-wide text-muted">Prix convenu</dt>
+          <dt className="text-[12px] uppercase tracking-wide text-muted">Montant convenu</dt>
           <dd className="tabular mt-1 text-[15px] font-semibold">{formatEuro(agreed)}</dd>
         </div>
         <div>
@@ -254,10 +254,10 @@ export default async function DealPage({ params }: { params: Promise<{ id: strin
         }
         progress={{ percent: pipelineProgressPercent(etape), tone: deal.stage === "CLOSED" ? "closed" : "active" }}
         figures={[
-          { label: "Prix convenu", value: formatEuro(agreed) },
-          { label: "Sur le compte sécurisé", value: formatEuro(auSequestre), note: depot > 0 ? `Dépôt de garantie de ${formatEuro(depot)} déduit` : "Prix convenu entier" },
+          { label: "Montant convenu", value: formatEuro(agreed) },
+          { label: "Sur le compte sécurisé", value: formatEuro(auSequestre), note: depot > 0 ? `Dépôt de garantie de ${formatEuro(depot)} déduit` : "Montant convenu entier" },
           { label: "Versement au cédant", value: "Accord des compagnies", note: "Après la signature" },
-          { label: "Paiement", value: ESCROW_STAGE_LABELS[deal.escrowStage as keyof typeof ESCROW_STAGE_LABELS] ?? deal.escrowStage },
+          { label: "Transaction", value: ESCROW_STAGE_LABELS[deal.escrowStage as keyof typeof ESCROW_STAGE_LABELS] ?? deal.escrowStage },
         ]}
         actions={
           <Link

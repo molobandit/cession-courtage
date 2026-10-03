@@ -68,8 +68,8 @@ export const DEAL_STAGE_LABELS: Record<DealStage, string> = {
   KYC: "Vérifications",
   DEED: "Signature",
   SIGNATURE: "Signature",
-  ESCROW: "Paiement et transfert",
-  TRANSFER: "Paiement et transfert",
+  ESCROW: "Transaction et transfert",
+  TRANSFER: "Transaction et transfert",
   RETENTION: "Solde",
   CLOSED: "Clôturé",
 };

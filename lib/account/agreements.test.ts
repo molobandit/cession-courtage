@@ -27,6 +27,6 @@ describe("engagements signés une fois par cycle ORIAS", () => {
       expect(texte).toContain("Nord Assur Pro");
       expect(texte).toContain("17001005");
     }
-    expect(contrat).toContain("La mise en vente est gratuite");
+    expect(contrat).toContain("n’emporte pas d’honoraires de dépôt");
   });
 });

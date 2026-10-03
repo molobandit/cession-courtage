@@ -35,7 +35,6 @@ export type PublicListingDetailModel = {
   contractCount: number;
   clientCount: number;
   averageAgeMonths: number;
-  sellerSupportMonths: number;
   multiple: number | null;
   daysLeft: number | null;
   publishedAt: Date | null;
@@ -183,7 +182,7 @@ export function PublicListingDetail({
                 ...(perceptionAmountLine
                   ? [{ label: "Montant précompté", value: perceptionAmountLine.replace("Montant précompté : ", "") }]
                   : []),
-                { label: "Prix", value: formatEuroWhole(askingPrice) },
+                { label: "Montant", value: formatEuroWhole(askingPrice) },
                 {
                   label: "Multiple",
                   value:
@@ -279,7 +278,7 @@ export function PublicListingDetail({
                 </p>
               </div>
               <div className="text-right">
-                <p className="text-[12px] text-muted">Prix</p>
+                <p className="text-[12px] text-muted">Montant</p>
                 <p className="tabular text-3xl font-bold text-ok">{formatEuroWhole(askingPrice)}</p>
                 <p className="mt-2 text-[12px] text-muted">Commissions / an</p>
                 <p className="tabular text-lg font-semibold text-ink">
@@ -312,7 +311,7 @@ export function PublicListingDetail({
           </div>
 
           <aside className="h-fit rounded-3xl border border-line bg-paper p-5 shadow-sm">
-            {!sold ? (
+            {!sold && (bestOffer !== null || offerCount > 0) ? (
               <div className="mb-4 rounded-2xl border border-indigo-line bg-indigo-soft px-4 py-3">
                 {offerCount >= 2 || (bestOffer !== null && bestOffer >= askingPrice) ? (
                   <p className="mb-1 inline-flex items-center gap-1.5 rounded-full bg-indigo px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-white">
@@ -324,14 +323,12 @@ export function PublicListingDetail({
                     <p className="tabular text-[26px] font-bold leading-tight text-ink">{formatEuroWhole(bestOffer)}</p>
                     <p className="text-[13px] text-muted">Meilleure offre actuelle</p>
                   </>
-                ) : (
-                  <p className="text-[15px] font-semibold text-ink">Aucune offre pour le moment</p>
-                )}
-                <p className="mt-1 text-[13px] font-semibold text-indigo-dark">
-                  {offerCount === 0
-                    ? "Soyez le premier à faire une offre"
-                    : `${offerCount} offre${offerCount > 1 ? "s" : ""} déjà déposée${offerCount > 1 ? "s" : ""}`}
-                </p>
+                ) : null}
+                {offerCount > 0 ? (
+                  <p className="mt-1 text-[13px] font-semibold text-indigo-dark">
+                    {`${offerCount} offre${offerCount > 1 ? "s" : ""} déjà déposée${offerCount > 1 ? "s" : ""}`}
+                  </p>
+                ) : null}
               </div>
             ) : null}
             {sold ? (

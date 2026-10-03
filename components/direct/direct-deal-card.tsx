@@ -69,7 +69,7 @@ export function DirectDealCard({
           ? { text: carriers.map((c) => c.name).join(", ") }
           : { text: "Les compagnies ne sont pas encore définies", muted: true },
       ]}
-      amount={prix > 0 ? formatEuroWhole(prix) : "Sans prix déclaré"}
+      amount={prix > 0 ? formatEuroWhole(prix) : "Sans montant déclaré"}
     />
   );
 }

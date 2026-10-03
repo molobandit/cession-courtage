@@ -3,11 +3,9 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { PageIntro } from "@/components/page-intro";
-import { BUY_POINTS, CTA_BROWSE, MARKET_ACCESS, NAV_BUY, PRICE_RULE_SENTENCES, STUDY_SENTENCE } from "@/lib/copy/market";
+import { BUY_POINTS, CTA_BROWSE, MARKET_ACCESS, NAV_BUY, PRICE_RULE_SENTENCES, RETENTION_TRUST_BODY, RETENTION_TRUST_TITLE, STUDY_SENTENCE } from "@/lib/copy/market";
 import { canBuy, getActor, isOriasVerified } from "@/lib/authz";
 import { GROWTH_PLAN_ANNUAL_EUR, INTEREST_DEPOSIT_LABEL } from "@/lib/billing/rates";
-import { CESSION_FUNDS_DISCLAIMER } from "@/lib/partners/catalog";
-import { OFFER_WINDOW_DAYS } from "@/lib/listing/constants";
 import { ACQUISITION_APP_PATH, acquisitionLoginHref } from "@/lib/nav/acquisition";
 
 export const metadata: Metadata = {
@@ -35,11 +33,11 @@ const SAFEGUARDS = [
   },
   {
     title: "Votre identité reste confidentielle",
-    body: `Pendant la séance de ${OFFER_WINDOW_DAYS} jours, les autres candidats voient la meilleure offre et le nombre d’offres, jamais qui les a faites.`,
+    body: `Pendant la séance, les autres candidats voient la meilleure offre et le nombre d’offres, jamais qui les a faites.`,
   },
   {
-    title: "La rétention est garantie par le contrat",
-    body: "La part différée du prix est recalculée sur la rétention constatée à trois, six et douze mois. Si la clientèle part, vous ne payez pas le portefeuille que vous n’avez pas conservé.",
+    title: RETENTION_TRUST_TITLE,
+    body: RETENTION_TRUST_BODY,
   },
 ];
 
@@ -69,7 +67,7 @@ export default async function AcquerirPage() {
         }
       >
         Accès à des portefeuilles certifiés avec plus de 50 points de contrôle.
-        Chaque portefeuille est étudié par notre équipe. Paiement sécurisé,
+        Chaque portefeuille est étudié par notre équipe. Transaction sécurisée,
         accompagnement jusqu’au transfert des contrats.
       </PageIntro>
 
@@ -146,14 +144,15 @@ export default async function AcquerirPage() {
       <section className="mx-auto max-w-6xl px-4 py-16">
         <div className="rounded-3xl border border-line bg-paper p-8">
           <h2 className="font-bold tracking-tight text-2xl font-semibold text-ink">
-            L’abonnement ouvre le détail. Le vendeur reste anonyme jusqu’au dépôt.
+            L’abonnement ouvre le détail. La transaction passe par un trust.
           </h2>
           <p className="mt-4 max-w-3xl text-[15px] leading-relaxed text-muted">
             Le catalogue reste libre. Un abonnement de{" "}
             {GROWTH_PLAN_ANNUAL_EUR.toLocaleString("fr-FR")} € HT par an est
-            obligatoire pour accéder au contact et aux messages. L’identité du
-            cédant n’apparaît qu’après un dépôt de {INTEREST_DEPOSIT_LABEL} du
-            prix. {CESSION_FUNDS_DISCLAIMER}
+            obligatoire pour le contact et les messages. Dès que vous vous
+            positionnez, un dépôt de {INTEREST_DEPOSIT_LABEL} est versé
+            dans un trust, pour lancer la procédure de cession.{" "}
+            {CESSION_FUNDS_DISCLAIMER}
           </p>
           <div className="mt-7 flex flex-wrap gap-3">
             <Button asChild variant="primary">

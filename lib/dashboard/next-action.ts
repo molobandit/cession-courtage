@@ -109,7 +109,7 @@ export function nextAction(state: DashboardState): NextAction {
     return {
       tone: "action",
       title: `Votre dossier n° ${state.draftListing.publicNumber} n’est pas encore soumis`,
-      detail: "Soumettez-le : notre équipe réalise l’étude du portefeuille, fixe le prix, puis met l’annonce en ligne.",
+      detail: "Soumettez-le : notre équipe réalise l’étude du portefeuille, détermine le montant, puis met l’annonce en ligne.",
       href: `/app/annonces/${state.draftListing.id}`,
       cta: "Compléter et soumettre",
     };
@@ -154,7 +154,7 @@ export function nextAction(state: DashboardState): NextAction {
       tone: "action",
       title: "Proposez votre portefeuille à la vente",
       detail:
-        "Soumettez votre dossier : notre équipe réalise l’étude, fixe le prix, puis met l’annonce en ligne sous alias.",
+        "Soumettez votre dossier : notre équipe réalise l’étude, détermine le montant, puis met l’annonce en ligne sous alias.",
       href: "/app/annonces/nouvelle",
       cta: "Soumettre mon dossier",
     };

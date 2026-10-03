@@ -65,7 +65,7 @@ export async function openDirectDealAction(
     return { error: "Choisissez au moins un service à formaliser." };
   }
   if (priceRequired(services) && parsed.data.salePrice <= 0) {
-    return { error: "Le prix doit être supérieur à zéro." };
+    return { error: "Le montant doit être supérieur à zéro." };
   }
 
   const { counterpartyEmail } = parsed.data;
@@ -340,7 +340,7 @@ export async function startDirectFeesCheckoutAction(
     if (deal.stage === "INVITED") {
       return { error: "Les honoraires se règlent une fois les conditions confirmées par la contrepartie." };
     }
-    if (!stripeConfigured()) return { error: "Le paiement en ligne n’est pas encore ouvert." };
+    if (!stripeConfigured()) return { error: "Le règlement en ligne n’est pas encore ouvert." };
 
     const services: DirectServices = {
       kit: deal.kit,
@@ -364,11 +364,11 @@ export async function startDirectFeesCheckoutAction(
       successUrl: `${origine}/app/formaliser/${deal.id}?session_id={CHECKOUT_SESSION_ID}`,
       cancelUrl: `${origine}/app/formaliser/${deal.id}`,
     });
-    if (!session.url) return { error: "Session de paiement incomplète." };
+    if (!session.url) return { error: "Session incomplète." };
     destination = session.url;
   } catch (error) {
     console.error("startDirectFeesCheckoutAction", error);
-    return { error: error instanceof Error ? error.message : "Paiement impossible pour le moment." };
+    return { error: error instanceof Error ? error.message : "Règlement impossible pour le moment." };
   }
   redirect(destination);
 }

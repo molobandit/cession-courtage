@@ -79,7 +79,7 @@ export async function loadDesk(actor: Actor) {
     if (state.key === "POSITION") {
       aFaire.push({ key: `t-${position.id}`, href, icon: "shield", title: `Verser le dépôt de garantie · N° ${l.publicNumber}`, detail: "Il ouvre les coordonnées du cédant et vous permet de faire une offre.", cta: "Verser" });
     } else if (state.key === "DEPOSIT") {
-      aFaire.push({ key: `t-${position.id}`, href, icon: "megaphone", title: `Déposer votre offre · N° ${l.publicNumber}`, detail: `Prix ${formatEuroWhole(Number(l.askingPrice))} · ${multiple}`, cta: "Faire une offre", urgent: true });
+      aFaire.push({ key: `t-${position.id}`, href, icon: "megaphone", title: `Déposer votre offre · N° ${l.publicNumber}`, detail: `Montant ${formatEuroWhole(Number(l.askingPrice))} · ${multiple}`, cta: "Faire une offre", urgent: true });
     } else if (deal && deal.stage !== "CLOSED") {
       const suite = nextPipelineAction(deal.stage, "buyer");
       aFaire.push({ key: `t-${position.id}`, href: `/app/dossiers/${deal.id}`, icon: "briefcase", title: `${suite.title} · N° ${l.publicNumber}`, detail: suite.body, cta: "Avancer", urgent: deal.stage === "DATA_ROOM" || deal.stage === "SIGNATURE" });
@@ -130,12 +130,12 @@ export async function loadDesk(actor: Actor) {
           ? "Dossier à soumettre"
           : `${cotation.label} · ${liste.length} candidat${liste.length > 1 ? "s" : ""}${offres.length ? ` · ${offres.length} offre${offres.length > 1 ? "s" : ""}` : ""}`,
       percent: liste.length ? Math.max(...liste.map((c) => c.state.percent)) : null,
-      montant: prixFixe ? formatEuroWhole(Number(annonce.askingPrice)) : "Prix à venir",
+      montant: prixFixe ? formatEuroWhole(Number(annonce.askingPrice)) : "Montant à venir",
       multiple,
       issue: "active",
     });
     if (annonce.status === "DRAFT") {
-      aFaire.push({ key: `t-draft-${annonce.id}`, href: `/app/annonces/${annonce.id}`, icon: "megaphone", title: `${annonce.reviewNote ? "Compléter" : "Soumettre"} votre dossier · N° ${annonce.publicNumber}`, detail: annonce.reviewNote ? `Notre équipe vous l’a renvoyé : ${annonce.reviewNote.replace(/[.\s]+$/, "")}.` : "Notre équipe réalise l’étude du portefeuille, fixe le prix, puis met l’annonce en ligne.", cta: annonce.reviewNote ? "Compléter" : "Soumettre" });
+      aFaire.push({ key: `t-draft-${annonce.id}`, href: `/app/annonces/${annonce.id}`, icon: "megaphone", title: `${annonce.reviewNote ? "Compléter" : "Soumettre"} votre dossier · N° ${annonce.publicNumber}`, detail: annonce.reviewNote ? `Notre équipe vous l’a renvoyé : ${annonce.reviewNote.replace(/[.\s]+$/, "")}.` : "Notre équipe réalise l’étude du portefeuille, détermine le montant, puis met l’annonce en ligne.", cta: annonce.reviewNote ? "Compléter" : "Soumettre" });
     } else if (offres.length) {
       const meilleure = Math.max(...offres.map((o) => Number(o.offer?.amount ?? 0)));
       aFaire.push({ key: `t-offres-${annonce.id}`, href: `/app/annonces/${annonce.id}/offres`, icon: "megaphone", title: `${offres.length} offre${offres.length > 1 ? "s" : ""} ${scelle ? "en séance" : "à examiner"} · N° ${annonce.publicNumber}`, detail: `Meilleure offre ${formatEuroWhole(meilleure)} pour ${formatEuroWhole(Number(annonce.askingPrice))} affichés`, cta: "Comparer", urgent: true });

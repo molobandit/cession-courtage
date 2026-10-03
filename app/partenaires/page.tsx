@@ -6,9 +6,9 @@ import { BRAND_NAME } from "@/lib/site";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Paiement et signatures sécurisés",
+  title: "Transaction et signatures sécurisées",
   description:
-    "Stripe pour l’accès, Trustap pour le paiement sécurisé du prix, Yousign ou DocuSign pour les actes. La bourse du portefeuille ne reçoit pas le prix de cession.",
+    "Stripe pour l’accès, Trustap pour le trust de la cession, Yousign ou DocuSign pour les actes. La bourse du portefeuille n’encaisse pas les fonds de la cession.",
   alternates: { canonical: "/partenaires" },
 };
 
@@ -23,12 +23,12 @@ export default function PartenairesPage() {
             Confiance
           </p>
           <h1 className="mt-4 max-w-3xl font-serif text-4xl font-semibold leading-tight text-ink">
-            L’argent et les signatures ne restent pas chez {BRAND_NAME}
+            La transaction et les signatures ne restent pas chez {BRAND_NAME}
           </h1>
           <p className="mt-5 max-w-2xl text-lg leading-relaxed text-muted">
             Chaque étape a un prestataire dédié. Les contrats se valident ensuite.
             Le circuit est déjà visible pour que cédant et acquéreur sachent qui
-            fera quoi, avant le premier euro de cession.
+            fera quoi, avant de s’engager.
           </p>
           <div className="mt-6">
             <PartnerStrip partners={partners} />

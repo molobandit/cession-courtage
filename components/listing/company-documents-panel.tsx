@@ -30,7 +30,7 @@ export function CompanyDocumentsPanel({
       <p className="mt-2 text-[14px] leading-relaxed text-muted">
         {canDownload
           ? "PDF du cabinet. Aucun nom d’assuré."
-          : "Les pièces s’ouvrent après le dépôt de 2,5 % du prix. Le cédant reste sous alias jusque-là. Aucun nom d’assuré."}
+          : "Les pièces s’ouvrent après le dépôt de 2,5 %, versé dans un trust pour lancer la procédure de cession. Aucun nom d’assuré."}
       </p>
       {canUpload ? (
         <div
@@ -70,7 +70,7 @@ export function CompanyDocumentsPanel({
             <span className="flex h-11 w-9 shrink-0 items-center justify-center rounded-md bg-muted/40 text-[10px] font-bold tracking-wide text-white">PDF</span>
             <span className="min-w-0 flex-1">
               <span className="block text-[15px] font-semibold text-ink">Présentation détaillée du cabinet</span>
-              <span className="block text-[13px] text-muted">S’ouvre avec votre engagement de 2,5 % et l’acceptation de la confidentialité.</span>
+              <span className="block text-[13px] text-muted">S’ouvre avec le dépôt de 2,5 % versé dans un trust pour lancer la procédure de cession.</span>
             </span>
             <span className="shrink-0 text-[12px] font-medium text-muted">Verrouillé</span>
           </div>

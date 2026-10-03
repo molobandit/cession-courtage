@@ -54,8 +54,8 @@ export default function MentionsLegalesPage() {
           Elle ne fournit aucun conseil en investissement, aucune recommandation
           personnalisée, et n’exerce aucune activité d’intermédiation en assurance
           au sens de l’article L. 511-1 du code des assurances. Les études de
-          portefeuille et les prix des annonces sont indicatifs et ne constituent
-          ni une garantie de prix, ni une évaluation opposable aux tiers.
+          portefeuille et les montants des annonces sont indicatifs et ne constituent
+          ni une garantie de montant, ni une évaluation opposable aux tiers.
         </p>
         <p>
           Chaque partie demeure responsable de ses propres obligations

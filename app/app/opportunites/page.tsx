@@ -29,7 +29,7 @@ export default async function OpportunitiesPage() {
             <tr>
               <th className="px-4 py-3 font-medium">Dossier</th>
               <th className="px-4 py-3 font-medium">Zone</th>
-              <th className="px-4 py-3 text-right font-medium">Prix</th>
+              <th className="px-4 py-3 text-right font-medium">Montant</th>
               <th className="px-4 py-3 text-right font-medium">Score</th>
               <th className="px-4 py-3 font-medium">Statut</th>
             </tr>

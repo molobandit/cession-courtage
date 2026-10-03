@@ -51,7 +51,7 @@ export function PartnerGrid({ partners }: { partners: PresentedPartner[] }) {
           href={`/faq#${PAYMENT_FAQ_ANCHOR}`}
           className="block rounded-3xl border border-indigo-line bg-indigo-soft px-6 py-5 text-[15px] font-medium text-ink hover:bg-indigo-soft/80"
         >
-          Questions sur le dépôt, le paiement et la signature
+          Questions sur le dépôt, la transaction et la signature
         </Link>
       </li>
     </ul>

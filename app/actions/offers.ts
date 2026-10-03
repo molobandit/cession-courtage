@@ -116,7 +116,7 @@ export async function submitOfferAction(
       const methode = formData.get("paymentMethod");
       if (formData.get("engagement") !== "on" || !isDepositMethod(methode)) {
         return {
-          error: `Choisissez la carte ou le prélèvement et cochez le dépôt de garantie de ${INTEREST_DEPOSIT_LABEL} du prix de l’annonce. Il vient en déduction du prix si la cession aboutit.`,
+          error: `Choisissez la carte ou le prélèvement et versez le dépôt de ${INTEREST_DEPOSIT_LABEL} dans un trust, pour lancer la procédure de cession. Il vient en déduction de la transaction si la cession aboutit.`,
         };
       }
       const suite = await startDepositPayment({

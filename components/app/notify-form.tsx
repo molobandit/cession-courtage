@@ -10,7 +10,7 @@ const initial: ProfileFormState = {};
 const OPTIONS: Array<{ key: keyof NotifyPrefs; label: string; hint: string }> = [
   { key: "messages", label: "Messages", hint: "Un acquéreur ou un cédant vous écrit." },
   { key: "offers", label: "Offres", hint: "Offre reçue, retenue ou retirée." },
-  { key: "deals", label: "Dossiers", hint: "Avancement du dossier : confidentialité, lettre d’intention, paiement, transfert." },
+  { key: "deals", label: "Dossiers", hint: "Avancement du dossier : confidentialité, lettre d’intention, transaction, transfert." },
   { key: "billing", label: "Facturation", hint: "Abonnement et dépôts d’intérêt." },
 ];
 

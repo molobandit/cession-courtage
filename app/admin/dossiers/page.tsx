@@ -75,7 +75,7 @@ export default async function AdminDossiersPage() {
                 <th className="px-3 py-2 font-medium">Dossier</th>
                 <th className="px-3 py-2 font-medium">Parties</th>
                 <th className="px-3 py-2 font-medium">Lot</th>
-                <th className="px-3 py-2 font-medium text-right">Prix</th>
+                <th className="px-3 py-2 font-medium text-right">Montant</th>
                 <th className="px-3 py-2 font-medium">Étape</th>
                 <th className="px-3 py-2 font-medium text-right">Avancement</th>
                 <th className="px-3 py-2 font-medium">En attente de</th>
@@ -156,7 +156,7 @@ export default async function AdminDossiersPage() {
                 <th className="px-3 py-2 font-medium">Portefeuille</th>
                 <th className="px-3 py-2 font-medium">Parties</th>
                 <th className="px-3 py-2 font-medium">Services</th>
-                <th className="px-3 py-2 font-medium text-right">Prix</th>
+                <th className="px-3 py-2 font-medium text-right">Montant</th>
                 <th className="px-3 py-2 font-medium text-right">Honoraires</th>
                 <th className="px-3 py-2 font-medium">Étape</th>
                 <th className="px-3 py-2 font-medium text-right">Avancement</th>
@@ -221,7 +221,7 @@ export default async function AdminDossiersPage() {
       <section className="mt-10">
         <h2 className="text-lg font-semibold text-ink">Dépôts de garantie</h2>
         <p className="mt-1 text-sm text-muted">
-          De l’argent engagé par des acquéreurs. Son sort se décide à la clôture ou au retrait.
+          Des fonds engagés par des acquéreurs. Leur sort se décide à la clôture ou au retrait.
         </p>
         <div className="mt-3 overflow-x-auto rounded-xl border border-line bg-surface">
           <table className="w-full min-w-[44rem] text-sm">

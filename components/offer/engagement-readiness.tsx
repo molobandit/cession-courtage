@@ -47,7 +47,7 @@ export function PaymentMethodChoice({ value, onChange }: { value: string; onChan
   ];
   return (
     <fieldset className="grid gap-2 sm:grid-cols-2">
-      <legend className="mb-1.5 text-[14px] font-medium text-ink">Payer le dépôt par</legend>
+      <legend className="mb-1.5 text-[14px] font-medium text-ink">Verser le dépôt par</legend>
       {options.map((o) => (
         <label
           key={o.v}

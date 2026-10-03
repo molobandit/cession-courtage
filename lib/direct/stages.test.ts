@@ -104,7 +104,7 @@ describe("avancement affiché", () => {
 
 describe("libellés", () => {
   it("nomme chaque étape", () => {
-    expect(stepByKey("ESCROW").label).toBe("Paiement sécurisé");
+    expect(stepByKey("ESCROW").label).toBe("Transaction sécurisée");
     expect(stepByKey("CLOSED").label).toBe("Clôturé");
   });
 });

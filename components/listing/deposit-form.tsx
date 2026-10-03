@@ -46,7 +46,7 @@ export function DepositForm({
       <PaymentMethodChoice value={methode} onChange={setMethode} />
       <div>
         <Button type="submit" variant="primary" disabled={pending || !pret}>
-          {pending ? "Enregistrement…" : `Payer mon dépôt de ${amountLabel}`}
+          {pending ? "Enregistrement…" : `Verser mon dépôt de ${amountLabel}`}
         </Button>
       </div>
       {state.error ? (

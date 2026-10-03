@@ -20,7 +20,7 @@ export function SubscribeButton({
     <form action={action} className={className}>
       {next ? <input type="hidden" name="next" value={next} /> : null}
       <Button type="submit" variant="primary" size="lg" className="w-full" disabled={pending}>
-        {pending ? "Redirection vers le paiement…" : label}
+        {pending ? "Redirection…" : label}
       </Button>
       {state.error ? (
         <p role="alert" className="mt-3 text-center text-[13px] text-danger">

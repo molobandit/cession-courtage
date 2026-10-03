@@ -55,7 +55,7 @@ export function depositCoversUpfront(upfrontAmount: number, deposit: number): bo
 
 /** Libellé de l'issue, pour les écrans et les courriels. */
 export function depositOutcomeLabel(outcome: DepositOutcome): string {
-  if (outcome === "DEDUCTED") return "Déduit du prix";
+  if (outcome === "DEDUCTED") return "Déduit de la transaction";
   if (outcome === "RETAINED") return "Conservé à titre indemnitaire";
   return "En attente d’issue";
 }
@@ -68,10 +68,10 @@ export function depositOutcomeLabel(outcome: DepositOutcome): string {
  */
 export function depositTerms(amountLabel: string, _amountEur?: number): string[] {
   return [
-    `Vous versez ${amountLabel} pour vous positionner sur ce dossier.`,
-    "Si la cession aboutit, ce montant vient en déduction du prix : il n’est pas remboursé à part.",
+    `Vous versez ${amountLabel} dans un trust pour vous positionner et lancer la procédure de cession.`,
+    "Si la cession aboutit, ce montant vient en déduction de la transaction : il n’est pas remboursé à part.",
     "Si vous vous retirez, il reste acquis au cédant à titre indemnitaire.",
     "Tant que le dossier suit son cours, il n’est ni acquis ni rendu.",
-    "Paiement par carte ou prélèvement SEPA, par un prestataire de paiement agréé : la plateforme ne détient jamais les fonds.",
+    "Règlement par carte ou prélèvement SEPA, par un prestataire agréé : la plateforme ne détient jamais les fonds.",
   ];
 }

@@ -30,7 +30,7 @@ export default async function OutilsPage() {
               {
                 href: "/app/annonces/nouvelle",
                 title: "Proposer un portefeuille à la vente",
-                detail: "Notre équipe réalise l’étude, fixe le prix et met l’annonce en ligne sous alias.",
+                detail: "Notre équipe réalise l’étude, détermine le montant et met l’annonce en ligne sous alias.",
               },
               {
                 href: "/etude-portefeuille",
@@ -73,7 +73,7 @@ export default async function OutilsPage() {
         {
           href: "/certification",
           title: "Portefeuille certifié",
-          detail: "Kbis, identité, ORIAS du dossier et documents du portefeuille.",
+          detail: "Kbis, identité, ORIAS, réputation du cabinet et documents du portefeuille.",
         },
         {
           href: "/tarifs",

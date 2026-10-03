@@ -89,14 +89,14 @@ export function ServiceWizard({ service, title }: { service: ServiceKey; title: 
               <div>
                 <label htmlFor="prix" className="flex items-center gap-2 text-[16px] font-medium text-ink">
                   <span>
-                    {service === "escrow" ? "Montant" : "Prix du Portefeuille"}
+                    {service === "escrow" ? "Montant" : "Montant du portefeuille"}
                     <Requis />
                   </span>
                   <Aide
                     texte={
                       service === "escrow"
                         ? "Somme à verser sur le compte sécurisé."
-                        : "Prix convenu entre les parties, net vendeur."
+                        : "Montant convenu entre les parties, net vendeur."
                     }
                   />
                 </label>
@@ -145,7 +145,7 @@ export function ServiceWizard({ service, title }: { service: ServiceKey; title: 
                     onChange={() => setSequestre((v) => !v)}
                     className="h-4 w-4 accent-indigo"
                   />
-                  Paiement sécurisé
+                  Transaction sécurisée
                   <Aide texte={`Le comptant reste sur un compte sécurisé, puis il est versé au cédant à la clôture. ${ESCROW_LABEL}.`} />
                 </label>
               </div>
@@ -154,8 +154,8 @@ export function ServiceWizard({ service, title }: { service: ServiceKey; title: 
             {service === "escrow" ? (
               <label className="flex items-center gap-3 text-[16px] text-ink">
                 <input type="checkbox" checked disabled className="h-4 w-4 accent-indigo" />
-                Service de paiement sécurisé
-                <Aide texte={`L’argent reste sur un compte sécurisé jusqu’à la clôture, puis il est versé au cédant. ${ESCROW_LABEL}.`} />
+                Service de transaction sécurisée
+                <Aide texte={`Les fonds restent dans le trust jusqu’à la clôture, puis ils sont libérés. ${ESCROW_LABEL}.`} />
               </label>
             ) : null}
 
@@ -222,7 +222,7 @@ export function ServiceWizard({ service, title }: { service: ServiceKey; title: 
               <div className="max-w-xs">
                 <label htmlFor="comptant" className="flex items-center gap-2 text-[16px] font-medium text-ink">
                   Part comptant (%)
-                  <Aide texte="Part du prix réglée à la signature. Le solde suit l’échéancier convenu entre les parties." />
+                  <Aide texte="Part réglée à la signature. Le solde suit l’échéancier convenu entre les parties." />
                 </label>
                 <input
                   id="comptant"
@@ -239,7 +239,7 @@ export function ServiceWizard({ service, title }: { service: ServiceKey; title: 
               <ul className="mt-3 grid gap-1.5 text-[14px]">
                 {avecPrix ? (
                   <li className="flex justify-between gap-4">
-                    <span className="text-muted">{service === "escrow" ? "Montant" : "Prix du portefeuille"}</span>
+                    <span className="text-muted">{service === "escrow" ? "Montant" : "Montant du portefeuille"}</span>
                     <span className="tabular text-ink">{formatEuroWhole(montant)}</span>
                   </li>
                 ) : null}

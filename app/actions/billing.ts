@@ -35,7 +35,7 @@ export async function startGrowthCheckoutAction(
   if (!stripeConfigured()) {
     // Trace le motif exact cote serveur : le visiteur n'a pas a le lire.
     console.error("stripe indisponible:", stripeRefusalReason());
-    return { error: "Le paiement par carte n’est pas encore ouvert." };
+    return { error: "Le règlement par carte n’est pas encore ouvert." };
   }
   if (await hasContactSubscription(actor)) {
     if (next) redirect(next);
@@ -70,12 +70,12 @@ export async function startGrowthCheckoutAction(
       successUrl: `${origin}/app/profil?session_id={CHECKOUT_SESSION_ID}${successNext}`,
       cancelUrl: next ? `${origin}${next}` : `${origin}/tarifs#abonnements`,
     });
-    if (!session.url) return { error: "Session de paiement incomplète." };
+    if (!session.url) return { error: "Session incomplète." };
     redirect(session.url);
   } catch (error) {
     if (error && typeof error === "object" && "digest" in error) throw error;
     console.error("startGrowthCheckoutAction", error);
-    return { error: error instanceof Error ? error.message : "Paiement impossible pour le moment." };
+    return { error: error instanceof Error ? error.message : "Règlement impossible pour le moment." };
   }
 }
 

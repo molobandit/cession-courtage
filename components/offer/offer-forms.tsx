@@ -52,9 +52,9 @@ export function SubmitOfferForm({
       />
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="grid gap-1">
-          <Label htmlFor="amount">Votre prix (€)</Label>
+          <Label htmlFor="amount">Votre montant (€)</Label>
           <Input id="amount" name="amount" defaultValue={asking} inputMode="decimal" required />
-          <p className="text-[12px] text-muted">Payé sur un compte sécurisé, dépôt déduit, puis versé au cédant à l’accord des compagnies.</p>
+          <p className="text-[12px] text-muted">Versé dans un trust, dépôt déduit. Les fonds sont libérés via le trust après contrôle et vérification de l’ensemble des données.</p>
         </div>
         <div className="grid gap-1">
           <Label htmlFor="effectiveDate">Date d’effet souhaitée</Label>
@@ -78,7 +78,7 @@ export function SubmitOfferForm({
           <label className="flex items-start gap-3 text-[14px] leading-relaxed text-ink">
             <input type="checkbox" name="engagement" checked={engagement} onChange={(e) => setEngagement(e.target.checked)} className="mt-1 h-4 w-4 shrink-0 accent-[#2563eb]" />
             <span>
-              Je verse le dépôt de garantie de {depositLabel}. Il vient en déduction du prix si la cession aboutit, et reste acquis
+              Je verse le dépôt de garantie de {depositLabel}. Il vient en déduction de la transaction si la cession aboutit, et reste acquis
               au cédant si je me retire.
               {depositTermsLines.length ? <span className="mt-1 block text-[12px] text-muted">{depositTermsLines.join(" ")}</span> : null}
             </span>
@@ -88,7 +88,7 @@ export function SubmitOfferForm({
       <p className="text-[13px] text-muted">Retenue par le cédant, votre offre vaut lettre d’intention : le dossier de cession s’ouvre aussitôt.</p>
       {state.error ? <p className="text-sm text-danger">{state.error}</p> : null}
       <Button type="submit" disabled={pending || !engagement || !pret}>
-        {pending ? "Envoi…" : needsDeposit ? `Payer le dépôt et déposer mon offre` : "Déposer mon offre"}
+        {pending ? "Envoi…" : needsDeposit ? `Verser le dépôt et déposer mon offre` : "Déposer mon offre"}
       </Button>
     </form>
   );

@@ -17,10 +17,22 @@ import { PartnerStrip } from "@/components/partners/partner-grid";
 import {
   ACCESS_MARKET_POINTS,
   ACCESS_PRICE_LINE,
+  COMPANY_SOCIETY_CHECKS,
   CTA_BROWSE,
   CTA_SELL,
+  DEPOSIT_POSITION_ITEMS,
+  DEPOSIT_POSITION_LEDE,
+  DEPOSIT_POSITION_TITLE,
+  FAQ_PORTFOLIO_TRANSFER_A,
+  FAQ_PORTFOLIO_TRANSFER_Q,
   MARKET_ACCESS,
   NO_FEE_LABEL,
+  RETENTION_TRUST_ITEMS,
+  RETENTION_TRUST_LEDE,
+  RETENTION_TRUST_TITLE,
+  SECURE_PAYMENT_ITEMS,
+  SECURE_PAYMENT_LEDE,
+  SECURE_PAYMENT_TITLE,
   TAKE_POSITION,
 } from "@/lib/copy/market";
 
@@ -44,8 +56,9 @@ const COMPARE_ROWS: {
   verified: string;
 }[] = [
   { label: "Publication sous alias", simple: "oui", verified: "oui" },
-  { label: "Paiement sécurisé", simple: "oui", verified: "oui" },
+  { label: "Transaction sécurisée", simple: "oui", verified: "oui" },
   { label: "Kbis et existence réelle de la société", simple: "non", verified: "oui" },
+  { label: "Réputation du cabinet", simple: "non", verified: "oui" },
   { label: "Pièce d’identité du représentant", simple: "non", verified: "oui" },
   { label: "Justificatif ORIAS du dossier", simple: "non", verified: "oui" },
   { label: "États de portefeuille et bordereaux", simple: "non", verified: "oui" },
@@ -54,25 +67,21 @@ const COMPARE_ROWS: {
 
 const VERIFIED_PILLS = [
   "Société réelle : Kbis et RCS",
+  "Réputation du cabinet",
   "Identité du représentant",
   "Justificatif ORIAS du dossier",
   "Statuts et documents sociaux",
   "États de portefeuille",
   "Bordereaux de commissions",
   "Revue interne compagnies et mix",
-  "Paiement sécurisé jusqu’au transfert",
+  "Transaction sécurisée jusqu’au transfert",
 ];
 
 const VERIFY_BLOCKS = [
   {
     title: "La société",
     lede: "Nous contrôlons que le cabinet existe et qu’il est en règle pour céder.",
-    items: [
-      "Extrait Kbis ou justificatif d’immatriculation",
-      "Informations légales (dénomination, siège, représentant)",
-      "Statuts ou documents juridiques pertinents",
-      "Justificatif ORIAS associé au dossier",
-    ],
+    items: [...COMPANY_SOCIETY_CHECKS],
   },
   {
     title: "La personne",
@@ -102,24 +111,8 @@ const FAQ = [
     a: `Pour ${formatEuroWhole(GROWTH_PLAN_ANNUAL_EUR)} HT par an, réglé par carte via Stripe. Vous accédez au détail de l’offre : contact, messages et dépôt d’offre. Ce n’est pas une vérification du portefeuille. Le vendeur reste anonyme à cette étape.`,
   },
   {
-    q: "Quelle est la différence entre l’abonnement, le dépôt et la vérification ?",
-    a: `L’abonnement ouvre le contact. Le dépôt de ${INTEREST_DEPOSIT_LABEL} révèle qui est le cédant et ouvre les PDF du cabinet. La vérification (option 2) contrôle la société, les pièces d’identité et les documents du portefeuille. Ce sont trois étapes distinctes.`,
-  },
-  {
-    q: "Que contrôlez-vous concrètement ?",
-    a: "Sur l’option certifié : Kbis et existence de la société, pièce d’identité du représentant, justificatif ORIAS du dossier, états de portefeuille et bordereaux de commissions. L’annonce simple repose sur les données déclarées. Dans les deux cas, le numéro ORIAS est contrôlé à l’inscription.",
-  },
-  {
-    q: "Quand le vendeur est-il identifié ?",
-    a: `Après un dépôt de ${INTEREST_DEPOSIT_LABEL} du prix de l’annonce. Avant cela, le cédant reste sous alias, même si vous êtes abonné, et même si le portefeuille est certifié.`,
-  },
-  {
-    q: "Combien coûte une vente ?",
-    a: "La mise en vente est gratuite. Les honoraires sont précisés dans le contrat d’intermédiation signé sur la plateforme, et ne sont dus que si la vente aboutit. Le séquestre est inclus, sans frais supplémentaires.",
-  },
-  {
-    q: "Quand l’argent est-il débloqué ?",
-    a: "L’argent de la cession reste sur un compte sécurisé jusqu’à ce que l’acquéreur ait le portefeuille. Si la vente n’aboutit pas, le dépôt et le prix lui sont rendus. L’abonnement annuel de 250 € HT se règle par Stripe.",
+    q: FAQ_PORTFOLIO_TRANSFER_Q,
+    a: FAQ_PORTFOLIO_TRANSFER_A,
   },
 ];
 
@@ -166,7 +159,7 @@ export default async function TarifsPage({
               href="/partenaires"
               className="rounded-full border border-line bg-surface px-5 py-2.5 text-[14px] font-medium text-ink shadow-sm hover:border-indigo"
             >
-              Paiement sécurisé
+              Transaction sécurisée
             </Link>
             <Link
               href="/annonces"
@@ -181,7 +174,7 @@ export default async function TarifsPage({
       <section className="bg-page px-4 pb-2 pt-2">
         <div className="mx-auto max-w-5xl rounded-3xl border border-line bg-paper px-5 py-5">
           <p className="text-center text-[13px] font-medium text-ink">
-            Stripe, Trustap, Yousign, DocuSign, Ondorse, CrediPro. La bourse ne reçoit pas le prix de cession.
+            Stripe, Trustap, Yousign, DocuSign, Ondorse, CrediPro. La bourse n’encaisse pas les fonds de la cession.
           </p>
           <div className="mt-3 flex justify-center">
             <PartnerStrip partners={partners} />
@@ -243,7 +236,7 @@ export default async function TarifsPage({
                 <Link href="/app/profil">Abonnement actif</Link>
               </Button>
             ) : canPay ? (
-              <SubscribeButton className="mt-8" label="Payer 250 € HT" next={next ?? undefined} />
+              <SubscribeButton className="mt-8" label="Régler 250 € HT" next={next ?? undefined} />
             ) : (
               <Button asChild variant="primary" className="mt-8 w-full" size="lg">
                 <Link
@@ -257,12 +250,12 @@ export default async function TarifsPage({
                       : `/connexion?next=${encodeURIComponent(next ? `/tarifs?next=${encodeURIComponent(next)}#abonnements` : "/tarifs#abonnements")}`
                   }
                 >
-                  {actor ? "Continuer vers le paiement" : "Se connecter pour s’abonner"}
+                  {actor ? "Continuer vers l’abonnement" : "Se connecter pour s’abonner"}
                 </Link>
               </Button>
             )}
             <p className="mt-3 text-center text-[12px] text-muted">
-              Paiement sécurisé Stripe. 250 € HT par an. Renouvellement annuel.
+              Abonnement Stripe. 250 € HT par an. Renouvellement annuel.
             </p>
           </article>
         </div>
@@ -278,9 +271,10 @@ export default async function TarifsPage({
               Ce que nous contrôlons, et ce que nous ne contrôlons pas
             </h2>
             <p className="mx-auto mt-3 max-w-2xl text-[15px] text-muted">
-              L’abonnement n’est pas une vérification. L’annonce simple publie
-              les données déclarées. L’option certifié contrôle la société, la
-              personne et le portefeuille.
+              L’abonnement n’est pas une vérification. L’annonce simple n’est
+              pas certifiée : les données du portefeuille ne sont pas vérifiées
+              par La bourse du portefeuille. Le portefeuille certifié : tous les
+              éléments sont contrôlés.
             </p>
           </div>
 
@@ -333,10 +327,10 @@ export default async function TarifsPage({
                   Portefeuille certifié
                 </h3>
                 <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-white/80">
-                  Contrôle de la société (souvent appelé KYB), de l’identité du
-                  représentant (KYC) et des documents du portefeuille. Honoraires
-                  dus uniquement si la vente aboutit. La salle de marché affiche{" "}
-                  {CERTIFIED_BADGE}.
+                  Portefeuille certifié. Tous les éléments sont contrôlés. Les
+                  données et les bordereaux de commission sont vérifiés, ainsi
+                  que le reste du dossier. Honoraires dus uniquement si la vente
+                  aboutit. La salle de marché affiche {CERTIFIED_BADGE}.
                 </p>
               </div>
               <div className="shrink-0 text-right">
@@ -386,41 +380,43 @@ export default async function TarifsPage({
 
           <div className="mt-6 grid gap-6 lg:grid-cols-3">
             <ServiceCard
-              title="Dépôt identité"
-              lede="Ce versement révèle le cédant. Ce n’est pas le contrôle des pièces."
+              title={DEPOSIT_POSITION_TITLE}
+              lede={DEPOSIT_POSITION_LEDE}
               price={INTEREST_DEPOSIT_LABEL}
-              items={[
-                "Calculé sur le prix de l’annonce",
-                "Dévoile les coordonnées du cédant",
-                "Messagerie anonyme avant le dépôt",
-                "Même un portefeuille certifié reste sous alias jusqu’ici",
-              ]}
+              items={[...DEPOSIT_POSITION_ITEMS]}
             />
             <ServiceCard
               title="Annonce simple"
-              lede="Le portefeuille est présenté tel que déclaré, sans relecture des pièces."
-              price="Gratuit"
+              lede="Annonce non certifiée. Les données du portefeuille ne sont pas vérifiées par La bourse du portefeuille."
+              price="Sans honoraires"
               items={[
-                "Mise en vente gratuite",
-                "Pas de Kbis, pièce d’identité ni bordereaux contrôlés",
-                "Statut non certifié en salle de marché",
-                "Paiement sécurisé, comme l’option 2",
+                "C’est à l’acquéreur d’effectuer ses propres vérifications",
+                "Kbis, pièces d’identité et capacité du vendeur à contrôler de son côté",
+                "Mise en vente sans honoraires",
+                "Transaction sécurisée",
               ]}
               href="/ceder"
               cta="Choisir l’annonce simple"
             />
             <ServiceCard
-              title="Paiement sécurisé"
-              lede="La bourse du portefeuille ne garde jamais l’argent de la cession."
+              title={SECURE_PAYMENT_TITLE}
+              lede={SECURE_PAYMENT_LEDE}
               price="Inclus"
-              items={[
-                "Le prix reste sur un compte sécurisé jusqu’au transfert",
-                "Il est versé au cédant dès l’accord des compagnies",
-                "Il est rendu à l’acquéreur si la vente n’aboutit pas",
-                "Aucun frais en plus des honoraires",
-              ]}
+              items={[...SECURE_PAYMENT_ITEMS]}
             />
           </div>
+          <article className="mt-6 rounded-3xl border border-line bg-surface p-7 shadow-sm">
+            <h3 className="text-lg font-bold text-ink">{RETENTION_TRUST_TITLE}</h3>
+            <p className="mt-2 text-[14px] leading-relaxed text-muted">{RETENTION_TRUST_LEDE}</p>
+            <ul className="mt-5 space-y-2">
+              {RETENTION_TRUST_ITEMS.map((item) => (
+                <li key={item} className="flex items-start gap-2 text-[14px] text-ink">
+                  <CheckIcon className="mt-0.5 shrink-0 text-indigo" />
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </article>
         </div>
       </section>
 
@@ -464,15 +460,15 @@ export default async function TarifsPage({
           </h2>
           <div className="mx-auto mt-6 grid max-w-2xl gap-3 text-left">
             <p className="rounded-2xl border border-line bg-paper px-5 py-4 text-[15px] leading-relaxed text-muted">
-              <span className="font-semibold text-ink">Vous vendez.</span> La mise en vente est gratuite.
-              Notre équipe relit votre annonce, puis la publie en salle de marché sous alias.
+              <span className="font-semibold text-ink">Vous vendez.</span> Notre équipe relit
+              votre annonce, puis la publie en salle de marché sous alias.
             </p>
             <p className="rounded-2xl border border-line bg-paper px-5 py-4 text-[15px] leading-relaxed text-muted">
               <span className="font-semibold text-ink">Vous achetez.</span> L’abonnement annuel ouvre le
               détail des portefeuilles, la messagerie avec les cédants et le dépôt d’offres.
             </p>
             <p className="rounded-2xl border border-line bg-paper px-5 py-4 text-[15px] leading-relaxed text-muted">
-              <span className="font-semibold text-ink">Le paiement est encadré.</span> {CESSION_FUNDS_DISCLAIMER}
+              <span className="font-semibold text-ink">La transaction est sécurisée.</span> {CESSION_FUNDS_DISCLAIMER}
             </p>
           </div>
           <div className="mt-8 flex flex-wrap justify-center gap-3">

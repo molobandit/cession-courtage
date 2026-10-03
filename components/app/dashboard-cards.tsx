@@ -54,7 +54,7 @@ export function CompactListingCard({ item }: { item: PublicListingCard }) {
             </dd>
           </div>
           <div>
-            <dt className="text-[12px] text-muted">Prix</dt>
+            <dt className="text-[12px] text-muted">Montant</dt>
             <dd className="tabular mt-0.5 text-[15px] font-semibold text-ink">
               {formatEuroWhole(item.askingPrice)}
             </dd>
@@ -307,7 +307,7 @@ export function PublishBanner({ href }: { href: string }) {
     >
       <span>
         <span className="font-semibold">Proposez votre portefeuille à la vente.</span>{" "}
-        Notre équipe l’étudie, fixe le prix et met l’annonce en ligne sous alias.
+        Notre équipe l’étudie, détermine le montant et met l’annonce en ligne sous alias.
       </span>
       <span className="hidden shrink-0 font-semibold sm:inline">Déposer</span>
     </Link>

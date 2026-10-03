@@ -145,7 +145,7 @@ export function RevisePriceForm({ dealId, defaultPrice }: { dealId: string; defa
   if (!ouvert) {
     return (
       <button type="button" onClick={() => setOuvert(true)} className="w-fit text-[14px] font-medium text-indigo-dark underline-offset-2 hover:underline">
-        Les pièces justifient un autre prix ? Réviser mon prix
+        Les pièces justifient un autre montant ? Réviser mon montant
       </button>
     );
   }
@@ -153,7 +153,7 @@ export function RevisePriceForm({ dealId, defaultPrice }: { dealId: string; defa
     <form onSubmit={keepFormSubmit(formAction)} className="grid gap-3 rounded-2xl border border-line bg-paper p-4">
       <input type="hidden" name="dealId" value={dealId} />
       <label className="grid max-w-xs gap-1.5 text-[14px] font-medium text-ink">
-        Prix révisé (€)
+        Montant révisé (€)
         <input name="price" inputMode="decimal" required defaultValue={defaultPrice} className={inputClass} />
       </label>
       <label className="grid gap-1.5 text-[14px] font-medium text-ink">
@@ -199,7 +199,7 @@ export function RevisionAnswerForm({ dealId }: { dealId: string }) {
               onChange={(e) => setCoche(e.target.checked)}
               className="mt-1 h-4 w-4 shrink-0 accent-[#2563eb]"
             />
-            <span>J’accepte le prix révisé : il remplace celui de l’offre dans le protocole.</span>
+            <span>J’accepte le montant révisé : il remplace celui de l’offre dans le protocole.</span>
           </label>
           <div className="flex flex-wrap gap-2.5">
             <Button type="submit" disabled={pending || !coche}>
@@ -227,7 +227,7 @@ export function RevisionAnswerForm({ dealId }: { dealId: string }) {
           </label>
           <div className="flex flex-wrap gap-2.5">
             <Button type="submit" variant="outline" disabled={pending}>
-              {pending ? "Envoi…" : "Maintenir le prix de l’offre"}
+              {pending ? "Envoi…" : "Maintenir le montant de l’offre"}
             </Button>
             <Button type="button" variant="ghost" onClick={() => setRefus(false)}>
               Annuler
@@ -261,12 +261,12 @@ export function EscrowForm({ dealId, amountLabel, live }: { dealId: string; amou
       </label>
       {!live ? (
         <p className="rounded-xl border border-warn/30 bg-warn/5 px-3 py-2 text-[13px] text-ink">
-          Le paiement en ligne n’est pas encore ouvert : le versement est enregistré dans le dossier.
+          Le règlement en ligne n’est pas encore ouvert : le versement est enregistré dans le dossier.
         </p>
       ) : null}
       <label className="flex items-start gap-3 text-[14px] leading-relaxed text-ink">
         <input type="checkbox" name="consent" checked={coche} onChange={(e) => setCoche(e.target.checked)} className="mt-1 h-4 w-4 shrink-0 accent-[#2563eb]" />
-        <span>Je verse {amountLabel} sur le compte sécurisé. L’argent y reste jusqu’à l’accord des compagnies.</span>
+        <span>Je verse {amountLabel} dans le trust. Les fonds y restent jusqu’à l’accord des compagnies.</span>
       </label>
       <div>
         <Button type="submit" disabled={pending || !coche || !origine}>

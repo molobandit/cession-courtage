@@ -13,7 +13,7 @@ export function PayFees({ dealId, label }: { dealId: string; label: string }) {
     <form action={action}>
       <input type="hidden" name="dealId" value={dealId} />
       <Button type="submit" variant="primary" disabled={pending}>
-        {pending ? "Ouverture du paiement…" : label}
+        {pending ? "Ouverture…" : label}
       </Button>
       {state.error ? (
         <p role="alert" className="mt-2 text-[13px] text-danger">

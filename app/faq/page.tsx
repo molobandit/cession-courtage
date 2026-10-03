@@ -5,15 +5,15 @@ import {
   GROWTH_PLAN_ANNUAL_EUR,
   INTEREST_DEPOSIT_LABEL,
 } from "@/lib/billing/rates";
-import { ASKING_MAX, ASKING_MIN, OFFER_WINDOW_DAYS } from "@/lib/listing/constants";
+import { ASKING_MAX, ASKING_MIN } from "@/lib/listing/constants";
 import { formatEuroWhole } from "@/lib/format/number";
 import { PAYMENT_FAQ, PAYMENT_FAQ_ANCHOR } from "@/lib/partners/faq";
-import { CESSION_FUNDS_DISCLAIMER } from "@/lib/partners/catalog";
+import { FAQ_PORTFOLIO_TRANSFER_A, FAQ_PORTFOLIO_TRANSFER_Q } from "@/lib/copy/market";
 
 export const metadata: Metadata = {
   title: "Questions fréquentes",
   description:
-    "Confidentialité, étude du portefeuille, séance d’offres, tarifs, paiement et transfert : les réponses aux questions que se posent les courtiers.",
+    "Confidentialité, étude du portefeuille, séance d’offres, tarifs, transaction et transfert : les réponses aux questions que se posent les courtiers.",
   alternates: { canonical: "/faq" },
 };
 
@@ -31,7 +31,7 @@ const SECTIONS: Section[] = [
       },
       {
         q: "À quel moment mon identité est-elle révélée ?",
-        a: `Après le dépôt de ${INTEREST_DEPOSIT_LABEL} du prix de l’annonce, jamais avant. Jusque-là, l’acquéreur ne connaît de vous qu’un alias. L’abonnement ouvre le contact et les messages, sans dévoiler votre nom.`,
+        a: `Dès que l’acquéreur se positionne, il verse un dépôt de ${INTEREST_DEPOSIT_LABEL} dans un trust, pour lancer la procédure de cession. C’est à ce moment que votre identité lui est ouverte, jamais avant. L’abonnement ouvre le contact et les messages, sans dévoiler votre nom.`,
       },
       {
         q: "Puis-je savoir qui a consulté mon dossier ?",
@@ -45,11 +45,11 @@ const SECTIONS: Section[] = [
   },
   {
     title: "Étude du portefeuille",
-    intro: "Ce que nous regardons, et qui fixe le prix.",
+    intro: "Ce que nous regardons, et qui détermine le montant de l’annonce.",
     questions: [
       {
-        q: "Qui fixe le prix de mon annonce ?",
-        a: "Notre équipe. Après l’étude de votre portefeuille, nous déterminons sa valeur et nous mettons l’annonce en ligne avec le prix correspondant. Vous n’avez ni prix à fixer, ni annonce à publier.",
+        q: "Qui détermine le montant de mon annonce ?",
+        a: "Notre équipe. Après l’étude de votre portefeuille, nous déterminons sa valeur et nous mettons l’annonce en ligne avec le montant correspondant. Vous n’avez ni montant à fixer, ni annonce à publier.",
       },
       {
         q: "Que regarde l’étude ?",
@@ -60,8 +60,8 @@ const SECTIONS: Section[] = [
         a: "En maîtrisant les résiliations et en proposant à l’acquéreur un accompagnement de quelques mois après la cession.",
       },
       {
-        q: "Le prix de l’annonce engage-t-il l’acquéreur ?",
-        a: "Non. C’est le prix auquel l’annonce est mise en ligne. L’acquéreur fait son offre, et la vérification préalable reste indispensable.",
+        q: "Le montant de l’annonce engage-t-il l’acquéreur ?",
+        a: "Non. C’est le montant auquel l’annonce est mise en ligne. L’acquéreur fait son offre, et la vérification préalable reste indispensable.",
       },
     ],
   },
@@ -71,7 +71,7 @@ const SECTIONS: Section[] = [
     questions: [
       {
         q: "Comment fonctionne la séance d’offres ?",
-        a: `La séance dure ${OFFER_WINDOW_DAYS} jours à compter de la publication. La meilleure offre et le nombre d’offres s’affichent en direct sur la fiche, sans jamais l’identité des acquéreurs : chacun sait où en est la cote avant de s’engager. Le cédant suit les offres et en retient une à la clôture.`,
+        a: `La meilleure offre et le nombre d’offres s’affichent en direct sur la fiche, sans jamais l’identité des acquéreurs : chacun sait où en est la cote avant de s’engager. Le cédant suit les offres et en retient une à la clôture.`,
       },
       {
         q: "Pourquoi le cédant attend-il la clôture pour retenir une offre ?",
@@ -86,8 +86,8 @@ const SECTIONS: Section[] = [
         a: "Oui, tant qu’elle n’a pas été retenue. Une fois l’offre acceptée, un dossier s’ouvre et le parcours contractuel commence.",
       },
       {
-        q: "À quels prix les annonces sont-elles mises en ligne ?",
-        a: `Notre équipe fixe un prix compris entre ${formatEuroWhole(ASKING_MIN)} et ${formatEuroWhole(ASKING_MAX)}.`,
+        q: "Dans quelle fourchette les annonces sont-elles mises en ligne ?",
+        a: `Notre équipe détermine un montant compris entre ${formatEuroWhole(ASKING_MIN)} et ${formatEuroWhole(ASKING_MAX)}.`,
       },
     ],
   },
@@ -97,11 +97,11 @@ const SECTIONS: Section[] = [
     questions: [
       {
         q: "Quelles sont les étapes ?",
-        a: "Accord de confidentialité, salle de données, lettre d’intention, vérification d’identité, acte, signature, paiement sécurisé, transfert des contrats, puis période de rétention. Les étapes se suivent dans cet ordre et ne peuvent pas être sautées.",
+        a: "Accord de confidentialité, salle de données, lettre d’intention, vérification d’identité, acte, signature, transaction sécurisée, transfert des contrats, puis période de rétention. Les étapes se suivent dans cet ordre et ne peuvent pas être sautées.",
       },
       {
-        q: "Qu’est-ce que l’ajustement du prix différé ?",
-        a: "Lorsqu’une partie du prix est différée, elle est recalculée sur le taux de rétention réellement constaté à trois, six et douze mois, rapporté à une cible de 90 %, avec un plancher à la moitié du montant convenu. Vous connaissez votre pire cas dès la signature, et l’acquéreur accepte un comptant plus élevé parce qu’il est couvert.",
+        q: FAQ_PORTFOLIO_TRANSFER_Q,
+        a: FAQ_PORTFOLIO_TRANSFER_A,
       },
       {
         q: "Puis-je ne céder qu’une partie de mon portefeuille ?",
@@ -118,31 +118,19 @@ const SECTIONS: Section[] = [
     intro: "Ce que coûte le service, et à quel moment.",
     questions: [
       {
-        q: "Combien coûte la mise en vente ?",
-        a: "Déposer une annonce est gratuit. Les honoraires sont précisés dans le contrat d’intermédiation et ne sont dus que si la vente aboutit.",
-      },
-      {
         q: "Quels sont les honoraires ?",
-        a: "Ils sont précisés dans le contrat d’intermédiation que vous signez sur la plateforme, et ne sont dus que si la vente aboutit. Dans tous les cas, le numéro ORIAS est contrôlé à l’inscription et le paiement passe par un séquestre, sans frais de séquestre supplémentaires.",
+        a: "Ils sont précisés dans le contrat d’intermédiation que vous signez sur la plateforme, et ne sont dus que si la vente aboutit. Dans tous les cas, le numéro ORIAS est contrôlé à l’inscription et la transaction passe par un trust.",
       },
       {
-        q: "Que contrôlez-vous concrètement ?",
-        a: `Deux niveaux distincts. Le dépôt de ${INTEREST_DEPOSIT_LABEL} révèle qui est le cédant, sans valider ses pièces. L’option certifié relit le Kbis, la pièce d’identité, le justificatif ORIAS du dossier et les documents du portefeuille. Ces pièces ne sont jamais publiées au catalogue.`,
-      },
-      {
-        q: "Un acquéreur doit-il payer ?",
-        a: `Consulter le catalogue est gratuit. Un abonnement de ${GROWTH_PLAN_ANNUAL_EUR.toLocaleString("fr-FR")} € HT par an est obligatoire pour accéder au détail de l’offre (contact, messages). Le vendeur reste anonyme jusqu’au dépôt de ${INTEREST_DEPOSIT_LABEL} du prix. L’abonnement passe par Stripe dès que ce rail est ouvert.`,
-      },
-      {
-        q: "Quand l’argent est-il débloqué ?",
-        a: `L’argent reste sur un compte sécurisé jusqu’à ce que l’acquéreur ait le portefeuille. Si la vente n’aboutit pas, il lui est rendu. ${CESSION_FUNDS_DISCLAIMER}`,
+        q: "Un acquéreur doit-il s’abonner ?",
+        a: `Consulter le catalogue ne nécessite pas d’abonnement. Un abonnement de ${GROWTH_PLAN_ANNUAL_EUR.toLocaleString("fr-FR")} € HT par an est obligatoire pour accéder au détail de l’offre (contact, messages). Dès que l’acquéreur se positionne, il verse ${INTEREST_DEPOSIT_LABEL} dans un trust pour lancer la procédure de cession. L’abonnement passe par Stripe dès que ce rail est ouvert.`,
       },
     ],
   },
   {
     id: PAYMENT_FAQ_ANCHOR,
-    title: "Paiement et signatures",
-    intro: "Où va l’argent, qui signe, qui vérifie. Sans copier une autre place de marché.",
+    title: "Transaction et signatures",
+    intro: "Qui signe, qui vérifie, par où passent les fonds. Sans copier une autre place de marché.",
     questions: PAYMENT_FAQ,
   },
   {
@@ -243,7 +231,7 @@ export default function FaqPage() {
             Faites étudier votre portefeuille
           </h2>
           <p className="mt-3 text-[15px] leading-relaxed text-muted">
-            Notre équipe réalise l’étude, puis fixe le prix de l’annonce.
+            Notre équipe réalise l’étude, puis détermine le montant de l’annonce.
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <Button asChild variant="primary">

@@ -60,8 +60,9 @@ describe("imputation sur le séquestre", () => {
 describe("ce qui est dit avant le versement", () => {
   it("annonce les deux issues, pas seulement la bonne", () => {
     const regles = depositTerms("2 500 €", 2500);
+    expect(regles.join(" ")).toContain("trust");
     expect(regles.join(" ")).toContain("prélèvement SEPA");
-    expect(regles.join(" ")).toContain("déduction du prix");
+    expect(regles.join(" ")).toContain("déduction de la transaction");
     expect(regles.join(" ")).toContain("indemnitaire");
   });
 
@@ -70,7 +71,7 @@ describe("ce qui est dit avant le versement", () => {
   });
 
   it("nomme chaque issue", () => {
-    expect(depositOutcomeLabel("DEDUCTED")).toBe("Déduit du prix");
+    expect(depositOutcomeLabel("DEDUCTED")).toBe("Déduit de la transaction");
     expect(depositOutcomeLabel("RETAINED")).toContain("indemnitaire");
     expect(depositOutcomeLabel("PENDING")).toContain("attente");
   });

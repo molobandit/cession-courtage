@@ -45,7 +45,7 @@ export function PartnerFooterLogos() {
           </li>
         ))}
       </ul>
-      <p className="mt-3 text-[13px] text-white/65">Paiements sécurisés</p>
+      <p className="mt-3 text-[13px] text-white/65">Transactions sécurisées</p>
     </div>
   );
 }
@@ -61,11 +61,11 @@ export function PartnerHomeMarquee() {
             Circuit de confiance
           </p>
           <h2 className="mt-4 text-3xl font-bold tracking-tight text-ink sm:text-4xl">
-            Paiement sécurisé et <span className="text-indigo">signatures</span>
+            Transaction sécurisée et <span className="text-indigo">signatures</span>
           </h2>
           <p className="mx-auto mt-3 max-w-2xl text-[15px] text-muted">
             Stripe, Trustap, Yousign, DocuSign, Ondorse et CrediPro. La bourse du
-            portefeuille ne reçoit pas le prix de cession.
+            portefeuille n’encaisse pas les fonds de la cession.
           </p>
         </div>
         <div className="relative mt-8 overflow-hidden">

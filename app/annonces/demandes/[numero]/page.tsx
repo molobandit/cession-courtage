@@ -193,8 +193,9 @@ export default async function PublicMandateDetailPage({ params }: PageProps) {
         <section className="mt-8 rounded-[1.75rem] border border-indigo-line bg-indigo-soft p-6">
           <h2 className="text-xl font-semibold text-ink">Proposer mon portefeuille</h2>
           <p className="mt-2 text-[15px] leading-relaxed text-muted">
-            Votre annonce est signalée à l’acquéreur, qui peut prendre position dessus. Votre
-            cabinet reste anonyme jusqu’à son dépôt de garantie.
+            Votre annonce est signalée à l’acquéreur, qui peut prendre position dessus.
+            Dès qu’il se positionne, il verse un dépôt de 2,5 % dans un trust,
+            pour lancer la procédure de cession.
           </p>
           <div className="mt-5">
             {annoncesProposables.length === 0 ? (

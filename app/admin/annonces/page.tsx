@@ -21,8 +21,8 @@ export default async function AdminListingsReviewPage() {
     <main className="mx-auto max-w-6xl px-4 py-6">
       <h1 className="font-serif text-2xl text-ink">Dossiers à étudier</h1>
       <p className="mt-1 max-w-2xl text-sm text-muted">
-        Le cédant ne fixe pas le prix. Réalisez l’étude du portefeuille (sincérité des chiffres, anonymat, complétude),
-        fixez le prix, puis mettez l’annonce en ligne : la séance de 21 jours s’ouvre. Renvoyé, le dossier part au cédant
+        Le cédant ne fixe pas le montant. Réalisez l’étude du portefeuille (sincérité des chiffres, anonymat, complétude),
+        déterminez le montant, puis mettez l’annonce en ligne : la séance d’offres s’ouvre. Renvoyé, le dossier part au cédant
         avec le motif.
       </p>
       <div className="mt-4 overflow-x-auto rounded-xl border border-line bg-surface">
@@ -52,6 +52,9 @@ export default async function AdminListingsReviewPage() {
                   <tr key={a.id} className="border-t border-line align-top">
                     <td className="px-3 py-3">
                       <span className="font-medium text-ink">N° {a.publicNumber}</span>
+                      <a href={`/annonces/${a.publicNumber}/etude`} className="ml-2 text-[13px] text-indigo underline-offset-2 hover:underline">
+                        Étude PDF
+                      </a>
                       <span className="block text-[13px] text-muted">{a.portfolio.label}</span>
                       <span className="block text-[13px] text-muted">
                         {a.displayedZone} · soumise le {a.submittedForReviewAt ? formatDateTime(a.submittedForReviewAt) : "date inconnue"}

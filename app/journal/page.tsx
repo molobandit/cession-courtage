@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { OFFER_WINDOW_DAYS } from "@/lib/listing/constants";
+import { RETENTION_TRUST_BODY, RETENTION_TRUST_TITLE } from "@/lib/copy/market";
 
 export const metadata: Metadata = {
   title: "Journal",
@@ -12,9 +12,9 @@ export const metadata: Metadata = {
 
 const ARTICLES = [
   {
-    title: "Pourquoi nous étudions chaque portefeuille avant de fixer son prix",
+    title: "Pourquoi nous étudions chaque portefeuille avant de déterminer sa valeur",
     lede: "Un multiple lancé au téléphone ne dit rien d’un portefeuille.",
-    body: "Deux portefeuilles aux mêmes commissions ne se valent pas : l’ancienneté des contrats, les résiliations, le mode de distribution et l’accompagnement proposé changent tout. C’est pourquoi notre équipe réalise d’abord une étude du portefeuille, qui met en évidence ses éléments et ses caractéristiques. La valeur est déterminée ensuite, et l’annonce est mise en ligne avec le prix correspondant.",
+    body: "Deux portefeuilles aux mêmes commissions ne se valent pas : l’ancienneté des contrats, les résiliations, le mode de distribution et l’accompagnement proposé changent tout. C’est pourquoi notre équipe réalise d’abord une étude du portefeuille, qui met en évidence ses éléments et ses caractéristiques. La valeur est déterminée ensuite, et l’annonce est mise en ligne avec le montant correspondant.",
   },
   {
     title: "Les résiliations comptent plus que tout le reste",
@@ -29,12 +29,12 @@ const ARTICLES = [
   {
     title: "Pourquoi la meilleure offre est affichée en séance",
     lede: `Un acquéreur qui ne sait pas où en est la cote propose au hasard ; un cédant qui ne voit rien décide à l’aveugle.`,
-    body: `Pendant ${OFFER_WINDOW_DAYS} jours, la fiche affiche la meilleure offre et le nombre d’offres déposées, comme la cote d’un titre, sans jamais révéler qui a offert. Chaque acquéreur se positionne en connaissance de cause, et un portefeuille recherché trouve son prix. Le cédant suit la séance et retient une offre à la clôture ; la plateforme n’adjuge pas, il reste libre de préférer une offre mieux financée à la plus élevée.`,
+    body: `Pendant la séance, la fiche affiche la meilleure offre et le nombre d’offres déposées, comme la cote d’un titre, sans jamais révéler qui a offert. Chaque acquéreur se positionne en connaissance de cause, et un portefeuille recherché trouve son montant. Le cédant suit la séance et retient une offre à la clôture ; la plateforme n’adjuge pas, il reste libre de préférer une offre mieux financée à la plus élevée.`,
   },
   {
-    title: "La part différée, et comment elle s’ajuste",
-    lede: "Le désaccord classique porte sur le risque que la clientèle parte après le départ du cédant.",
-    body: "L’acquéreur veut différer une partie du prix, le cédant veut être payé. La sortie tient dans une règle écrite à l’avance : la rétention est mesurée à trois, six et douze mois, et la part différée est recalculée sur le taux constaté rapporté à une cible de 90 %, sans jamais descendre en dessous de la moitié du montant convenu. Le cédant connaît son plancher dès la signature. L’acquéreur, couvert, accepte une part comptant plus élevée. Les deux y gagnent par rapport à une négociation au jugé.",
+    title: RETENTION_TRUST_TITLE,
+    lede: "Le trust conserve une part du montant, versée à l’acquéreur seulement en cas de déperdition réelle.",
+    body: RETENTION_TRUST_BODY,
   },
 ];
 
@@ -83,8 +83,7 @@ export default function JournalPage() {
             Faites étudier votre portefeuille
           </h2>
           <p className="mt-3 text-[15px] leading-relaxed text-muted">
-            Notre équipe réalise l’étude, fixe le prix, puis met l’annonce en ligne.
-            La mise en vente est gratuite.
+            Notre équipe réalise l’étude, détermine le montant, puis met l’annonce en ligne.
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <Button asChild variant="primary">

@@ -37,7 +37,7 @@ export default async function NewAcquisitionRequestPage() {
         </p>
         <SubscribeButton
           className="mt-8"
-          label={`Payer ${GROWTH_PLAN_ANNUAL_EUR} € HT`}
+          label={`Régler ${GROWTH_PLAN_ANNUAL_EUR} € HT`}
           next={ACQUISITION_REQUEST_PATH}
         />
       </main>

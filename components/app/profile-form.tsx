@@ -47,8 +47,9 @@ export function ProfileForm({
       <section id="identite">
         <h2 className="text-lg font-semibold text-ink">Identité</h2>
         <p className="mt-1 text-[14px] text-muted">
-          Ces informations restent internes jusqu’au dépôt de 2,5 % du prix, qui
-          ouvre vos coordonnées à l’acquéreur engagé.
+          Ces informations restent internes jusqu’au dépôt de 2,5 % dans
+          un trust, versé dès que l’acquéreur se positionne pour lancer la
+          procédure de cession.
         </p>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <div>

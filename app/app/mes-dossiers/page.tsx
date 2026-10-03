@@ -24,7 +24,7 @@ export default async function MesDossiersPage() {
       </p>
       <h1 className="mt-2 text-3xl font-bold tracking-tight text-ink">Mes dossiers</h1>
       <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-muted">
-        Après un dépôt de {INTEREST_DEPOSIT_LABEL} du prix de cession, le cabinet cédant
+        Après un dépôt de {INTEREST_DEPOSIT_LABEL} du montant de la cession, le cabinet cédant
         n’est plus sous alias. Les assurés du portefeuille restent anonymes. Cette
         page suit l’avancement de chaque opération, pas une prise de participation.
       </p>

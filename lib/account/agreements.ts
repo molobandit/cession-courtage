@@ -117,28 +117,28 @@ export function buildIntermediationContract(party: DocumentParty, oriasNumber: s
       {
         heading: "Article 1. Objet",
         paragraphs: [
-          "La plateforme met en relation des courtiers qui cèdent ou acquièrent un portefeuille de contrats d’assurance, et met à leur disposition les outils de la transaction : annonce relue avant publication, séance d’offres, dossier de cession, pièces générées, signature électronique et séquestre du prix par un tiers habilité.",
+          "La plateforme met en relation des courtiers qui cèdent ou acquièrent un portefeuille de contrats d’assurance, et met à leur disposition les outils de la transaction : annonce relue avant publication, séance d’offres, dossier de cession, pièces générées, signature électronique et trust tenu par un tiers habilité.",
         ],
       },
       {
         heading: "Article 2. Engagements de la plateforme",
         paragraphs: [
           "La plateforme relit chaque annonce avant publication, garde l’anonymat des cabinets jusqu’à l’offre retenue, vérifie l’identité des comptes et l’immatriculation ORIAS, et informe chaque partie des étapes du dossier.",
-          "Elle ne détient jamais les fonds : le dépôt de garantie et le prix transitent par un prestataire de paiement ou de séquestre habilité. Elle n’est pas partie à la cession et ne garantit ni la valeur du portefeuille ni la conservation des contrats.",
+          "Elle ne détient jamais les fonds : le dépôt de garantie et les fonds de la cession transitent par un prestataire habilité. Elle n’est pas partie à la cession et ne garantit ni la valeur du portefeuille ni la conservation des contrats.",
         ],
       },
       {
         heading: "Article 3. Engagements du courtier",
         paragraphs: [
           "Le courtier déclare une immatriculation ORIAS valide et des informations exactes, les tient à jour, et répond de l’exactitude des pièces qu’il dépose.",
-          "Acquéreur, il dépose une offre ferme, appuyée sur un accord de principe bancaire ou un justificatif de fonds, et un dépôt de garantie qui vient en déduction du prix si la cession aboutit et reste acquis au cédant à titre indemnitaire s’il se retire.",
+          "Acquéreur, il dépose une offre ferme, appuyée sur un accord de principe bancaire ou un justificatif de fonds, et un dépôt de garantie qui vient en déduction de la transaction si la cession aboutit et reste acquis au cédant à titre indemnitaire s’il se retire.",
           "Il s’interdit, pendant vingt-quatre mois après une mise en relation, de conclure hors de la plateforme une cession avec la contrepartie rencontrée par elle, sauf à régler les honoraires qui auraient été dus.",
         ],
       },
       {
         heading: "Article 4. Rémunération",
         paragraphs: [
-          `La mise en vente est gratuite. L’annonce simple n’emporte aucune commission sur la cession. L’option portefeuille certifié emporte des honoraires de ${VERIFIED_FEE_RANGE_LABEL} du prix de cession, avec un minimum de ${formatEuroWhole(SUCCESS_FEE_FLOOR_EUR)}, à la charge du cédant et dus exclusivement en cas de cession conclue.`,
+          `La mise en vente n’emporte pas d’honoraires de dépôt. L’annonce simple n’emporte aucune commission sur la cession. L’option portefeuille certifié emporte des honoraires de ${VERIFIED_FEE_RANGE_LABEL} du montant de la cession, avec un minimum de ${formatEuroWhole(SUCCESS_FEE_FLOOR_EUR)}, à la charge du cédant et dus exclusivement en cas de cession conclue.`,
           `L’accès au marché (contact des cédants et messagerie) est un abonnement de ${GROWTH_PLAN_ANNUAL_EUR.toLocaleString("fr-FR")} € HT par an. Aucune autre somme n’est due à la plateforme au titre du présent contrat.`,
         ],
       },

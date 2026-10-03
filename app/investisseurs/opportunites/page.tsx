@@ -42,7 +42,7 @@ export default async function InvestorOpportunitiesPage({
             <ul className="mt-3 space-y-1 text-[14px] text-muted">
               <li>Contrats : {formatCount(item.contractCount)}</li>
               <li>Commission annuelle : {formatEuroWhole(item.annualCommissions)}</li>
-              <li>Prix de cession : {formatEuroWhole(item.askingPrice)}</li>
+              <li>Montant de cession : {formatEuroWhole(item.askingPrice)}</li>
               <li>{item.certified ? "Portefeuille certifié" : "Portefeuille non certifié"}</li>
             </ul>
             <div className="mt-3 flex flex-wrap items-center gap-2">

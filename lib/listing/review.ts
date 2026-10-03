@@ -23,7 +23,7 @@ export async function notifyAdminsListingSubmitted(listingId: string, publicNumb
       userId: a.id,
       email: a.email,
       title: `Dossier à étudier · n° ${publicNumber}`,
-      body: "Un cédant a soumis son dossier. Réalisez l’étude, fixez le prix, puis mettez l’annonce en ligne.",
+      body: "Un cédant a soumis son dossier. Réalisez l’étude, déterminez le montant, puis mettez l’annonce en ligne.",
       href: "/admin/annonces",
     });
   }
@@ -69,7 +69,7 @@ export async function approveListing(listingId: string, adminId: string, price: 
       userId: c.cedant.id,
       email: c.cedant.email,
       title: `Annonce en ligne · dossier n° ${c.listing.publicNumber}`,
-      body: `Notre équipe a terminé l’étude de votre portefeuille. L’annonce est en ligne au prix de ${formatEuroWhole(price)} : la séance d’offres est ouverte pour ${OFFER_WINDOW_DAYS} jours.`,
+      body: `Notre équipe a terminé l’étude de votre portefeuille. L’annonce est en ligne au montant de ${formatEuroWhole(price)} : la séance d’offres est ouverte.`,
       href: `/app/annonces/${listingId}`,
     }).catch((e: unknown) => console.error("notify", e));
   }

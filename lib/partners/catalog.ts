@@ -1,3 +1,5 @@
+import { TRANSACTION_SECURE_BODY } from "@/lib/copy/market";
+
 export type PartnerId =
   | "stripe"
   | "trustap"
@@ -28,7 +30,7 @@ export const PARTNERS: PartnerCopy[] = [
     role: "Accès au marché",
     envKey: "STRIPE_SECRET_KEY",
     purpose:
-      "Règlement de l’abonnement annuel et des dépôts d’intérêt inférieurs à 999 euros, par carte. Le prix de cession ne passe jamais par ce canal.",
+      "Règlement de l’abonnement annuel et des dépôts d’intérêt inférieurs à 999 euros, par carte. Les fonds de la cession ne passent jamais par ce canal.",
     detail:
       "Stripe encaisse ce que La bourse du portefeuille facture pour l’accès au détail des offres et à la messagerie. Un dépôt d’intérêt sous 999 euros emprunte le même rail carte. Un plafond carte trop bas pourra passer par un prélèvement SEPA une fois ce moyen ouvert au contrat. La plateforme ne voit pas le numéro complet de la carte.",
     termsUrl: "https://stripe.com/fr/legal/ssa",
@@ -37,12 +39,11 @@ export const PARTNERS: PartnerCopy[] = [
   {
     id: "trustap",
     name: "Trustap",
-    role: "Paiement sécurisé du prix",
+    role: "Trust de la transaction",
     envKey: "TRUSTAP_API_KEY",
     purpose:
-      "Garde le prix de vente et les dépôts à partir de 999 euros sur un compte sécurisé, hors des comptes de La bourse du portefeuille.",
-    detail:
-      "Trustap est prévu pour le paiement sécurisé, certifié PCI DSS de niveau 1. Après la signature, l’acquéreur y verse le prix, dépôt de garantie déduit. L’argent est versé au cédant dès que les compagnies ont accepté le transfert. Si la cession s’arrête, il est rendu à l’acquéreur.",
+      "Conserve les fonds de la cession et les dépôts à partir de 999 euros, hors des comptes de La bourse du portefeuille.",
+    detail: TRANSACTION_SECURE_BODY,
     termsUrl: "https://www.trustap.com/terms/",
     logoSrc: "/partners/trustap.svg",
   },
@@ -90,7 +91,7 @@ export const PARTNERS: PartnerCopy[] = [
     purpose:
       "Aide à financer l’acquisition, ou à refinancer un achat déjà payé comptant.",
     detail:
-      "CrediPro est le courtier en financement professionnel visé. Deux usages : monter le prêt pour acheter, et le post-financement si l’acquéreur a déjà payé comptant et veut dégager de la trésorerie. L’étude de faisabilité sera gratuite dès validation du contrat. Le prêt, une fois obtenu, rejoint le compte sécurisé. La bourse du portefeuille ne prête pas.",
+      "CrediPro est le courtier en financement professionnel visé. Deux usages : monter le prêt pour acheter, et le post-financement si l’acquéreur a déjà payé comptant et veut dégager de la trésorerie. L’étude de faisabilité n’est pas facturée dès validation du contrat. Le prêt, une fois obtenu, rejoint le compte sécurisé. La bourse du portefeuille ne prête pas.",
     termsUrl: "https://www.credipro.com",
     logoSrc: "/partners/credipro.svg",
   },
@@ -99,11 +100,11 @@ export const PARTNERS: PartnerCopy[] = [
 export const TRUST_PILLARS: { title: string; body: string }[] = [
   {
     title: "Aucun fonds sur nos comptes",
-    body: "La bourse du portefeuille n’encaisse pas le prix de cession. L’abonnement passe par Stripe. Le prix passe par un compte sécurisé Trustap, une fois le contrat validé.",
+    body: "La bourse du portefeuille n’encaisse pas les fonds de la cession. L’abonnement passe par Stripe. La transaction passe par un trust Trustap, une fois le contrat validé.",
   },
   {
     title: "Libération conditionnée",
-    body: "Le prix entier est consigné après la signature, dépôt déduit. Il sort quand l’acquéreur confirme l’accord des compagnies sur le transfert.",
+    body: TRANSACTION_SECURE_BODY,
   },
   {
     title: "Preuve de signature",
@@ -125,8 +126,7 @@ export const LIVE_BADGE = "Circuit actif";
 export const READY_BADGE = "Prêt. Contrat à valider";
 
 /** Phrase unique pour les écrans qui parlent encore d’encaissement. */
-export const CESSION_FUNDS_DISCLAIMER =
-  "Votre paiement est sécurisé. Le dépôt de garantie se règle par carte ou prélèvement. Le prix est versé sur un compte sécurisé, puis remis au cédant dès que les compagnies ont accepté le transfert des contrats. La bourse du portefeuille ne garde jamais l’argent. Le paiement en ligne ouvre prochainement : d’ici là, chaque versement est suivi dans le dossier.";
+export const CESSION_FUNDS_DISCLAIMER = TRANSACTION_SECURE_BODY;
 
 export function hasForbiddenDash(text: string): boolean {
   return /[—–]/.test(text) || / - /.test(text);

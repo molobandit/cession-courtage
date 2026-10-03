@@ -188,15 +188,15 @@ export default async function PositionPage({ params }: { params: Promise<{ id: s
           tone: state.outcome === "closed" ? "closed" : state.outcome === "lost" || state.outcome === "withdrawn" ? "lost" : "active",
         }}
         figures={[
-          { label: "Prix", value: formatEuroWhole(prix) },
+          { label: "Montant", value: formatEuroWhole(prix) },
           { label: "Commissions / an", value: formatEuroWhole(commissions) },
           {
             label: "Multiple",
             value: formatMultiple(listingMultiple(prix, commissions)),
-            note: "Prix ÷ commissions",
+            note: "Montant ÷ commissions",
           },
           deal
-            ? { label: "Prix convenu", value: formatEuroWhole(Number(deal.agreedPrice)), accent: true }
+            ? { label: "Montant convenu", value: formatEuroWhole(Number(deal.agreedPrice)), accent: true }
             : offer
               ? { label: estAcheteur ? "Votre offre" : "Offre reçue", value: formatEuroWhole(Number(offer.amount)), accent: true }
               : { label: "Dépôt de garantie", value: deposit ? formatEuroWhole(Number(deposit.amount)) : "À verser" },
@@ -247,7 +247,7 @@ export default async function PositionPage({ params }: { params: Promise<{ id: s
             <h2 className="text-[15px] font-semibold text-ink">Portefeuille</h2>
             <dl className="mt-3 grid gap-2 text-[14px]">
               <div className="flex justify-between gap-3">
-                <dt className="text-muted">Prix</dt>
+                <dt className="text-muted">Montant</dt>
                 <dd className="tabular font-semibold text-ink">{formatEuroWhole(prix)}</dd>
               </div>
               <div className="flex justify-between gap-3">

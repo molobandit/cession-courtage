@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { LegalLayout, LegalSection } from "@/components/legal/legal-page";
 import { GROWTH_PLAN_ANNUAL_EUR, INTEREST_DEPOSIT_LABEL } from "@/lib/billing/rates";
-import { ASKING_MAX, ASKING_MIN, OFFER_WINDOW_DAYS } from "@/lib/listing/constants";
+import { ASKING_MAX, ASKING_MIN } from "@/lib/listing/constants";
 import { formatEuroWhole } from "@/lib/format/number";
 
 export const metadata: Metadata = {
@@ -36,7 +36,7 @@ export default function ConditionsGeneralesPage() {
       <LegalSection title="2. Rôle de la plateforme">
         <p>
           L’éditeur n’est pas partie à la cession. Il n’est mandataire d’aucune des
-          parties, ne garantit ni la conclusion, ni le prix, ni l’exécution de la
+          parties, ne garantit ni la conclusion, ni le montant, ni l’exécution de la
           transaction, et n’exerce aucune activité d’intermédiation en assurance.
         </p>
         <p>
@@ -77,59 +77,58 @@ export default function ConditionsGeneralesPage() {
 
       <LegalSection title="5. Fenêtre d’offres">
         <p>
-          Lorsque le cédant ouvre une fenêtre d’offres, celle-ci court pendant{" "}
-          {OFFER_WINDOW_DAYS} jours à compter de la publication. Pendant cette
-          période, aucun candidat n’a connaissance des propositions des autres, et
-          le cédant n’a accès ni aux montants ni aux identités.
+          Lorsque le cédant ouvre une fenêtre d’offres, celle-ci court à compter
+          de la publication. Pendant cette période, aucun candidat n’a
+          connaissance des propositions des autres, et le cédant n’a accès ni aux
+          montants ni aux identités.
         </p>
         <p>
           Les propositions sont révélées simultanément à la clôture. Une offre peut
-          être retirée par son auteur tant qu’elle n’a pas été retenue. Le prix
+          être retirée par son auteur tant qu’elle n’a pas été retenue. Le montant
           demandé est compris entre {formatEuroWhole(ASKING_MIN)} et{" "}
           {formatEuroWhole(ASKING_MAX)}.
         </p>
       </LegalSection>
 
-      <LegalSection title="6. Prix et honoraires">
+      <LegalSection title="6. Honoraires et transaction">
         <p>
           La consultation du catalogue et la publication d’une annonce sont
           fournies sans frais. Pour accéder au détail d’une offre (contact,
           messages), l’acquéreur souscrit un abonnement de{" "}
-          {GROWTH_PLAN_ANNUAL_EUR} € hors taxes par an. Le cédant demeure
-          anonyme jusqu’au versement d’un dépôt de {INTEREST_DEPOSIT_LABEL} du
-          prix de l’annonce. L’éditeur n’encaisse pas le prix de cession. Les
-          modalités de paiement et de signature figurent à l’article 10.
+          {GROWTH_PLAN_ANNUAL_EUR} € hors taxes par an. Dès que l’acquéreur se
+          positionne, il verse un dépôt de {INTEREST_DEPOSIT_LABEL} du montant de
+          l’annonce dans un trust, pour lancer la procédure de cession.
+          L’éditeur n’encaisse pas les fonds de la cession. Les
+          modalités de transaction et de signature figurent à l’article 10.
         </p>
         <p>
-          Deux options de cession coexistent. L’option annonce simple ne comporte
-          pas de vérification détaillée de la société. L’option portefeuille
-          certifié comprend le contrôle du Kbis, de l’identité du représentant,
-          du justificatif ORIAS du dossier et des documents du portefeuille. Les
-          honoraires de chaque option sont fixés par le contrat d’intermédiation
-          signé sur la plateforme et ne sont dus qu’en cas de cession conclue.
-          Dans les deux cas, le paiement transite par un séquestre, sans frais
-          de séquestre supplémentaires. Les fonds sont libérés lorsque
-          l’acquéreur a le portefeuille en sa possession. Si la cession
-          n’aboutit pas, les fonds consignés sont restitués à l’acquéreur.
-          Tant que le contrat du séquestre n’est pas validé, l’étape est
+          Deux options de cession coexistent. L’annonce simple n’est pas
+          certifiée : les données du portefeuille ne sont pas vérifiées par
+          l’éditeur, c’est à l’acquéreur d’effectuer ses propres vérifications.
+          Le portefeuille certifié : tous les éléments sont contrôlés, y compris
+          la société, sa réputation, les données et les bordereaux de commission. Les honoraires de chaque
+          option sont fixés par le contrat d’intermédiation signé sur la
+          plateforme et ne sont dus qu’en cas de cession conclue.
+          Dans les deux cas, la transaction transite par un trust. Les fonds
+          sont libérés via le trust uniquement après contrôle et vérification de
+          l’ensemble des données.
+          Tant que le contrat du trust n’est pas validé, l’étape est
           enregistrée sans mouvement de fonds, conformément à l’article 10.
         </p>
       </LegalSection>
 
-      <LegalSection title="7. Ajustement du prix différé">
+      <LegalSection title="7. Séquestre de conservation">
         <p>
-          Lorsque les parties conviennent d’une part différée, celle-ci est
-          recalculée en fonction du taux de rétention constaté à trois, six et douze
-          mois, rapporté à une cible de 90 %, sans pouvoir descendre en dessous de
-          la moitié du montant convenu ni excéder ce montant. Les relevés sont
-          déposés contradictoirement par les parties.
+          Le trust séquestre 20 % du montant du portefeuille. Cette part est
+          versée au prorata à l’acquéreur uniquement si la déperdition dépasse
+          10 %.
         </p>
       </LegalSection>
 
       <LegalSection title="8. Responsabilité">
         <p>
-          Les études de portefeuille et les prix des annonces sont indicatifs et
-          reposent sur les données déposées par le cédant. Elles ne constituent ni une garantie de prix, ni un audit, ni
+          Les études de portefeuille et les montants des annonces sont indicatifs et
+          reposent sur les données déposées par le cédant. Elles ne constituent ni une garantie de montant, ni un audit, ni
           une évaluation opposable aux tiers. Il appartient à l’acquéreur de conduire
           ses propres vérifications préalables.
         </p>
@@ -153,16 +152,16 @@ export default function ConditionsGeneralesPage() {
         </p>
       </LegalSection>
 
-      <LegalSection title="10. Prestataires de paiement et de signature">
+      <LegalSection title="10. Prestataires de transaction et de signature">
         <p>
-          L’éditeur ne détient, ne reçoit ni ne conserve le prix de cession. Les
+          L’éditeur ne détient, ne reçoit ni ne conserve les fonds de la cession. Les
           opérations financières et les signatures électroniques sont conçues pour
           être réalisées par des prestataires indépendants. Stripe encaisse
           l’abonnement d’accès et les dépôts d’intérêt inférieurs à 999 euros.
-          Trustap conserve le prix de cession et les versements à partir de 999
+          Trustap conserve les fonds de la cession et les versements à partir de 999
           euros. Yousign, ou DocuSign, porte la signature électronique. Ondorse
           porte la vérification d’identité professionnelle. CrediPro porte le
-          financement de l’acquisition, sans se substituer au séquestre.
+          financement de l’acquisition, sans se substituer au trust.
         </p>
         <p>
           Tant que le contrat d’un prestataire n’est pas validé, l’étape

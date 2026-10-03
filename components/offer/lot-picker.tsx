@@ -159,7 +159,7 @@ export function LotPicker({
         </p>
         {selection.carriers.length > 0 && indicatif > 0 ? (
           <p className="text-[13px] text-ink">
-            Prix au prorata :{" "}
+            Montant au prorata :{" "}
             <span className="tabular font-semibold">{formatEuroWhole(indicatif)}</span>{" "}
             <button
               type="button"

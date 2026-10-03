@@ -120,6 +120,11 @@ export default async function PortfolioPage({ params }: { params: Promise<{ id: 
         </div>
         <div className="flex flex-wrap gap-3">
           <RecalculateValuationButton portfolioId={portfolio.id} />
+          {valuation ? (
+            <Button asChild variant="outline" size="sm">
+              <a href={`/app/portefeuilles/${portfolio.id}/etude`}>Télécharger l’étude</a>
+            </Button>
+          ) : null}
           <Button asChild variant="primary">
             <Link href={`/app/annonces/nouvelle?portfolio=${portfolio.id}`}>
               Proposer à la vente
@@ -249,7 +254,7 @@ export default async function PortfolioPage({ params }: { params: Promise<{ id: 
                     {LISTING_STATUS_LABELS[listing.status]}
                   </span>
                   <span className="tabular text-[15px] text-ink">
-                    {listing.publishedAt ? formatEuroWhole(Number(listing.askingPrice)) : "Prix à venir"}
+                    {listing.publishedAt ? formatEuroWhole(Number(listing.askingPrice)) : "Montant à venir"}
                   </span>
                 </Link>
               </li>

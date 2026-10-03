@@ -45,7 +45,7 @@ function statusTone(status: OfferStatus): "indigo" | "ok" | "warn" | "mute" {
 
 function vsAskingCopy(amount: number, asking: number): { label: string; tone: "ok" | "warn" | "mute" } {
   const { delta, ratio } = vsAsking(amount, asking);
-  if (Math.abs(delta) < 1) return { label: "Au prix de l’annonce", tone: "ok" };
+  if (Math.abs(delta) < 1) return { label: "Au montant de l’annonce", tone: "ok" };
   if (delta > 0) return { label: `${formatEuro(delta)} au-dessus`, tone: "ok" };
   return {
     label: `${formatEuro(Math.abs(delta))} en dessous · ${formatPercent(ratio * 100, 0)} du demandé`,
@@ -91,7 +91,7 @@ export function OfferReviewBoard({
         }`}
         subtitle="Les acquéreurs restent sous alias. Retenir une offre ouvre le dossier de cession et écarte les offres concurrentes sur les mêmes compagnies."
         figures={[
-          { label: "Prix", value: formatEuro(asking), note: listing.displayedZone },
+          { label: "Montant", value: formatEuro(asking), note: listing.displayedZone },
           { label: "Commissions / an", value: formatEuro(listing.annualCommissions) },
           { label: "Meilleure offre", value: best ? formatEuro(best.amount) : "Aucune", note: best ? vsAskingCopy(best.amount, asking).label.split(" · ")[0] : undefined, accent: Boolean(best) },
           { label: "Comptant, meilleure offre", value: best ? formatPercent(best.upfrontPercent, 0) : "Aucune offre" },
@@ -139,7 +139,7 @@ export function OfferReviewBoard({
           <section className="mt-6 rounded-[1.75rem] border border-line bg-paper p-5 sm:p-6">
             <h2 className="text-lg font-bold tracking-tight text-ink">Positionnement</h2>
             <p className="mt-1 text-[14px] text-muted">
-              La ligne verticale marque le prix de l’annonce. Les barres sont à l’échelle de la plus
+              La ligne verticale marque le montant de l’annonce. Les barres sont à l’échelle de la plus
               haute proposition.
             </p>
             <ul className="mt-5 space-y-3">
@@ -168,11 +168,11 @@ export function OfferReviewBoard({
                       <span
                         className="absolute top-[-3px] h-4 w-px bg-ink/70"
                         style={{ left: `${askingWidth}%` }}
-                        title="Prix de l’annonce"
+                        title="Montant de l’annonce"
                       />
                     </div>
                     {index === 0 ? (
-                      <p className="mt-1 text-[11px] text-muted">Repère : prix de l’annonce</p>
+                      <p className="mt-1 text-[11px] text-muted">Repère : montant de l’annonce</p>
                     ) : null}
                   </li>
                 );
