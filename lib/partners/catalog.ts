@@ -53,7 +53,7 @@ export const PARTNERS: PartnerCopy[] = [
     role: "Signature électronique",
     envKey: "YOUSIGN_API_KEY",
     purpose:
-      "Signature de l’accord de confidentialité, de la lettre d’intention et de l’acte, avec une preuve opposable.",
+      "Signature de l’accord de confidentialité et de l’acte de cession, avec une preuve opposable.",
     detail:
       "Yousign porte le parcours de signature prévu pour la France, conforme au règlement européen sur l’identification électronique. Chaque partie reçoit un exemplaire numérique. Seul le représentant habilité signe. Tant que la clé n’est pas validée, l’étape est enregistrée sur le dossier sans valeur de signature qualifiée.",
     termsUrl: "https://yousign.com/fr-fr/conditions-generales",
