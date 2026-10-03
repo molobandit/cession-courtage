@@ -58,7 +58,7 @@ export async function proposeListingAction(
   // d'une annonce qui n'appartient pas au cabinet.
   if (!listing || !ownsFirm(actor, listing.portfolio.firmId)) return { error: "Annonce introuvable." };
   if (!listingAcceptsOffers(listing.status)) {
-    return { error: "Cette annonce ne reçoit plus d’offres : elle ne peut pas être proposée." };
+    return { error: "Cette annonce n’est plus disponible : elle ne peut pas être proposée." };
   }
 
   const existante = await prisma.mandateProposal.findUnique({

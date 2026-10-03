@@ -201,7 +201,7 @@ export default async function PublicMandateDetailPage({ params }: PageProps) {
             {annoncesProposables.length === 0 ? (
               <div className="flex flex-wrap items-center gap-3">
                 <p className="text-[15px] text-ink">
-                  Il vous faut une annonce ouverte aux offres pour répondre à cette demande.
+                  Il vous faut une annonce en ligne pour répondre à cette demande.
                 </p>
                 <Button asChild variant="primary">
                   <Link href="/app/annonces/nouvelle">Publier un portefeuille</Link>

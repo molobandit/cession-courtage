@@ -49,7 +49,7 @@ export async function submitOfferAction(
     if (!(await hasContactSubscription(actor))) {
       return {
         error:
-          "Cette annonce ne reçoit plus d’offres : le montant est celui de l’annonce.",
+          "Le montant est celui de l’annonce : positionnez-vous en versant votre dépôt.",
       };
     }
     const parsed = offerSchema.safeParse({
@@ -73,7 +73,7 @@ export async function submitOfferAction(
       return { error: "Vous ne pouvez pas enchérir sur votre propre annonce." };
     }
     if (!listingAcceptsOffers(listing.status)) {
-      return { error: "Cette annonce ne reçoit plus d’offres." };
+      return { error: "Le montant est celui de l’annonce : positionnez-vous en versant votre dépôt." };
     }
 
     /*
@@ -214,7 +214,7 @@ export async function acceptOfferAction(
     if (isOfferWindowSealed(offer.listing)) {
       const cloture = offer.listing.offerWindowClosesAt;
       return {
-        error: `La séance est en cours${cloture ? ` jusqu’au ${cloture.toLocaleDateString("fr-FR", { timeZone: "Europe/Paris" })}` : ""} : vous pourrez retenir une offre à sa clôture.`,
+        error: `Ce dossier n’est pas encore ouvert à l’acceptation${cloture ? ` avant le ${cloture.toLocaleDateString("fr-FR", { timeZone: "Europe/Paris" })}` : ""}.`,
       };
     }
 

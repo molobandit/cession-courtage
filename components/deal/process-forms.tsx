@@ -199,7 +199,7 @@ export function RevisionAnswerForm({ dealId }: { dealId: string }) {
               onChange={(e) => setCoche(e.target.checked)}
               className="mt-1 h-4 w-4 shrink-0 accent-[#2563eb]"
             />
-            <span>J’accepte le montant révisé : il remplace celui de l’offre dans le protocole.</span>
+            <span>J’accepte le montant révisé : il remplace celui de l’annonce dans le contrat.</span>
           </label>
           <div className="flex flex-wrap gap-2.5">
             <Button type="submit" disabled={pending || !coche}>
@@ -227,7 +227,7 @@ export function RevisionAnswerForm({ dealId }: { dealId: string }) {
           </label>
           <div className="flex flex-wrap gap-2.5">
             <Button type="submit" variant="outline" disabled={pending}>
-              {pending ? "Envoi…" : "Maintenir le montant de l’offre"}
+              {pending ? "Envoi…" : "Maintenir le montant de l’annonce"}
             </Button>
             <Button type="button" variant="ghost" onClick={() => setRefus(false)}>
               Annuler

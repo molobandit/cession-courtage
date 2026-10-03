@@ -33,7 +33,7 @@ const SAFEGUARDS = [
   },
   {
     title: "Votre identité reste confidentielle",
-    body: `Pendant la séance, les autres candidats voient la meilleure offre et le nombre d’offres, jamais qui les a faites.`,
+    body: "Votre nom n’est connu du cédant qu’au moment où vous versez votre dépôt de positionnement. Les autres candidats ne savent jamais qui s’intéresse au dossier.",
   },
   {
     title: RETENTION_TRUST_TITLE,
@@ -95,7 +95,7 @@ export default async function AcquerirPage() {
             </h2>
             <p className="mt-4 text-[15px] leading-relaxed text-muted">
               Plutôt que de surveiller la salle de marché, vous décrivez une fois ce que
-              vous cherchez. Chaque portefeuille en séance est confronté à votre demande,
+              vous cherchez. Chaque portefeuille en ligne est confronté à votre demande,
               et ceux qui dépassent le seuil de mise en relation apparaissent dans vos
               correspondances, avec leur score.
             </p>

@@ -22,7 +22,7 @@ export default async function AdminListingsReviewPage() {
       <h1 className="font-serif text-2xl text-ink">Dossiers à étudier</h1>
       <p className="mt-1 max-w-2xl text-sm text-muted">
         Le cédant ne fixe pas le montant. Réalisez l’étude du portefeuille (sincérité des chiffres, anonymat, complétude),
-        déterminez le montant, puis mettez l’annonce en ligne : la séance d’offres s’ouvre. Renvoyé, le dossier part au cédant
+        déterminez le montant, puis mettez l’annonce en ligne. Renvoyé, le dossier part au cédant
         avec le motif.
       </p>
       <div className="mt-4 overflow-x-auto rounded-xl border border-line bg-surface">

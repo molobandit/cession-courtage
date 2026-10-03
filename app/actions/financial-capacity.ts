@@ -165,8 +165,8 @@ export async function trancherCapaciteAction(
       title: decision === "VERIFIED" ? "Financement vérifié" : "Financement à revoir",
       body:
         decision === "VERIFIED"
-          ? "Votre capacité d’acquisition est vérifiée pour douze mois : les cédants voient « financement vérifié » à côté de vos offres."
-          : `Motif : ${note.replace(/[.\s]+$/, "")}. Déposez un nouveau justificatif dans votre profil pour reprendre vos offres.`,
+          ? "Votre capacité d’acquisition est vérifiée pour douze mois : les cédants voient « financement vérifié » à côté de vos positionnements."
+          : `Motif : ${note.replace(/[.\s]+$/, "")}. Déposez un nouveau justificatif dans votre profil pour vous positionner à nouveau.`,
       href: "/app/profil#capacite",
     }).catch((e: unknown) => console.error("notify", e));
 

@@ -133,9 +133,9 @@ describe("le dépôt de positionnement", () => {
     );
   });
 
-  it("ne reçoit plus d’offres : le montant est celui de l’annonce", async () => {
+  it("refuse toute proposition de prix : le montant est celui de l’annonce", async () => {
     const resultat = await submitOfferAction({}, form({ listingId: LISTING, amount: "40000", paymentMethod: "CARD" }));
-    expect(resultat.error).toContain("ne reçoit plus d’offres");
+    expect(resultat.error).toContain("montant est celui de l’annonce");
     expect(await prisma.offer.count({ where: { listingId: LISTING, buyerId: acheteur } })).toBe(0);
   });
 });

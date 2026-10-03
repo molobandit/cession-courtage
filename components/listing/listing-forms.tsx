@@ -3,7 +3,6 @@
 import { useActionState, useEffect, useRef, useState } from "react";
 import {
   createListingAction,
-  openOfferWindowAction,
   updateListingAction,
   publishListingAction,
   withdrawListingAction,
@@ -499,17 +498,6 @@ function TinyForm({
 
 export function PublishListingButton({ listingId }: { listingId: string }) {
   return <TinyForm action={publishListingAction} listingId={listingId} label="Soumettre mon dossier à l’équipe" pendingLabel="Envoi…" />;
-}
-
-export function OpenOffersButton({ listingId }: { listingId: string }) {
-  return (
-    <TinyForm
-      action={openOfferWindowAction}
-      listingId={listingId}
-      label="Ouvrir les offres"
-      pendingLabel="Ouverture…"
-    />
-  );
 }
 
 export function WithdrawListingButton({ listingId }: { listingId: string }) {

@@ -332,8 +332,8 @@ export default async function PublicListingPage({
             </>
           ) : !isInvestor(actor) ? (
             <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-muted">
-              Ce suivi est réservé au compte investisseur. Les courtiers utilisent l’offre
-              d’acquisition ci-dessous.
+              Ce suivi est réservé au compte investisseur. Les courtiers se positionnent
+              depuis le bloc ci-dessus.
             </p>
           ) : investorPos ? (
             <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-muted">

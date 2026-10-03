@@ -261,7 +261,7 @@ export function PublicListingList({
                   // Comme une cote : les titres en séance d'abord, les adjugés ensuite.
                   const vendus = visible.filter((item) => item.sold).length;
                   const enSeance = visible.length - vendus;
-                  return `${formatCount(enSeance)} portefeuille${enSeance > 1 ? "s" : ""} en séance${
+                  return `${formatCount(enSeance)} portefeuille${enSeance > 1 ? "s" : ""} disponible${
                     vendus > 0 ? ` · ${formatCount(vendus)} vendu${vendus > 1 ? "s" : ""}` : ""
                   }`;
                 })()}

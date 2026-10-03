@@ -4,27 +4,6 @@ import { formatEuroWhole } from "@/lib/format/number";
 import type { PublicListingCard } from "@/lib/listing/public-card";
 import { cn } from "@/lib/utils";
 
-export function MarketplaceHero() {
-  return (
-    <section className="overflow-hidden rounded-[1.75rem] bg-gradient-to-br from-indigo via-indigo-mid to-indigo-dark p-5 text-white shadow-sm sm:p-8">
-      <p className="text-[13px] font-medium text-white/80">Salle de marché</p>
-      <h2 className="mt-1 text-xl font-bold tracking-tight sm:text-2xl">
-        Portefeuilles et demandes d’acquisition
-      </h2>
-      <p className="mt-2 max-w-xl text-[14px] leading-relaxed text-white/80">
-        Alias jusqu’au dépôt. Montants d’offre masqués tant que la fenêtre
-        n’est pas close.
-      </p>
-      <Link
-        href="/annonces"
-        className="mt-5 flex min-h-12 w-full items-center justify-center rounded-full bg-white px-5 text-[15px] font-semibold text-indigo hover:bg-indigo-soft sm:max-w-xs"
-      >
-        Parcourir les annonces
-      </Link>
-    </section>
-  );
-}
-
 export function CompactListingCard({ item }: { item: PublicListingCard }) {
   const zone = item.isNationwide ? "France entière" : item.zone;
   const branches = item.riskTypes.slice(0, 4).join(", ");

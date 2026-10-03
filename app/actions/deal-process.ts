@@ -286,7 +286,7 @@ export async function revisePriceAction(_prev: DealProcessState, formData: FormD
       throw new ProcessError(`Indiquez un prix entre ${ASKING_MIN.toLocaleString("fr-FR")} et ${ASKING_MAX.toLocaleString("fr-FR")} €.`);
     }
     if (Math.abs(prix - p.snapshot.agreedPrice) < 0.01) {
-      throw new ProcessError("C’est le prix de votre offre : confirmez-le plutôt.");
+      throw new ProcessError("C’est le montant de l’annonce : confirmez-le plutôt.");
     }
     const motif = String(formData.get("reason") ?? "").trim().slice(0, 1000);
     if (motif.length < 10) throw new ProcessError("Expliquez la révision en une phrase : le cédant en a besoin pour répondre.");
@@ -334,7 +334,7 @@ export async function answerRevisionAction(_prev: DealProcessState, formData: Fo
       await afterFact(dealId, actor.id, {
         key: `revision-declined:${Date.now()}`,
         title: "Révision refusée",
-        body: `Le cédant maintient le prix de l’offre : « ${motif} ». Confirmez-le ou proposez un autre prix.`,
+        body: `Le cédant maintient le montant de l’annonce : « ${motif} ». Confirmez-le ou proposez un autre montant.`,
       });
       return { ok: "Refus envoyé à l’acquéreur." };
     }

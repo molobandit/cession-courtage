@@ -39,7 +39,7 @@ export default async function NotificationsPage() {
       <RefreshOnce when={nonLues.length > 0} />
       <h1 className="text-2xl font-bold tracking-tight text-ink sm:text-[28px]">Notifications</h1>
       <p className="mt-1 text-[15px] text-muted">
-        Prises de position, offres, étapes de dossier et messages. Chaque ligne mène au dossier concerné.
+        Prises de position, dépôts, étapes de dossier et messages. Chaque ligne mène au dossier concerné.
       </p>
 
       {notifications.length === 0 ? (

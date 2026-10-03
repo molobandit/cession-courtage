@@ -138,7 +138,7 @@ function TaskAction({ p, task, side, escrowLive }: { p: DealProcess; task: Task;
             <dd className="tabular text-[17px] font-bold text-ink">{formatEuro(r.price)}</dd>
           </div>
           <div>
-            <dt className="text-[12px] uppercase tracking-wide text-muted">Montant de l’offre</dt>
+            <dt className="text-[12px] uppercase tracking-wide text-muted">Montant de l’annonce</dt>
             <dd className="tabular text-[15px] font-semibold text-ink">{formatEuro(p.snapshot.agreedPrice)}</dd>
           </div>
           <div>

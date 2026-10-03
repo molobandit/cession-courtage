@@ -382,7 +382,7 @@ export default async function ProfilPage({
         <section id="capacite" className={card}>
           <h2 className="text-lg font-semibold text-ink">Financement</h2>
           <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-muted">
-            Obligatoire avant tout dépôt ou offre, une seule fois : le montant que vous pouvez engager, votre mode de
+            Obligatoire avant tout dépôt de positionnement, une seule fois : le montant que vous pouvez engager, votre mode de
             financement et votre accord de principe bancaire (ou attestation de fonds pour un achat comptant). Notre
             équipe le contrôle ; le cédant voit alors « financement vérifié ». Un contrôle vaut douze mois.
           </p>

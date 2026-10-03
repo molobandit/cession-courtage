@@ -29,7 +29,7 @@ export default async function DepositReturnPage({ searchParams }: { searchParams
     <main className="mx-auto max-w-xl px-4 py-12">
       <h1 className="text-2xl font-semibold text-ink">Dépôt en cours de confirmation</h1>
       <p className="mt-3 text-[15px] leading-relaxed text-muted">
-        Le prestataire n’a pas encore confirmé votre dépôt. Dès sa confirmation, votre dépôt et votre offre
+        Le prestataire n’a pas encore confirmé votre dépôt. Dès sa confirmation, votre dépôt de positionnement
         apparaissent dans « Mes achats » et vous êtes prévenu par notification.
       </p>
       <Link href="/app/achats" className="mt-6 inline-flex h-11 items-center rounded-full bg-indigo px-5 text-[15px] font-semibold !text-white hover:bg-indigo-dark">

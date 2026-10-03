@@ -246,7 +246,7 @@ export async function openOfferWindowAction(
     const listing = await findMyListing(String(formData.get("listingId") ?? ""), actor);
     if (!listing) return { error: "Annonce introuvable." };
     if (listing.status !== ListingStatus.PUBLISHED) {
-      return { error: "La séance s’ouvre une fois l’annonce publiée par l’équipe." };
+      return { error: "L’annonce doit d’abord être mise en ligne par l’équipe." };
     }
     const closes = new Date(Date.now() + OFFER_WINDOW_DAYS * 24 * 60 * 60 * 1000);
     await prisma.listing.update({
