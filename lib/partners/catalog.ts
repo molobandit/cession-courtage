@@ -30,9 +30,9 @@ export const PARTNERS: PartnerCopy[] = [
     role: "Accès au marché",
     envKey: "STRIPE_SECRET_KEY",
     purpose:
-      "Règlement de l’abonnement annuel et des dépôts d’intérêt inférieurs à 999 euros, par carte. Les fonds de la cession ne passent jamais par ce canal.",
+      "Règlement des dépôts de positionnement inférieurs à 999 euros, par carte. Les fonds de la cession ne passent jamais par ce canal.",
     detail:
-      "Stripe encaisse ce que La bourse du portefeuille facture pour l’accès au détail des offres et à la messagerie. Un dépôt d’intérêt sous 999 euros emprunte le même rail carte. Un plafond carte trop bas pourra passer par un prélèvement SEPA une fois ce moyen ouvert au contrat. La plateforme ne voit pas le numéro complet de la carte.",
+      "Stripe encaisse ce que La bourse du portefeuille facture pour l’accès au dossier complet et à la messagerie. Un dépôt de positionnement sous 999 euros emprunte le même rail carte. Un plafond carte trop bas pourra passer par un prélèvement SEPA une fois ce moyen ouvert au contrat. La plateforme ne voit pas le numéro complet de la carte.",
     termsUrl: "https://stripe.com/fr/legal/ssa",
     logoSrc: "/partners/stripe.svg",
   },
@@ -100,7 +100,7 @@ export const PARTNERS: PartnerCopy[] = [
 export const TRUST_PILLARS: { title: string; body: string }[] = [
   {
     title: "Aucun fonds sur nos comptes",
-    body: "La bourse du portefeuille n’encaisse pas les fonds de la cession. L’abonnement passe par Stripe. La transaction passe par un trust Trustap, une fois le contrat validé.",
+    body: "La bourse du portefeuille n’encaisse pas les fonds de la cession. Le dépôt de positionnement passe par Stripe. La transaction passe par un trust Trustap, une fois le contrat validé.",
   },
   {
     title: "Libération conditionnée",

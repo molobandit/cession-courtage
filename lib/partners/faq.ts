@@ -14,7 +14,7 @@ export const PAYMENT_FAQ: { q: string; a: string }[] = [
   },
   {
     q: "À quoi sert Stripe alors ?",
-    a: "Stripe règle l’abonnement annuel qui ouvre le contact et les messages. C’est le droit d’accès au marché, pas la transaction de cession. Les deux circuits sont séparés exprès : un incident sur l’abonnement ne touche pas le trust.",
+    a: "Stripe encaisse le dépôt de positionnement de 2,5 %. Les fonds de la cession, eux, passent par le trust : les deux circuits sont séparés exprès.",
   },
   {
     q: "La signature sur le dossier est-elle déjà opposable ?",
@@ -26,10 +26,10 @@ export const PAYMENT_FAQ: { q: string; a: string }[] = [
   },
   {
     q: "Mon plafond carte ne passe pas. Que faire ?",
-    a: "Choisissez le prélèvement SEPA au moment de régler le dépôt de garantie : il n’a pas de plafond de carte et s’encaisse sous quelques jours. Les fonds de la cession passent par le trust, jamais par l’abonnement.",
+    a: "Choisissez le prélèvement SEPA au moment de verser le dépôt de positionnement : il n’a pas de plafond de carte et s’encaisse sous quelques jours.",
   },
   {
     q: "Puis-je emprunter pour acheter ?",
-    a: "Oui, via CrediPro dès que ce contrat sera validé : prêt d’acquisition ou refinancement d’un achat déjà payé comptant. En attendant, un entretien avec un conseiller aide à cadrer l’apport. Le prêt alimente le séquestre. Il ne le remplace pas.",
+    a: "Oui, via CrediPro dès que ce contrat sera validé : prêt d’acquisition ou refinancement d’un achat déjà payé comptant. En attendant, un entretien avec un conseiller aide à cadrer l’apport. Le prêt alimente le trust. Il ne le remplace pas.",
   },
 ];

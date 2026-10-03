@@ -1,45 +1,33 @@
 import "server-only";
-import type { PositionRow, TodoItem } from "@/components/app/desk";
+import type { PositionRow } from "@/components/app/desk";
 import { canBuy, canSell, listMyDeals, listMyListings, listMyMandates } from "@/lib/authz";
 import type { Actor } from "@/lib/authz/actor";
-import { SALE_PIPELINE, nextPipelineAction, pipelineProgressPercent } from "@/lib/deal/pipeline";
-import { listMyDirectDeals } from "@/lib/direct/load";
-import { stepByKey, type DirectStage } from "@/lib/direct/stages";
+import { SALE_PIPELINE, pipelineProgressPercent } from "@/lib/deal/pipeline";
 import { formatEuroWhole } from "@/lib/format/number";
 import { marketStatus } from "@/lib/listing/market-status";
-import { bestDeals } from "@/lib/listing/filter";
-import { loadPublicListingCards } from "@/lib/listing/load-public-cards";
 import { commissionsCedees, listingLotTotals } from "@/lib/listing/lot-totals";
 import { listMyProposalsAsSeller } from "@/lib/mandate/proposals";
-import { formatMultiple, listingMultiple, marketIndices } from "@/lib/market/indices";
+import { formatMultiple, listingMultiple } from "@/lib/market/indices";
 import { listListingPositions, listMyPositions, positionSnapshot } from "@/lib/position/load";
-import { prisma } from "@/lib/prisma";
 
 /**
- * Tout ce que le poste de marché affiche, chargé en une fois.
+ * Le carnet de positions d'un membre, chargé en une fois.
  *
- * Le tableau de bord répond à trois questions, dans cet ordre : que se passe-t-il
- * sur le marché, qu'est-ce qui m'attend, où en sont mes positions. Chaque ligne
- * mène à l'écran où l'on agit.
+ * Une ligne par dossier, dans le sens où on l'a pris : un achat, une vente, une
+ * demande d'acquisition. Chaque ligne mène à l'écran où l'on agit. Ce qu'il
+ * reste à faire, lui, se lit sur le tableau de bord.
  */
 export async function loadDesk(actor: Actor) {
   const vendeur = canSell(actor);
   const acheteur = canBuy(actor);
 
-  const [cartes, positions, annonces, deals, mandats, propositions, directs, nonLues, demandesAchat, correspondances] = await Promise.all([
-    loadPublicListingCards(),
+  const [positions, annonces, deals, mandats, propositions] = await Promise.all([
     acheteur ? listMyPositions(actor.id) : Promise.resolve([]),
     vendeur ? listMyListings(actor) : Promise.resolve([]),
     listMyDeals(actor),
     acheteur ? listMyMandates(actor) : Promise.resolve([]),
     vendeur ? listMyProposalsAsSeller(actor.id) : Promise.resolve([]),
-    listMyDirectDeals(actor.id, actor.email),
-    prisma.notification.count({ where: { userId: actor.id, readAt: null } }),
-    prisma.buyerMandate.count({ where: { isPublic: true, isActive: true, publicNumber: { not: null } } }),
-    acheteur ? prisma.match.count({ where: { mandate: { buyerId: actor.id } } }) : Promise.resolve(0),
   ]);
-
-  const indices = marketIndices(cartes);
 
   const [candidatsParAnnonce, suivisPropositions] = await Promise.all([
     Promise.all(annonces.map(async (a) => [a.id, await listListingPositions(a.id)] as const)),
@@ -52,40 +40,28 @@ export async function loadDesk(actor: Actor) {
   ]);
   const dealsVendeur = deals.filter((d) => d.sellerId === actor.id);
 
-  const aFaire: TodoItem[] = [];
   const lignes: PositionRow[] = [];
 
   // Achats : une ligne par position.
   for (const { position, state, deal, offer } of positions) {
     const l = position.listing;
-    const multiple = formatMultiple(listingMultiple(Number(l.askingPrice), commissionsCedees(l, lots)));
-    const href = `/app/positions/${position.id}`;
     lignes.push({
       key: `pos-${position.id}`,
-      href,
+      href: `/app/positions/${position.id}`,
       side: "Achat",
       numero: String(l.publicNumber),
       libelle: l.portfolio.label,
       etape: state.title,
       percent: state.percent,
       montant: formatEuroWhole(Number(deal?.agreedPrice ?? offer?.amount ?? l.askingPrice)),
-      multiple,
+      multiple: formatMultiple(listingMultiple(Number(l.askingPrice), commissionsCedees(l, lots))),
       issue: state.outcome,
     });
-    if (state.outcome !== "active") continue;
-    if (state.key === "POSITION") {
-      aFaire.push({ key: `t-${position.id}`, href, icon: "shield", title: `Verser le dépôt de garantie · N° ${l.publicNumber}`, detail: "Il ouvre les coordonnées du cédant et vous permet de faire une offre.", cta: "Verser" });
-    } else if (state.key === "DEPOSIT") {
-      aFaire.push({ key: `t-${position.id}`, href, icon: "megaphone", title: `Déposer votre offre · N° ${l.publicNumber}`, detail: `Montant ${formatEuroWhole(Number(l.askingPrice))} · ${multiple}`, cta: "Faire une offre", urgent: true });
-    } else if (deal && deal.stage !== "CLOSED") {
-      const suite = nextPipelineAction(deal.stage, "buyer");
-      aFaire.push({ key: `t-${position.id}`, href: `/app/dossiers/${deal.id}`, icon: "briefcase", title: `${suite.title} · N° ${l.publicNumber}`, detail: suite.body, cta: "Avancer", urgent: deal.stage === "DATA_ROOM" || deal.stage === "SIGNATURE" });
-    }
   }
 
   // Ventes : une ligne par annonce, avec son dossier le plus avancé ou ses candidats.
   for (const annonce of annonces) {
-    const cotation = marketStatus({ status: annonce.status, offerWindowClosesAt: annonce.offerWindowClosesAt });
+    const cotation = marketStatus({ status: annonce.status });
     // Avant la mise en ligne, le prix n'est pas encore fixé par l'équipe : on ne l'affiche pas.
     const prixFixe = annonce.publishedAt !== null;
     const multiple = prixFixe ? formatMultiple(listingMultiple(Number(annonce.askingPrice), commissionsCedees(annonce, lots))) : "";
@@ -107,10 +83,6 @@ export async function loadDesk(actor: Actor) {
         multiple,
         issue: plusAvance.stage === "CLOSED" ? "closed" : "active",
       });
-      if (plusAvance.stage !== "CLOSED") {
-        const suite = nextPipelineAction(plusAvance.stage, "seller");
-        aFaire.push({ key: `t-deal-${plusAvance.id}`, href: `/app/dossiers/${plusAvance.id}`, icon: "briefcase", title: `${suite.title} · N° ${annonce.publicNumber}`, detail: suite.body, cta: "Avancer" });
-      }
       continue;
     }
 
@@ -131,19 +103,6 @@ export async function loadDesk(actor: Actor) {
       multiple,
       issue: "active",
     });
-    if (annonce.status === "DRAFT") {
-      aFaire.push({ key: `t-draft-${annonce.id}`, href: `/app/annonces/${annonce.id}`, icon: "megaphone", title: `${annonce.reviewNote ? "Compléter" : "Soumettre"} votre dossier · N° ${annonce.publicNumber}`, detail: annonce.reviewNote ? `Notre équipe vous l’a renvoyé : ${annonce.reviewNote.replace(/[.\s]+$/, "")}.` : "Notre équipe réalise l’étude du portefeuille, détermine le montant, puis met l’annonce en ligne.", cta: annonce.reviewNote ? "Compléter" : "Soumettre" });
-    } else if (positionnes.length) {
-      aFaire.push({
-        key: `t-positionnes-${annonce.id}`,
-        href: `/app/annonces/${annonce.id}`,
-        icon: "megaphone",
-        title: `${positionnes.length} acquéreur${positionnes.length > 1 ? "s" : ""} positionné${positionnes.length > 1 ? "s" : ""} · n° ${annonce.publicNumber}`,
-        detail: "Le dépôt de positionnement est versé : la procédure de cession est lancée.",
-        cta: "Ouvrir",
-        urgent: true,
-      });
-    }
   }
 
   // Réponses du cédant aux demandes d'acquisition.
@@ -178,38 +137,8 @@ export async function loadDesk(actor: Actor) {
     });
   }
 
-  // Services à la carte en cours.
-  for (const d of directs.filter((x) => x.stage !== "CLOSED")) {
-    const etape = stepByKey(d.stage as DirectStage);
-    aFaire.push({ key: `t-direct-${d.id}`, href: `/app/formaliser/${d.id}`, icon: "clipboard", title: `${d.portfolioLabel}`, detail: `Service à la carte · étape « ${etape.label} »`, cta: "Ouvrir" });
-  }
-
   const ordre = { active: 0, closed: 1, withdrawn: 2, lost: 3 } as const;
   lignes.sort((a, b) => ordre[a.issue ?? "active"] - ordre[b.issue ?? "active"]);
-  aFaire.sort((a, b) => Number(Boolean(b.urgent)) - Number(Boolean(a.urgent)));
 
-  const positionsOuvertes = lignes.filter((l) => l.side !== "Demande" && (l.issue ?? "active") === "active").length;
-  const offresEnAttente =
-    positions.filter((p) => p.state.key === "OFFER").length +
-    [...candidats.values()].flat().filter((c) => c.state.key === "OFFER").length;
-
-  return {
-    vendeur,
-    acheteur,
-    indices,
-    /** Les portefeuilles achetables au multiple le plus bas, hors les siens. */
-    demandesAchat,
-    correspondances,
-    meilleures: bestDeals(cartes.filter((c) => !annonces.some((a) => a.id === c.id)), 3),
-    aFaire: aFaire.slice(0, 6),
-    lignes,
-    enAttenteDuCedant: positions.filter((p) => p.state.key === "OFFER").length,
-    compteurs: {
-      positionsOuvertes,
-      offresEnAttente,
-      annoncesEnSeance: annonces.filter((a) => a.status === "OFFERS_OPEN" || a.status === "OFFERS_CLOSED" || a.status === "PUBLISHED").length,
-      nonLues,
-    },
-    directs,
-  };
+  return { vendeur, acheteur, lignes };
 }

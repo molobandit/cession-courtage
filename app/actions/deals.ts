@@ -87,8 +87,8 @@ export async function sendListingMessageAction(
     let recipientId: string | null = String(formData.get("recipientId") ?? "").trim() || null;
     if (seller) {
       if (!recipientId) return { error: "Choisissez l’acquéreur à qui répondre." };
-      // Ont droit à une réponse les acquéreurs qui ont pris position ou fait une offre.
-      const [offre, position] = await Promise.all([
+      // Ont droit à une réponse les acquéreurs qui se sont positionnés sur l’annonce.
+      const [offer, position] = await Promise.all([
         prisma.offer.findUnique({
           where: { listingId_buyerId: { listingId, buyerId: recipientId } },
           select: { id: true },
@@ -98,7 +98,7 @@ export async function sendListingMessageAction(
           select: { id: true },
         }),
       ]);
-      if (!offre && !position) return { error: "Destinataire hors ayants droit." };
+      if (!offer && !position) return { error: "Destinataire hors ayants droit." };
     } else {
       const sellerId = await listingSellerUserId(listing.portfolio.firmId);
       if (!sellerId) return { error: "Cédant introuvable." };
