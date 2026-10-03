@@ -30,7 +30,7 @@ export function CompanyDocumentsPanel({
       <p className="mt-2 text-[14px] leading-relaxed text-muted">
         {canDownload
           ? "PDF du cabinet. Aucun nom d’assuré."
-          : "Les pièces s’ouvrent après le dépôt de 2,5 %, versé dans un trust pour lancer la procédure de cession. Aucun nom d’assuré."}
+          : "Les pièces s’ouvrent après le dépôt de positionnement de 2,5 %, versé dans un trust pour lancer la procédure de cession. Aucun nom d’assuré."}
       </p>
       {canUpload ? (
         <div
@@ -39,12 +39,14 @@ export function CompanyDocumentsPanel({
           }`}
         >
           <p className="font-semibold">
-            {pretes === DATA_ROOM_KINDS.length ? "✓ Dossier prêt à céder" : `Dossier prêt à céder : ${pretes} pièce${pretes > 1 ? "s" : ""} sur ${DATA_ROOM_KINDS.length}`}
+            {pretes === DATA_ROOM_KINDS.length
+              ? `✓ ${DATA_ROOM_KINDS.length} pièces sur ${DATA_ROOM_KINDS.length} reçues`
+              : `${pretes} pièce${pretes > 1 ? "s" : ""} sur ${DATA_ROOM_KINDS.length} reçue${pretes > 1 ? "s" : ""}`}
           </p>
           <p className="mt-0.5 text-[13px] text-muted">
             {pretes === DATA_ROOM_KINDS.length
-              ? "Dès qu’une offre est retenue, l’acquéreur examine les pièces sans vous attendre."
-              : `Déposez maintenant : ${DATA_ROOM_KINDS.filter((k) => !byKind.has(k)).map((k) => companyDocLabel(k)).join(", ")}. La vérification ne vous attendra pas.`}
+              ? "Dès qu’un acquéreur verse son dépôt de positionnement, il examine les pièces sans vous attendre."
+              : `Il manque : ${DATA_ROOM_KINDS.filter((k) => !byKind.has(k)).map((k) => companyDocLabel(k)).join(", ")}. Envoyez-les ci-dessous.`}
           </p>
         </div>
       ) : null}

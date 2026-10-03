@@ -5,6 +5,7 @@ import { marketStatus } from "@/lib/listing/market-status";
 import { Pill } from "@/components/app/dashboard-cards";
 import { AcceptOfferButton } from "@/components/offer/offer-forms";
 import { formatDate, formatEuro, formatPercent } from "@/lib/format/fr";
+import { formatEuroWhole } from "@/lib/format/number";
 import { OFFER_STATUS_LABELS } from "@/lib/labels";
 import { barScale, cashSplit, rankOffers, vsAsking } from "@/lib/offer/compare";
 import { cn } from "@/lib/utils";
@@ -224,7 +225,7 @@ export function OfferReviewBoard({
                             <p className={`mt-1 text-[13px] ${verifiee ? "text-ok" : "text-muted"}`}>
                               {libelleCapacite(capacite)}
                               {verifiee && capacite.montantEur !== null
-                                ? ` · ${capacite.montantEur.toLocaleString("fr-FR")} €`
+                                ? ` · ${formatEuroWhole(capacite.montantEur)}`
                                 : ""}
                             </p>
                           );

@@ -4,6 +4,7 @@ import { canBuy, canSell, listMyListings, listMyPortfolios } from "@/lib/authz";
 import type { Actor } from "@/lib/authz/actor";
 import { SALE_PIPELINE, type PipelineStep } from "@/lib/deal/pipeline";
 import { nextAction, type DashboardState, type NextAction } from "@/lib/dashboard/next-action";
+import { secondFacteurActif } from "@/lib/auth/second-facteur";
 import { loadPublicListingCards } from "@/lib/listing/load-public-cards";
 import { listMyPositions } from "@/lib/position/load";
 import { prisma } from "@/lib/prisma";
@@ -41,6 +42,8 @@ export type LigneAchat = {
 
 export type HomeData = {
   prenom: string | null;
+  /** Double authentification déjà activée : on ne la propose qu'une fois. */
+  deuxFacteurs: boolean;
   vendeur: boolean;
   acheteur: boolean;
   action: NextAction;
@@ -72,7 +75,7 @@ export async function loadHome(actor: Actor): Promise<HomeData> {
   const vendeur = canSell(actor);
   const acheteur = canBuy(actor);
 
-  const [annonces, dossiers, positions, portefeuilles, cartes] = await Promise.all([
+  const [annonces, dossiers, positions, portefeuilles, cartes, deuxFacteurs] = await Promise.all([
     vendeur ? listMyListings(actor) : Promise.resolve([]),
     prisma.deal.findMany({
       where: { OR: [{ sellerId: actor.id }, { buyerId: actor.id }] },
@@ -82,6 +85,7 @@ export async function loadHome(actor: Actor): Promise<HomeData> {
     acheteur ? listMyPositions(actor.id) : Promise.resolve([]),
     vendeur ? listMyPortfolios(actor) : Promise.resolve([]),
     loadPublicListingCards(),
+    secondFacteurActif(actor.id),
   ]);
 
   const dossiersParAnnonce = new Map(dossiers.map((d) => [d.listingId, d] as const));
@@ -174,6 +178,7 @@ export async function loadHome(actor: Actor): Promise<HomeData> {
 
   return {
     prenom: actor.fullName?.split(" ")[0] ?? null,
+    deuxFacteurs,
     vendeur,
     acheteur,
     action: nextAction(etat),

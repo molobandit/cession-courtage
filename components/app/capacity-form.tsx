@@ -5,6 +5,7 @@ import { declarerCapaciteAction, type CapaciteState } from "@/app/actions/financ
 import { Button } from "@/components/ui/button";
 import { keepFormSubmit } from "@/components/ui/keep-form";
 import { MODES_FINANCEMENT } from "@/lib/buyer/financial-capacity";
+import { formatEuroWhole } from "@/lib/format/number";
 
 const initial: CapaciteState = {};
 
@@ -37,7 +38,7 @@ export function CapacityForm({
     <div className="mt-4">
       <p className="text-[15px] font-medium text-ink">
         {libelle}
-        {montantActuel !== null ? <span className="tabular text-muted"> · {montantActuel.toLocaleString("fr-FR")} €</span> : null}
+        {montantActuel !== null ? <span className="tabular text-muted"> · {formatEuroWhole(montantActuel)}</span> : null}
       </p>
       {note ? <p className="mt-1 text-[14px] text-muted">{note}</p> : null}
 

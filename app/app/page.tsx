@@ -21,7 +21,8 @@ export default async function MemberHomePage() {
   if (!isOriasVerified(actor)) redirect("/en-attente-orias");
   if (actor.role === "INVESTOR") redirect("/app/mes-dossiers");
 
-  const { prenom, vendeur, acheteur, action, ventes, ventesTotal, achats, marche } = await loadHome(actor);
+  const { prenom, deuxFacteurs, vendeur, acheteur, action, ventes, ventesTotal, achats, marche } =
+    await loadHome(actor);
 
   return (
     <main className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
@@ -31,6 +32,17 @@ export default async function MemberHomePage() {
         </h1>
         <p className="mt-1 text-[16px] text-muted">Voici où en sont vos dossiers.</p>
       </header>
+
+      {deuxFacteurs ? null : (
+        <aside className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-line bg-paper px-5 py-4">
+          <p className="text-[14px] text-ink">
+            Protégez votre compte avec un code à six chiffres, en plus de votre mot de passe.
+          </p>
+          <Button asChild variant="outline">
+            <Link href="/app/profil#securite">Activer</Link>
+          </Button>
+        </aside>
+      )}
 
       <section
         aria-labelledby="prochaine-action"

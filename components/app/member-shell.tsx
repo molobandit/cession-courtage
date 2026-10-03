@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BrandMark } from "@/components/brand-mark";
-import { MemberNav, MemberRail } from "@/components/app/member-nav";
+import { MemberNav, MemberRail, memberWorkspaceLinks } from "@/components/app/member-nav";
 import { MemberSearch } from "@/components/app/member-search";
 import { BRAND_NAME } from "@/lib/site";
 
@@ -139,8 +139,36 @@ export function MemberShell({
             </div>
           ) : null}
         </header>
-        <div className="flex-1">{children}</div>
+        <div className="flex-1 pb-20 md:pb-0">{children}</div>
       </div>
+
+      {/*
+        Sur téléphone, le menu descend en bas de l'écran : le pouce y arrive,
+        et la page garde toute sa largeur pour les cartes.
+      */}
+      <nav
+        aria-label="Espace membre"
+        className="fixed inset-x-0 bottom-0 z-40 flex border-t border-line bg-surface md:hidden"
+      >
+        {memberWorkspaceLinks(canSell, canBuy, isInvestor)
+          .filter((item) => item.href !== "/investisseurs")
+          .slice(0, 4)
+          .map((item) => {
+            const actif = item.exact ? path === item.href : path.startsWith(item.href);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                aria-current={actif ? "page" : undefined}
+                className={`flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium ${
+                  actif ? "text-indigo-dark" : "text-muted"
+                }`}
+              >
+                {item.short}
+              </Link>
+            );
+          })}
+      </nav>
     </div>
   );
 }
