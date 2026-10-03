@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ToolIcon, type ToolIconName } from "@/components/app/toolbox";
 import { ADVISOR_BOOKING_HREF, CTA_ADVISOR } from "@/lib/copy/market";
 import {
   INVESTORS_CLOSING_TITLE,
@@ -15,6 +16,13 @@ import {
   INVESTORS_STEPS_TITLE,
   INVESTORS_TITLE,
 } from "@/lib/copy/investors";
+
+/*
+ * Une icône par protection, dans l'ordre des trois cartes : le cadenas du
+ * trust, le coffre du séquestre, le document validé des dossiers vérifiés.
+ * Elles vivent ici et non dans les textes : `lib/copy` ne porte que des mots.
+ */
+const PROTECTION_ICONS: ToolIconName[] = ["lock", "vault", "file-check"];
 
 export const metadata: Metadata = {
   title: "Investisseurs",
@@ -103,12 +111,14 @@ export default function InvestisseursPage() {
             {INVESTORS_PROTECTION_TITLE}
           </h2>
           <div className="mt-10 grid gap-4 sm:grid-cols-3">
-            {INVESTORS_PROTECTION.map((point) => (
+            {INVESTORS_PROTECTION.map((point, index) => (
               <article
                 key={point.title}
                 className="rounded-2xl border border-line bg-paper px-6 py-8 text-center"
               >
-                <span className="inline-block h-9 w-9 rounded-xl bg-indigo" aria-hidden="true" />
+                <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-soft text-indigo">
+                  <ToolIcon name={PROTECTION_ICONS[index]!} className="h-6 w-6" strokeWidth={1.6} />
+                </span>
                 <h3 className="mt-5 text-[16px] font-semibold text-ink">{point.title}</h3>
                 <p className="mt-2 text-[14px] leading-relaxed text-muted">{point.body}</p>
               </article>
