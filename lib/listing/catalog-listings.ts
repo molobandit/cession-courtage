@@ -53,6 +53,34 @@ const RISKS = [
 
 const SEGMENTS = ["INDIVIDUAL", "PROFESSIONAL", "COMPANY"] as const;
 
+/*
+ * Commission annuelle moyenne par contrat, branche par branche.
+ *
+ * Le dossier 10412 donne environ 180 € par contrat et par an. Un risque de
+ * masse descend sous ce chiffre, un contrat d'entreprise monte au-dessus, et
+ * l'ensemble tient entre 120 et 400 €. C'est ce barème qui fixe le nombre de
+ * contrats d'un dossier de démonstration, et non l'inverse.
+ */
+const BRANCH_COMMISSION: Record<(typeof RISKS)[number], number> = {
+  HEALTH_INDIVIDUAL: 185,
+  HEALTH_SENIOR: 225,
+  HEALTH_GROUP: 375,
+  PROVIDENT: 210,
+  LOAN_INSURANCE: 150,
+  AUTO: 135,
+  HOME: 120,
+  MOTORCYCLE: 125,
+  PROFESSIONAL_MULTIRISK: 340,
+  PROFESSIONAL_LIABILITY: 265,
+  DECENNIAL: 390,
+  LEGAL_PROTECTION: 130,
+  FUNERAL: 140,
+  SAVINGS: 300,
+  RETIREMENT: 285,
+  FLEET: 400,
+  LANDLORD: 165,
+};
+
 const ZONES: { department: string; region: string; regionCode: string; label: string; postal: string }[] = [
   { department: "75", region: "Île-de-France", regionCode: "IDF", label: "Paris", postal: "75002" },
   { department: "92", region: "Île-de-France", regionCode: "IDF", label: "Hauts-de-Seine", postal: "92100" },
@@ -141,8 +169,6 @@ export function buildCatalogListings(): CatalogListingRow[] {
     const status = i % 13 === 0 ? "SOLD" : i % 11 === 0 ? "UNDER_NEGOTIATION" : "OFFERS_OPEN";
     const commissions = 12_000 + ((i * 2_830) % 68_000);
     const roundedComm = Math.round(commissions * 100) / 100;
-    const asking = Math.min(198_000, Math.max(8_000, Math.round(commissions * (1.75 + (i % 7) * 0.05))));
-    const roundedAsk = Math.round(asking / 500) * 500;
     const publishedAt = isoDaysFrom(CATALOG_NOW, -(i % 45));
 
     const departments = nationwide ? ZONES.slice(0, 8).map((z) => z.department) : [zone.department];
@@ -160,45 +186,55 @@ export function buildCatalogListings(): CatalogListingRow[] {
      * annonce de contrats, réparties sur trois branches et trois compagnies,
      * et les commissions des lignes font exactement le total du portefeuille.
      */
-    const contracts = 24 + ((i * 7) % 37);
     const branches = [0, 4, 9].map((offset) => RISKS[(i - 1 + offset) % RISKS.length]!);
     const carriers = [0, 3, 7].map((offset) => CARRIERS[(i - 1 + offset) % CARRIERS.length]!);
     const poids = [0.52, 0.31, 0.17];
 
+    /*
+     * Le nombre de contrats se déduit des commissions, au tarif des branches
+     * du dossier : un portefeuille de 40 000 € en santé individuelle compte
+     * environ 215 contrats, pas 43. Les lignes portent ensuite la moyenne de
+     * leur branche, et la dernière absorbe l'arrondi pour que leur somme fasse
+     * exactement le total annoncé.
+     */
+    const moyennes = branches.map((branche) => BRANCH_COMMISSION[branche]);
+    const moyennePonderee = moyennes.reduce((somme, m, g) => somme + m * poids[g]!, 0);
+    const contracts = Math.max(20, Math.round(roundedComm / moyennePonderee));
+    const parGroupe = poids.map((p) => Math.max(1, Math.round(contracts * p)));
+    parGroupe[2] = Math.max(1, contracts - parGroupe[0]! - parGroupe[1]!);
+
     const lines: CatalogContractLine[] = [];
     let reste = Math.round(roundedComm * 100);
-    for (let n = 0; n < contracts; n += 1) {
-      const groupe = n % 3;
-      const derniere = n === contracts - 1;
-      const parGroupe = Math.max(1, Math.round((contracts * poids[groupe]!) / 1));
-      const centimes = derniere
-        ? reste
-        : Math.max(
-            500,
-            Math.round((roundedComm * 100 * poids[groupe]!) / Math.max(1, parGroupe)),
-          );
-      const montant = Math.min(reste, centimes) / 100;
-      reste -= Math.round(montant * 100);
-      const taux = 0.1 + ((i + n) % 9) * 0.01;
-      const anciennete = 12 + ((i * 3 + n * 11) % 84);
-      lines.push({
-        id: `cl_catalog_${pad}_${pad2(n + 1)}`,
-        carrier: carriers[groupe]!,
-        riskType: branches[groupe]!,
-        premium: (montant / taux).toFixed(2),
-        commissionRate: taux.toFixed(4),
-        annualCommission: montant.toFixed(2),
-        annualCommissionNumber: montant,
-        // Antériorité étalée sur sept ans : les exercices passés ne sont jamais vides.
-        effectiveDate: isoDaysFrom(CATALOG_NOW, -30 * anciennete),
-        // Échéances réparties sur les douze mois à venir.
-        renewalDate: isoDaysFrom(CATALOG_NOW, 10 + ((i * 5 + n * 13) % 350)),
-        clientSegment: SEGMENTS[(i + n) % SEGMENTS.length]!,
-        postalCode: zone.postal,
-        commissionType: n % 23 === 0 ? "ADVANCED" : "LINEAR",
-        clientKey: `ck_catalog_${pad}_${pad2(Math.floor(n / 2) + 1)}`,
-        department: nationwide ? ZONES[(n % 8)]!.department : zone.department,
-      });
+    let n = 0;
+    for (let groupe = 0; groupe < 3; groupe += 1) {
+      for (let k = 0; k < parGroupe[groupe]!; k += 1, n += 1) {
+        const derniere = groupe === 2 && k === parGroupe[2]! - 1;
+        // Une variation de quelques euros autour de la moyenne : deux contrats
+        // d'une même branche ne rapportent jamais exactement pareil.
+        const cible = Math.round(moyennes[groupe]! * (1 + (((i + n) % 11) - 5) * 0.02) * 100);
+        const montant = Math.max(100, derniere ? reste : Math.min(reste - (contracts - n - 1) * 100, cible)) / 100;
+        reste -= Math.round(montant * 100);
+        const taux = 0.1 + ((i + n) % 9) * 0.01;
+        const anciennete = 12 + ((i * 3 + n * 11) % 84);
+        lines.push({
+          id: `cl_catalog_${pad}_${pad2(n + 1)}`,
+          carrier: carriers[groupe]!,
+          riskType: branches[groupe]!,
+          premium: (montant / taux).toFixed(2),
+          commissionRate: taux.toFixed(4),
+          annualCommission: montant.toFixed(2),
+          annualCommissionNumber: montant,
+          // Antériorité étalée sur sept ans : les exercices passés ne sont jamais vides.
+          effectiveDate: isoDaysFrom(CATALOG_NOW, -30 * anciennete),
+          // Échéances réparties sur les douze mois à venir.
+          renewalDate: isoDaysFrom(CATALOG_NOW, 10 + ((i * 5 + n * 13) % 350)),
+          clientSegment: SEGMENTS[(i + n) % SEGMENTS.length]!,
+          postalCode: zone.postal,
+          commissionType: n % 23 === 0 ? "ADVANCED" : "LINEAR",
+          clientKey: `ck_catalog_${pad}_${pad2(Math.floor(n / 2) + 1)}`,
+          department: nationwide ? ZONES[n % 8]!.department : zone.department,
+        });
+      }
     }
 
     const totalLignes = lines.reduce((somme, l) => somme + l.annualCommissionNumber, 0);
@@ -207,6 +243,10 @@ export function buildCatalogListings(): CatalogListingRow[] {
         lines.length,
     );
     const clients = new Set(lines.map((l) => l.clientKey)).size;
+    // Le montant de l'annonce part du total réel des lignes, dans la fourchette
+    // du dossier de présentation : de 1,75 à 2,05 fois les commissions.
+    const roundedAsk =
+      Math.round(Math.min(198_000, Math.max(8_000, totalLignes * (1.75 + (i % 7) * 0.05))) / 500) * 500;
 
     rows.push({
       pad,
