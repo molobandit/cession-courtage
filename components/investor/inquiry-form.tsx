@@ -124,19 +124,12 @@ export function InvestorInquiryForm({ listingId }: { listingId?: string }) {
           className={FIELD}
         />
       </div>
-      <div>
-        <Label htmlFor="intervention" className="text-[15px] font-medium normal-case tracking-normal text-ink">
-          Type d’intervention
-        </Label>
-        <select id="intervention" name="intervention" required className={FIELD}>
-          <option value="">Choisir</option>
-          <option value="FINANCING">Financement</option>
-          <option value="EQUITY">Prise de participation</option>
-          <option value="DEBT">Dette</option>
-          <option value="CO_INVEST">Co-investissement</option>
-          <option value="OTHER">Autre</option>
-        </select>
-      </div>
+      {/*
+        Le type d'intervention n'existe pas dans le dossier investisseurs : on
+        investit dossier par dossier, avec un mandat de gestion en option. Le
+        champ reste côté serveur pour les demandes déjà enregistrées.
+      */}
+      <input type="hidden" name="intervention" value="OTHER" />
       {state.error ? <p className="text-[15px] text-danger">{state.error}</p> : null}
       <Button type="submit" variant="primary" size="lg" disabled={pending}>
         {pending ? "Envoi…" : "Je souhaite me positionner"}
