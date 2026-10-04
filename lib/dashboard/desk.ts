@@ -5,6 +5,8 @@ import type { Actor } from "@/lib/authz/actor";
 import { SALE_PIPELINE, pipelineProgressPercent } from "@/lib/deal/pipeline";
 import { formatEuroWhole } from "@/lib/format/number";
 import { marketStatus } from "@/lib/listing/market-status";
+import { annonceAvecPositionne, candidatsPositionnes } from "@/lib/listing/positioned-buyers";
+import { stripeConfigured } from "@/lib/billing/stripe";
 import { commissionsCedees, listingLotTotals } from "@/lib/listing/lot-totals";
 import { listMyProposalsAsSeller } from "@/lib/mandate/proposals";
 import { formatMultiple, listingMultiple } from "@/lib/market/indices";
@@ -38,6 +40,7 @@ export async function loadDesk(actor: Actor) {
     ...positions.map((p) => p.position.listing).filter((l) => l.isPartial).map((l) => l.id),
     ...annonces.filter((a) => a.isPartial).map((a) => a.id),
   ]);
+  const paiementsActifs = stripeConfigured();
   const dealsVendeur = deals.filter((d) => d.sellerId === actor.id);
 
   const lignes: PositionRow[] = [];
@@ -61,7 +64,7 @@ export async function loadDesk(actor: Actor) {
 
   // Ventes : une ligne par annonce, avec son dossier le plus avancé ou ses candidats.
   for (const annonce of annonces) {
-    const cotation = marketStatus({ status: annonce.status });
+
     // Avant la mise en ligne, le prix n'est pas encore fixé par l'équipe : on ne l'affiche pas.
     const prixFixe = annonce.publishedAt !== null;
     const multiple = prixFixe ? formatMultiple(listingMultiple(Number(annonce.askingPrice), commissionsCedees(annonce, lots))) : "";
@@ -86,8 +89,13 @@ export async function loadDesk(actor: Actor) {
       continue;
     }
 
-    // Positionnés : ceux qui ont versé leur dépôt, pas ceux qui regardent.
-    const positionnes = liste.filter((c) => c.state.key !== "POSITION" && c.state.outcome === "active");
+    // Positionnés : ceux dont le dépôt est reçu, pas ceux qui regardent.
+    const positionnes = candidatsPositionnes(liste, paiementsActifs);
+    const cotation = marketStatus({
+      status: annonceAvecPositionne({ status: annonce.status, candidatsPositionnes: positionnes.length })
+        ? "UNDER_NEGOTIATION"
+        : annonce.status,
+    });
     lignes.push({
       key: `vente-${annonce.id}`,
       href: `/app/annonces/${annonce.id}`,
@@ -97,7 +105,7 @@ export async function loadDesk(actor: Actor) {
       etape:
         annonce.status === "DRAFT"
           ? "Dossier à soumettre"
-          : `${cotation.label} · ${liste.length} candidat${liste.length > 1 ? "s" : ""}${positionnes.length ? ` · ${positionnes.length} positionné${positionnes.length > 1 ? "s" : ""}` : ""}`,
+          : `${cotation.label}${positionnes.length ? ` · ${positionnes.length} acquéreur${positionnes.length > 1 ? "s" : ""} positionné${positionnes.length > 1 ? "s" : ""}` : liste.length ? ` · ${liste.length} acquéreur${liste.length > 1 ? "s" : ""} ${liste.length > 1 ? "suivent" : "suit"} le dossier` : ""}`,
       percent: liste.length ? Math.max(...liste.map((c) => c.state.percent)) : null,
       montant: prixFixe ? formatEuroWhole(Number(annonce.askingPrice)) : "Montant à venir",
       multiple,

@@ -1532,8 +1532,8 @@ async function main() {
       { dealId: "deal_nda", senderId: "user_seller_06", body: "Accord en cours de préparation. Nous revenons vers vous sous 48 heures.", createdAt: daysAgo(10) },
       { dealId: "deal_dataroom", senderId: "user_seller_07", body: "L'accord de confidentialité est signé. La salle de données contient la répartition par compagnie (aucune donnée nominative).", createdAt: daysAgo(12) },
       { dealId: "deal_dataroom", senderId: "user_buyer_06", body: "Merci. Nous examinons le fichier de répartition et reviendrons avec nos questions de due diligence.", createdAt: daysAgo(11) },
-      { dealId: "deal_loi", senderId: "user_buyer_04", body: "Lettre d'intention déposée. Nous proposons un rendez-vous pour caler le calendrier de transfert des codes de production.", createdAt: daysAgo(6) },
-      { listingId: "lst_05", senderId: "user_seller_05", recipientId: "user_buyer_01", body: "La fenêtre d'offres est close. Nous comparons les propositions reçues et reviendrons vers les acquéreurs retenus.", createdAt: daysAgo(1) },
+      { dealId: "deal_loi", senderId: "user_buyer_04", body: "Dépôt de positionnement versé. Nous proposons un rendez-vous pour caler le calendrier de transfert des codes de production.", createdAt: daysAgo(6) },
+      { listingId: "lst_05", senderId: "user_seller_05", recipientId: "user_buyer_01", body: "Les pièces du cabinet sont en cours de dépôt. Le montant de l'annonce est celui fixé par l'équipe après l'étude.", createdAt: daysAgo(1) },
     ],
   });
 
@@ -1555,7 +1555,6 @@ async function main() {
 
   await prisma.notification.createMany({
     data: [
-      { userId: "user_seller_05", type: NotificationType.OFFER_WINDOW_CLOSED, title: "Fenêtre d'offres close", body: "Vous pouvez désormais comparer les offres reçues sur le dossier Nord , concentration AXA.", href: "/app/annonces/lst_05/offres", createdAt: daysAgo(1) },
       { userId: "user_buyer_02", type: NotificationType.RETENTION_DUE, title: "Déclaration de rétention M+12", body: "Merci de confirmer les contrats conservés et les commissions encaissées à 12 mois.", href: "/app/dossiers/deal_closed/retention", createdAt: daysAgo(8) },
     ],
   });

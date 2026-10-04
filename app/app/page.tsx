@@ -10,6 +10,7 @@ import {
   type Tuile,
 } from "@/lib/dashboard/home";
 import { ACCESS_PRICE_LINE, ADVISOR_BOOKING_HREF, CTA_ADVISOR } from "@/lib/copy/market";
+import { NOM_ACQUEREUR_REGLE } from "@/lib/listing/positioned-buyers";
 import { ADVISOR_MEMBER_LINE, ADVISOR_TITLE } from "@/lib/copy/investors";
 import { formatCount, formatEuroWhole } from "@/lib/format/number";
 import { formatDate } from "@/lib/format/fr";
@@ -139,7 +140,7 @@ export default async function MemberHomePage() {
                   ))}
                 </ul>
                 <p className="px-5 py-4 text-[13px] leading-relaxed text-muted">
-                  Le nom de l’acquéreur vous est communiqué à l’ouverture de la procédure.
+                  {NOM_ACQUEREUR_REGLE}
                 </p>
               </>
             ) : (

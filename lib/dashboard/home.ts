@@ -8,7 +8,19 @@ import { secondFacteurActif } from "@/lib/auth/second-facteur";
 import { interestDepositFor } from "@/lib/billing/rates";
 import { loadPublicListingCards } from "@/lib/listing/load-public-cards";
 import { listListingPositions, listMyPositions } from "@/lib/position/load";
+import { annonceAvecPositionne, candidatsPositionnes } from "@/lib/listing/positioned-buyers";
+import { stripeConfigured } from "@/lib/billing/stripe";
 import { prisma } from "@/lib/prisma";
+import { DATA_ROOM_KINDS } from "@/lib/listing/company-doc-kinds";
+
+/** Pièces de la salle de données déjà déposées sur une annonce. */
+async function compterPiecesCabinet(listingId: string): Promise<number> {
+  const rows = await prisma.listingCompanyDocument.findMany({
+    where: { listingId, kind: { in: [...DATA_ROOM_KINDS] } },
+    select: { kind: true },
+  });
+  return new Set(rows.map((r) => r.kind)).size;
+}
 
 /**
  * Tout ce que l'accueil de l'espace membre affiche, chargé en une fois.
@@ -125,6 +137,7 @@ export async function loadHome(actor: Actor): Promise<HomeData> {
       }),
     ]);
 
+  const paiementsActifs = stripeConfigured();
   const dossiersParAnnonce = new Map(dossiers.map((d) => [d.listingId, d] as const));
   const candidatsParAnnonce = vendeur
     ? new Map(
@@ -148,9 +161,13 @@ export async function loadHome(actor: Actor): Promise<HomeData> {
     const dossier = dossiersParAnnonce.get(annonce.id);
     const titre = annonce.publicNumber ? `N° ${annonce.publicNumber}` : annonce.portfolio.label;
     const libelle = brancheEtZone(annonce.portfolio.label, annonce.displayedZone);
-    const candidats = (candidatsParAnnonce.get(annonce.id) ?? []).filter(
-      (c) => c.state.key !== "POSITION" && c.state.outcome === "active",
-    );
+    /*
+     * Positionné veut dire dépôt reçu, pas « position dont l'étape a bougé » :
+     * ce second compte incluait les offres de l'ancien modèle, et le tableau
+     * de bord annonçait un acquéreur positionné là où la fiche en comptait zéro.
+     */
+    const suiveurs = candidatsParAnnonce.get(annonce.id) ?? [];
+    const candidats = candidatsPositionnes(suiveurs, paiementsActifs);
 
     if (dossier && dossier.stage !== "CLOSED") {
       parEtape[3] += 1;
@@ -260,8 +277,7 @@ export async function loadHome(actor: Actor): Promise<HomeData> {
   for (const [listingId, candidats] of candidatsParAnnonce) {
     const annonce = annonces.find((a) => a.id === listingId);
     if (!annonce?.publicNumber) continue;
-    for (const c of candidats) {
-      if (c.state.key === "POSITION" || c.state.outcome !== "active") continue;
+    for (const c of candidatsPositionnes(candidats, paiementsActifs)) {
       recues.push({
         key: c.position.id,
         href: `/app/annonces/${listingId}`,
@@ -314,6 +330,15 @@ export async function loadHome(actor: Actor): Promise<HomeData> {
     },
   ];
 
+  // L'annonce qui porte un acquéreur positionné, et celle qui attend encore.
+  const annoncePositionnee = annonces.find(
+    (a) => a.publicNumber !== null && candidatsPositionnes(candidatsParAnnonce.get(a.id) ?? [], paiementsActifs).length > 0,
+  );
+  const annonceEnLigne = annonces.find((a) => a.publicNumber !== null && EN_LIGNE.includes(a.status));
+  const piecesManquantes = annoncePositionnee
+    ? Math.max(0, DATA_ROOM_KINDS.length - (await compterPiecesCabinet(annoncePositionnee.id)))
+    : 0;
+
   const brouillon = annonces.find((a) => a.status === "DRAFT");
   const dossierActif = dossiers.find((d) => d.stage !== "CLOSED");
   const sansEtude = portefeuilles.find((p) => p.valuations.length === 0);
@@ -330,6 +355,14 @@ export async function loadHome(actor: Actor): Promise<HomeData> {
     retentionDeal: null,
     activeDeal: dossierActif ? { id: dossierActif.id } : null,
     unvaluedPortfolio: sansEtude ? { id: sansEtude.id } : null,
+    listingWithPositioned:
+      annoncePositionnee && annoncePositionnee.publicNumber !== null
+        ? { id: annoncePositionnee.id, publicNumber: annoncePositionnee.publicNumber, missingDocs: piecesManquantes }
+        : null,
+    onlineListing:
+      annonceEnLigne && annonceEnLigne.publicNumber !== null
+        ? { id: annonceEnLigne.id, publicNumber: annonceEnLigne.publicNumber }
+        : null,
     positionToFund: aVerser
       ? { id: aVerser.position.id, publicNumber: aVerser.position.listing.publicNumber ?? 0 }
       : null,

@@ -15,6 +15,13 @@ import { formatDateTime, formatEuro } from "@/lib/format/fr";
 import { DeskPageHeader } from "@/components/app/desk";
 import { MarketBadge } from "@/components/listing/market-badge";
 import { marketStatus } from "@/lib/listing/market-status";
+import {
+  POSITIONNES_LABEL,
+  SUIVEURS_LABEL,
+  annonceAvecPositionne,
+  candidatsPositionnes,
+} from "@/lib/listing/positioned-buyers";
+import { stripeConfigured } from "@/lib/billing/stripe";
 import { listListingPositions } from "@/lib/position/load";
 import { listCompanyDocs } from "@/lib/listing/company-docs";
 import { CompanyDocumentsPanel } from "@/components/listing/company-documents-panel";
@@ -41,9 +48,16 @@ export default async function SellerListingPage({
   const recipients = await listListingMailboxRecipients(id, actor);
   const companyDocs = await listCompanyDocs(id);
   const candidats = await listListingPositions(listing.id);
-  // Un acquéreur positionné est un candidat qui a versé son dépôt de positionnement.
-  const positionnes = candidats.filter((c) => c.deposit).length;
-  const cotation = marketStatus({ status: listing.status, offerWindowClosesAt: listing.offerWindowClosesAt });
+  const positionnes = candidatsPositionnes(candidats, stripeConfigured()).length;
+  /*
+   * Le badge suit le même compte que les chiffres : une annonce qui porte un
+   * acquéreur positionné ne peut pas se dire « Disponible » juste au dessus.
+   */
+  const cotation = marketStatus({
+    status: annonceAvecPositionne({ status: listing.status, candidatsPositionnes: positionnes })
+      ? "UNDER_NEGOTIATION"
+      : listing.status,
+  });
 
   return (
     <main className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 sm:py-8">
@@ -57,9 +71,9 @@ export default async function SellerListingPage({
           listing.publishedAt
             ? { label: "Montant de mise en ligne", value: formatEuro(listing.askingPrice), note: "Fixé par notre équipe après l’étude" }
             : { label: "Montant", value: "À venir", note: "Fixé par notre équipe après l’étude du portefeuille" },
-          { label: "Candidats", value: String(candidats.length), note: "Acquéreurs qui suivent le dossier" },
+          { label: SUIVEURS_LABEL, value: String(candidats.length), note: "Ils consultent le dossier, sans engagement" },
           {
-            label: "Acquéreurs positionnés",
+            label: POSITIONNES_LABEL,
             value: String(positionnes),
             note: "Dépôt de positionnement versé",
             accent: positionnes > 0,

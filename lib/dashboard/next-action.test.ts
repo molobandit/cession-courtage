@@ -11,11 +11,31 @@ const base: DashboardState = {
   activeDeal: null,
   unvaluedPortfolio: null,
   positionToFund: null,
+  listingWithPositioned: null,
+  onlineListing: null,
   activeDealCount: 0,
   retentionDue: 0,
 };
 
 describe("nextAction", () => {
+  it("met l'acquereur positionne avant tout le reste, cote cedant", () => {
+    const a = nextAction({
+      ...base,
+      portfolioCount: 2,
+      listingWithPositioned: { id: "lst_1", publicNumber: 10005, missingDocs: 4 },
+      onlineListing: { id: "lst_1", publicNumber: 10005 },
+    });
+    expect(a.title).toContain("un acquéreur est positionné");
+    expect(a.detail).toContain("4 pièces");
+    expect(a.href).toBe("/app/annonces/lst_1");
+  });
+
+  it("ne demande pas de confier un portefeuille quand l'annonce est deja en ligne", () => {
+    const a = nextAction({ ...base, portfolioCount: 2, onlineListing: { id: "lst_1", publicNumber: 10005 } });
+    expect(a.title).toContain("est en ligne");
+    expect(a.title).not.toContain("Confiez");
+  });
+
   it("envoie un cedant vierge vers l'import", () => {
     const action = nextAction(base);
     expect(action.href).toBe("/app/import");

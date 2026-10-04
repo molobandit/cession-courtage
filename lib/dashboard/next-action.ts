@@ -30,6 +30,10 @@ export type DashboardState = {
   unvaluedPortfolio: { id: string } | null;
   /** Position prise sans depot de positionnement verse. */
   positionToFund: { id: string; publicNumber: number } | null;
+  /** Annonce du cedant qui porte un acquereur positionne, et ce qui lui manque. */
+  listingWithPositioned: { id: string; publicNumber: number; missingDocs: number } | null;
+  /** Annonce en ligne qui attend encore un acquereur. */
+  onlineListing: { id: string; publicNumber: number } | null;
   activeDealCount: number;
   /** Releves de deperdition attendus. */
   retentionDue: number;
@@ -79,6 +83,24 @@ export function nextAction(state: DashboardState): NextAction {
     };
   }
 
+  /*
+   * Un acquéreur positionné passe avant tout le reste côté cédant : c'est le
+   * dossier qui avance, et c'est lui qui attend quelque chose du vendeur.
+   */
+  if (state.canSell && state.listingWithPositioned) {
+    const l = state.listingWithPositioned;
+    return {
+      tone: "action",
+      title: `Dossier n° ${l.publicNumber} : un acquéreur est positionné`,
+      detail:
+        l.missingDocs > 0
+          ? `Il manque ${l.missingDocs} pièce${l.missingDocs > 1 ? "s" : ""} du cabinet pour que la procédure avance.`
+          : "La procédure de cession est ouverte, suivez le dossier.",
+      href: `/app/annonces/${l.id}`,
+      cta: "Ouvrir l’annonce",
+    };
+  }
+
   if (state.canSell && state.draftListing) {
     return {
       tone: "action",
@@ -107,6 +129,19 @@ export function nextAction(state: DashboardState): NextAction {
       detail: "Un bordereau CSV ou XLSX suffit.",
       href: "/app/import",
       cta: "Importer un bordereau",
+    };
+  }
+
+  /*
+   * Une annonce déjà en ligne : il n'y a plus rien à confier, on le dit.
+   */
+  if (state.canSell && state.onlineListing) {
+    return {
+      tone: "attente",
+      title: `Votre annonce n° ${state.onlineListing.publicNumber} est en ligne`,
+      detail: "Les acquéreurs la consultent. Vous serez prévenu dès que l’un d’eux verse son dépôt de positionnement.",
+      href: `/app/annonces/${state.onlineListing.id}`,
+      cta: "Ouvrir l’annonce",
     };
   }
 

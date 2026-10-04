@@ -36,7 +36,7 @@ export async function takePositionAction(
   if (!isOriasVerified(actor)) redirect("/en-attente-orias");
   if (!canBuy(actor)) return { error: "Ce compte ne peut pas acquérir de portefeuille." };
   if (ownsFirm(actor, listing.portfolio.firmId)) {
-    return { error: "C’est votre propre annonce : suivez les candidats depuis « Mes cessions »." };
+    return { error: "C’est votre propre annonce : suivez les acquéreurs depuis « Mes ventes »." };
   }
   if (!(await hasContactSubscription(actor))) {
     redirect(fiche);
@@ -50,7 +50,7 @@ export async function takePositionAction(
   if (existante) redirect(`/app/positions/${existante.id}`);
 
   if (!listingAcceptsOffers(listing.status)) {
-    return { error: "Ce portefeuille ne reçoit plus de candidatures." };
+    return { error: "Ce portefeuille ne reçoit plus de positionnements." };
   }
 
   // Arrivé depuis sa demande d'acquisition : la position garde la trace de la proposition.
