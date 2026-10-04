@@ -15,6 +15,18 @@ const lines: string[] = [
   "-- Catalogue public de démonstration. Idempotent.",
   "-- wrangler d1 execute cession-courtage --remote --file ./scripts/d1-catalog-listings.sql",
   "PRAGMA foreign_keys = OFF;",
+  /*
+   * Ce qui pend aux annonces part avant elles.
+   *
+   * D1 n'a pas applique la cle etrangere lors d'un rechargement en ligne : les
+   * positions des annonces supprimees ont survecu, pointant dans le vide, et
+   * Prisma a refuse la requete entiere du tableau de bord. On ne compte donc
+   * plus sur la cascade, on supprime dans l'ordre.
+   */
+  "DELETE FROM DealSignoff WHERE dealId IN (SELECT id FROM Deal WHERE listingId LIKE 'lst_catalog_%');",
+  "DELETE FROM Deal WHERE listingId LIKE 'lst_catalog_%';",
+  "DELETE FROM InterestDeposit WHERE listingId LIKE 'lst_catalog_%';",
+  "DELETE FROM BuyerPosition WHERE listingId LIKE 'lst_catalog_%';",
   "DELETE FROM ListingLine WHERE listingId LIKE 'lst_catalog_%';",
   "DELETE FROM Valuation WHERE listingId LIKE 'lst_catalog_%';",
   "DELETE FROM Listing WHERE id LIKE 'lst_catalog_%';",

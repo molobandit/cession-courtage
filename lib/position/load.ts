@@ -97,10 +97,21 @@ export async function loadPosition(id: string) {
   return { position, ...detail };
 }
 
+/*
+ * Une position dont l'annonce a disparu ne se lit pas.
+ *
+ * D1 n'applique pas les clés étrangères comme Postgres : supprimer une annonce
+ * laisse ses positions derrière elle, pointant dans le vide. Prisma, lui, tient
+ * la relation pour obligatoire et refuse la requête entière, ce qui renvoyait
+ * une erreur 500 sur le tableau de bord à cause d'une seule ligne orpheline.
+ * Ce filtre ne retient que les positions dont l'annonce existe encore.
+ */
+const ANNONCE_EXISTE = { listing: { is: {} } } as const;
+
 /** Positions d'un acquéreur, avec leur avancement, pour le tableau de bord. */
 export async function listMyPositions(buyerId: string) {
   const positions = await prisma.buyerPosition.findMany({
-    where: { buyerId },
+    where: { buyerId, ...ANNONCE_EXISTE },
     orderBy: { updatedAt: "desc" },
     select: POSITION_SELECT,
   });
@@ -115,7 +126,7 @@ export async function listMyPositions(buyerId: string) {
 /** Candidats d'une annonce, pour son cédant. */
 export async function listListingPositions(listingId: string) {
   const positions = await prisma.buyerPosition.findMany({
-    where: { listingId },
+    where: { listingId, ...ANNONCE_EXISTE },
     orderBy: { createdAt: "asc" },
     select: POSITION_SELECT,
   });

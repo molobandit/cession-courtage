@@ -1,6 +1,10 @@
--- Catalogue public de demonstration (80 fiches). Idempotent.
+-- Catalogue public de démonstration. Idempotent.
 -- wrangler d1 execute cession-courtage --remote --file ./scripts/d1-catalog-listings.sql
 PRAGMA foreign_keys = OFF;
+DELETE FROM DealSignoff WHERE dealId IN (SELECT id FROM Deal WHERE listingId LIKE 'lst_catalog_%');
+DELETE FROM Deal WHERE listingId LIKE 'lst_catalog_%';
+DELETE FROM InterestDeposit WHERE listingId LIKE 'lst_catalog_%';
+DELETE FROM BuyerPosition WHERE listingId LIKE 'lst_catalog_%';
 DELETE FROM ListingLine WHERE listingId LIKE 'lst_catalog_%';
 DELETE FROM Valuation WHERE listingId LIKE 'lst_catalog_%';
 DELETE FROM Listing WHERE id LIKE 'lst_catalog_%';
@@ -9,7 +13,7 @@ DELETE FROM Portfolio WHERE id LIKE 'pf_catalog_%';
 DELETE FROM Firm WHERE id = 'firm_catalog';
 PRAGMA foreign_keys = ON;
 
-INSERT INTO Firm (id, legalName, siren, legalForm, address, postalCode, city, department, region, foundedAt, headcount, annualRevenue, distributionMode, complianceScore, createdAt) VALUES ('firm_catalog', 'Catalogue de demonstration', '890190080', 'SAS', '1 rue de la Bourse', '75002', 'Paris', '75', 'Île-de-France', '2024-01-15T00:00:00.000Z', 2, '0.00', 'REMOTE', 100, '2024-01-15T00:00:00.000Z');
+INSERT INTO Firm (id, legalName, siren, legalForm, address, postalCode, city, department, region, foundedAt, headcount, annualRevenue, distributionMode, complianceScore, createdAt) VALUES ('firm_catalog', 'Cabinet Horizon Courtage', '890190080', 'SAS', '1 rue de la Bourse', '75002', 'Paris', '75', 'Île-de-France', '2024-01-15T00:00:00.000Z', 2, '0.00', 'REMOTE', 100, '2024-01-15T00:00:00.000Z');
 
 INSERT OR IGNORE INTO User (id, email, passwordHash, role, oriasNumber, oriasVerifiedAt, firmId, kycStatus, publicAlias, fullName, jobTitle, createdAt, updatedAt, financialCapacityStatus) SELECT 'usr_catalog_seller', 'cedant.catalogue@cession-courtage.demo', (SELECT passwordHash FROM User WHERE email = 'marie.lefort@parisienne-courtage.demo'), 'SELLER', '17001090', '2024-01-15T00:00:00.000Z', 'firm_catalog', 'VERIFIED', 'C90', 'Cédant Catalogue', 'Gérant', '2024-01-15T00:00:00.000Z', '2024-01-15T00:00:00.000Z', 'NONE';
 UPDATE User SET firmId = 'firm_catalog', kycStatus = 'VERIFIED', oriasVerifiedAt = '2024-01-15T00:00:00.000Z' WHERE id = 'usr_catalog_seller';
