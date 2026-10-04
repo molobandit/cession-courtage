@@ -22,22 +22,35 @@ const A4 = { w: 595.28, h: 841.89 };
 const MARGE = 44;
 const LARGEUR = A4.w - MARGE * 2;
 
-const NAVY = rgb(0.067, 0.094, 0.153);
+/*
+ * La charte du dossier, celle de la plateforme.
+ *
+ * Un bleu et un seul, décliné du plus profond au plus pâle. Les couleurs de
+ * tranche restent dans la même famille, du bleu vers l'indigo puis l'ardoise :
+ * un camembert arc-en-ciel ferait graphique de tableur, et ce document se
+ * présente à un acquéreur qui décide d'un achat.
+ */
+const NUIT = rgb(0.094, 0.165, 0.42);
+const NUIT_CLAIR = rgb(0.137, 0.227, 0.525);
+const NAVY = NUIT;
 const NAVY_2 = rgb(0.118, 0.227, 0.541);
 const BLEU = rgb(0.145, 0.388, 0.922);
-const BLEU_PALE = rgb(0.937, 0.965, 1);
-const PAGE = rgb(0.973, 0.98, 0.988);
-const ENCRE = rgb(0.067, 0.094, 0.153);
-const GRIS = rgb(0.373, 0.42, 0.478);
-const TRAIT = rgb(0.898, 0.906, 0.922);
+const BLEU_CLAIR = rgb(0.506, 0.616, 0.953);
+const BLEU_PALE = rgb(0.933, 0.949, 1);
+const PAGE = rgb(0.988, 0.992, 1);
+const ENCRE = rgb(0.094, 0.133, 0.231);
+const GRIS = rgb(0.392, 0.443, 0.525);
+const TRAIT = rgb(0.886, 0.906, 0.949);
 const BLANC = rgb(1, 1, 1);
 const TRANCHE = [
+  rgb(0.118, 0.227, 0.541),
   rgb(0.145, 0.388, 0.922),
-  rgb(0.31, 0.275, 0.898),
-  rgb(0.027, 0.494, 0.549),
-  rgb(0.016, 0.47, 0.337),
-  rgb(0.706, 0.325, 0.035),
-  rgb(0.58, 0.64, 0.72),
+  rgb(0.306, 0.51, 0.957),
+  rgb(0.447, 0.616, 0.969),
+  rgb(0.584, 0.706, 0.98),
+  rgb(0.722, 0.796, 0.988),
+  rgb(0.835, 0.871, 0.945),
+  rgb(0.886, 0.906, 0.949),
 ];
 
 const dateFr = (d: Date) =>
@@ -118,6 +131,70 @@ function multiple(v: number) {
 
 function pct(share: number, digits = 0) {
   return `${(share * 100).toLocaleString("fr-FR", { maximumFractionDigits: digits, minimumFractionDigits: digits })} %`;
+}
+
+/**
+ * Un anneau de répartition, tracé en arcs.
+ *
+ * Chaque part devient un secteur de couronne : arc extérieur dans le sens des
+ * aiguilles, arc intérieur en sens inverse, et le chemin se referme. Le trou
+ * du milieu porte le chiffre qui compte, ce qu'un camembert plein ne permet
+ * pas. Les parts sous un pour cent sont regroupées en fin de liste par
+ * l'appelant : un filet de 0,3 degré ne se voit pas et salit le tracé.
+ */
+function anneau(
+  ctx: Ctx,
+  cx: number,
+  cy: number,
+  rayon: number,
+  epaisseur: number,
+  parts: { share: number; couleur: RGB }[],
+) {
+  const ri = rayon - epaisseur;
+  let angle = 0;
+  const point = (r: number, a: number) => `${(r * Math.sin(a)).toFixed(2)} ${(-r * Math.cos(a)).toFixed(2)}`;
+  for (const part of parts) {
+    const balaye = Math.max(0, Math.min(1, part.share)) * Math.PI * 2;
+    if (balaye <= 0.0005) continue;
+    const fin = angle + balaye;
+    const grand = balaye > Math.PI ? 1 : 0;
+    const chemin = [
+      `M ${point(rayon, angle)}`,
+      `A ${rayon} ${rayon} 0 ${grand} 1 ${point(rayon, fin)}`,
+      `L ${point(ri, fin)}`,
+      `A ${ri} ${ri} 0 ${grand} 0 ${point(ri, angle)}`,
+      "Z",
+    ].join(" ");
+    ctx.page.drawSvgPath(chemin, { x: cx, y: cy, color: part.couleur, borderWidth: 0 });
+    angle = fin;
+  }
+}
+
+/** Une barre horizontale, pour une part : le fond pâle, puis la part remplie. */
+function barre(ctx: Ctx, x: number, y: number, largeurTotale: number, part: number, couleur: RGB) {
+  ctx.page.drawRectangle({ x, y, width: largeurTotale, height: 5, color: BLEU_PALE });
+  const remplie = Math.max(2, Math.min(1, Math.max(0, part)) * largeurTotale);
+  ctx.page.drawRectangle({ x, y, width: remplie, height: 5, color: couleur });
+}
+
+/** Le chiffre d'abord, son libellé ensuite : la lecture va du gros au petit. */
+function chiffreCle(
+  ctx: Ctx,
+  x: number,
+  y: number,
+  valeur: string,
+  libelle: string,
+  precision: string,
+  max: number,
+  couleur: RGB = NUIT,
+) {
+  ecrire(ctx, valeur, x, y, 20, { gras: true, couleur });
+  ecrire(ctx, libelle, x, y - 16, 9, { gras: true, couleur: ENCRE });
+  if (precision) {
+    couper(ctx, precision, 8, max)
+      .slice(0, 2)
+      .forEach((l, i) => ecrire(ctx, l, x, y - 28 - i * 9.5, 8, { couleur: GRIS }));
+  }
 }
 
 function nouvellePage(ctx: Ctx) {
@@ -278,24 +355,91 @@ export async function renderValuationStudyPdf(study: ValuationStudy): Promise<Ui
   const implicite = `Multiple implicite : ${multiple(study.lowMultiple)} à ${multiple(study.highMultiple)}`;
 
   // ── 1. Couverture ──────────────────────────────────────────────
-  ctx.page.drawRectangle({ x: 0, y: 0, width: A4.w, height: A4.h, color: NAVY });
-  ctx.page.drawRectangle({ x: 0, y: 0, width: 10, height: A4.h, color: BLEU });
-  ecrire(ctx, BRAND_NAME.toUpperCase(), MARGE + 8, A4.h - 52, 9, { gras: true, couleur: rgb(0.75, 0.84, 0.99) });
-  ecrire(ctx, "DOSSIER DE PRÉSENTATION ET DE VALORISATION", MARGE + 8, A4.h - 150, 10, {
-    gras: true,
-    couleur: rgb(0.75, 0.84, 0.99),
-  });
-  const titre = couper(ctx, study.headline, 28, LARGEUR - 20, true);
-  titre.slice(0, 3).forEach((l, i) => ecrire(ctx, l, MARGE + 8, A4.h - 196 - i * 32, 28, { gras: true, couleur: BLANC }));
-  const accroche = `${study.contractCount.toLocaleString("fr-FR")} contrats actifs, ${study.carrierCount} compagnie${study.carrierCount > 1 ? "s" : ""} partenaire${study.carrierCount > 1 ? "s" : ""}. Commissions récurrentes : ${euro(ctx, study.annualCommissions)}.`;
-  couper(ctx, accroche, 12, LARGEUR - 40).slice(0, 2).forEach((l, i) =>
-    ecrire(ctx, l, MARGE + 8, A4.h - 306 - i * 18, 12, { couleur: rgb(0.75, 0.84, 0.99) }),
-  );
+  /*
+   * La couverture doit tenir toute seule.
+   *
+   * Un acquéreur en reçoit plusieurs : celle-ci dit en un coup d'œil de quel
+   * portefeuille il s'agit, ce qu'il rapporte et ce qu'il coûte. Le dégradé
+   * est simulé par des bandes, pdf-lib ne connaissant pas les dégradés : vingt
+   * bandes du bleu nuit vers l'indigo, invisibles à l'œil une fois imprimées.
+   */
+  const BANDES = 20;
+  for (let i = 0; i < BANDES; i += 1) {
+    const t = i / (BANDES - 1);
+    ctx.page.drawRectangle({
+      x: 0,
+      y: (A4.h / BANDES) * i,
+      width: A4.w,
+      height: A4.h / BANDES + 1,
+      color: rgb(
+        NUIT.red + (NUIT_CLAIR.red - NUIT.red) * t,
+        NUIT.green + (NUIT_CLAIR.green - NUIT.green) * t,
+        NUIT.blue + (NUIT_CLAIR.blue - NUIT.blue) * t,
+      ),
+    });
+  }
 
   /*
-   * Les quatre chiffres que l'acquéreur cherche d'abord, dès la couverture :
-   * ce que le portefeuille rapporte, sa taille, son ancienneté, et le prix.
-   * Il doit pouvoir décider d'ouvrir la suite sans tourner la page.
+   * Le filigrane : la marque, en très grand, débordant du bord droit.
+   * Dessinée au trait et à peine plus claire que le fond, elle donne de la
+   * profondeur sans jamais disputer la lecture au titre.
+   */
+  const FILIGRANE = rgb(0.157, 0.247, 0.541);
+  const carreArrondi = (c: number, r: number) =>
+    `M ${r} 0 H ${c - r} A ${r} ${r} 0 0 1 ${c} ${r} V ${c - r} A ${r} ${r} 0 0 1 ${c - r} ${c} H ${r} A ${r} ${r} 0 0 1 0 ${c - r} V ${r} A ${r} ${r} 0 0 1 ${r} 0 Z`;
+  ctx.page.drawSvgPath(carreArrondi(230, 54), {
+    x: A4.w - 150,
+    y: 690,
+    borderColor: FILIGRANE,
+    borderWidth: 9,
+  });
+  ctx.page.drawSvgPath("M 0 118 A 118 118 0 0 1 118 0", {
+    x: A4.w - 92,
+    y: 626,
+    borderColor: FILIGRANE,
+    borderWidth: 9,
+  });
+
+  // Le liseré de gauche, signature de tous les documents de la maison.
+  ctx.page.drawRectangle({ x: 0, y: 0, width: 7, height: A4.h, color: BLEU });
+
+  // Le cartouche de marque : le carré de la plateforme, et son arc.
+  ctx.page.drawSvgPath(carreArrondi(26, 7), { x: MARGE + 8, y: A4.h - 50, color: BLEU, borderWidth: 0 });
+  ctx.page.drawSvgPath("M 0 13 A 13 13 0 0 1 13 0", {
+    x: MARGE + 14.5,
+    y: A4.h - 63.5,
+    borderColor: BLANC,
+    borderWidth: 2.2,
+  });
+  ecrire(ctx, BRAND_NAME, MARGE + 44, A4.h - 68, 12, { gras: true, couleur: BLANC });
+  const sceau = "CONFIDENTIEL";
+  const sceauL = largeur(ctx, sceau, 7, true) + 20;
+  ctx.page.drawRectangle({
+    x: A4.w - MARGE - sceauL - 8,
+    y: A4.h - 72,
+    width: sceauL,
+    height: 18,
+    borderColor: rgb(0.44, 0.55, 0.85),
+    borderWidth: 0.8,
+  });
+  ecrire(ctx, sceau, A4.w - MARGE - sceauL + 2, A4.h - 66, 7, { gras: true, couleur: rgb(0.78, 0.85, 1) });
+
+  ecrire(ctx, "DOSSIER DE PRÉSENTATION ET DE VALORISATION", MARGE + 8, A4.h - 232, 9, {
+    gras: true,
+    couleur: BLEU_CLAIR,
+  });
+  const titre = couper(ctx, study.headline, 30, LARGEUR - 40, true);
+  titre.slice(0, 3).forEach((l, i) => ecrire(ctx, l, MARGE + 8, A4.h - 274 - i * 36, 30, { gras: true, couleur: BLANC }));
+
+  const accroche = `${study.contractCount.toLocaleString("fr-FR")} contrats actifs, ${study.carrierCount} compagnie${study.carrierCount > 1 ? "s" : ""} partenaire${study.carrierCount > 1 ? "s" : ""}. Commissions récurrentes : ${euro(ctx, study.annualCommissions)}.`;
+  const basTitre = A4.h - 274 - Math.min(titre.length, 3) * 36;
+  couper(ctx, accroche, 12, LARGEUR - 60)
+    .slice(0, 2)
+    .forEach((l, i) => ecrire(ctx, l, MARGE + 8, basTitre - 14 - i * 18, 12, { couleur: rgb(0.78, 0.85, 1) }));
+
+  /*
+   * Les quatre chiffres que l'acquéreur cherche d'abord. Le montant est
+   * détaché par un filet : c'est le seul des quatre qui est un prix.
    */
   const cles = [
     { v: euro(ctx, study.annualCommissions), k: "commissions annuelles nettes" },
@@ -306,33 +450,35 @@ export async function renderValuationStudyPdf(study: ValuationStudy): Promise<Ui
   const colonne = (LARGEUR - 16) / 4;
   cles.forEach((c, i) => {
     const x = MARGE + 8 + i * colonne;
-    if (i === 3) ctx.page.drawRectangle({ x: x - 14, y: 322, width: 1, height: 58, color: rgb(0.35, 0.45, 0.72) });
-    ecrire(ctx, c.v, x, 352, 19, { gras: true, couleur: BLANC });
-    couper(ctx, c.k, 8, colonne - 10).slice(0, 2).forEach((l, j) =>
-      ecrire(ctx, l, x, 332 - j * 10, 8, { couleur: rgb(0.75, 0.84, 0.99) }),
-    );
+    if (i === 3) ctx.page.drawRectangle({ x: x - 16, y: 318, width: 0.8, height: 62, color: rgb(0.42, 0.53, 0.84) });
+    ecrire(ctx, c.v, x, 356, 18, { gras: true, couleur: BLANC });
+    couper(ctx, c.k, 7.5, colonne - 12)
+      .slice(0, 2)
+      .forEach((l, j) => ecrire(ctx, l, x, 338 - j * 10, 7.5, { couleur: rgb(0.72, 0.8, 0.98) }));
   });
-  ctx.page.drawRectangle({ x: MARGE + 8, y: 300, width: LARGEUR - 16, height: 1, color: rgb(0.3, 0.4, 0.68) });
+  ctx.page.drawRectangle({ x: MARGE + 8, y: 296, width: LARGEUR - 16, height: 0.8, color: rgb(0.34, 0.45, 0.78) });
 
+  /*
+   * Le pied de couverture : quatre repères sur une ligne, sans cadre. Les
+   * pavés d'avant faisaient formulaire administratif.
+   */
   const metas = [
     { k: "DOSSIER N°", v: study.publicNumber ? String(study.publicNumber) : "Estimation" },
     { k: "LOCALISATION", v: study.zone },
     { k: "DONNÉES ARRÊTÉES AU", v: dateFr(study.dataCutoff) },
     { k: "CONFIDENTIALITÉ", v: "Document anonymisé" },
   ];
-  const mw = (LARGEUR - 24) / 2;
-  const mh = 58;
   metas.forEach((m, i) => {
-    const col = i % 2;
-    const row = Math.floor(i / 2);
-    const x = MARGE + 8 + col * (mw + 12);
-    const y = 148 - row * (mh + 14);
-    ctx.page.drawRectangle({ x, y, width: mw, height: mh, color: rgb(0.09, 0.14, 0.28) });
-    ecrire(ctx, m.k, x + 12, y + mh - 18, 7, { gras: true, couleur: rgb(0.75, 0.84, 0.99) });
-    const vals = couper(ctx, m.v, 12, mw - 24, true);
-    vals.slice(0, 2).forEach((v, j) => ecrire(ctx, v, x + 12, y + mh - 36 - j * 14, 12, { gras: true, couleur: BLANC }));
+    const x = MARGE + 8 + i * colonne;
+    ecrire(ctx, m.k, x, 252, 7, { gras: true, couleur: rgb(0.6, 0.7, 0.95) });
+    couper(ctx, m.v, 10, colonne - 12, true)
+      .slice(0, 2)
+      .forEach((l, j) => ecrire(ctx, l, x, 236 - j * 12, 10, { gras: true, couleur: BLANC }));
   });
-  ecrire(ctx, `Présenté par ${BRAND_NAME}`, MARGE + 8, 36, 10, { couleur: BLANC });
+
+  ecrire(ctx, `Présenté par ${BRAND_NAME}. La salle de marché des portefeuilles d'assurance.`, MARGE + 8, 44, 9, {
+    couleur: rgb(0.6, 0.7, 0.95),
+  });
 
   // ── 2. Confidentialité ─────────────────────────────────────────
   nouvellePage(ctx);
@@ -458,34 +604,67 @@ export async function renderValuationStudyPdf(study: ValuationStudy): Promise<Ui
     "Anatomie du portefeuille",
     `Répartition des ${study.contractCount} contrats actifs et de leurs commissions par branche.`,
   );
-  const pieParts = study.byBranch.map((s) => ({ label: s.label, share: s.share, value: s.contracts }));
-  ecrire(ctx, "Contrats par branche", MARGE, ctx.y - 8, 10, { gras: true });
-  ctx.y -= 22;
-  barreEmpilee(ctx, MARGE, ctx.y - 28, LARGEUR, 28, pieParts);
-  ctx.y -= 44;
-  legend(ctx, MARGE, ctx.y, pieParts.slice(0, 6));
-  ctx.y -= Math.min(pieParts.length, 6) * 14 + 18;
-  ecrire(ctx, "Commissions annuelles par branche", MARGE, ctx.y, 10, { gras: true });
-  ctx.y -= 18;
-  histogramme(
-    ctx,
-    MARGE + 8,
-    ctx.y - 150,
-    LARGEUR - 16,
-    150,
-    study.byBranch.map((s) => ({ label: s.label, value: s.value })),
-    (v) => euro(ctx, v),
-  );
-  ctx.y -= 178;
+  /*
+   * L'anneau plutôt que l'histogramme.
+   *
+   * Un acquéreur cherche d'abord si le portefeuille tient sur une branche ou
+   * s'il est réparti : c'est une question de proportions, et l'anneau la montre
+   * d'un regard. Son centre porte la part de la branche principale, le chiffre
+   * qui décide. Le détail chiffré se lit à droite, ligne à ligne.
+   */
+  const parts = study.byBranch.map((b, i) => ({ ...b, couleur: TRANCHE[i % TRANCHE.length]! }));
+  const cx = MARGE + 92;
+  const cy = ctx.y - 104;
+  anneau(ctx, cx, cy, 78, 26, parts.map((p) => ({ share: p.share, couleur: p.couleur })));
+
+  const dominante = parts[0];
+  if (dominante) {
+    const part = pct(dominante.share);
+    ecrire(ctx, part, cx - largeur(ctx, part, 22, true) / 2, cy - 2, 22, { gras: true, couleur: NUIT });
+    const sous = "branche principale";
+    ecrire(ctx, sous, cx - largeur(ctx, sous, 7) / 2, cy - 16, 7, { couleur: GRIS });
+  }
+
+  // Le détail, à droite de l'anneau : une ligne par branche.
+  const dx = MARGE + 196;
+  const dw = LARGEUR - 196;
+  let dy = ctx.y - 16;
+  ecrire(ctx, "Part des commissions annuelles", dx, dy, 8, { gras: true, couleur: GRIS });
+  dy -= 18;
+  for (const b of parts.slice(0, 7)) {
+    ctx.page.drawRectangle({ x: dx, y: dy - 1, width: 7, height: 7, color: b.couleur });
+    ecrire(ctx, b.label, dx + 14, dy - 1, 9, { gras: true });
+    const montant = euro(ctx, b.value);
+    ecrire(ctx, montant, dx + dw - largeur(ctx, montant, 9, true), dy - 1, 9, { gras: true, couleur: NUIT });
+    dy -= 12;
+    const part = pct(b.share);
+    ecrire(ctx, `${b.contracts} contrat${b.contracts > 1 ? "s" : ""}`, dx + 14, dy, 7.5, { couleur: GRIS });
+    ecrire(ctx, part, dx + dw - largeur(ctx, part, 7.5), dy, 7.5, { couleur: GRIS });
+    dy -= 7;
+    barre(ctx, dx + 14, dy, dw - 14, b.share, b.couleur);
+    dy -= 16;
+  }
+  ctx.y = Math.min(dy, cy - 100) - 8;
+
   if (study.topCarrier) {
-    titreSection(ctx, study, "Nature des contrats");
+    titreSection(ctx, study, "Les compagnies");
     paragraphe(
       ctx,
       study,
       study.carrierCount === 1
-        ? `Portefeuille concentré à 100 % chez ${study.topCarrier.name}. ${study.keyPoints[0] ?? ""}`
-        : `Compagnie principale : ${study.topCarrier.name} (${pct(study.topCarrier.share)} des commissions).`,
+        ? `Portefeuille concentré à 100 % chez ${study.topCarrier.name}. Une seule compagnie porte donc l'ensemble du revenu.`
+        : `${study.carrierCount} compagnies partenaires, la première à ${pct(study.topCarrier.share)} des commissions. Aucune ne fait basculer le portefeuille à elle seule.`,
     );
+    ctx.y -= 6;
+    const compagnies = study.byCarrier.slice(0, 6);
+    for (const c of compagnies) {
+      place(ctx, 26, study);
+      ecrire(ctx, c.label, MARGE, ctx.y - 10, 9, { gras: true });
+      const v = `${euro(ctx, c.value)}  ·  ${pct(c.share)}`;
+      ecrire(ctx, v, MARGE + LARGEUR - largeur(ctx, v, 8.5), ctx.y - 10, 8.5, { couleur: GRIS });
+      barre(ctx, MARGE, ctx.y - 19, LARGEUR, c.share, BLEU);
+      ctx.y -= 26;
+    }
   }
 
   // ── 6. Structure ───────────────────────────────────────────────
