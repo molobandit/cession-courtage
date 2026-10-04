@@ -14,7 +14,7 @@ export const COMPANY_DOC_KINDS = [
 ] as const;
 
 /**
- * Pièces sans lesquelles un acquéreur ne confirme pas son prix.
+ * Pièces sans lesquelles un acquéreur ne confirme pas le montant.
  *
  * Déposées une fois sur l'annonce, elles alimentent la salle de données de
  * chaque dossier ouvert sur cette annonce : le cédant prépare sa vente avant

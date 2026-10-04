@@ -30,7 +30,7 @@ export type SignoffKind =
 
 export const SIGNOFF_LABELS: Record<string, string> = {
   NDA_SIGNED: "a accepté l’engagement de confidentialité",
-  PRICE_CONFIRMED: "a confirmé son prix après examen des pièces",
+  PRICE_CONFIRMED: "a confirmé le montant de l’annonce après examen des pièces",
   LOI_ACCEPTED: "s’en est tenu au montant de l’annonce",
   DEED_SIGNED: "a signé le protocole et les attestations de transfert",
   ATTESTATIONS_SENT: "a adressé les attestations aux compagnies",
@@ -240,8 +240,8 @@ export function stageTasks(s: ProcessSnapshot): Task[] {
       return [
         task({
           key: "escrow-fund",
-          label: "Verser le prix sur le compte sécurisé",
-          detail: "Le prix, dépôt de garantie déduit, reste sur un compte sécurisé jusqu’à l’accord des compagnies. Origine des fonds déclarée.",
+          label: "Verser le montant sur le compte sécurisé",
+          detail: "Le montant, dépôt de positionnement déduit, reste sur un compte sécurisé jusqu’à l’accord des compagnies. Origine des fonds déclarée.",
           owner: "buyer",
           done: verse,
         }),
@@ -253,12 +253,12 @@ export function stageTasks(s: ProcessSnapshot): Task[] {
           done: Boolean(envoyees),
           doneAt: envoyees?.createdAt ?? null,
           available: verse,
-          waitingReason: verse ? undefined : "En attente du versement du prix.",
+          waitingReason: verse ? undefined : "En attente du versement du montant.",
         }),
         task({
           key: "transfer-confirm",
           label: "Confirmer l’accord des compagnies",
-          detail: "Quand les compagnies ont rattaché les contrats et les commissions au code de l’acquéreur : le prix est alors versé au cédant et la cession close.",
+          detail: "Quand les compagnies ont rattaché les contrats et les commissions au code de l’acquéreur : le montant est alors versé au cédant et la cession close.",
           owner: "buyer",
           done: Boolean(confirme),
           doneAt: confirme?.createdAt ?? null,
@@ -300,8 +300,8 @@ export function tasksFor(s: ProcessSnapshot, side: Side) {
 }
 
 export const STAGE_INTRO: Partial<Record<DealStage, string>> = {
-  DATA_ROOM: "L’acquéreur examine les pièces du cabinet et confirme son prix. Les deux comptes sont vérifiés une fois pour toutes, le cédant renseigne ses codes courtier.",
+  DATA_ROOM: "L’acquéreur examine les pièces du cabinet et confirme le montant de l’annonce. Les deux comptes sont vérifiés une fois pour toutes, le cédant renseigne ses codes courtier.",
   SIGNATURE: "Les deux représentants signent le protocole et les attestations de transfert, en un geste chacun.",
-  TRANSFER: "L’acquéreur verse le prix sur un compte sécurisé, le cédant envoie les attestations signées, l’acquéreur confirme l’accord des compagnies : le prix est alors versé au cédant.",
+  TRANSFER: "L’acquéreur verse le montant sur un compte sécurisé, le cédant envoie les attestations signées, l’acquéreur confirme l’accord des compagnies : le montant est alors versé au cédant.",
   CLOSED: "La cession est close.",
 };

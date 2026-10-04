@@ -837,7 +837,7 @@ export async function renderValuationStudyPdf(study: ValuationStudy): Promise<Ui
     study,
     study.publicNumber
       ? `Pour échanger sur ce dossier : via la messagerie sécurisée, onglet Messages de l'annonce n° ${study.publicNumber}.`
-      : "Prochaine étape : déposer le dossier pour étude, puis mise en ligne de l'annonce au prix déterminé.",
+      : "Prochaine étape : déposer le dossier pour étude, puis mise en ligne de l'annonce au montant déterminé.",
   );
 
   pied(ctx, study);

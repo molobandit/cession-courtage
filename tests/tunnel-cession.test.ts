@@ -204,7 +204,7 @@ describe("aucune étape ne se franchit sans ce qu’elle exige", () => {
   it("le séquestre exige l’origine des fonds, et les attestations attendent les fonds", async () => {
     await poser(DealStage.TRANSFER);
     connecterUtilisateur(sellerId);
-    expect((await sendAttestationsAction({}, form({ dealId: DEAL, consent: "on" }))).error).toContain("versement du prix");
+    expect((await sendAttestationsAction({}, form({ dealId: DEAL, consent: "on" }))).error).toContain("versement du montant");
     expect((await fundEscrowAction({}, form({ dealId: DEAL, consent: "on", fundsOrigin: "FONDS_PROPRES" }))).error).toContain("autre partie");
     connecterUtilisateur(buyerId);
     expect((await fundEscrowAction({}, form({ dealId: DEAL, consent: "on" }))).error).toContain("origine des fonds");
