@@ -1,11 +1,11 @@
 import { MagicLinkForm } from "@/components/auth/magic-link-form";
 
-export const metadata = { title: "Lien magique" };
+export const metadata = { title: "Recevoir un code par e-mail" };
 
 export default function MagicLinkRequestPage() {
   return (
     <main className="mx-auto max-w-md px-4 py-10">
-      <h1 className="font-serif text-2xl text-navy">Lien magique</h1>
+      <h1 className="text-2xl font-bold tracking-tight text-ink">Recevoir un code par e-mail</h1>
       <p className="mt-1 text-sm text-muted">
         Si un compte existe pour cet e-mail, un code à six chiffres et un lien
         de connexion valables 15 minutes vous sont adressés. Aucun mot de passe

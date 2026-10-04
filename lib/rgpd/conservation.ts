@@ -23,7 +23,7 @@ export type RegleConservation = {
 
 export const REGLES: RegleConservation[] = [
   {
-    donnee: "Jeton de connexion par lien magique",
+    donnee: "Jeton de connexion par e-mail",
     jours: 1,
     motif:
       "Le jeton vaut quinze minutes. Passé ce délai il n’ouvre plus rien : le conserver n’aurait d’autre effet que d’exposer une empreinte inutile.",

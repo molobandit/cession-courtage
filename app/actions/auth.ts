@@ -8,6 +8,7 @@ import { enregistrerEchec, verrouActif } from "@/lib/auth/throttle";
 import { prisma } from "@/lib/prisma";
 import { allocatePublicAlias } from "@/lib/auth/alias";
 import { investorOriasPlaceholder } from "@/lib/auth/investor-orias";
+import { issuePasswordReset, consumePasswordReset } from "@/lib/auth/password-reset";
 import { issueMagicLink } from "@/lib/auth/magic-link";
 import { persistOriasLookup } from "@/lib/orias/persist";
 import { notifySignupReceived } from "@/lib/notify/transactional";
@@ -19,6 +20,8 @@ import {
   emailCodeSchema,
   loginSchema,
   magicLinkRequestSchema,
+  passwordResetRequestSchema,
+  passwordResetSchema,
   registerInvestorSchema,
   registerSchema,
 } from "@/lib/validations/auth";
@@ -306,6 +309,41 @@ export async function requestMagicLinkAction(_prev: FormState, formData: FormDat
   }
   await issueMagicLink(parsed.data.email);
   redirect(`/lien-envoye?email=${encodeURIComponent(parsed.data.email)}`);
+}
+
+/**
+ * Demande de réinitialisation.
+ *
+ * Toujours la même réponse, que l'e-mail soit connu ou non : le formulaire ne
+ * doit pas servir à savoir qui est inscrit.
+ */
+export async function requestPasswordResetAction(_prev: FormState, formData: FormData): Promise<FormState> {
+  const parsed = passwordResetRequestSchema.safeParse({ email: formData.get("email") });
+  if (!parsed.success) {
+    const fieldErrors = parsed.error.flatten().fieldErrors;
+    return { fieldErrors, error: firstIssue(fieldErrors) };
+  }
+  await issuePasswordReset(parsed.data.email);
+  redirect(`/connexion/mot-de-passe/envoye?email=${encodeURIComponent(parsed.data.email)}`);
+}
+
+/** Pose le nouveau mot de passe, si le lien est encore bon. */
+export async function resetPasswordAction(_prev: FormState, formData: FormData): Promise<FormState> {
+  const parsed = passwordResetSchema.safeParse({
+    email: formData.get("email"),
+    token: formData.get("token"),
+    password: formData.get("password"),
+    confirmPassword: formData.get("confirmPassword"),
+  });
+  if (!parsed.success) {
+    const fieldErrors = parsed.error.flatten().fieldErrors;
+    return { fieldErrors, error: firstIssue(fieldErrors) };
+  }
+  const ok = await consumePasswordReset(parsed.data.email, parsed.data.token, parsed.data.password);
+  if (!ok) {
+    return { error: "Ce lien a expiré ou a déjà servi. Demandez-en un nouveau." };
+  }
+  redirect("/connexion?reinitialise=1");
 }
 
 export async function consumeEmailCodeAction(_prev: FormState, formData: FormData): Promise<FormState> {

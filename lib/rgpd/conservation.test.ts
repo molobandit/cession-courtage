@@ -40,7 +40,7 @@ describe("durees de conservation", () => {
   });
 
   it("purge les donnees transitoires sous deux jours", () => {
-    expect(regle("Jeton de connexion par lien magique").jours).toBeLessThanOrEqual(2);
+    expect(regle("Jeton de connexion par e-mail").jours).toBeLessThanOrEqual(2);
     expect(regle("Compteur d’échecs de connexion").jours).toBeLessThanOrEqual(2);
   });
 

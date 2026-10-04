@@ -8,7 +8,7 @@ export const metadata = { title: "Connexion" };
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ next?: string; callbackUrl?: string; error?: string }>;
+  searchParams: Promise<{ next?: string; callbackUrl?: string; error?: string; reinitialise?: string }>;
 }) {
   const params = await searchParams;
   const rawNext = params.next ?? params.callbackUrl ?? "/app";
@@ -27,6 +27,7 @@ export default async function LoginPage({
   }
   nextPath = safeInternalPath(nextPath) ?? "/app";
   const invalidLink = params.error === "lien-invalide";
+  const reinitialise = params.reinitialise === "1";
 
   const actor = await getActor();
   if (actor) {
@@ -50,7 +51,12 @@ export default async function LoginPage({
       </p>
       {invalidLink ? (
         <p className="mt-4 rounded-2xl border border-danger/30 bg-paper px-4 py-3 text-sm text-danger">
-          Ce lien magique est invalide ou expiré. Demandez-en un nouveau.
+          Ce lien de connexion est invalide ou expiré. Demandez-en un nouveau.
+        </p>
+      ) : null}
+      {reinitialise ? (
+        <p className="mt-4 rounded-2xl border border-ok/30 bg-paper px-4 py-3 text-sm text-ink">
+          Votre mot de passe est enregistré. Connectez-vous avec.
         </p>
       ) : null}
       <div className="mt-6 rounded-2xl border border-line bg-paper p-6">

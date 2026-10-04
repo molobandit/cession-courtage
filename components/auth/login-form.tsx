@@ -48,6 +48,11 @@ export function LoginForm({ nextPath }: { nextPath: string }) {
         {pending ? "Connexion…" : state.besoinDeCode ? "Valider le code" : "Se connecter"}
       </Button>
       <p className="text-sm text-muted">
+        <Link href="/connexion/mot-de-passe" className="underline underline-offset-2">
+          Mot de passe oublié ?
+        </Link>
+      </p>
+      <p className="text-sm text-muted">
         <Link href="/connexion/lien-magique" className="underline underline-offset-2">
           Recevoir un code par e-mail
         </Link>

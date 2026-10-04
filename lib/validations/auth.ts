@@ -110,6 +110,22 @@ export const magicLinkConsumeSchema = z.object({
   token: z.string().trim().min(6).max(128),
 });
 
+export const passwordResetRequestSchema = z.object({
+  email: z.string().trim().toLowerCase().email("Adresse e-mail invalide."),
+});
+
+export const passwordResetSchema = z
+  .object({
+    email: z.string().trim().toLowerCase().email(),
+    token: z.string().trim().min(16).max(128),
+    password,
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    path: ["confirmPassword"],
+    message: "Les deux mots de passe ne correspondent pas.",
+  });
+
 export const emailCodeSchema = z.object({
   email: z.string().trim().toLowerCase().email("Adresse e-mail invalide."),
   code: z.string().trim().regex(/^\d{6}$/, "Le code comporte six chiffres."),
