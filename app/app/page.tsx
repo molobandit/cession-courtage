@@ -75,8 +75,8 @@ export default async function MemberHomePage() {
 
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-white px-5 py-4">
           <p className="min-w-0 text-[15px] leading-relaxed text-ink">
-            <span className="font-semibold text-indigo-dark">Prochaine action</span> · {action.title} :{" "}
-            {action.detail}
+            <span className="font-semibold text-indigo-dark">Prochaine action</span> · {action.title}
+            {action.detail ? ` : ${action.detail}` : ""}
           </p>
           <Button asChild variant="primary">
             <Link href={action.href}>{action.cta}</Link>

@@ -12,6 +12,12 @@ export function SalePipeline({
   currentKey: DealStage | "POSITION";
 }) {
   const percent = pipelineProgressPercent(currentKey);
+  /*
+   * Une cession close a franchi les quatre étapes, signature comprise.
+   * `pipelineIndex` rend 3 pour CLOSED, et la signature restait donc affichée
+   * comme à venir sur un dossier terminé.
+   */
+  const close = currentKey === "CLOSED";
 
   return (
     <section className="rounded-3xl border border-line bg-paper p-5 sm:p-6">
@@ -40,7 +46,7 @@ export function SalePipeline({
             key={step.key}
             step={step}
             current={step.key === currentKey}
-            done={index < pipelineIndex(currentKey)}
+            done={close || index < pipelineIndex(currentKey)}
           />
         ))}
       </ol>

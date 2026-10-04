@@ -11,6 +11,7 @@ import { counterpartyDisplayName, findMyDeal, getActor, isOriasVerified } from "
 import { dealPieces } from "@/lib/deal/pieces";
 import { ESCROW_UPFRONT_SHARE, pipelineProgressPercent } from "@/lib/deal/pipeline";
 import { currentPrice, revisionPending, stageTasks, tasksFor, type Side } from "@/lib/deal/process";
+import { RETENTION_RULE, RETENTION_SHARE, dealMoney } from "@/lib/deal/escrow-money";
 import { escrowAmountAfterDeposit } from "@/lib/billing/deposit-fate";
 import { loadDealProcess } from "@/lib/deal/process-load";
 import { formatDate, formatDateTime, formatEuro } from "@/lib/format/fr";
@@ -46,6 +47,17 @@ export default async function DealPage({ params }: { params: Promise<{ id: strin
       : Number(p.deal.upfrontAmount);
   const depot = Number(p.deal.listing.deposits.find((d) => d.buyerId === p.deal.buyerId)?.amount ?? 0);
   const auSequestre = escrowAmountAfterDeposit(upfront, depot);
+  /*
+   * Où est l'argent, selon l'étape. Après la clôture, le trust ne garde que le
+   * séquestre de conservation : afficher le montant entier était faux.
+   */
+  const argent = dealMoney({
+    stage: deal.stage,
+    amount: agreed,
+    deposit: depot,
+    escrowStage: deal.escrowStage,
+  });
+  const close = deal.stage === "CLOSED" || deal.stage === "RETENTION";
 
   const suivi = tasksFor(p.snapshot, side);
   const tasks = stageTasks(p.snapshot);
@@ -97,8 +109,12 @@ export default async function DealPage({ params }: { params: Promise<{ id: strin
           <dd className="mt-1 text-[15px] font-semibold">{p.deal.loiEffectiveDate ? formatDate(p.deal.loiEffectiveDate) : "Fixée au contrat"}</dd>
         </div>
         <div>
-          <dt className="text-[12px] uppercase tracking-wide text-muted">Montant à sécuriser</dt>
-          <dd className="tabular mt-1 text-[15px] font-semibold">{formatEuro(auSequestre)}</dd>
+          <dt className="text-[12px] uppercase tracking-wide text-muted">
+            {close ? "Séquestre de conservation" : "Montant à sécuriser"}
+          </dt>
+          <dd className="tabular mt-1 text-[15px] font-semibold">
+            {formatEuro(close ? argent.retention : auSequestre)}
+          </dd>
         </div>
         <div className="sm:col-span-2">
           <dt className="text-[12px] uppercase tracking-wide text-muted">Compagnies cédées</dt>
@@ -253,8 +269,20 @@ export default async function DealPage({ params }: { params: Promise<{ id: strin
         progress={{ percent: pipelineProgressPercent(etape), tone: deal.stage === "CLOSED" ? "closed" : "active" }}
         figures={[
           { label: "Montant de l’annonce", value: formatEuro(agreed) },
-          { label: "Dans le trust", value: formatEuro(auSequestre), note: depot > 0 ? `Dépôt de positionnement de ${formatEuro(depot)} déduit` : "Montant entier" },
-          { label: "Versement au cédant", value: "Accord des compagnies", note: "Après la signature" },
+          close
+            ? {
+                label: "Séquestre de conservation",
+                value: `${formatEuro(argent.retention)} (${Math.round(RETENTION_SHARE * 100)} %)`,
+                note: RETENTION_RULE,
+              }
+            : {
+                label: "Dans le trust",
+                value: formatEuro(argent.inTrust),
+                note: argent.trustLabel,
+              },
+          close
+            ? { label: "Versé au cédant", value: formatEuro(argent.paidToSeller), note: "Fonds libérés par le trust" }
+            : { label: "Versement au cédant", value: "Accord des compagnies", note: "Après la signature" },
           { label: "Transaction", value: ESCROW_STAGE_LABELS[deal.escrowStage as keyof typeof ESCROW_STAGE_LABELS] ?? deal.escrowStage },
         ]}
         actions={

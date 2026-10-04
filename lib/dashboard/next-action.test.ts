@@ -18,12 +18,13 @@ const base: DashboardState = {
 };
 
 describe("nextAction", () => {
-  it("dit qui l'on attend sur les dossiers en cours", () => {
-    expect(nextAction({ ...base, canBuy: true, activeDealCount: 1 }).detail).toBe(
-      "En attente du cédant sur votre dossier.",
-    );
-    expect(nextAction({ ...base, canBuy: true, activeDealCount: 3 }).detail).toBe(
-      "En attente du cédant sur vos 3 dossiers.",
+  it("dit qui l'on attend sur les dossiers en cours, sans se répéter", () => {
+    const un = nextAction({ ...base, canBuy: true, activeDealCount: 1 });
+    expect(un.title).toBe("En attente du cédant sur votre dossier");
+    // Le bandeau accole titre et détail : un détail vide évite la redite.
+    expect(un.detail).toBe("");
+    expect(nextAction({ ...base, canBuy: true, activeDealCount: 3 }).title).toBe(
+      "En attente du cédant sur vos 3 dossiers",
     );
   });
 

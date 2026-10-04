@@ -73,18 +73,20 @@ export function nextAction(state: DashboardState): NextAction {
   if (state.activeDealCount > 0) {
     return {
       tone: "action",
+      /*
+       * Le bandeau accole le titre et le détail : deux phrases qui disent la
+       * même chose se lisaient « 2 dossiers sont en cours : En attente du
+       * cédant sur vos 2 dossiers. » Une seule suffit.
+       */
       title:
         state.activeDealCount === 1
-          ? "Un dossier est en cours"
-          : `${state.activeDealCount} dossiers sont en cours`,
+          ? "En attente du cédant sur votre dossier"
+          : `En attente du cédant sur vos ${state.activeDealCount} dossiers`,
       /*
        * Dire qui l'on attend, plutôt qu'une règle générale : l'acquéreur
        * veut savoir si la balle est dans son camp ou dans celui du cédant.
        */
-      detail:
-        state.activeDealCount === 1
-          ? "En attente du cédant sur votre dossier."
-          : `En attente du cédant sur vos ${state.activeDealCount} dossiers.`,
+      detail: "",
       href: state.activeDeal ? `/app/dossiers/${state.activeDeal.id}` : "/app",
       cta: state.activeDealCount === 1 ? "Ouvrir le dossier" : "Ouvrir les dossiers",
     };
