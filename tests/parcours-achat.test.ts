@@ -31,7 +31,7 @@ import { menerDossier } from "./setup/dossier";
 import { declarerFinancement, restaurer, sauvegarder, signerEngagements } from "./setup/engagements";
 
 const ANNONCE_CATALOGUE = "lst_catalog_05";
-const ANNONCE_DEMANDE = "lst_catalog_10";
+const ANNONCE_DEMANDE = "lst_catalog_06";
 const CEDANT = "usr_catalog_seller";
 
 type Compte = { id: string; email: string; kycStatus: string };

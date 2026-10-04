@@ -17,7 +17,16 @@ export const CATALOG_SELLER = {
   publicAlias: "C90",
   fullName: "Cédant Catalogue",
 } as const;
-export const CATALOG_COUNT = 80;
+/*
+ * Huit dossiers de démonstration, pas quatre-vingts.
+ *
+ * Le catalogue sert à faire vivre la salle de marché et les tests, pas à
+ * simuler un volume. Avec les deux annonces du seed qui restent en ligne, la
+ * salle compte dix dossiers : six certifiés, quatre non. Assez pour montrer
+ * les trois statuts et les deux niveaux de certification, et assez court pour
+ * qu'on la lise d'un coup d'œil.
+ */
+export const CATALOG_COUNT = 8;
 export const CATALOG_PUBLIC_NUMBER_START = 10_101;
 
 const CARRIERS = [
@@ -166,11 +175,11 @@ export function buildCatalogListings(): CatalogListingRow[] {
     const pad = pad2(i);
     const zone = ZONES[(i - 1) % ZONES.length]!;
     const nationwide = i % 17 === 0;
-    // Deux tiers des dossiers certifiés : la certification est le cœur du modèle.
-    const certified = i % 3 !== 0;
+    // Cinq certifiés ici, plus l'annonce certifiée du seed : six en salle.
+    const certified = i <= 5;
     const support = [0, 3, 6][i % 3]!;
-    // Un dossier vendu tous les treize, un acquéreur positionné tous les onze.
-    const status = i % 13 === 0 ? "SOLD" : i % 11 === 0 ? "UNDER_NEGOTIATION" : "OFFERS_OPEN";
+    // Un vendu, un avec acquéreur positionné, six disponibles.
+    const status = i === 7 ? "SOLD" : i === 8 ? "UNDER_NEGOTIATION" : "OFFERS_OPEN";
     // Plafonné pour que la valeur centrale de l'étude reste sous ASKING_MAX :
     // un dossier dont le prix serait rogné par la borne sortirait de sa propre
     // fourchette, et la fiche se contredirait.

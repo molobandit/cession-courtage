@@ -1113,14 +1113,21 @@ async function main() {
     partialCarrier?: string;
   }[] = [
     { id: "lst_01", portfolioId: "pf_01", status: ListingStatus.DRAFT, isPartial: false, sellerSupportMonths: 3, publishedAt: null, offerWindowClosesAt: null, askingFactor: 1 },
-    { id: "lst_02", portfolioId: "pf_02", status: ListingStatus.PUBLISHED, isPartial: false, sellerSupportMonths: 6, publishedAt: daysAgo(12), offerWindowClosesAt: null, askingFactor: 1.02 },
+    /*
+     * Six annonces retirées du marché : la salle ne doit compter que dix
+     * dossiers, et le catalogue en fournit huit. Leurs offres, dossiers et
+     * messages restent en base, un portefeuille retiré après avoir été
+     * regardé est un cas réel. lst_03 et lst_05 restent en ligne : les tests
+     * du parcours d'achat s'appuient dessus.
+     */
+    { id: "lst_02", portfolioId: "pf_02", status: ListingStatus.WITHDRAWN, isPartial: false, sellerSupportMonths: 6, publishedAt: daysAgo(12), offerWindowClosesAt: null, askingFactor: 1.02 },
     { id: "lst_03", portfolioId: "pf_03", status: ListingStatus.OFFERS_OPEN, isPartial: false, sellerSupportMonths: 3, publishedAt: daysAgo(8), offerWindowClosesAt: daysFromNow(13), askingFactor: 0.98 },
-    { id: "lst_04", portfolioId: "pf_04", status: ListingStatus.OFFERS_OPEN, isPartial: true, sellerSupportMonths: 6, publishedAt: daysAgo(6), offerWindowClosesAt: daysFromNow(15), askingFactor: 1.0, partialCarrier: "April" },
+    { id: "lst_04", portfolioId: "pf_04", status: ListingStatus.WITHDRAWN, isPartial: true, sellerSupportMonths: 6, publishedAt: daysAgo(6), offerWindowClosesAt: daysFromNow(15), askingFactor: 1.0, partialCarrier: "April" },
     { id: "lst_05", portfolioId: "pf_05", status: ListingStatus.OFFERS_OPEN, isPartial: false, sellerSupportMonths: 0, publishedAt: daysAgo(22), offerWindowClosesAt: daysAgo(1), askingFactor: 0.95 },
-    { id: "lst_06", portfolioId: "pf_06", status: ListingStatus.UNDER_NEGOTIATION, isPartial: false, sellerSupportMonths: 6, publishedAt: daysAgo(40), offerWindowClosesAt: daysAgo(19), askingFactor: 1.01 },
-    { id: "lst_07", portfolioId: "pf_07", status: ListingStatus.UNDER_NEGOTIATION, isPartial: false, sellerSupportMonths: 0, publishedAt: daysAgo(35), offerWindowClosesAt: daysAgo(14), askingFactor: 0.9 },
-    { id: "lst_08", portfolioId: "pf_08", status: ListingStatus.UNDER_NEGOTIATION, isPartial: false, sellerSupportMonths: 6, publishedAt: daysAgo(50), offerWindowClosesAt: daysAgo(29), askingFactor: 1.05 },
-    { id: "lst_09", portfolioId: "pf_09", status: ListingStatus.SOLD, isPartial: false, sellerSupportMonths: 3, publishedAt: daysAgo(200), offerWindowClosesAt: daysAgo(179), askingFactor: 1.0 },
+    { id: "lst_06", portfolioId: "pf_06", status: ListingStatus.WITHDRAWN, isPartial: false, sellerSupportMonths: 6, publishedAt: daysAgo(40), offerWindowClosesAt: daysAgo(19), askingFactor: 1.01 },
+    { id: "lst_07", portfolioId: "pf_07", status: ListingStatus.WITHDRAWN, isPartial: false, sellerSupportMonths: 0, publishedAt: daysAgo(35), offerWindowClosesAt: daysAgo(14), askingFactor: 0.9 },
+    { id: "lst_08", portfolioId: "pf_08", status: ListingStatus.WITHDRAWN, isPartial: false, sellerSupportMonths: 6, publishedAt: daysAgo(50), offerWindowClosesAt: daysAgo(29), askingFactor: 1.05 },
+    { id: "lst_09", portfolioId: "pf_09", status: ListingStatus.WITHDRAWN, isPartial: false, sellerSupportMonths: 3, publishedAt: daysAgo(200), offerWindowClosesAt: daysAgo(179), askingFactor: 1.0 },
     { id: "lst_10", portfolioId: "pf_10", status: ListingStatus.WITHDRAWN, isPartial: false, sellerSupportMonths: 3, publishedAt: daysAgo(18), offerWindowClosesAt: null, askingFactor: 1.1 },
   ];
 

@@ -1,9 +1,13 @@
 import { prisma } from "@/lib/prisma";
-import { buildCatalogListings, CATALOG_FIRM } from "@/lib/listing/catalog-listings";
+import { buildCatalogListings, CATALOG_COUNT, CATALOG_FIRM } from "@/lib/listing/catalog-listings";
 
 /**
- * Completes the public catalogue to ~80 fiches on first load.
- * Idempotent: if lst_catalog_01 exists, nothing is written.
+ * Complète le catalogue public au premier chargement.
+ *
+ * Le témoin est la dernière fiche attendue, déduite de `CATALOG_COUNT` : un
+ * identifiant écrit en dur restait vrai tant que le catalogue gardait sa
+ * taille, et redevenait faux le jour où elle changeait. Le catalogue était
+ * alors réécrit à chaque page.
  */
 export async function ensurePublicCatalog(): Promise<void> {
   try {
@@ -14,19 +18,14 @@ export async function ensurePublicCatalog(): Promise<void> {
 }
 
 async function ensurePublicCatalogUnsafe(): Promise<void> {
+  const dernier = `lst_catalog_${String(CATALOG_COUNT).padStart(2, "0")}`;
   const already = await prisma.listing.findUnique({
-    where: { id: "lst_catalog_80" },
+    where: { id: dernier },
     select: { id: true },
   });
   if (!already) {
     await createPublicCatalog();
   }
-
-  // Un dossier vendu visible en vitrine (cachet VENDU), sans recréer le catalogue.
-  await prisma.listing.updateMany({
-    where: { id: "lst_catalog_02", status: { not: "SOLD" } },
-    data: { status: "SOLD" },
-  });
 }
 
 async function createPublicCatalog(): Promise<void> {

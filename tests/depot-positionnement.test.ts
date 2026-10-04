@@ -151,6 +151,11 @@ describe("la clôture impute le dépôt sur le prix", () => {
       select: { id: true, listingId: true, buyerId: true, sellerId: true, stage: true },
     });
     if (!deal) throw new Error("Dossier deal_closed absent. Lancez npm run db:seed.");
+    // La clôture repasse l'annonce en vendu : on note son état pour le rendre.
+    const annonceAvant = await prisma.listing.findUniqueOrThrow({
+      where: { id: deal.listingId },
+      select: { status: true },
+    });
 
     const existant = await prisma.interestDeposit.findUnique({
       where: { listingId_buyerId: { listingId: deal.listingId, buyerId: deal.buyerId } },
@@ -186,8 +191,10 @@ describe("la clôture impute le dépôt sur le prix", () => {
     });
     expect(depot?.outcome).toBe("DEDUCTED");
 
-    // Le dossier de démonstration retrouve son étape.
+    // Le dossier de démonstration retrouve son étape, et l'annonce son statut :
+    // sans cela, le test laisserait une annonce vendue dans la salle de marché.
     await prisma.deal.update({ where: { id: deal.id }, data: { stage: deal.stage } });
+    await prisma.listing.update({ where: { id: deal.listingId }, data: { status: annonceAvant.status } });
     if (!existant) {
       await prisma.interestDeposit
         .delete({
