@@ -35,7 +35,7 @@ export function DossierViewer({
   }
 
   return (
-    <div className="flex h-[100dvh] flex-col bg-surface-alt">
+    <div className="flex h-[calc(100dvh-4.1rem)] flex-col bg-surface-alt">
       <header className="flex flex-wrap items-center gap-3 border-b border-line bg-paper px-4 py-3 sm:px-6">
         <Link href={listingHref} className="text-[14px] font-medium text-indigo-dark hover:underline">
           Retour à l&apos;annonce
@@ -65,7 +65,7 @@ export function DossierViewer({
 
       <iframe
         ref={cadre}
-        src={`${pdfHref}#view=Fit`}
+        src={`${pdfHref}#navpanes=0&view=Fit`}
         title={`Dossier de présentation n° ${publicNumber}`}
         onLoad={() => setPret(true)}
         className="hidden w-full flex-1 border-0 sm:block"
