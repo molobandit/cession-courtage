@@ -328,7 +328,7 @@ export function PublicListingDetail({
               href={studyHref}
               className="inline-flex h-11 items-center rounded-full border border-indigo-line bg-indigo-soft px-5 text-[14px] font-semibold text-indigo-dark hover:bg-indigo-soft/70"
             >
-              Ouvrir le dossier de présentation (PDF)
+              Ouvrir le dossier de présentation
             </Link>
             <SectionTabLink
               href={interestHref}

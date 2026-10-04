@@ -26,6 +26,9 @@
   // Fichiers deposes : bordereaux d'import et pieces de salle de donnees.
   // Workers n'a pas de systeme de fichiers, ces fichiers vivent dans R2.
   // En local, wrangler simule ce bucket dans .wrangler/state.
+  // Navigateur de Cloudflare : imprime le dossier de présentation en PDF.
+  // "remote" : en local aussi, c'est le navigateur de Cloudflare qui imprime.
+  "browser": { "binding": "BROWSER", "remote": true },
   "r2_buckets": [
     {
       "binding": "UPLOADS",

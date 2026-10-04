@@ -257,7 +257,7 @@ export default async function PublicListingPage({
         topCarrierShare: byCarrier[0]?.share ?? null,
         precompteLine: perception.amountLine ?? perception.modeLine,
         valuation: fourchette,
-        studyHref: `/annonces/${listing.publicNumber}/etude`,
+        studyHref: `/annonces/${listing.publicNumber}/dossier`,
         perceptionModeLine: perception.modeLine,
         perceptionAmountLine: perception.amountLine,
         contractCount,

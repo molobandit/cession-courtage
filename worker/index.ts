@@ -37,6 +37,12 @@ const SECURITY_HEADERS: Record<string, string> = {
   ].join("; "),
 };
 
+/**
+ * Le dossier de présentation PDF s'affiche dans la page /annonces/n/dossier :
+ * lui seul peut être intégré, et seulement par le site lui-même.
+ */
+const ENCADRABLE = /^\/annonces\/\d+\/etude$/;
+
 /** 204 et 304 ne peuvent pas porter de corps : recopier `body` les casserait. */
 const BODYLESS_STATUS = new Set([101, 204, 205, 304]);
 
@@ -51,6 +57,13 @@ export default {
     const headers = new Headers(response.headers);
     for (const [key, value] of Object.entries(SECURITY_HEADERS)) {
       headers.set(key, value);
+    }
+    if (ENCADRABLE.test(new URL(request.url).pathname)) {
+      headers.set("X-Frame-Options", "SAMEORIGIN");
+      headers.set(
+        "Content-Security-Policy",
+        SECURITY_HEADERS["Content-Security-Policy"]!.replace("frame-ancestors 'none'", "frame-ancestors 'self'"),
+      );
     }
 
     // `new Headers(...)` fusionne les valeurs multiples d'un meme en-tete en une

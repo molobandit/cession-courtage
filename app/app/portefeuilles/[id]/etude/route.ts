@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { getActor, isAdmin } from "@/lib/authz";
 import { ownsFirm } from "@/lib/authz/policies";
 import { loadValuationStudy } from "@/lib/listing/valuation-study";
+import { buildPresentationDossierHtml, presentationDossierFileName } from "@/lib/listing/presentation-dossier";
+import { presentationDossierAssets } from "@/lib/listing/presentation-dossier-assets";
+import { printPresentationDossier } from "@/lib/listing/presentation-dossier-pdf";
 import { renderValuationStudyPdf } from "@/lib/listing/valuation-study-pdf";
 import { prisma } from "@/lib/prisma";
 
@@ -11,7 +14,7 @@ import { prisma } from "@/lib/prisma";
  * Réservée au cédant propriétaire et à l’admin. Un acquéreur ne la télécharge
  * pas depuis cette route : ce n’est pas la présentation nominative du cabinet.
  */
-export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const introuvable = NextResponse.json({ error: "Document introuvable." }, { status: 404 });
   const actor = await getActor();
@@ -26,13 +29,25 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
 
   const study = await loadValuationStudy({ portfolioId: portfolio.id });
   if (!study) return introuvable;
-  const pdf = await renderValuationStudyPdf(study);
-  const suffix = study.publicNumber ?? "estimation";
+  const listing = await prisma.listing.findFirst({
+    where: { portfolioId: portfolio.id },
+    orderBy: { publishedAt: "desc" },
+    select: { publicNumber: true, askingPrice: true, certificationStatus: true },
+  });
+  const origin = new URL(request.url).origin;
+  const html = buildPresentationDossierHtml(study, {
+    certified: listing?.certificationStatus === "CERTIFIED",
+    askingPrice: listing ? Number(listing.askingPrice) : undefined,
+    recipient: null,
+    listingUrl: listing ? `${origin}/annonces/${listing.publicNumber}` : null,
+    ...(await presentationDossierAssets(origin)),
+  });
+  const pdf = (await printPresentationDossier(html, study.publicNumber)) ?? (await renderValuationStudyPdf(study));
 
   return new NextResponse(pdf.buffer as ArrayBuffer, {
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `inline; filename="etude-portefeuille-${suffix}.pdf"`,
+      "Content-Disposition": `inline; filename="${presentationDossierFileName(study.publicNumber)}"`,
       "Cache-Control": "private, no-store",
       "X-Content-Type-Options": "nosniff",
     },

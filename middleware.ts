@@ -38,9 +38,19 @@ const SECURITY_HEADERS: Record<string, string> = {
   ].join("; "),
 };
 
-function withSecurityHeaders(response: NextResponse): NextResponse {
+/** Le dossier PDF s'affiche dans la page /annonces/n/dossier, et seulement là. */
+const ENCADRABLE = /^\/annonces\/\d+\/etude$/;
+
+function withSecurityHeaders(response: NextResponse, pathname = ""): NextResponse {
   for (const [key, value] of Object.entries(SECURITY_HEADERS)) {
     response.headers.set(key, value);
+  }
+  if (ENCADRABLE.test(pathname)) {
+    response.headers.set("X-Frame-Options", "SAMEORIGIN");
+    response.headers.set(
+      "Content-Security-Policy",
+      SECURITY_HEADERS["Content-Security-Policy"]!.replace("frame-ancestors 'none'", "frame-ancestors 'self'"),
+    );
   }
   return response;
 }
@@ -76,7 +86,7 @@ export default function middleware(request: NextRequest) {
     );
   }
 
-  return withSecurityHeaders(NextResponse.next());
+  return withSecurityHeaders(NextResponse.next(), request.nextUrl.pathname);
 }
 
 export const config = {
