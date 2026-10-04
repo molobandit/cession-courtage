@@ -18,6 +18,15 @@ const base: DashboardState = {
 };
 
 describe("nextAction", () => {
+  it("dit qui l'on attend sur les dossiers en cours", () => {
+    expect(nextAction({ ...base, canBuy: true, activeDealCount: 1 }).detail).toBe(
+      "En attente du cédant sur votre dossier.",
+    );
+    expect(nextAction({ ...base, canBuy: true, activeDealCount: 3 }).detail).toBe(
+      "En attente du cédant sur vos 3 dossiers.",
+    );
+  });
+
   it("met l'acquereur positionne avant tout le reste, cote cedant", () => {
     const a = nextAction({
       ...base,

@@ -77,7 +77,14 @@ export function nextAction(state: DashboardState): NextAction {
         state.activeDealCount === 1
           ? "Un dossier est en cours"
           : `${state.activeDealCount} dossiers sont en cours`,
-      detail: "La partie qui n’a pas agi bloque l’étape suivante.",
+      /*
+       * Dire qui l'on attend, plutôt qu'une règle générale : l'acquéreur
+       * veut savoir si la balle est dans son camp ou dans celui du cédant.
+       */
+      detail:
+        state.activeDealCount === 1
+          ? "En attente du cédant sur votre dossier."
+          : `En attente du cédant sur vos ${state.activeDealCount} dossiers.`,
       href: state.activeDeal ? `/app/dossiers/${state.activeDeal.id}` : "/app",
       cta: state.activeDealCount === 1 ? "Ouvrir le dossier" : "Ouvrir les dossiers",
     };

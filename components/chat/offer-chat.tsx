@@ -16,18 +16,25 @@ export function OfferChat({
   actorId,
   messages,
   recipients,
+  cedant,
 }: {
   listingId?: string;
   dealId?: string;
   actorId: string;
   messages: ChatLine[];
   recipients?: { id: string; publicAlias: string }[];
+  /** Le cédant reçoit les questions, il n'en pose pas. */
+  cedant?: boolean;
 }) {
   return (
     <div className="overflow-hidden rounded-[1.75rem] border border-line bg-paper">
       <div className="max-h-[28rem] space-y-3 overflow-y-auto px-4 py-4 sm:px-5">
         {messages.length === 0 ? (
-          <p className="text-[15px] text-muted">Aucun message pour le moment. Posez votre première question.</p>
+          <p className="text-[15px] text-muted">
+            {cedant
+              ? "Les questions des acquéreurs apparaîtront ici."
+              : "Aucun message pour le moment. Posez votre première question."}
+          </p>
         ) : (
           messages.map((m) => {
             const mine = m.senderId === actorId;

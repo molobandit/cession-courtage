@@ -149,6 +149,7 @@ export default async function SellerListingPage({
         </p>
         <div className="mt-3">
           <OfferChat
+            cedant
             listingId={listing.id}
             actorId={actor.id}
             recipients={recipients}

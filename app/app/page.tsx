@@ -145,8 +145,7 @@ export default async function MemberHomePage() {
               </>
             ) : (
               <p className="px-5 py-8 text-center text-[15px] leading-relaxed text-muted">
-                Aucun acquéreur ne s’est encore positionné. Un positionnement suppose un dépôt de 2,5 %
-                versé dans un trust et une capacité financière justifiée.
+                Aucun acquéreur ne s’est encore positionné.
               </p>
             )}
           </Bloc>
