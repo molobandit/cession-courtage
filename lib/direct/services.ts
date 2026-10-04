@@ -20,7 +20,7 @@ export type ServiceFilter = "kits" | "transactions" | "attestations";
 export type ServiceEntry = {
   key: ServiceKey;
   filter: ServiceFilter;
-  /** Segment d'adresse de la liste, ex. /app/services/kits-contractuels. */
+  /** Segment d'adresse historique de la liste. */
   slug: string;
   title: string;
   /** Sous-titre court de la tuile. */
@@ -103,14 +103,6 @@ export function serviceByFilter(value: string | null | undefined): ServiceEntry 
 
 export function serviceBySlug(value: string | null | undefined): ServiceEntry | null {
   return SERVICE_ENTRIES.find((s) => s.slug === value) ?? null;
-}
-
-export function serviceListHref(entry: ServiceEntry): string {
-  return `/app/services/${entry.slug}`;
-}
-
-export function serviceCreateHref(entry: ServiceEntry): string {
-  return `/app/services/creer?service=${entry.key}`;
 }
 
 /** Le prix n'est exigé que par les services qui en dépendent. */
