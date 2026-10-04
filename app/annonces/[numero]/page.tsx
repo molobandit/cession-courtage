@@ -35,6 +35,7 @@ import { SalePipeline } from "@/components/deal/sale-pipeline";
 import { prisma } from "@/lib/prisma";
 import { findMyDeposit } from "@/lib/listing/deposit";
 import { depositReleasesIdentity } from "@/lib/listing/identity-access";
+import { listingActions, listingState, listingViewer } from "@/lib/listing/listing-actions";
 import { stripeConfigured } from "@/lib/billing/stripe";
 import { findMyInvestorPosition } from "@/lib/investor/positions";
 import { InvestorDepositForm } from "@/components/investor/placement-forms";
@@ -236,6 +237,22 @@ export default async function PublicListingPage({
       : null;
   const monDossier =
     actor && verified && !isSeller && !isInvestor(actor) ? await findPositionId(listing.id, actor.id) : null;
+  /*
+   * Ce que la fiche propose, décidé en un seul endroit : un bouton affiché
+   * mène toujours quelque part, et ce qui n'est pas possible est expliqué.
+   */
+  const actions = listingActions({
+    state: listingState(listing.status),
+    viewer: listingViewer({
+      signedIn: Boolean(actor),
+      isSeller,
+      isInvestor: Boolean(actor && isInvestor(actor)),
+      depositReceived,
+      depositPending: Boolean(myDeposit) && !depositReceived,
+      canBuy: Boolean(actor && verified && canBuy(actor)),
+    }),
+  });
+
   const peutPrendrePosition = Boolean(
     actor && verified && canBuy(actor) && !isSeller && listingAcceptsOffers(listing.status),
   );
@@ -300,6 +317,7 @@ export default async function PublicListingPage({
         coverageDetail: listing.isNationwide
           ? "Ce portefeuille couvre tout le pays."
           : "Zones au grain départemental, sans commune ni raison sociale.",
+        actions,
         exclusive: listing.status === "UNDER_NEGOTIATION" && !isSeller && !myDeal,
         dealHref: myDeal ? `/app/dossiers/${myDeal.id}` : null,
         defaultTab: myDeal || myDeposit ? "position" : "informations",
@@ -330,6 +348,21 @@ export default async function PublicListingPage({
               <Button asChild variant="primary" className="mt-4">
                 <Link href={`/app/dossiers/${myDeal.id}`}>Ouvrir le dossier</Link>
               </Button>
+            </section>
+          ) : actions.notices.length > 0 ? (
+            /*
+             * Même explication que le panneau du montant, au même mot : elle
+             * vient de `listingActions`, et non d'une phrase recopiée ici.
+             */
+            <section className="rounded-3xl border border-line bg-paper p-6">
+              {actions.notices.map((phrase, i) => (
+                <p
+                  key={phrase}
+                  className={`text-[15px] leading-relaxed ${i === 0 ? "font-semibold text-ink" : "mt-2 text-muted"}`}
+                >
+                  {phrase}
+                </p>
+              ))}
             </section>
           ) : null}
 

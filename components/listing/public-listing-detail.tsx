@@ -3,6 +3,7 @@ import Link from "next/link";
 import { SectionTab, SectionTabLink, SectionTabs } from "@/components/ui/section-tabs";
 import { MarketBadge } from "@/components/listing/market-badge";
 import { SALE_PIPELINE } from "@/lib/deal/pipeline";
+import type { ListingActions } from "@/lib/listing/listing-actions";
 import type { MarketTone } from "@/lib/listing/market-status";
 import { TakePositionButton } from "@/components/listing/take-position-button";
 import { MarketStamp } from "@/components/listing/market-stamp";
@@ -70,6 +71,8 @@ export type PublicListingDetailModel = {
   coverageTitle: string;
   coverageDetail: string;
   exclusive: boolean;
+  /** Ce que la fiche propose, selon son état et selon qui la regarde. */
+  actions: ListingActions;
   dealHref: string | null;
   defaultTab?: "informations" | "documents" | "position";
 };
@@ -150,6 +153,7 @@ export function PublicListingDetail({
     coverageTitle,
     coverageDetail,
     exclusive,
+    actions,
     dealHref,
     defaultTab,
   } = model;
@@ -330,12 +334,14 @@ export function PublicListingDetail({
             >
               Ouvrir le dossier de présentation
             </Link>
-            <SectionTabLink
-              href={interestHref}
-              className="inline-flex h-11 items-center rounded-full border border-line bg-paper px-5 text-[14px] font-medium text-ink hover:bg-surface-alt"
-            >
-              Poser une question au cédant
-            </SectionTabLink>
+            {actions.askSeller ? (
+              <SectionTabLink
+                href={interestHref}
+                className="inline-flex h-11 items-center rounded-full border border-line bg-paper px-5 text-[14px] font-medium text-ink hover:bg-surface-alt"
+              >
+                Poser une question au cédant
+              </SectionTabLink>
+            ) : null}
           </div>
 
           {/* Le cadre : les quatre étapes, dites comme dans le dossier de présentation. */}
@@ -437,46 +443,50 @@ export function PublicListingDetail({
             ) : null}
 
             <div className="mt-5">
-              {sold ? (
-                <p className="text-center text-[15px] font-semibold">Ce portefeuille est vendu.</p>
-              ) : exclusive && !dealHref ? (
-                <>
-                  <p className="text-[13px] font-semibold">Acquéreur positionné</p>
-                  <p className="mt-2 text-[13px] leading-relaxed text-white/80">
-                    Un confrère a versé son dépôt de positionnement. Vous pouvez consulter la fiche.
-                  </p>
-                </>
-              ) : dealHref ? (
+              {actions.primary === "deal" && dealHref ? (
                 <Link
                   href={dealHref}
                   className="flex h-12 items-center justify-center rounded-full bg-white text-[15px] font-semibold text-deep-soft hover:bg-white/90"
                 >
-                  Continuer le dossier
+                  Ouvrir le dossier de cession
                 </Link>
-              ) : positionHref ? (
+              ) : (actions.primary === "position" || actions.primary === "manage") && positionHref ? (
                 <Link
                   href={positionHref}
                   className="flex h-12 items-center justify-center rounded-full bg-white text-[15px] font-semibold text-deep-soft hover:bg-white/90"
                 >
                   {positionLabel ?? "Suivre mon dossier"}
                 </Link>
-              ) : positionListingId ? (
+              ) : actions.primary === "takePosition" && positionListingId ? (
                 <TakePositionButton
                   listingId={positionListingId}
                   label="Se positionner"
                   className="flex h-12 w-full items-center justify-center rounded-full bg-white text-[15px] font-semibold text-deep-soft hover:bg-white/90 disabled:opacity-60"
                 />
-              ) : (
+              ) : actions.primary === "takePosition" || actions.primary === "signIn" ? (
                 <SectionTabLink
                   href={interestHref}
                   className="flex h-12 items-center justify-center rounded-full bg-white text-[15px] font-semibold text-deep-soft hover:bg-white/90"
                 >
                   Se positionner
                 </SectionTabLink>
-              )}
+              ) : null}
+
+              {/*
+                * Ce qui remplace un bouton absent. Une action impossible n'est
+                * jamais laissée en place pour échouer au clic : on dit pourquoi.
+                */}
+              {actions.notices.map((phrase, i) => (
+                <p
+                  key={phrase}
+                  className={`text-[13px] leading-relaxed ${i === 0 ? "font-semibold text-white" : "mt-2 text-white/80"}`}
+                >
+                  {phrase}
+                </p>
+              ))}
             </div>
 
-            {followHref && !sold ? (
+            {followHref && actions.follow ? (
               <Link
                 href={followHref}
                 className="mt-3 flex h-11 items-center justify-center rounded-full border border-white/40 text-[14px] font-medium text-white hover:bg-white/10"
