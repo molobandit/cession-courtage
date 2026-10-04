@@ -33,7 +33,7 @@ describe("clé utilisable", () => {
 
   it("refuse le direct tant qu’il n’est pas autorisé", () => {
     // C'est la garde qui compte : une cle live collee par megarde sur un site
-    // de demonstration encaisserait un vrai abonnement.
+    // de démonstration encaisserait un vrai abonnement.
     expect(stripeKeyUsable("sk_live_abc", undefined)).toBe(false);
     expect(stripeKeyUsable("sk_live_abc", "")).toBe(false);
     expect(stripeKeyUsable("sk_live_abc", "1")).toBe(false);

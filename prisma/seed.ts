@@ -61,7 +61,7 @@ async function createPrismaClient(): Promise<PrismaClient> {
 }
 
 /**
- * Mot de passe des comptes de demonstration.
+ * Mot de passe des comptes de démonstration.
  *
  * JAMAIS la valeur de production : le depot est public, tout ce qui est ecrit
  * ici est lisible par n'importe qui, y compris dans l'historique. Pour semer

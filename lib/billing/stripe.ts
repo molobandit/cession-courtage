@@ -20,7 +20,7 @@ const API = "https://api.stripe.com/v1";
  *
  * Le simple prefixe « sk_ » ne suffit plus : une cle en mode direct exige
  * `STRIPE_ALLOW_LIVE=true`. Sans cette garde, coller la cle de production sur
- * le site de demonstration encaisserait un vrai abonnement.
+ * le site de démonstration encaisserait un vrai abonnement.
  */
 export function stripeConfigured(): boolean {
   return stripeKeyUsable(runtimeEnv("STRIPE_SECRET_KEY"), runtimeEnv("STRIPE_ALLOW_LIVE"));

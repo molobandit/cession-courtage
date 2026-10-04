@@ -63,7 +63,7 @@ export const LISTING_STATUS_LABELS: Record<ListingStatus, string> = {
 
 export const DEAL_STAGE_LABELS: Record<DealStage, string> = {
   NDA: "Procédure ouverte",
-  DATA_ROOM: "Vérifications",
+  DATA_ROOM: "Examen des pièces",
   LOI: "Vérifications",
   KYC: "Vérifications",
   DEED: "Signature des contrats",

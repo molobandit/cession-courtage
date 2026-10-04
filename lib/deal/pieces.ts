@@ -22,7 +22,7 @@ export function dealPieces(input: { stage: DealStage; carriers: { name: string }
   const signe = atteinte(stage, "TRANSFER");
   const pieces: DealPiece[] = [
     { key: "confidentialite", title: "Engagement de confidentialité", available: true, hint: "Accepté par les deux parties" },
-    { key: "lettre-intention", title: "Lettre d’intention", available: true, hint: "L’offre acceptée par le cédant" },
+    { key: "lettre-intention", title: "Engagement de reprise", available: true, hint: "Le montant de l’annonce, accepté des deux côtés" },
     { key: "protocole", title: "Protocole de cession", available: true, hint: signe ? "Signé par les deux parties" : "Projet, à relire avant la signature" },
   ];
   input.carriers.forEach((c, i) => {

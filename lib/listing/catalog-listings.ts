@@ -1,5 +1,5 @@
 /**
- * Catalogue de demonstration : ~80 fiches publiques, sans PII nominative.
+ * Catalogue de démonstration : huit fiches publiques, sans donnée nominative.
  * Zone = departement ou region. Reference Dossier n° 10101+.
  */
 
@@ -316,7 +316,12 @@ export function buildCatalogListings(): CatalogListingRow[] {
 
 export const CATALOG_FIRM = {
   id: CATALOG_FIRM_ID,
-  legalName: "Catalogue de demonstration",
+  /*
+   * Une raison sociale, pas un nom de jeu de données : c'est elle que lit
+   * l'acquéreur qui a versé son dépôt, à la ligne « Contrepartie » du dossier
+   * de cession. « Catalogue de demonstration » y faisait compte technique.
+   */
+  legalName: "Cabinet Horizon Courtage",
   siren: "890190080",
   legalForm: "SAS",
   address: "1 rue de la Bourse",

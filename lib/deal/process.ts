@@ -3,10 +3,10 @@ import type { DealStage } from "@prisma/client";
 /**
  * Ce qu'exige chaque étape du dossier de cession, et qui doit le faire.
  *
- * Quatre étapes après l'offre acceptée : vérifications, signature, paiement
+ * Quatre étapes après le positionnement : vérifications, signature, paiement
  * et transfert, clôture. La vitesse ne vient pas de contrôles en moins
  * mais de contrôles faits une fois : la confidentialité est acceptée au dépôt,
- * l'offre vaut lettre d'intention, le compte de chaque cabinet est vérifié une
+ * le dépôt de positionnement vaut engagement, le compte de chaque cabinet est vérifié une
  * fois pour toutes, les pièces du cabinet cédant sont déposées sur l'annonce
  * avant même la vente.
  *
@@ -31,7 +31,7 @@ export type SignoffKind =
 export const SIGNOFF_LABELS: Record<string, string> = {
   NDA_SIGNED: "a accepté l’engagement de confidentialité",
   PRICE_CONFIRMED: "a confirmé son prix après examen des pièces",
-  LOI_ACCEPTED: "a accepté la révision du prix",
+  LOI_ACCEPTED: "a accepté la révision du montant",
   DEED_SIGNED: "a signé le protocole et les attestations de transfert",
   ATTESTATIONS_SENT: "a adressé les attestations aux compagnies",
   TRANSFER_CONFIRMED: "a confirmé le rattachement des contrats",
@@ -78,7 +78,7 @@ export type ProcessSnapshot = {
   roomDocs: { kind: string; createdAt: Date }[];
   roomKinds: readonly string[];
   verification: { seller: VerificationState; buyer: VerificationState };
-  /** Prix retenu à l'acceptation de l'offre. */
+  /** Montant de l'annonce, retenu à l'ouverture du dossier. */
   agreedPrice: number;
   /** Révision du prix proposée par l'acquéreur après examen, si elle existe. */
   revision: { proposedAt: Date; price: number } | null;
@@ -137,7 +137,7 @@ export function roomDocsDone(s: ProcessSnapshot) {
   };
 }
 
-/** Prix en vigueur : la révision acceptée ou en attente, sinon le prix de l'offre. */
+/** Prix en vigueur : la révision acceptée ou en attente, sinon le montant de l'annonce. */
 export function currentPrice(s: ProcessSnapshot): number {
   return s.revision ? s.revision.price : s.agreedPrice;
 }
@@ -205,8 +205,8 @@ export function stageTasks(s: ProcessSnapshot): Task[] {
           key: "price-confirm",
           label: "Confirmer le prix après examen des pièces",
           detail: s.declined
-            ? `Le cédant a refusé la révision${s.declined.reason ? ` : « ${s.declined.reason} »` : ""}. Confirmez le prix de l’offre ou proposez-en un autre.`
-            : "Un geste : le prix de l’offre est confirmé, ou révisé si les pièces le justifient.",
+            ? `Le cédant a refusé la révision${s.declined.reason ? ` : « ${s.declined.reason} »` : ""}. Confirmez le montant ou proposez-en un autre.`
+            : "Un geste : le montant est confirmé, ou révisé si les pièces le justifient.",
           owner: "buyer",
           done: Boolean(confirme),
           doneAt: confirme?.createdAt ?? null,

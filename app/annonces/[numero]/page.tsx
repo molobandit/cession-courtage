@@ -345,9 +345,6 @@ export default async function PublicListingPage({
                 Le parcours continue jusqu’à la clôture : vérifications, signature, transaction sécurisée,
                 accord des compagnies et libération des fonds via le trust.
               </p>
-              <Button asChild variant="primary" className="mt-4">
-                <Link href={`/app/dossiers/${myDeal.id}`}>Ouvrir le dossier</Link>
-              </Button>
             </section>
           ) : actions.notices.length > 0 ? (
             /*
@@ -445,7 +442,9 @@ export default async function PublicListingPage({
 
       {actor && !isSeller && canBuy(actor) ? (
         <section id="depot" className="rounded-3xl border border-indigo-line bg-surface p-7">
-          <h2 className="text-2xl font-semibold text-ink">Se positionner</h2>
+          <h2 className="text-2xl font-semibold text-ink">
+            {myDeposit ? "Votre positionnement" : "Se positionner"}
+          </h2>
           {myDeposit ? (
             <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-muted">
               Votre dépôt de{" "}

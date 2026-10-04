@@ -12,7 +12,7 @@ function sql(value: string | number | boolean | null): string {
 
 const rows = buildCatalogListings();
 const lines: string[] = [
-  "-- Catalogue public de demonstration (80 fiches). Idempotent.",
+  "-- Catalogue public de démonstration. Idempotent.",
   "-- wrangler d1 execute cession-courtage --remote --file ./scripts/d1-catalog-listings.sql",
   "PRAGMA foreign_keys = OFF;",
   "DELETE FROM ListingLine WHERE listingId LIKE 'lst_catalog_%';",

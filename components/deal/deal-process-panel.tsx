@@ -16,6 +16,7 @@ import {
 } from "@/components/deal/process-forms";
 import { certificateKey } from "@/lib/direct/documents";
 import { SALE_PIPELINE } from "@/lib/deal/pipeline";
+import { DEAL_STAGE_LABELS } from "@/lib/labels";
 import {
   SIGNOFF_LABELS,
   STAGE_INTRO,
@@ -41,8 +42,15 @@ import { cn } from "@/lib/utils";
 
 const OWNER: Record<Side, string> = { seller: "Cédant", buyer: "Acquéreur" };
 
+/*
+ * Le libellé d'une étape de dossier.
+ *
+ * SALE_PIPELINE décrit les quatre étapes publiques d'une vente, pas les dix
+ * étapes d'un dossier : y chercher DATA_ROOM ne donnait rien, et l'écran
+ * affichait le code brut. DEAL_STAGE_LABELS les nomme toutes.
+ */
 function stageLabel(stage: DealStage) {
-  return SALE_PIPELINE.find((s) => s.key === stage)?.label ?? stage;
+  return DEAL_STAGE_LABELS[stage] ?? stage;
 }
 
 function pieceLink(dealId: string, key: string) {
