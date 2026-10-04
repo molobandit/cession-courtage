@@ -5,7 +5,6 @@ import { revalidatePath } from "next/cache";
 import { getActor, isOriasVerified } from "@/lib/authz/actor";
 import { ForbiddenError, UnauthenticatedError } from "@/lib/authz/errors";
 import { isDealParticipant } from "@/lib/authz/policies";
-import { offPlatformPhoneError } from "@/lib/chat/phone-block";
 import {
   ACCEPTED_PIECE_TYPES,
   FUNDS_ORIGINS,
