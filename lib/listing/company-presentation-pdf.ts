@@ -199,8 +199,8 @@ export async function renderCompanyPresentationPdf(p: CompanyPresentation): Prom
   cartesChiffres(ctx, [
     { label: "Commissions / an", value: euro(p.portfolio.annualCommissions) },
     { label: "Contrats", value: p.portfolio.contractCount.toLocaleString("fr-FR"), note: `${p.portfolio.clientCount.toLocaleString("fr-FR")} clients` },
-    { label: "Prix", value: euro(p.sale.askingPrice), note: p.sale.negotiable ? "Négociable" : "Ferme" },
-    { label: "Multiple", value: p.sale.multiple ? `x${p.sale.multiple.toLocaleString("fr-FR", { maximumFractionDigits: 2 })}` : "-", note: "Prix / commissions" },
+    { label: "Montant de l'annonce", value: euro(p.sale.askingPrice), note: "net vendeur" },
+    { label: "Multiple", value: p.sale.multiple ? `x${p.sale.multiple.toLocaleString("fr-FR", { maximumFractionDigits: 2 })}` : "-", note: "Montant / commissions" },
   ]);
 
   titreSection(ctx, "Identité de la société");

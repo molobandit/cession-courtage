@@ -51,7 +51,7 @@ export function OfferChat({
       <div className="border-t border-line p-4">
         <p className="mb-3 text-[13px] leading-relaxed text-muted">
           Échangez ici. Les numéros de portable (06, 07, +33 6, +33 7) sont bloqués,
-          pour que la négociation ne sorte pas du site.
+          pour que les échanges restent sur le site.
         </p>
         <MessageForm
           dealId={dealId}

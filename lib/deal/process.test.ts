@@ -3,7 +3,6 @@ import {
   currentPrice,
   nextStage,
   normalizeStage,
-  revisionPending,
   stageComplete,
   stageTasks,
   tasksFor,
@@ -44,7 +43,17 @@ describe("vérifications", () => {
     expect(stageComplete({ ...s, signoffs: [signe("PRICE_CONFIRMED", "b")] })).toBe(true);
   });
 
-  it("n’ouvre pas la confirmation du prix tant que des pièces du cabinet manquent", () => {
+  it("ne propose jamais de réviser le montant : il se confirme, c’est tout", () => {
+    const s = base({ roomDocs: KINDS.map((kind) => ({ kind, createdAt: T0 })) });
+    const taches = stageTasks(s);
+    expect(taches.map((t) => t.key)).not.toContain("price-accept");
+    const t = taches.find((x) => x.key === "price-confirm")!;
+    expect(t.label).toBe("Confirmer le montant après examen des pièces");
+    expect(t.detail).not.toMatch(/révis/i);
+    expect(t.detail).not.toMatch(/prix/i);
+  });
+
+  it("n’ouvre pas la confirmation du montant tant que des pièces du cabinet manquent", () => {
     const s = base({ roomDocs: [{ kind: "STATUTS", createdAt: T0 }] });
     const t = stageTasks(s).find((x) => x.key === "price-confirm")!;
     expect(t.available).toBe(false);
@@ -70,15 +79,17 @@ describe("vérifications", () => {
     expect(stageComplete(s)).toBe(false);
   });
 
-  it("une révision du prix attend l’accord du cédant, et fixe le prix en vigueur", () => {
+  it("une révision héritée d’un ancien dossier ne bloque plus l’étape", () => {
+    /*
+     * Le montant ne se négocie plus : plus aucune révision ne peut naître. Un
+     * dossier ouvert avant la décision peut en porter une en base ; elle ne
+     * retient plus l'étape, et le montant en vigueur reste lisible.
+     */
     const revision = { proposedAt: plus(10), price: 27000 };
     const s = base({ revision, signoffs: [signe("PRICE_CONFIRMED", "b", plus(10))] });
-    expect(revisionPending(s)).toBe(true);
+    expect(stageTasks(s).map((t) => t.key)).not.toContain("price-accept");
+    expect(stageComplete(s)).toBe(true);
     expect(currentPrice(s)).toBe(27000);
-    expect(stageComplete(s)).toBe(false);
-    // Une acceptation antérieure à la révision ne vaut rien.
-    expect(stageComplete({ ...s, signoffs: [...s.signoffs, signe("LOI_ACCEPTED", "s", plus(2))] })).toBe(false);
-    expect(stageComplete({ ...s, signoffs: [...s.signoffs, signe("LOI_ACCEPTED", "s", plus(20))] })).toBe(true);
   });
 });
 

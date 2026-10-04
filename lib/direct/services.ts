@@ -72,7 +72,7 @@ export const SERVICE_ENTRIES: ServiceEntry[] = [
     emptyText:
       "Vous n’avez pas encore de transactions sécurisées. Créez votre première transaction pour sécuriser les fonds.",
     emptyShort: "Pas encore de transactions sécurisées",
-    pitch: "Le prix reste sur un compte sécurisé, puis il est versé au cédant à la clôture.",
+    pitch: "Le montant reste sur un compte sécurisé, puis il est versé au cédant à la clôture.",
   },
   {
     key: "attestations",

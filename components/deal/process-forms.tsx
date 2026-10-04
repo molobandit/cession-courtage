@@ -2,10 +2,8 @@
 
 import { useActionState, useRef, useState } from "react";
 import {
-  answerRevisionAction,
   fundEscrowAction,
   removeDealPieceAction,
-  revisePriceAction,
   saveDealCarrierCodesAction,
   signDeedAction,
   uploadDealPieceAction,
@@ -136,107 +134,6 @@ export function RemovePiece({ dealId, documentId }: { dealId: string; documentId
       </button>
       {state.error ? <span className="ml-2 text-[12px] text-danger">{state.error}</span> : null}
     </form>
-  );
-}
-
-export function RevisePriceForm({ dealId, defaultPrice }: { dealId: string; defaultPrice: string }) {
-  const [state, formAction, pending] = useActionState(revisePriceAction, initial);
-  const [ouvert, setOuvert] = useState(false);
-  if (!ouvert) {
-    return (
-      <button type="button" onClick={() => setOuvert(true)} className="w-fit text-[14px] font-medium text-indigo-dark underline-offset-2 hover:underline">
-        Les pièces justifient un autre montant ? Réviser mon montant
-      </button>
-    );
-  }
-  return (
-    <form onSubmit={keepFormSubmit(formAction)} className="grid gap-3 rounded-2xl border border-line bg-paper p-4">
-      <input type="hidden" name="dealId" value={dealId} />
-      <label className="grid max-w-xs gap-1.5 text-[14px] font-medium text-ink">
-        Montant révisé (€)
-        <input name="price" inputMode="decimal" required defaultValue={defaultPrice} className={inputClass} />
-      </label>
-      <label className="grid gap-1.5 text-[14px] font-medium text-ink">
-        Pourquoi ?
-        <textarea
-          name="reason"
-          rows={2}
-          required
-          minLength={10}
-          maxLength={1000}
-          placeholder="Ex. : les bordereaux montrent 8 % de commissions en moins que l’annonce."
-          className="w-full rounded-xl border border-line bg-paper px-3 py-2 text-[15px] text-ink focus:border-indigo focus:outline-none"
-        />
-      </label>
-      <div className="flex flex-wrap gap-2.5">
-        <Button type="submit" variant="outline" disabled={pending}>
-          {pending ? "Envoi…" : "Envoyer la révision au cédant"}
-        </Button>
-        <Button type="button" variant="ghost" onClick={() => setOuvert(false)}>
-          Annuler
-        </Button>
-      </div>
-      <Feedback state={state} />
-    </form>
-  );
-}
-
-export function RevisionAnswerForm({ dealId }: { dealId: string }) {
-  const [state, formAction, pending] = useActionState(answerRevisionAction, initial);
-  const [refus, setRefus] = useState(false);
-  const [coche, setCoche] = useState(false);
-  return (
-    <div className="grid gap-3">
-      {!refus ? (
-        <form onSubmit={keepFormSubmit(formAction)} className="grid gap-3">
-          <input type="hidden" name="dealId" value={dealId} />
-          <input type="hidden" name="decision" value="accept" />
-          <label className="flex items-start gap-3 text-[14px] leading-relaxed text-ink">
-            <input
-              type="checkbox"
-              name="consent"
-              checked={coche}
-              onChange={(e) => setCoche(e.target.checked)}
-              className="mt-1 h-4 w-4 shrink-0 accent-[#2563eb]"
-            />
-            <span>J’accepte le montant révisé : il remplace celui de l’annonce dans le contrat.</span>
-          </label>
-          <div className="flex flex-wrap gap-2.5">
-            <Button type="submit" disabled={pending || !coche}>
-              {pending ? "Enregistrement…" : "Accepter la révision"}
-            </Button>
-            <Button type="button" variant="outline" onClick={() => setRefus(true)}>
-              Refuser
-            </Button>
-          </div>
-        </form>
-      ) : (
-        <form onSubmit={keepFormSubmit(formAction)} className="grid gap-3">
-          <input type="hidden" name="dealId" value={dealId} />
-          <input type="hidden" name="decision" value="decline" />
-          <label className="grid gap-1.5 text-[14px] font-medium text-ink">
-            Motif du refus
-            <textarea
-              name="reason"
-              rows={2}
-              required
-              minLength={5}
-              maxLength={500}
-              className="w-full rounded-xl border border-line bg-paper px-3 py-2 text-[15px] text-ink focus:border-indigo focus:outline-none"
-            />
-          </label>
-          <div className="flex flex-wrap gap-2.5">
-            <Button type="submit" variant="outline" disabled={pending}>
-              {pending ? "Envoi…" : "Maintenir le montant de l’annonce"}
-            </Button>
-            <Button type="button" variant="ghost" onClick={() => setRefus(false)}>
-              Annuler
-            </Button>
-          </div>
-        </form>
-      )}
-      <Feedback state={state} />
-    </div>
   );
 }
 

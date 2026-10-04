@@ -531,7 +531,7 @@ export async function renderValuationStudyPdf(study: ValuationStudy): Promise<Ui
   let iy = ctx.y;
   for (const l of couper(
     ctx,
-    `${BRAND_NAME} accompagne courtiers et repreneurs dans la cession et l'acquisition de portefeuilles d'assurance. L'étude du portefeuille précède toute mise en ligne : ce n'est pas le cédant qui fixe le prix. Les dossiers certifiés sont ouverts, contrôlés et chiffrés avant d'être présentés.`,
+    `${BRAND_NAME} accompagne courtiers et repreneurs dans la cession et l'acquisition de portefeuilles d'assurance. L'étude du portefeuille précède toute mise en ligne : ce n'est pas le cédant qui fixe le montant. Les dossiers certifiés sont ouverts, contrôlés et chiffrés avant d'être présentés.`,
     10,
     introW,
   )) {
@@ -764,7 +764,7 @@ export async function renderValuationStudyPdf(study: ValuationStudy): Promise<Ui
   // ── 8. Honoraires ──────────────────────────────────────────────
   nouvellePage(ctx);
   bandeauInterieur(ctx, study);
-  titreSection(ctx, study, "L'opportunité, le prix et les honoraires", "Synthèse de l'opportunité de portefeuille de courtage en assurance.");
+  titreSection(ctx, study, "L'opportunité, le montant et les honoraires", "Synthèse de l'opportunité de portefeuille de courtage en assurance.");
   const blocTop = ctx.y;
   const facts = [
     { k: "LOCALISATION", v: study.zone },
@@ -793,7 +793,7 @@ export async function renderValuationStudyPdf(study: ValuationStudy): Promise<Ui
   ecrire(ctx, "Portefeuille certifié", feeX + 14, blocTop - 132, 9, { gras: true, couleur: GRIS });
   const feeLine = couper(ctx, `${euro(ctx, feeMin)} - ${euro(ctx, feeMax)} HT`, 12, feeW - 28, true);
   feeLine.forEach((l, i) => ecrire(ctx, l, feeX + 14, blocTop - 156 - i * 14, 12, { gras: true, couleur: NAVY }));
-  ecrire(ctx, `${VERIFIED_FEE_RANGE_LABEL} du prix`, feeX + 14, blocTop - 186, 8, { couleur: GRIS });
+  ecrire(ctx, `${VERIFIED_FEE_RANGE_LABEL} du montant`, feeX + 14, blocTop - 186, 8, { couleur: GRIS });
   ecrire(ctx, `Minimum ${euro(ctx, SUCCESS_FEE_FLOOR_EUR)} HT`, feeX + 14, blocTop - 200, 8, { couleur: GRIS });
   ctx.y = Math.min(ctx.y, blocTop - 230);
   paragraphe(
@@ -814,7 +814,7 @@ export async function renderValuationStudyPdf(study: ValuationStudy): Promise<Ui
   const etapes = [
     { n: "01", t: "Audit et validation", d: "Vérification du périmètre net, des quittances et de l'antériorité des contrats." },
     { n: "02", t: "Mise en relation", d: "Présentation qualifiée de l'opportunité à des repreneurs ciblés, sous confidentialité." },
-    { n: "03", t: "Négociation", d: "Cadrage du prix dans la fourchette de valorisation et des modalités de reprise." },
+    { n: "03", t: "Le positionnement", d: "L'acquéreur verse son dépôt sur le montant arrêté, et la procédure de cession démarre." },
     { n: "04", t: "Sécurisation", d: "Conservation des fonds jusqu'à la signature des contrats, puis versement au cédant." },
   ];
   const ew = (LARGEUR - 24) / 4;

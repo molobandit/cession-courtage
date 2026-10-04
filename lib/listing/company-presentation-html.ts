@@ -99,7 +99,7 @@ export function buildCompanyPresentationHtml(p: CompanyPresentation, opts: Compa
     <div><b>${euro(p.portfolio.annualCommissions)}</b><span>commissions annuelles</span></div>
     <div><b>${nombre(p.portfolio.contractCount)}</b><span>contrats, ${nombre(p.portfolio.clientCount)} clients</span></div>
     ${p.sale.multiple ? `<div><b>${nombre(p.sale.multiple, 2)} fois</b><span>les commissions annuelles</span></div>` : ""}
-    <div class="prix"><b>${euro(p.sale.askingPrice)}</b><span>montant de l'annonce${p.sale.negotiable ? ", négociable" : ""}</span></div>
+    <div class="prix"><b>${euro(p.sale.askingPrice)}</b><span>montant de l'annonce, net vendeur</span></div>
   </div>
   <div class="meta">
     <div><small>DOSSIER N°</small><b>${esc(numero)}</b></div>
@@ -156,7 +156,7 @@ export function buildCompanyPresentationHtml(p: CompanyPresentation, opts: Compa
     [pct(p.portfolio.churnRate), "Résiliations sur 12 mois"],
   ];
   const cession = faits([
-    { label: "Montant de l'annonce", value: `${euro(p.sale.askingPrice)}${p.sale.negotiable ? ", négociable" : ""}` },
+    { label: "Montant de l'annonce", value: `${euro(p.sale.askingPrice)}, net vendeur` },
     p.sale.multiple ? { label: "Multiple", value: `${nombre(p.sale.multiple, 2)} fois les commissions` } : null,
     { label: "Objet", value: p.sale.partial ? "Cession partielle du portefeuille" : "Cession totale du portefeuille" },
     p.sale.motive ? { label: "Motif de la cession", value: p.sale.motive } : null,

@@ -22,10 +22,8 @@ import { disposePlatformProxy } from "./setup/prisma-test";
 import { connecterUtilisateur } from "./setup/auth-stub";
 import { effacerParcours, etapeDe, formulaire as form, menerDossier, pdf } from "./setup/dossier";
 import {
-  answerRevisionAction,
   confirmPriceAction,
   fundEscrowAction,
-  revisePriceAction,
   sendAttestationsAction,
   signDeedAction,
   uploadRoomDocumentAction,
@@ -193,21 +191,6 @@ describe("aucune étape ne se franchit sans ce qu’elle exige", () => {
     const exe = new File([new Uint8Array([77, 90])], "outil.exe", { type: "application/octet-stream" });
     expect((await uploadRoomDocumentAction({}, form({ dealId: DEAL, kind: "STATUTS", file: exe }))).error).toContain("PDF");
     expect((await uploadAccountDocumentAction({}, form({ kind: "PASSEPORT", file: pdf() }))).error).toContain("inconnu");
-  });
-
-  it("une révision du prix se motive, et le refus du cédant rend la main à l’acquéreur", async () => {
-    await poser(DealStage.DATA_ROOM);
-    connecterUtilisateur(buyerId);
-    expect((await revisePriceAction({}, form({ dealId: DEAL, price: "25 000", reason: "" }))).error).toContain("Expliquez");
-    expect((await revisePriceAction({}, form({ dealId: DEAL, price: "25 000", reason: "Commissions 2025 inférieures de 8 %." }))).ok).toBeTruthy();
-    connecterUtilisateur(sellerId);
-    expect((await answerRevisionAction({}, form({ dealId: DEAL, decision: "decline", reason: "" }))).error).toContain("motif");
-    await answerRevisionAction({}, form({ dealId: DEAL, decision: "decline", reason: "Le prix de l’offre tient compte de 2025." }));
-    const d = await prisma.deal.findUniqueOrThrow({ where: { id: DEAL }, select: { loiProposedAt: true, loiDeclineReason: true } });
-    expect(d.loiProposedAt).toBeNull();
-    expect(d.loiDeclineReason).toContain("2025");
-    expect(await prisma.dealSignoff.count({ where: { dealId: DEAL, kind: "PRICE_CONFIRMED" } })).toBe(0);
-    expect(await etapeDe(DEAL)).toBe(DealStage.DATA_ROOM);
   });
 
   it("le protocole se signe au nom du représentant, pas avant les vérifications", async () => {

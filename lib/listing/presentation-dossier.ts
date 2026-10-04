@@ -514,7 +514,7 @@ export function buildPresentationDossierHtml(study: ValuationStudy, opts: Presen
     [euro(study.annualCommissions), "Commissions par an", "base de la valorisation"],
     [nombre(study.contractCount), "Contrats actifs", compte(branches.length, "branche", "branches")],
     [`${nombre(study.averageAgeMonths)} mois`, "Ancienneté moyenne", "date d'effet des contrats"],
-    [fois(multiplePrix), "Le prix en années de commissions", "prix divisé par les commissions annuelles nettes"],
+    [fois(multiplePrix), "Le montant en années de commissions", "montant divisé par les commissions annuelles nettes"],
   ];
   const valorisation = `
 <section class="page">

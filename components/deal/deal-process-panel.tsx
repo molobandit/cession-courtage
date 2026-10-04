@@ -10,8 +10,6 @@ import {
   CommitForm,
   EscrowForm,
   PieceUpload,
-  RevisePriceForm,
-  RevisionAnswerForm,
   SignDeedForm,
 } from "@/components/deal/process-forms";
 import { certificateKey } from "@/lib/direct/documents";
@@ -28,7 +26,7 @@ import {
 import type { DealProcess } from "@/lib/deal/process-load";
 import { DATA_ROOM_KINDS, companyDocLabel } from "@/lib/listing/company-doc-kinds";
 import { escrowAmountAfterDeposit } from "@/lib/billing/deposit-fate";
-import { formatDateTime, formatEuro, formatPercent } from "@/lib/format/fr";
+import { formatDateTime, formatEuro } from "@/lib/format/fr";
 import { cn } from "@/lib/utils";
 
 /**
@@ -128,41 +126,9 @@ function TaskAction({ p, task, side, escrowLive }: { p: DealProcess; task: Task;
         <CommitForm
           dealId={id}
           action={confirmPriceAction}
-          consentLabel={`J’ai examiné les pièces du cabinet et je confirme mon montant de ${formatEuro(prix)}.`}
-          submitLabel="Confirmer mon montant"
+          consentLabel={`J’ai examiné les pièces du cabinet et je confirme le montant de l’annonce, ${formatEuro(prix)}.`}
+          submitLabel={`Confirmer le montant de ${formatEuro(prix)}`}
         />
-        <RevisePriceForm dealId={id} defaultPrice={String(prix)} />
-      </div>
-    );
-  }
-
-  if (task.key === "price-accept" && p.snapshot.revision) {
-    const r = p.snapshot.revision;
-    return (
-      <div className="grid gap-4">
-        <dl className="grid gap-3 rounded-2xl bg-surface-alt p-4 sm:grid-cols-3">
-          <div>
-            <dt className="text-[12px] uppercase tracking-wide text-muted">Montant révisé</dt>
-            <dd className="tabular text-[17px] font-bold text-ink">{formatEuro(r.price)}</dd>
-          </div>
-          <div>
-            <dt className="text-[12px] uppercase tracking-wide text-muted">Montant de l’annonce</dt>
-            <dd className="tabular text-[15px] font-semibold text-ink">{formatEuro(p.snapshot.agreedPrice)}</dd>
-          </div>
-          <div>
-            <dt className="text-[12px] uppercase tracking-wide text-muted">Écart</dt>
-            <dd className="tabular text-[15px] font-semibold text-ink">
-              {formatPercent(((r.price - p.snapshot.agreedPrice) / p.snapshot.agreedPrice) * 100)}
-            </dd>
-          </div>
-          {deal.loiConditions ? (
-            <div className="sm:col-span-3">
-              <dt className="text-[12px] uppercase tracking-wide text-muted">Motif</dt>
-              <dd className="whitespace-pre-line text-[14px] text-ink">{deal.loiConditions}</dd>
-            </div>
-          ) : null}
-        </dl>
-        <RevisionAnswerForm dealId={id} />
       </div>
     );
   }
@@ -376,8 +342,8 @@ export function DealJournal({ p }: { p: DealProcess }) {
       at: s.createdAt,
       text: `${s.userId === deal.sellerId ? "Le cédant" : "L’acquéreur"} ${SIGNOFF_LABELS[s.kind] ?? s.kind}${s.signatureName ? ` (${s.signatureName})` : ""}.`,
     })),
-    ...(deal.loiProposedAt ? [{ at: deal.loiProposedAt, text: `L’acquéreur a révisé son prix à ${formatEuro(Number(deal.loiPrice ?? 0))}.` }] : []),
-    ...(deal.loiDeclinedAt ? [{ at: deal.loiDeclinedAt, text: `Le cédant a refusé une révision du prix${deal.loiDeclineReason ? ` : « ${deal.loiDeclineReason} »` : ""}.` }] : []),
+    ...(deal.loiProposedAt ? [{ at: deal.loiProposedAt, text: `Montant discuté à ${formatEuro(Number(deal.loiPrice ?? 0))}, avant que le montant cesse de se négocier.` }] : []),
+    ...(deal.loiDeclinedAt ? [{ at: deal.loiDeclinedAt, text: "Le cédant s’en est tenu au montant de l’annonce." }] : []),
     ...deal.documents
       .filter((d) => d.slot?.startsWith("generated:"))
       .map((d) => ({ at: d.createdAt, text: `Pièce archivée : ${ARCHIVES[d.slot!] ?? d.fileName} (empreinte ${d.sha256.slice(0, 12)}…).` })),

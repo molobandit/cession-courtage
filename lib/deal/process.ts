@@ -31,7 +31,7 @@ export type SignoffKind =
 export const SIGNOFF_LABELS: Record<string, string> = {
   NDA_SIGNED: "a accepté l’engagement de confidentialité",
   PRICE_CONFIRMED: "a confirmé son prix après examen des pièces",
-  LOI_ACCEPTED: "a accepté la révision du montant",
+  LOI_ACCEPTED: "s’en est tenu au montant de l’annonce",
   DEED_SIGNED: "a signé le protocole et les attestations de transfert",
   ATTESTATIONS_SENT: "a adressé les attestations aux compagnies",
   TRANSFER_CONFIRMED: "a confirmé le rattachement des contrats",
@@ -203,10 +203,13 @@ export function stageTasks(s: ProcessSnapshot): Task[] {
         }),
         task({
           key: "price-confirm",
-          label: "Confirmer le prix après examen des pièces",
-          detail: s.declined
-            ? `Le cédant a refusé la révision${s.declined.reason ? ` : « ${s.declined.reason} »` : ""}. Confirmez le montant ou proposez-en un autre.`
-            : "Un geste : le montant est confirmé, ou révisé si les pièces le justifient.",
+          label: "Confirmer le montant après examen des pièces",
+          /*
+           * Le montant ne se négocie pas : il est arrêté par l'équipe à l'issue
+           * de l'étude, et l'acquéreur s'est positionné dessus. Après les
+           * pièces, il confirme, il ne propose pas autre chose.
+           */
+          detail: "Un geste, après lecture des pièces du cabinet cédant.",
           owner: "buyer",
           done: Boolean(confirme),
           doneAt: confirme?.createdAt ?? null,
@@ -214,19 +217,6 @@ export function stageTasks(s: ProcessSnapshot): Task[] {
           waitingReason: docsOk ? undefined : "Les pièces du cabinet cédant doivent être déposées.",
         }),
       ];
-      if (s.revision) {
-        const acceptee = freshSignoff(s, "LOI_ACCEPTED", "seller", s.revision.proposedAt);
-        out.push(
-          task({
-            key: "price-accept",
-            label: "Accepter ou refuser la révision du prix",
-            detail: "L’acquéreur a révisé son prix après l’examen des pièces.",
-            owner: "seller",
-            done: Boolean(acceptee),
-            doneAt: acceptee?.createdAt ?? null,
-          }),
-        );
-      }
       return out;
     }
 

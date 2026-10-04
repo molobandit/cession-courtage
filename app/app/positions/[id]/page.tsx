@@ -167,7 +167,7 @@ export default async function PositionPage({ params }: { params: Promise<{ id: s
             note: "Montant ÷ commissions",
           },
           deal
-            ? { label: "Montant convenu", value: formatEuroWhole(Number(deal.agreedPrice)), accent: true }
+            ? { label: "Montant de l’annonce", value: formatEuroWhole(Number(deal.agreedPrice)), accent: true }
             : {
                 label: "Dépôt de positionnement",
                 value: deposit ? formatEuroWhole(Number(deposit.amount)) : formatEuroWhole(interestDepositFor(prix)),
