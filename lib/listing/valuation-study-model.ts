@@ -23,6 +23,8 @@ export type ValuationStudy = {
   byBranch: Share[];
   byCarrier: Share[];
   averageCommissionPerContract: number;
+  /** Ancienneté moyenne des contrats, en mois. */
+  averageAgeMonths: number;
   advancedCommissionShare: number;
   listingPrecompte: boolean | null;
   lowValue: number;
@@ -50,6 +52,19 @@ function pctLabel(share: number): string {
   return `${p.toLocaleString("fr-FR", { maximumFractionDigits: digits, minimumFractionDigits: digits })} %`;
 }
 
+/**
+ * Minuscule le premier mot d'un libellé de branche, sauf s'il est un sigle.
+ *
+ * « Santé individuelle » devient « santé individuelle », mais « RC
+ * professionnelle » reste « RC professionnelle » : abaisser un sigle donnait
+ * « rc professionnelle » en titre de dossier.
+ */
+function enMinuscules(label: string): string {
+  const premier = label.split(" ")[0] ?? "";
+  if (premier.length > 1 && premier === premier.toUpperCase()) return label;
+  return label.toLowerCase();
+}
+
 function joinFr(items: string[]): string {
   if (items.length === 0) return "";
   if (items.length === 1) return items[0]!;
@@ -59,7 +74,7 @@ function joinFr(items: string[]): string {
 
 export function studyHeadline(byBranch: Share[]): string {
   if (byBranch.length === 0) return "Portefeuille de courtage";
-  const top = byBranch.slice(0, 2).map((s) => s.label.toLowerCase());
+  const top = byBranch.slice(0, 2).map((s) => enMinuscules(s.label));
   return `Portefeuille ${joinFr(top)}`;
 }
 
@@ -91,15 +106,15 @@ export function studyKeyPoints(input: {
   if (dominant) {
     if (rest.length === 0) {
       points.push(
-        `Portefeuille de ${dominant.label.toLowerCase()}, qui porte ${pctLabel(dominant.share)} des commissions.`,
+        `Portefeuille de ${enMinuscules(dominant.label)}, qui porte ${pctLabel(dominant.share)} des commissions.`,
       );
     } else {
       const autres = rest
         .slice(0, 3)
-        .map((s) => `${s.label.toLowerCase()} (${pctLabel(s.share)})`)
+        .map((s) => `${enMinuscules(s.label)} (${pctLabel(s.share)})`)
         .join(", ");
       points.push(
-        `Portefeuille dominé par ${dominant.label.toLowerCase()} (${pctLabel(dominant.share)} des commissions), complété par ${autres}.`,
+        `Portefeuille dominé par ${enMinuscules(dominant.label)} (${pctLabel(dominant.share)} des commissions), complété par ${autres}.`,
       );
     }
   }
@@ -152,6 +167,14 @@ export function studyFromLines(input: {
     annualCommissions > 0
       ? round2(input.lines.filter(isAdvanced).reduce((s, l) => s + l.annualCommission, 0) / annualCommissions)
       : 0;
+  // Ancienneté moyenne : ce qui dit si la clientèle est installée ou neuve.
+  const dates = input.lines.map((l) => l.effectiveDate).filter(Boolean) as Date[];
+  const averageAgeMonths =
+    dates.length > 0
+      ? Math.round(
+          dates.reduce((s, d) => s + (input.dataCutoff.getTime() - d.getTime()) / (30 * 86_400_000), 0) / dates.length,
+        )
+      : 0;
   const lowMultiple = annualCommissions > 0 ? round2(input.lowValue / annualCommissions) : 0;
   const highMultiple = annualCommissions > 0 ? round2(input.highValue / annualCommissions) : 0;
   return {
@@ -168,6 +191,7 @@ export function studyFromLines(input: {
     byBranch,
     byCarrier,
     averageCommissionPerContract: contractCount > 0 ? round2(annualCommissions / contractCount) : 0,
+    averageAgeMonths,
     advancedCommissionShare,
     listingPrecompte: input.listingPrecompte,
     lowValue: input.lowValue,

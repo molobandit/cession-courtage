@@ -130,13 +130,13 @@ function nouvellePage(ctx: Ctx) {
 function bandeauInterieur(ctx: Ctx, study: ValuationStudy) {
   ctx.page.drawRectangle({ x: 0, y: A4.h - 36, width: A4.w, height: 36, color: NAVY });
   ecrire(ctx, BRAND_NAME.toUpperCase(), MARGE, A4.h - 23, 8, { gras: true, couleur: BLANC });
-  const droit = study.publicNumber ? `Dossier n. ${study.publicNumber}` : "Estimation confidentielle";
+  const droit = study.publicNumber ? `Dossier n° ${study.publicNumber}` : "Estimation confidentielle";
   ecrire(ctx, droit, A4.w - MARGE - largeur(ctx, droit, 8), A4.h - 23, 8, { couleur: BLANC });
 }
 
 function pied(ctx: Ctx, study: ValuationStudy) {
   const total = ctx.pages.length;
-  const dossier = study.publicNumber ? `Dossier n. ${study.publicNumber}` : "Estimation de portefeuille";
+  const dossier = study.publicNumber ? `Dossier n° ${study.publicNumber}` : "Estimation de portefeuille";
   ctx.pages.forEach((pg, i) => {
     if (i === 0) return;
     ctx.page = pg;
@@ -156,14 +156,14 @@ function place(ctx: Ctx, hauteur: number, study: ValuationStudy) {
 }
 
 function titreSection(ctx: Ctx, study: ValuationStudy, titre: string, sous?: string) {
-  place(ctx, sous ? 52 : 36, study);
+  place(ctx, sous ? 64 : 44, study);
   ctx.page.drawRectangle({ x: MARGE, y: ctx.y - 4, width: 18, height: 4, color: BLEU });
   ecrire(ctx, titre, MARGE, ctx.y - 22, 16, { gras: true });
-  ctx.y -= 28;
+  ctx.y -= 38;
   if (sous) {
     for (const l of couper(ctx, sous, 10, LARGEUR)) {
-      ecrire(ctx, l, MARGE, ctx.y - 2, 10, { couleur: GRIS });
-      ctx.y -= 13;
+      ecrire(ctx, l, MARGE, ctx.y - 10, 10, { couleur: GRIS });
+      ctx.y -= 14;
     }
     ctx.y -= 4;
   }
@@ -262,7 +262,7 @@ function legend(ctx: Ctx, x: number, y: number, parts: { label: string; share: n
 
 export async function renderValuationStudyPdf(study: ValuationStudy): Promise<Uint8Array> {
   const doc = await PDFDocument.create();
-  doc.setTitle(`Dossier de présentation et de valorisation${study.publicNumber ? ` · n. ${study.publicNumber}` : ""}`);
+  doc.setTitle(`Dossier de présentation et de valorisation${study.publicNumber ? ` · n° ${study.publicNumber}` : ""}`);
   doc.setAuthor(BRAND_NAME);
   doc.setSubject(study.headline);
   doc.setCreationDate(study.issuedAt);
@@ -281,18 +281,41 @@ export async function renderValuationStudyPdf(study: ValuationStudy): Promise<Ui
   ctx.page.drawRectangle({ x: 0, y: 0, width: A4.w, height: A4.h, color: NAVY });
   ctx.page.drawRectangle({ x: 0, y: 0, width: 10, height: A4.h, color: BLEU });
   ecrire(ctx, BRAND_NAME.toUpperCase(), MARGE + 8, A4.h - 52, 9, { gras: true, couleur: rgb(0.75, 0.84, 0.99) });
-  ecrire(ctx, "DOSSIER DE PRÉSENTATION & DE VALORISATION", MARGE + 8, A4.h - 150, 10, {
+  ecrire(ctx, "DOSSIER DE PRÉSENTATION ET DE VALORISATION", MARGE + 8, A4.h - 150, 10, {
     gras: true,
     couleur: rgb(0.75, 0.84, 0.99),
   });
   const titre = couper(ctx, study.headline, 28, LARGEUR - 20, true);
   titre.slice(0, 3).forEach((l, i) => ecrire(ctx, l, MARGE + 8, A4.h - 196 - i * 32, 28, { gras: true, couleur: BLANC }));
-  ecrire(ctx, "Cession de portefeuille  -  analyse confidentielle", MARGE + 8, A4.h - 310, 12, {
-    couleur: rgb(0.75, 0.84, 0.99),
+  const accroche = `${study.contractCount.toLocaleString("fr-FR")} contrats actifs, ${study.carrierCount} compagnie${study.carrierCount > 1 ? "s" : ""} partenaire${study.carrierCount > 1 ? "s" : ""}. Commissions récurrentes : ${euro(ctx, study.annualCommissions)}.`;
+  couper(ctx, accroche, 12, LARGEUR - 40).slice(0, 2).forEach((l, i) =>
+    ecrire(ctx, l, MARGE + 8, A4.h - 306 - i * 18, 12, { couleur: rgb(0.75, 0.84, 0.99) }),
+  );
+
+  /*
+   * Les quatre chiffres que l'acquéreur cherche d'abord, dès la couverture :
+   * ce que le portefeuille rapporte, sa taille, son ancienneté, et le prix.
+   * Il doit pouvoir décider d'ouvrir la suite sans tourner la page.
+   */
+  const cles = [
+    { v: euro(ctx, study.annualCommissions), k: "commissions annuelles nettes" },
+    { v: study.contractCount.toLocaleString("fr-FR"), k: "contrats actifs" },
+    { v: `${study.averageAgeMonths} mois`, k: "d'ancienneté moyenne" },
+    { v: euro(ctx, study.midValue), k: "montant de l'annonce, net vendeur" },
+  ];
+  const colonne = (LARGEUR - 16) / 4;
+  cles.forEach((c, i) => {
+    const x = MARGE + 8 + i * colonne;
+    if (i === 3) ctx.page.drawRectangle({ x: x - 14, y: 322, width: 1, height: 58, color: rgb(0.35, 0.45, 0.72) });
+    ecrire(ctx, c.v, x, 352, 19, { gras: true, couleur: BLANC });
+    couper(ctx, c.k, 8, colonne - 10).slice(0, 2).forEach((l, j) =>
+      ecrire(ctx, l, x, 332 - j * 10, 8, { couleur: rgb(0.75, 0.84, 0.99) }),
+    );
   });
+  ctx.page.drawRectangle({ x: MARGE + 8, y: 300, width: LARGEUR - 16, height: 1, color: rgb(0.3, 0.4, 0.68) });
 
   const metas = [
-    { k: "DOSSIER N.", v: study.publicNumber ? String(study.publicNumber) : "Estimation" },
+    { k: "DOSSIER N°", v: study.publicNumber ? String(study.publicNumber) : "Estimation" },
     { k: "LOCALISATION", v: study.zone },
     { k: "DONNÉES ARRÊTÉES AU", v: dateFr(study.dataCutoff) },
     { k: "CONFIDENTIALITÉ", v: "Document anonymisé" },
@@ -317,9 +340,9 @@ export async function renderValuationStudyPdf(study: ValuationStudy): Promise<Ui
   titreSection(
     ctx,
     study,
-    "Avertissement & engagement de confidentialité",
+    "Avertissement et engagement de confidentialité",
     study.publicNumber
-      ? `Dossier de vente n. ${study.publicNumber} - conditions d'accès aux informations confidentielles.`
+      ? `Dossier de vente n° ${study.publicNumber} : conditions d'accès aux informations confidentielles.`
       : "Estimation de portefeuille - conditions d'accès aux informations confidentielles.",
   );
   paragraphe(
@@ -562,7 +585,7 @@ export async function renderValuationStudyPdf(study: ValuationStudy): Promise<Ui
   // ── 8. Honoraires ──────────────────────────────────────────────
   nouvellePage(ctx);
   bandeauInterieur(ctx, study);
-  titreSection(ctx, study, "Opportunité - prix de vente & honoraires", "Synthèse de l'opportunité de portefeuille de courtage en assurance.");
+  titreSection(ctx, study, "L'opportunité, le prix et les honoraires", "Synthèse de l'opportunité de portefeuille de courtage en assurance.");
   const blocTop = ctx.y;
   const facts = [
     { k: "LOCALISATION", v: study.zone },
@@ -606,11 +629,11 @@ export async function renderValuationStudyPdf(study: ValuationStudy): Promise<Ui
   titreSection(
     ctx,
     study,
-    "Cadre d'intermédiation & prochaines étapes",
+    "Le cadre et les prochaines étapes",
     `${BRAND_NAME} accompagne la cession de bout en bout, dans un cadre sécurisé et confidentiel.`,
   );
   const etapes = [
-    { n: "01", t: "Audit & validation", d: "Vérification du périmètre net, des quittances et de l'antériorité des contrats." },
+    { n: "01", t: "Audit et validation", d: "Vérification du périmètre net, des quittances et de l'antériorité des contrats." },
     { n: "02", t: "Mise en relation", d: "Présentation qualifiée de l'opportunité à des repreneurs ciblés, sous confidentialité." },
     { n: "03", t: "Négociation", d: "Cadrage du prix dans la fourchette de valorisation et des modalités de reprise." },
     { n: "04", t: "Sécurisation", d: "Conservation des fonds jusqu'à la signature des contrats, puis versement au cédant." },
@@ -634,7 +657,7 @@ export async function renderValuationStudyPdf(study: ValuationStudy): Promise<Ui
     ctx,
     study,
     study.publicNumber
-      ? `Pour échanger sur ce dossier : via la messagerie sécurisée, onglet Messages de l'annonce n. ${study.publicNumber}.`
+      ? `Pour échanger sur ce dossier : via la messagerie sécurisée, onglet Messages de l'annonce n° ${study.publicNumber}.`
       : "Prochaine étape : déposer le dossier pour étude, puis mise en ligne de l'annonce au prix déterminé.",
   );
 

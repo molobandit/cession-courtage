@@ -1,15 +1,19 @@
 import { NextResponse } from "next/server";
-import { getActor, isAdmin } from "@/lib/authz";
-import { ownsFirm } from "@/lib/authz/policies";
+import { getActor } from "@/lib/authz";
+import { canViewListing } from "@/lib/authz/policies";
 import { loadValuationStudy } from "@/lib/listing/valuation-study";
 import { renderValuationStudyPdf } from "@/lib/listing/valuation-study-pdf";
 import { prisma } from "@/lib/prisma";
 
 /**
- * Étude anonymisée rattachée à un numéro de dossier.
+ * Dossier de présentation rattaché à un numéro de dossier.
  *
- * Cédant propriétaire ou admin uniquement. Pas `canViewListing` : un acquéreur
- * qui voit l’annonce n’obtient pas ce PDF.
+ * C'est la pièce qui permet à un acquéreur de juger un portefeuille avant de
+ * se positionner, et les deux dossiers de référence disent qu'elle accompagne
+ * l'annonce. Qui voit l'annonce obtient donc le PDF : le document est anonyme
+ * par construction, ni raison sociale, ni SIREN, ni contact, seulement le
+ * numéro de dossier. Le nom du cabinet ne se découvre qu'au dépôt de
+ * positionnement, et il n'est pas là-dedans.
  */
 export async function GET(_request: Request, { params }: { params: Promise<{ numero: string }> }) {
   const { numero } = await params;
@@ -17,14 +21,19 @@ export async function GET(_request: Request, { params }: { params: Promise<{ num
   const publicNumber = Number(numero);
   if (!Number.isFinite(publicNumber)) return introuvable;
   const actor = await getActor();
-  if (!actor) return introuvable;
 
   const listing = await prisma.listing.findFirst({
     where: { publicNumber },
-    select: { id: true, publicNumber: true, portfolioId: true, portfolio: { select: { firmId: true } } },
+    select: {
+      id: true,
+      publicNumber: true,
+      portfolioId: true,
+      status: true,
+      portfolio: { select: { firmId: true } },
+    },
   });
   if (!listing) return introuvable;
-  if (!ownsFirm(actor, listing.portfolio.firmId) && !isAdmin(actor)) return introuvable;
+  if (!canViewListing(actor, listing)) return introuvable;
 
   const study = await loadValuationStudy({ portfolioId: listing.portfolioId, listingId: listing.id });
   if (!study) return introuvable;
@@ -34,7 +43,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ num
     headers: {
       "Content-Type": "application/pdf",
       "Content-Disposition": `inline; filename="etude-portefeuille-${listing.publicNumber}.pdf"`,
-      "Cache-Control": "private, no-store",
+      "Cache-Control": "private, max-age=0, must-revalidate",
       "X-Content-Type-Options": "nosniff",
     },
   });

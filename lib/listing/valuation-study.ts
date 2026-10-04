@@ -1,7 +1,7 @@
 import "server-only";
 import { CommissionType } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { valuePortfolio } from "@/lib/valuation/run";
+import { computePortfolioValuation } from "@/lib/valuation/run";
 import { studyFromLines, studyZone, type ValuationStudy } from "@/lib/listing/valuation-study-model";
 
 export type { ValuationStudy } from "@/lib/listing/valuation-study-model";
@@ -66,17 +66,24 @@ export async function loadValuationStudy(input: {
     rows = rows.filter((r) => keep.has(r.id));
   }
 
-  let valuation = await prisma.valuation.findFirst({
-    where: {
-      portfolioId: portfolio.id,
-      listingId: listing?.id ?? null,
-    },
+  /*
+   * L'étude enregistrée si elle existe, sinon le même calcul, en lecture seule.
+   *
+   * Cette fonction sert un PDF que n'importe quel acquéreur peut ouvrir : une
+   * consultation ne doit pas écrire de valorisation en base, ni en écrire une
+   * par visiteur.
+   */
+  const enregistree = await prisma.valuation.findFirst({
+    where: { portfolioId: portfolio.id, listingId: listing?.id ?? null },
     orderBy: { computedAt: "desc" },
+    select: { lowValue: true, midValue: true, highValue: true },
   });
-  if (!valuation) {
-    const run = await valuePortfolio(portfolio.id, listing?.id ?? null);
-    valuation = await prisma.valuation.findUnique({ where: { id: run.valuationId } });
-  }
+  const valuation =
+    enregistree ??
+    (await computePortfolioValuation(portfolio.id, listing?.id ?? null).catch((error) => {
+      console.error("loadValuationStudy", error);
+      return null;
+    }));
   if (!valuation) return null;
 
   return studyFromLines({
