@@ -3,6 +3,7 @@
  * Zone = departement ou region. Reference Dossier n° 10101+.
  */
 
+import { RISK_TYPE_LABELS } from "@/lib/labels";
 import { computeValuation } from "@/lib/valuation/compute";
 import { DEFAULT_MULTIPLES } from "@/lib/valuation/defaults";
 import { ASKING_MAX, ASKING_MIN } from "@/lib/listing/constants";
@@ -291,7 +292,12 @@ export function buildCatalogListings(): CatalogListingRow[] {
       portfolioId: `pf_catalog_${pad}`,
       publicNumber: CATALOG_PUBLIC_NUMBER_START + i - 1,
       firmId: CATALOG_FIRM_ID,
-      label: `Catalogue ${displayedZone} ${pad}`,
+      /*
+       * Le libellé que lisent les écrans membres : la branche principale et la
+       * zone, comme en salle de marché. « Catalogue Paris 01 » était le nom du
+       * jeu de données, pas celui d'un portefeuille.
+       */
+      label: `${RISK_TYPE_LABELS[branches[0]!] ?? "Portefeuille de courtage"}, ${displayedZone}`,
       contractCount: lines.length,
       clientCount: clients,
       annualCommissions: (Math.round(totalLignes * 100) / 100).toFixed(2),
