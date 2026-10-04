@@ -47,6 +47,74 @@ async function ndaDate(buyer: { id: string; oriasNumber: string | null }): Promi
   return statut.signed.NDA?.signedAt ?? null;
 }
 
+/**
+ * Pose la position d'un investisseur, avec l'état de son règlement.
+ *
+ * Le dossier investisseurs applique la même règle qu'à l'acquéreur : 2,5 % du
+ * montant, versés dans un trust, et c'est ce dépôt qui lève l'anonymat. La
+ * position s'enregistre donc avec son état de paiement, et non plus nue.
+ */
+async function placeInvestorPosition(
+  investorId: string,
+  listing: { id: string; askingPrice: unknown },
+  payment: { method: DepositMethod | null; ref: string | null; status: string },
+) {
+  const montant = interestDepositFor(Number(listing.askingPrice));
+  return prisma.investorPosition.upsert({
+    where: { listingId_investorId: { listingId: listing.id, investorId } },
+    update: { paymentMethod: payment.method, paymentRef: payment.ref, paymentStatus: payment.status },
+    create: {
+      listingId: listing.id,
+      investorId,
+      depositAmount: montant.toFixed(2),
+      paymentMethod: payment.method,
+      paymentRef: payment.ref,
+      paymentStatus: payment.status,
+    },
+  });
+}
+
+export async function startInvestorDepositPayment(input: {
+  investor: { id: string; email: string };
+  listing: ListingForDeposit;
+  method: DepositMethod;
+  cancelPath: string;
+}): Promise<{ kind: "redirect"; url: string } | { kind: "placed"; positionId: string }> {
+  const { investor, listing, method } = input;
+  const montant = interestDepositFor(Number(listing.askingPrice));
+  if (montant <= 0) throw new Error("Montant de dépôt invalide.");
+
+  if (!stripeConfigured()) {
+    const position = await placeInvestorPosition(investor.id, listing, { method, ref: null, status: "RECORDED" });
+    return { kind: "placed", positionId: position.id };
+  }
+
+  const checkout = await prisma.depositCheckout.create({
+    data: {
+      listingId: listing.id,
+      buyerId: investor.id,
+      method,
+      amountCents: Math.round(montant * 100),
+      investor: true,
+    },
+  });
+  const origine = siteUrl();
+  const session = await stripeCreatePaymentCheckout({
+    userId: investor.id,
+    email: investor.email,
+    amountCents: checkout.amountCents,
+    name: `Dépôt de positionnement · dossier n° ${listing.publicNumber ?? ""}`,
+    description: "Versé dans un trust. Il lance la procédure de cession et lève l’anonymat du cédant.",
+    metadata: { kind: DEPOSIT_KIND, depositCheckoutId: checkout.id, listingId: listing.id },
+    successUrl: `${origine}/app/depot/retour?session_id={CHECKOUT_SESSION_ID}`,
+    cancelUrl: `${origine}${input.cancelPath}`,
+    paymentMethodTypes: [method === "SEPA" ? "sepa_debit" : "card"],
+  });
+  await prisma.depositCheckout.update({ where: { id: checkout.id }, data: { sessionId: session.id } });
+  if (!session.url) throw new Error("Session de paiement incomplète.");
+  return { kind: "redirect", url: session.url };
+}
+
 export async function startDepositPayment(input: {
   buyer: { id: string; email: string; oriasNumber: string | null };
   listing: ListingForDeposit;
@@ -107,6 +175,22 @@ export async function settleDepositSession(session: StripeCheckoutSession & { pa
   const enCours = session.status === "complete" && session.payment_status === "unpaid";
   if (!payee && !enCours) return null;
 
+  if (checkout.investor) {
+    const annonce = await prisma.listing.findUnique({
+      where: { id: checkout.listingId },
+      select: { id: true, askingPrice: true },
+    });
+    if (!annonce) return null;
+    const etat = session.payment_status === "paid" ? "PAID" : "PROCESSING";
+    await prisma.depositCheckout.update({ where: { id }, data: { status: etat } });
+    const position = await placeInvestorPosition(checkout.buyerId, annonce, {
+      method: checkout.method === "SEPA" ? "SEPA" : "CARD",
+      ref: stripeId(session.payment_intent ?? null) ?? session.id,
+      status: etat,
+    });
+    return { positionId: position.id };
+  }
+
   const [buyer, listing] = await Promise.all([
     prisma.user.findUnique({ where: { id: checkout.buyerId }, select: { id: true, email: true, oriasNumber: true } }),
     prisma.listing.findUnique({
@@ -140,6 +224,12 @@ export async function failDepositSession(session: StripeCheckoutSession) {
   const checkout = await prisma.depositCheckout.findUnique({ where: { id } });
   if (!checkout) return;
   await prisma.depositCheckout.update({ where: { id }, data: { status: "FAILED" } });
+  if (checkout.investor) {
+    await prisma.investorPosition.deleteMany({
+      where: { listingId: checkout.listingId, investorId: checkout.buyerId, paymentStatus: { not: "PAID" } },
+    });
+    return;
+  }
   const dossier = await prisma.deal.findUnique({ where: { listingId_buyerId: { listingId: checkout.listingId, buyerId: checkout.buyerId } }, select: { id: true } });
   if (dossier) return;
   await prisma.interestDeposit.deleteMany({ where: { listingId: checkout.listingId, buyerId: checkout.buyerId, outcome: "PENDING" } });

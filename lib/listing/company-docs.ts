@@ -78,11 +78,14 @@ export async function actorCanReadCompanyDocs(listingId: string): Promise<boolea
   const isOwner = ownsFirm(actor, listing.portfolio.firmId);
   const investor = isInvestor(actor);
   const subscribed = isOwner || investor ? false : await hasContactSubscription(actor);
-  // Acquéreur : le dépôt doit être reçu par le trust, pas seulement enregistré.
+  // Acquéreur comme investisseur : le dépôt doit être reçu par le trust, pas
+  // seulement enregistré. Même règle des deux côtés, celle du dossier de référence.
   const deposit = isOwner
     ? null
     : investor
-      ? await findMyInvestorPosition(listingId, actor.id)
+      ? await findMyInvestorPosition(listingId, actor.id).then((p) =>
+          p && depositReleasesIdentity(p.paymentStatus, stripeConfigured()) ? p : null,
+        )
       : await findMyDeposit(listingId, actor.id).then((d) =>
           d && depositReleasesIdentity(d.paymentStatus, stripeConfigured()) ? d : null,
         );

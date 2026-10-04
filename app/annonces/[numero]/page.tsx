@@ -389,6 +389,15 @@ export default async function PublicListingPage({
               Ce suivi est réservé au compte investisseur. Les courtiers se positionnent
               depuis le bloc ci-dessus.
             </p>
+          ) : investorPos && !depositReleasesIdentity(investorPos.paymentStatus, stripeConfigured()) ? (
+            /*
+             * Dépôt posé mais pas encore reçu : rien ne s'ouvre avant le trust,
+             * exactement comme pour l'acquéreur.
+             */
+            <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-muted">
+              Votre dépôt est en cours de traitement. La présentation du cabinet et ses
+              coordonnées s’ouvriront dès sa réception par le trust.
+            </p>
           ) : investorPos ? (
             <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-muted">
               Votre engagement de {formatEuroWhole(Number(investorPos.depositAmount))} est
@@ -407,7 +416,13 @@ export default async function PublicListingPage({
                 assurés du portefeuille ne sont jamais nominatifs.{" "}
                 {CESSION_FUNDS_DISCLAIMER}
               </p>
-              <InvestorDepositForm listingId={listing.id} amountLabel={formatEuroWhole(deposit)} amountEur={deposit} />
+              <InvestorDepositForm
+                listingId={listing.id}
+                publicNumber={listing.publicNumber}
+                amountLabel={formatEuroWhole(deposit)}
+                amountEur={deposit}
+                listingAmountLabel={formatEuroWhole(askingPrice)}
+              />
             </>
           )}
         </section>

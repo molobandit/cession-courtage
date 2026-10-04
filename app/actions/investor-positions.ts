@@ -5,6 +5,10 @@ import { getActor, isInvestor } from "@/lib/authz/actor";
 import { ForbiddenError, UnauthenticatedError } from "@/lib/authz/errors";
 import { isTradableListingStatus, ownsFirm } from "@/lib/authz/policies";
 import { INTEREST_DEPOSIT_LABEL, INTEREST_DEPOSIT_RATE, interestDepositFor } from "@/lib/billing/rates";
+import { isDepositMethod, startInvestorDepositPayment } from "@/lib/billing/deposit-checkout";
+import { depositReleasesIdentity } from "@/lib/listing/identity-access";
+import { stripeConfigured } from "@/lib/billing/stripe";
+import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { idSchema } from "@/lib/validations/actions";
 
@@ -14,6 +18,7 @@ export async function placeInvestorDepositAction(
   _prev: InvestorFormState,
   formData: FormData,
 ): Promise<InvestorFormState> {
+  let redirection = "";
   try {
     const actor = await getActor();
     if (!actor) throw new UnauthenticatedError();
@@ -29,6 +34,7 @@ export async function placeInvestorDepositAction(
         status: true,
         askingPrice: true,
         publicNumber: true,
+        offerWindowClosesAt: true,
         portfolio: { select: { firmId: true } },
       },
     });
@@ -42,18 +48,40 @@ export async function placeInvestorDepositAction(
     const amount = interestDepositFor(Number(listing.askingPrice));
     if (amount <= 0) return { error: "Montant de dépôt invalide." };
 
-    const position = await prisma.investorPosition.upsert({
-      where: { listingId_investorId: { listingId: listing.id, investorId: actor.id } },
-      update: {},
-      create: {
-        listingId: listing.id,
-        investorId: actor.id,
-        depositAmount: amount.toFixed(2),
-      },
-    });
+    const methode = formData.get("paymentMethod");
+    if (!isDepositMethod(methode)) {
+      return { error: "Choisissez de verser le dépôt par carte ou par prélèvement." };
+    }
 
+    /*
+     * Même parcours de paiement que l'acquéreur : le dossier investisseurs
+     * applique la même règle, 2,5 % versés dans un trust, et c'est ce dépôt
+     * qui lève l'anonymat. Sans Stripe, la position s'enregistre en RECORDED.
+     */
+    const suite = await startInvestorDepositPayment({
+      investor: { id: actor.id, email: actor.email },
+      listing,
+      method: methode,
+      cancelPath: `/annonces/${listing.publicNumber}?voie=investir`,
+    });
+    if (suite.kind === "redirect") {
+      redirection = suite.url;
+      return { ok: true };
+    }
+    const position = { id: suite.positionId };
+
+    /*
+     * Le cédant n'est prévenu qu'une fois le dépôt reçu : un positionnement
+     * annoncé sur un règlement en attente ne vaut rien, et c'est la même règle
+     * que pour l'acquéreur.
+     */
     const { findFirmSeller, notifyDepositPlaced } = await import("@/lib/notify/transactional");
-    const seller = await findFirmSeller(listing.portfolio.firmId);
+    const recu = depositReleasesIdentity(
+      (await prisma.investorPosition.findUnique({ where: { id: position.id }, select: { paymentStatus: true } }))
+        ?.paymentStatus,
+      stripeConfigured(),
+    );
+    const seller = recu ? await findFirmSeller(listing.portfolio.firmId) : null;
     if (seller) {
       await notifyDepositPlaced({
         depositKey: `inv:${position.id}`,
@@ -79,8 +107,14 @@ export async function placeInvestorDepositAction(
     revalidatePath("/investisseurs/opportunites");
     return { ok: true };
   } catch (error) {
+    if (error && typeof error === "object" && "digest" in error) throw error;
     if (error instanceof UnauthenticatedError) return { error: "Authentification requise." };
     if (error instanceof ForbiddenError) return { error: error.message };
+    console.error("placeInvestorDepositAction", error);
     return { error: "Dépôt impossible." };
   }
+  // Le paiement sort du site : la redirection a lieu hors du try, sinon le
+  // signal de Next serait pris pour une erreur.
+  if (redirection) redirect(redirection);
+  return { error: "Dépôt impossible." };
 }

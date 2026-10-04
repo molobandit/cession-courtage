@@ -602,6 +602,11 @@ model InvestorPosition {
   listingId     String
   investorId    String
   depositAmount Decimal
+  /// CARD ou SEPA, quand le reglement passe par Stripe.
+  paymentMethod String?
+  paymentRef    String?
+  /// RECORDED, PROCESSING ou PAID. Seul PAID leve l'anonymat du cedant.
+  paymentStatus String   @default("RECORDED")
   createdAt     DateTime @default(now())
 
   listing  Listing @relation(fields: [listingId], references: [id], onDelete: Restrict)
@@ -916,6 +921,8 @@ model DepositCheckout {
   status       String   @default("PENDING")
   /// Offre saisie avec le dépôt, déposée dès le paiement confirmé.
   pendingOffer Json?
+  /// Vrai quand la session règle une position investisseur.
+  investor     Boolean  @default(false)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 

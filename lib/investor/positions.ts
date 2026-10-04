@@ -12,7 +12,8 @@ function assertInvestor(actor: Actor) {
 export async function findMyInvestorPosition(listingId: string, investorId: string) {
   return prisma.investorPosition.findUnique({
     where: { listingId_investorId: { listingId, investorId } },
-    select: { id: true, depositAmount: true, createdAt: true },
+    // paymentStatus : seul un dépôt reçu lève l'anonymat du cédant.
+    select: { id: true, depositAmount: true, createdAt: true, paymentStatus: true },
   });
 }
 
