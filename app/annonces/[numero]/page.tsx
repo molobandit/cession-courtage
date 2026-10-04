@@ -241,14 +241,23 @@ export default async function PublicListingPage({
    * Ce que la fiche propose, décidé en un seul endroit : un bouton affiché
    * mène toujours quelque part, et ce qui n'est pas possible est expliqué.
    */
+  const investorReceived = investorPos
+    ? depositReleasesIdentity(investorPos.paymentStatus, stripeConfigured())
+    : false;
+
   const actions = listingActions({
     state: listingState(listing.status),
     viewer: listingViewer({
       signedIn: Boolean(actor),
       isSeller,
       isInvestor: Boolean(actor && isInvestor(actor)),
-      depositReceived,
-      depositPending: Boolean(myDeposit) && !depositReceived,
+      /*
+       * L'investisseur a posé son dépôt comme l'acquéreur : sa position compte
+       * donc pour décider de ce que la fiche propose, et il ne se voit plus
+       * offrir de se positionner là où il l'est déjà.
+       */
+      depositReceived: depositReceived || investorReceived,
+      depositPending: (Boolean(myDeposit) || Boolean(investorPos)) && !depositReceived && !investorReceived,
       canBuy: Boolean(actor && verified && canBuy(actor)),
     }),
   });
@@ -318,6 +327,22 @@ export default async function PublicListingPage({
           ? "Ce portefeuille couvre tout le pays."
           : "Zones au grain départemental, sans commune ni raison sociale.",
         actions,
+        /*
+         * Même logique et mêmes mots que pour l'acquéreur : reçu dans un trust,
+         * ou en cours de traitement.
+         */
+        depositNotice:
+          investorPos || myDeposit
+            ? {
+                titre: "Votre positionnement",
+                phrase:
+                  depositReceived || investorReceived
+                    ? `Votre dépôt de ${formatEuroWhole(
+                        Number(investorPos?.depositAmount ?? myDeposit?.amount ?? deposit),
+                      )} est reçu dans un trust.`
+                    : "Votre dépôt est en cours de traitement.",
+              }
+            : null,
         exclusive: listing.status === "UNDER_NEGOTIATION" && !isSeller && !myDeal,
         dealHref: myDeal ? `/app/dossiers/${myDeal.id}` : null,
         defaultTab: myDeal || myDeposit ? "position" : "informations",

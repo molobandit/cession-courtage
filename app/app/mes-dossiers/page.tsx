@@ -6,6 +6,8 @@ import { formatEuroWhole } from "@/lib/format/number";
 import { LISTING_STATUS_LABELS } from "@/lib/labels";
 import { INTEREST_DEPOSIT_LABEL } from "@/lib/billing/rates";
 import { listMyInvestorPositions } from "@/lib/investor/positions";
+import { depositReleasesIdentity } from "@/lib/listing/identity-access";
+import { stripeConfigured } from "@/lib/billing/stripe";
 
 export const metadata = { title: "Mes dossiers" };
 
@@ -16,6 +18,7 @@ export default async function MesDossiersPage() {
   if (!isInvestor(actor)) redirect("/app");
 
   const positions = await listMyInvestorPositions(actor);
+  const paiementsActifs = stripeConfigured();
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-8 sm:py-10">
@@ -24,7 +27,7 @@ export default async function MesDossiersPage() {
       </p>
       <h1 className="mt-2 text-3xl font-bold tracking-tight text-ink">Mes dossiers</h1>
       <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-muted">
-        Après un dépôt de {INTEREST_DEPOSIT_LABEL} du montant de la cession, le cabinet cédant
+        Après un dépôt de {INTEREST_DEPOSIT_LABEL} du montant de l’annonce, le cabinet cédant
         n’est plus sous alias. Les assurés du portefeuille restent anonymes. Cette
         page suit l’avancement de chaque opération, pas une prise de participation.
       </p>
@@ -54,10 +57,16 @@ export default async function MesDossiersPage() {
                   </div>
                   <div>
                     <dt className="text-muted">Identité du cabinet</dt>
-                    <dd className="mt-0.5 font-medium text-ink">Ouverte</dd>
+                    <dd className="mt-0.5 font-medium text-ink">
+                      {depositReleasesIdentity(row.paymentStatus, paiementsActifs) ? "Ouverte" : "À l’ouverture du dépôt"}
+                    </dd>
                   </div>
                   <div>
-                    <dt className="text-muted">Dépôt enregistré</dt>
+                    <dt className="text-muted">
+                      {depositReleasesIdentity(row.paymentStatus, paiementsActifs)
+                        ? "Dépôt reçu dans le trust"
+                        : "Dépôt en cours de traitement"}
+                    </dt>
                     <dd className="mt-0.5 tabular font-medium text-ink">
                       {formatEuroWhole(Number(row.depositAmount))}
                     </dd>

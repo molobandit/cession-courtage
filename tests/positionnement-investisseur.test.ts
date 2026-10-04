@@ -73,6 +73,17 @@ describe("le dépôt de positionnement d'un investisseur", () => {
   });
 });
 
+describe("une annonce qui porte une position investisseur reçue", () => {
+  it("quitte le marché, comme pour un dépôt d'acquéreur", async () => {
+    const annonce = await prisma.listing.findFirst({
+      where: { investorPositions: { some: { paymentStatus: "PAID" } }, status: { notIn: ["SOLD", "WITHDRAWN"] } },
+      select: { status: true },
+    });
+    if (!annonce) return; // Aucune position payée en base : rien à prouver ici.
+    expect(annonce.status).toBe("UNDER_NEGOTIATION");
+  });
+});
+
 describe("l'anonymat du cédant, vu de l'investisseur", () => {
   it("tient tant que le dépôt n'est pas reçu, et cède quand il l'est", () => {
     // Paiements actifs : seul un dépôt payé ouvre l'identité.

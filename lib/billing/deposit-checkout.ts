@@ -8,6 +8,7 @@ import {
   stripeRetrieveCheckoutSession,
   type StripeCheckoutSession,
 } from "@/lib/billing/stripe";
+import { depositReleasesIdentity } from "@/lib/listing/identity-access";
 import { placeDeposit } from "@/lib/listing/place-deposit";
 import { recordOffer, type PendingOffer } from "@/lib/offer/record";
 import { prisma } from "@/lib/prisma";
@@ -60,7 +61,7 @@ async function placeInvestorPosition(
   payment: { method: DepositMethod | null; ref: string | null; status: string },
 ) {
   const montant = interestDepositFor(Number(listing.askingPrice));
-  return prisma.investorPosition.upsert({
+  const position = await prisma.investorPosition.upsert({
     where: { listingId_investorId: { listingId: listing.id, investorId } },
     update: { paymentMethod: payment.method, paymentRef: payment.ref, paymentStatus: payment.status },
     create: {
@@ -72,6 +73,19 @@ async function placeInvestorPosition(
       paymentStatus: payment.status,
     },
   });
+
+  /*
+   * Un dépôt reçu retire l'annonce du marché, qu'il vienne d'un acquéreur ou
+   * d'un investisseur : la règle du dossier de référence est la même pour les
+   * deux, et la salle de marché doit le dire du même mot.
+   */
+  if (depositReleasesIdentity(payment.status, stripeConfigured())) {
+    await prisma.listing.updateMany({
+      where: { id: listing.id, status: { notIn: ["SOLD", "WITHDRAWN", "UNDER_NEGOTIATION"] } },
+      data: { status: "UNDER_NEGOTIATION" },
+    });
+  }
+  return position;
 }
 
 export async function startInvestorDepositPayment(input: {

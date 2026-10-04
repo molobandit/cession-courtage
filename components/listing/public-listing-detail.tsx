@@ -73,6 +73,8 @@ export type PublicListingDetailModel = {
   exclusive: boolean;
   /** Ce que la fiche propose, selon son état et selon qui la regarde. */
   actions: ListingActions;
+  /** Où en est le dépôt du lecteur, quand il en a posé un. */
+  depositNotice?: { titre: string; phrase: string } | null;
   dealHref: string | null;
   defaultTab?: "informations" | "documents" | "position";
 };
@@ -154,6 +156,7 @@ export function PublicListingDetail({
     coverageDetail,
     exclusive,
     actions,
+    depositNotice,
     dealHref,
     defaultTab,
   } = model;
@@ -443,6 +446,16 @@ export function PublicListingDetail({
             ) : null}
 
             <div className="mt-5">
+              {/*
+                * Le lecteur qui s'est déjà positionné lit où en est son dépôt,
+                * et non une invitation à se positionner une seconde fois.
+                */}
+              {depositNotice ? (
+                <div className="mb-4">
+                  <p className="text-[13px] font-semibold text-white">{depositNotice.titre}</p>
+                  <p className="mt-1 text-[13px] leading-relaxed text-white/80">{depositNotice.phrase}</p>
+                </div>
+              ) : null}
               {actions.primary === "deal" && dealHref ? (
                 <Link
                   href={dealHref}
