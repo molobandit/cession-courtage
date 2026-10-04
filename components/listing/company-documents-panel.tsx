@@ -53,9 +53,7 @@ export function CompanyDocumentsPanel({
       {publicNumber ? (
         canDownload ? (
           <a
-            href={`/annonces/${publicNumber}/presentation-cabinet`}
-            target="_blank"
-            rel="noreferrer"
+            href={`/annonces/${publicNumber}/cabinet`}
             className="mt-4 flex items-center gap-4 rounded-2xl border border-indigo-line bg-indigo-soft px-4 py-3 transition hover:border-indigo"
           >
             <span className="flex h-11 w-9 shrink-0 items-center justify-center rounded-md bg-indigo text-[10px] font-bold tracking-wide text-white">PDF</span>
@@ -65,7 +63,7 @@ export function CompanyDocumentsPanel({
                 Identité de la société, chiffres clés, répartition des commissions, conformité et pièces disponibles.
               </span>
             </span>
-            <span className="shrink-0 text-[14px] font-semibold text-indigo-dark">Ouvrir le PDF</span>
+            <span className="shrink-0 text-[14px] font-semibold text-indigo-dark">Ouvrir</span>
           </a>
         ) : (
           <div className="mt-4 flex items-center gap-4 rounded-2xl border border-line bg-surface-alt px-4 py-3">

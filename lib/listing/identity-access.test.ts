@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { canReadCedantIdentity } from "@/lib/listing/identity-access";
+import { canReadCedantIdentity, depositReleasesIdentity } from "@/lib/listing/identity-access";
 
 describe("canReadCedantIdentity", () => {
   it("ouvre le cédant au propriétaire", () => {
@@ -48,5 +48,18 @@ describe("canReadCedantIdentity", () => {
         isInvestor: true,
       }),
     ).toBe(false);
+  });
+});
+
+describe("dépôt reçu par le trust", () => {
+  it("lève l'anonymat seulement une fois payé quand le paiement est branché", () => {
+    expect(depositReleasesIdentity("PAID", true)).toBe(true);
+    expect(depositReleasesIdentity("PROCESSING", true)).toBe(false);
+    expect(depositReleasesIdentity("RECORDED", true)).toBe(false);
+  });
+
+  it("accepte un dépôt enregistré sur un site sans paiement en ligne", () => {
+    expect(depositReleasesIdentity("RECORDED", false)).toBe(true);
+    expect(depositReleasesIdentity("PROCESSING", false)).toBe(false);
   });
 });

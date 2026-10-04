@@ -39,7 +39,7 @@ const SECURITY_HEADERS: Record<string, string> = {
 };
 
 /** Le dossier PDF s'affiche dans la page /annonces/n/dossier, et seulement là. */
-const ENCADRABLE = /^\/annonces\/\d+\/etude$/;
+const ENCADRABLE = /^\/annonces\/\d+\/(etude|presentation-cabinet)$/;
 
 function withSecurityHeaders(response: NextResponse, pathname = ""): NextResponse {
   for (const [key, value] of Object.entries(SECURITY_HEADERS)) {

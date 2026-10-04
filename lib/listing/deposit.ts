@@ -10,6 +10,6 @@ import { prisma } from "@/lib/prisma";
 export async function findMyDeposit(listingId: string, buyerId: string) {
   return prisma.interestDeposit.findUnique({
     where: { listingId_buyerId: { listingId, buyerId } },
-    select: { id: true, amount: true, placedAt: true, ndaAcceptedAt: true },
+    select: { id: true, amount: true, placedAt: true, ndaAcceptedAt: true, paymentStatus: true },
   });
 }

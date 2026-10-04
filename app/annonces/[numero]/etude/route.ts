@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getActor, isAdmin } from "@/lib/authz";
 import { canViewListing, ownsFirm } from "@/lib/authz/policies";
 import { loadValuationStudy } from "@/lib/listing/valuation-study";
-import { buildPresentationDossierHtml, presentationDossierFileName } from "@/lib/listing/presentation-dossier";
+import { buildPresentationDossierHtml, presentationDossierFileName, printableDossierHtml } from "@/lib/listing/presentation-dossier";
 import { presentationDossierAssets } from "@/lib/listing/presentation-dossier-assets";
 import { printPresentationDossier } from "@/lib/listing/presentation-dossier-pdf";
 import { renderValuationStudyPdf } from "@/lib/listing/valuation-study-pdf";
@@ -55,6 +55,12 @@ export async function GET(request: Request, { params }: { params: Promise<{ nume
     listingUrl: `${origin}/annonces/${listing.publicNumber}`,
     ...(await presentationDossierAssets(origin)),
   });
+  // Impression : la page à imprimer, qui ne sort que les pages du dossier.
+  if (new URL(request.url).searchParams.has("impression")) {
+    return new NextResponse(printableDossierHtml(html, `/annonces/${listing.publicNumber}/dossier`), {
+      headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "private, no-store" },
+    });
+  }
   // Le navigateur de Cloudflare imprime le dossier ; à défaut, l'ancien format.
   const pdf = (await printPresentationDossier(html, listing.publicNumber)) ?? (await renderValuationStudyPdf(study));
 

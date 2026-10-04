@@ -34,9 +34,13 @@ async function empreinte(html: string): Promise<string> {
   return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-export async function printPresentationDossier(html: string, publicNumber: number | null): Promise<Uint8Array | null> {
+export async function printPresentationDossier(
+  html: string,
+  publicNumber: number | null,
+  famille: "dossiers" | "cabinets" = "dossiers",
+): Promise<Uint8Array | null> {
   const { BROWSER, UPLOADS } = env();
-  const key = `dossiers/${publicNumber ?? "estimation"}/${await empreinte(html)}.pdf`;
+  const key = `${famille}/${publicNumber ?? "estimation"}/${await empreinte(html)}.pdf`;
 
   if (UPLOADS) {
     try {

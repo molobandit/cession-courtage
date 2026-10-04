@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { requireOriasVerified, type Actor } from "@/lib/authz/actor";
 import { ForbiddenError } from "@/lib/authz/errors";
 import { identitiesRevealedFor, isDealParticipant } from "@/lib/authz/policies";
+import { stripeConfigured } from "@/lib/billing/stripe";
+import { depositReleasesIdentity } from "@/lib/listing/identity-access";
 
 export async function listMyDeals(actor?: Actor) {
   const user = actor ?? (await requireOriasVerified());
@@ -11,7 +13,7 @@ export async function listMyDeals(actor?: Actor) {
     where: { OR: [{ sellerId: user.id }, { buyerId: user.id }] },
     orderBy: { createdAt: "desc" },
     include: {
-      listing: { select: { publicNumber: true, displayedZone: true, askingPrice: true, deposits: { select: { buyerId: true } } } },
+      listing: { select: { publicNumber: true, displayedZone: true, askingPrice: true, deposits: { select: { buyerId: true, paymentStatus: true } } } },
       seller: { select: { id: true, fullName: true, email: true, publicAlias: true, kycStatus: true, firm: { select: { legalName: true } } } },
       buyer: { select: { id: true, fullName: true, email: true, publicAlias: true, kycStatus: true, firm: { select: { legalName: true } } } },
     },
@@ -31,7 +33,7 @@ export async function getMyDeal(dealId: string, actor?: Actor) {
           displayedZone: true,
           askingPrice: true,
           status: true,
-          deposits: { select: { buyerId: true } },
+          deposits: { select: { buyerId: true, paymentStatus: true } },
         },
       },
       seller: { select: { id: true, fullName: true, email: true, publicAlias: true, kycStatus: true, firm: { select: { legalName: true } } } },
@@ -119,7 +121,7 @@ function presentDeal(
     escrowStage: string;
     escrowProviderRef: string | null;
     createdAt: Date;
-    listing: { id?: string; publicNumber: number; displayedZone: string; askingPrice: unknown; status?: string; deposits?: { buyerId: string }[] };
+    listing: { id?: string; publicNumber: number; displayedZone: string; askingPrice: unknown; status?: string; deposits?: { buyerId: string; paymentStatus?: string | null }[] };
     seller: DealParty;
     buyer: DealParty;
     documents?: {
@@ -145,7 +147,11 @@ function presentDeal(
 ) {
   // Le depot d'interet de l'acquereur du dossier leve l'anonymat, sans attendre
   // la LOI. Les depots des autres candidats sur la meme annonce n'y changent rien.
-  const hasDeposit = (deal.listing.deposits ?? []).some((d) => d.buyerId === deal.buyerId);
+  // Seul un dépôt reçu par le trust lève l'anonymat (voir depositReleasesIdentity).
+  const paymentsLive = stripeConfigured();
+  const hasDeposit = (deal.listing.deposits ?? []).some(
+    (d) => d.buyerId === deal.buyerId && depositReleasesIdentity(d.paymentStatus, paymentsLive),
+  );
   const revealed = identitiesRevealedFor({ stage: deal.stage, hasDeposit });
   return {
     id: deal.id,

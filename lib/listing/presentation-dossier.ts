@@ -36,12 +36,12 @@ export type PresentationDossierOptions = {
 };
 
 /* Huit nuances du même bleu, écartées pour rester lisibles côte à côte. */
-const COULEURS = ["#312e81", "#4f46e5", "#818cf8", "#c7d2fe", "#1d4ed8", "#60a5fa", "#a5b4fc", "#93c5fd"];
+export const COULEURS = ["#312e81", "#4f46e5", "#818cf8", "#c7d2fe", "#1d4ed8", "#60a5fa", "#a5b4fc", "#93c5fd"];
 /** Tranches claires : texte foncé dessus. */
-const CLAIRES = new Set([3, 6, 7]);
+export const CLAIRES = new Set([3, 6, 7]);
 const NOMBRES = ["zéro", "une", "deux", "trois", "quatre", "cinq", "six", "sept", "huit", "neuf", "dix"];
 
-function esc(s: string): string {
+export function esc(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 
@@ -50,23 +50,23 @@ function sansTiret(s: string): string {
   return s.replace(/\s*[—–]\s*/g, ", ").replace(/\s+-\s+/g, ", ");
 }
 
-function t(s: string): string {
+export function t(s: string): string {
   return esc(sansTiret(s));
 }
 
-const NBSP = " ";
+export const NBSP = " ";
 
-function nombre(v: number, decimales = 0): string {
+export function nombre(v: number, decimales = 0): string {
   return v
     .toLocaleString("fr-FR", { minimumFractionDigits: decimales, maximumFractionDigits: decimales })
     .replace(/\s/g, NBSP);
 }
 
-function euro(v: number): string {
+export function euro(v: number): string {
   return `${nombre(Math.round(v))}${NBSP}€`;
 }
 
-function pct(share: number): string {
+export function pct(share: number): string {
   const p = share * 100;
   return `${nombre(p, p > 0 && p < 1 ? 1 : 0)}${NBSP}%`;
 }
@@ -75,13 +75,13 @@ function fois(v: number): string {
   return `${nombre(v, 2)} fois`;
 }
 
-function compte(n: number, singulier: string, pluriel: string, feminin = true): string {
+export function compte(n: number, singulier: string, pluriel: string, feminin = true): string {
   const mot = n === 1 ? singulier : pluriel;
   const chiffre = n <= 10 ? (n === 1 ? (feminin ? "une" : "un") : NOMBRES[n]!) : nombre(n);
   return `${chiffre} ${mot}`;
 }
 
-function dateFr(d: Date): string {
+export function dateFr(d: Date): string {
   return d.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "Europe/Paris" });
 }
 
@@ -188,7 +188,7 @@ function synthese(study: ValuationStudy): string {
 
 // ── Pièces de mise en page ─────────────────────────────────────────
 
-function anneau(parts: Share[], centre: string, sousCentre: string): string {
+export function anneau(parts: Share[], centre: string, sousCentre: string): string {
   const r = 78;
   const ep = 30;
   const c = 2 * Math.PI * r;
@@ -215,13 +215,13 @@ function anneau(parts: Share[], centre: string, sousCentre: string): string {
     <text x="110" y="126" text-anchor="middle" font-size="8.5" fill="#64748b">${sousCentre}</text></svg>`;
 }
 
-function barre(parts: Share[]): string {
+export function barre(parts: Share[]): string {
   return `<div class="barre">${parts
     .map((p, i) => `<span style="flex:${Math.max(p.share, 0.004)};background:${COULEURS[i % COULEURS.length]}"></span>`)
     .join("")}</div>`;
 }
 
-function legende(parts: Share[], format: (p: Share) => string): string {
+export function legende(parts: Share[], format: (p: Share) => string): string {
   return `<div class="legende">${parts
     .map((p, i) => `<span><i style="background:${COULEURS[i % COULEURS.length]}"></i>${format(p)}</span>`)
     .join("")}</div>`;
@@ -241,7 +241,7 @@ function icone(nom: "depot" | "fonds" | "transfert" | "sequestre" | "etude" | "l
   return `<svg viewBox="0 0 24 24" width="13pt" height="13pt" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${traits[nom]}</svg>`;
 }
 
-const CSS = `
+export const CSS = `
 @page{size:960pt 540pt;margin:0}
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{background:#fff}
@@ -265,7 +265,8 @@ h2{font-size:26.8pt;font-weight:600;color:#1e1b4b;letter-spacing:-.2pt;margin-to
 .legende{display:flex;flex-wrap:wrap;gap:4pt 14pt;margin-top:7pt;font-size:9.8pt;color:#334155}
 .legende i{display:inline-block;width:7pt;height:7pt;border-radius:2pt;margin-right:5pt;vertical-align:0}
 .marque{display:flex;align-items:center;gap:9pt;font-weight:600;font-size:14pt}
-.marque img{width:24pt;height:24pt;border-radius:6pt}
+.marque .lg{display:inline-block;width:24pt;height:24pt;border-radius:6pt}
+.lg{background-position:center;background-size:cover;background-repeat:no-repeat}
 /* couverture */
 .couv .tete{display:flex;justify-content:space-between;align-items:center}
 .pastille{font-size:7.9pt;font-weight:600;letter-spacing:1.6pt;background:rgba(255,255,255,.14);border-radius:20pt;padding:4pt 10pt}
@@ -296,7 +297,7 @@ export function buildPresentationDossierHtml(study: ValuationStudy, opts: Presen
     opts.listingUrl ? `<a href="${esc(opts.listingUrl + ancre)}" style="color:inherit;text-decoration:underline;text-underline-offset:2pt">${texte}</a>` : texte;
   const entete = (n: number, titre: string, intro: string) =>
     `<div class="n">${String(n).padStart(2, "0")}</div><h2>${t(titre)}</h2><p class="intro">${t(intro)}</p>`;
-  const marque = `<div class="marque"><img src="${esc(opts.images.mark)}" alt=""><span>${esc(BRAND_NAME)}</span></div>`;
+  const marque = `<div class="marque"><span class="lg"></span><span>${esc(BRAND_NAME)}</span></div>`;
   const titre = titreDossier(study);
   const branches = study.byBranch;
   const compagnies = compagniesAnonymes(study.byCarrier);
@@ -324,7 +325,7 @@ export function buildPresentationDossierHtml(study: ValuationStudy, opts: Presen
   // ── Couverture ──
   const couverture = `
 <section class="page bleu couv">
-  <img class="filigrane" src="${esc(opts.images.mark)}" alt="">
+  <div class="filigrane lg"></div>
   <div class="tete">${marque}<span class="pastille">CONFIDENTIEL</span></div>
   <div class="k">Dossier de présentation et d'étude</div>
   <h1>${t(titre)}</h1>
@@ -596,10 +597,10 @@ export function buildPresentationDossierHtml(study: ValuationStudy, opts: Presen
       .join("")}
   </div>
   <div style="font-size:15.9pt;font-weight:600;margin-top:20pt">Ce dossier vous intéresse ?</div>
-  <p style="font-size:11.6pt;color:#e0e7ff;margin-top:3pt">Vous pouvez poser vos questions au cédant par ${lien("la messagerie sécurisée", "#messages")}, ou vous positionner directement. Le dépôt de 2,5 % lance la procédure et vous donne le nom du cabinet.</p>
+  <p style="font-size:11.6pt;color:#e0e7ff;margin-top:3pt">Vous pouvez poser vos questions au cédant par ${lien("la messagerie sécurisée")}, ou vous positionner directement. Le dépôt de 2,5 % lance la procédure et vous donne le nom du cabinet.</p>
   <div style="position:absolute;left:48pt;right:48pt;bottom:42pt;background:#fff;color:#1e1b4b;border-radius:12pt;padding:12pt 18pt;display:flex;align-items:center;gap:22pt">
-    <div class="marque" style="color:#1e1b4b;font-size:12.8pt"><img src="${esc(opts.images.mark)}" alt=""><span>${esc(BRAND_NAME)}</span></div>
-    <div style="font-size:11pt;color:#334155">Pour échanger sur ce dossier : par ${lien("la messagerie sécurisée", "#messages")}, onglet Messages de l'annonce n° ${esc(numero)}.</div>
+    <div class="marque" style="color:#1e1b4b;font-size:12.8pt"><span class="lg"></span><span>${esc(BRAND_NAME)}</span></div>
+    <div style="font-size:11pt;color:#334155">Pour échanger sur ce dossier : par ${lien("la messagerie sécurisée")}, onglet Messages de l'annonce n° ${esc(numero)}.</div>
     ${opts.listingUrl ? `<a href="${esc(opts.listingUrl)}" style="margin-left:auto;flex:none;background:#4f46e5;color:#fff;border-radius:20pt;padding:7pt 18pt;font-weight:600;font-size:11pt;text-decoration:none">Se positionner</a>` : ""}
   </div>
   ${pied(8)}
@@ -611,7 +612,7 @@ export function buildPresentationDossierHtml(study: ValuationStudy, opts: Presen
 
   return `<!doctype html><html lang="fr"><head><meta charset="utf-8">
 <title>Dossier de présentation · n° ${esc(numero)}</title>
-<style>${polices}${CSS}</style></head><body>
+<style>${polices}${CSS}.lg{background-image:url("${esc(opts.images.mark)}")}</style></head><body>
 ${couverture}${confidentialite}${quiSommesNous}${essentiel}${anatomie}${structure}${valorisation}${honoraires}${cadre}
 </body></html>`;
 }
@@ -619,4 +620,35 @@ ${couverture}${confidentialite}${quiSommesNous}${essentiel}${anatomie}${structur
 /** Nom du fichier remis à l'acquéreur. */
 export function presentationDossierFileName(publicNumber: number | null): string {
   return publicNumber ? `Dossier_${publicNumber}_La_bourse_du_portefeuille.pdf` : "Dossier_La_bourse_du_portefeuille.pdf";
+}
+
+/**
+ * Version à imprimer d'un dossier : le même HTML, mis à l'échelle d'une
+ * feuille A4 paysage, avec une barre « Retour · Imprimer » visible à l'écran
+ * seulement. L'impression lancée depuis cette page ne sort que les pages du
+ * dossier, sur tous les navigateurs, téléphone compris.
+ */
+export function printableDossierHtml(html: string, retour: string): string {
+  // A4 paysage : 297 x 210 mm. La page de 1280 x 720 px, réduite à 87,5 %,
+  // occupe 1120 x 630 px ; 22 mm en haut la centrent sur la feuille.
+  const css = `
+@page{size:A4 landscape;margin:22mm 0 0 0}
+.barre-impression{position:sticky;top:0;z-index:10;display:flex;gap:10px;align-items:center;justify-content:space-between;padding:10px 16px;background:#fff;box-shadow:0 1px 0 #e2e8f0;font-family:"IBM Plex Sans",system-ui,sans-serif}
+.barre-impression a,.barre-impression button{font:600 14px "IBM Plex Sans",system-ui,sans-serif;border-radius:999px;padding:9px 18px;cursor:pointer;text-decoration:none}
+.barre-impression a{color:#3730a3;background:#eef2ff}
+.barre-impression button{color:#fff;background:#4f46e5;border:0}
+@media screen{html,body{background:#e2e8f0}.page{zoom:var(--z,1);margin:16px auto;box-shadow:0 2px 12px rgba(15,23,42,.15)}}
+@media print{.barre-impression{display:none}html,body{background:#fff}.page{zoom:.875;margin:0 auto;page-break-after:always;break-after:page}.page:last-child{page-break-after:auto;break-after:auto}}`;
+  const script = `<script>
+(function(){
+  function ajuste(){document.documentElement.style.setProperty('--z',String(Math.min(1,(window.innerWidth-24)/1280)));}
+  ajuste();window.addEventListener('resize',ajuste);
+  var fait=false;
+  window.addEventListener('load',function(){if(fait)return;fait=true;(document.fonts?document.fonts.ready:Promise.resolve()).then(function(){setTimeout(function(){window.print();},400);});});
+})();
+</script>`;
+  const barre = `<div class="barre-impression"><a href="${esc(retour)}" onclick="if(history.length>1){history.back();return false;}">Retour</a><button type="button" onclick="window.print()">Imprimer</button></div>`;
+  return html
+    .replace("</style></head>", `${css}</style>${script}</head>`)
+    .replace("<body>", `<body>${barre}`);
 }

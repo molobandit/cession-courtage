@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildPresentationDossierHtml, constatsEtude, presentationDossierFileName } from "@/lib/listing/presentation-dossier";
+import { buildPresentationDossierHtml, constatsEtude, presentationDossierFileName, printableDossierHtml } from "@/lib/listing/presentation-dossier";
 import type { ValuationStudy } from "@/lib/listing/valuation-study-model";
 
 function study(over: Partial<ValuationStudy> = {}): ValuationStudy {
@@ -87,11 +87,19 @@ describe("dossier de présentation", () => {
       listingUrl: "https://exemple.test/annonces/10999",
     });
     expect(html).toContain("Remis à l'acquéreur A·12 le 04/10/2026");
-    expect(html).toContain('href="https://exemple.test/annonces/10999#messages"');
+    expect(html).toContain('href="https://exemple.test/annonces/10999"');
     expect(html).toContain(">Se positionner</a>");
   });
 
   it("nomme le fichier proprement", () => {
     expect(presentationDossierFileName(10412)).toBe("Dossier_10412_La_bourse_du_portefeuille.pdf");
+  });
+
+  it("prépare une version à imprimer qui ne sort que les pages du dossier", () => {
+    const html = printableDossierHtml(buildPresentationDossierHtml(study(), { certified: true, images }), "/annonces/10999");
+    expect(html).toContain("@page{size:A4 landscape");
+    expect(html).toContain(".barre-impression{display:none}");
+    expect(html).toContain("window.print()");
+    expect(html.match(/<section class="page/g)).toHaveLength(9);
   });
 });

@@ -5,7 +5,8 @@ import { ownsFirm } from "@/lib/authz/policies";
 import { hasContactSubscription } from "@/lib/billing/contact-access";
 import { findMyDeposit } from "@/lib/listing/deposit";
 import { findMyInvestorPosition } from "@/lib/investor/positions";
-import { canReadCedantIdentity } from "@/lib/listing/identity-access";
+import { stripeConfigured } from "@/lib/billing/stripe";
+import { canReadCedantIdentity, depositReleasesIdentity } from "@/lib/listing/identity-access";
 import type { CompanyDocKind, CompanyDocRow } from "@/lib/listing/company-doc-kinds";
 
 export { COMPANY_DOC_KINDS, companyDocLabel, type CompanyDocRow, type CompanyDocKind } from "@/lib/listing/company-doc-kinds";
@@ -77,11 +78,14 @@ export async function actorCanReadCompanyDocs(listingId: string): Promise<boolea
   const isOwner = ownsFirm(actor, listing.portfolio.firmId);
   const investor = isInvestor(actor);
   const subscribed = isOwner || investor ? false : await hasContactSubscription(actor);
+  // Acquéreur : le dépôt doit être reçu par le trust, pas seulement enregistré.
   const deposit = isOwner
     ? null
     : investor
       ? await findMyInvestorPosition(listingId, actor.id)
-      : await findMyDeposit(listingId, actor.id);
+      : await findMyDeposit(listingId, actor.id).then((d) =>
+          d && depositReleasesIdentity(d.paymentStatus, stripeConfigured()) ? d : null,
+        );
   return canReadCedantIdentity({
     isOwner,
     canBuy: canBuy(actor),

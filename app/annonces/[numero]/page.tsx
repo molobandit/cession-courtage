@@ -34,6 +34,8 @@ import { CedantIdentityCard } from "@/components/listing/cedant-identity-card";
 import { SalePipeline } from "@/components/deal/sale-pipeline";
 import { prisma } from "@/lib/prisma";
 import { findMyDeposit } from "@/lib/listing/deposit";
+import { depositReleasesIdentity } from "@/lib/listing/identity-access";
+import { stripeConfigured } from "@/lib/billing/stripe";
 import { findMyInvestorPosition } from "@/lib/investor/positions";
 import { InvestorDepositForm } from "@/components/investor/placement-forms";
 import { listCertificationStatuses } from "@/lib/listing/certification";
@@ -163,6 +165,7 @@ export default async function PublicListingPage({
     ? { low: Math.round(Number(valorisation.lowValue)), high: Math.round(Number(valorisation.highValue)) }
     : estimee;
   const myDeposit = actor && !isSeller && !isInvestor(actor) ? await findMyDeposit(listing.id, actor.id) : null;
+  const depositReceived = myDeposit ? depositReleasesIdentity(myDeposit.paymentStatus, stripeConfigured()) : false;
   const readiness =
     actor && !isSeller && canBuy(actor)
       ? await loadEngagementReadiness(actor, 0, `/annonces/${listing.publicNumber}#position`)
@@ -416,9 +419,18 @@ export default async function PublicListingPage({
               <span className="tabular font-medium text-ink">
                 {formatEuroWhole(Number(myDeposit.amount))}
               </span>{" "}
-              est enregistré dans un trust. La procédure de cession est lancée.
-              Les coordonnées du cédant et les PDF du cabinet sont ouverts dans
-              l’onglet Documents. Les assurés du portefeuille restent anonymes.
+              {depositReceived ? (
+                <>
+                  est reçu dans un trust. La procédure de cession est lancée.
+                  Les coordonnées du cédant et les PDF du cabinet sont ouverts dans
+                  l’onglet Documents. Les assurés du portefeuille restent anonymes.
+                </>
+              ) : (
+                <>
+                  est en cours de traitement. La présentation du cabinet et ses
+                  coordonnées s’ouvriront dès sa réception par le trust.
+                </>
+              )}
             </p>
           ) : (
             <>

@@ -148,9 +148,7 @@ export default async function DealPage({ params }: { params: Promise<{ id: strin
           Déposées sur l’annonce, communes à tout acquéreur du portefeuille. Chaque ouverture par l’acquéreur est journalisée.
         </p>
         <a
-          href={`/annonces/${deal.listing.publicNumber}/presentation-cabinet`}
-          target="_blank"
-          rel="noreferrer"
+          href={`/annonces/${deal.listing.publicNumber}/cabinet`}
           className="mt-3 flex items-center gap-3 rounded-xl border border-indigo-line bg-indigo-soft px-3 py-2.5 hover:border-indigo"
         >
           <span className="flex h-9 w-7 shrink-0 items-center justify-center rounded bg-indigo text-[9px] font-bold text-white">PDF</span>

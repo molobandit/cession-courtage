@@ -41,7 +41,7 @@ const SECURITY_HEADERS: Record<string, string> = {
  * Le dossier de présentation PDF s'affiche dans la page /annonces/n/dossier :
  * lui seul peut être intégré, et seulement par le site lui-même.
  */
-const ENCADRABLE = /^\/annonces\/\d+\/etude$/;
+const ENCADRABLE = /^\/annonces\/\d+\/(etude|presentation-cabinet)$/;
 
 /** 204 et 304 ne peuvent pas porter de corps : recopier `body` les casserait. */
 const BODYLESS_STATUS = new Set([101, 204, 205, 304]);
