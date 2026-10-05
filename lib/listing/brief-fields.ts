@@ -115,8 +115,9 @@ export async function persistListingBriefFields(
       });
     }
     // Le dossier a changé : la copie des visiteurs se réimprime, en arrière plan.
-    const { warmVisitorDossier } = await import("@/lib/listing/dossier-warmup");
-    void warmVisitorDossier(listingId);
+    void import("@/lib/listing/dossier-warmup")
+      .then((m) => m.scheduleWarmVisitorDossier(listingId))
+      .catch(() => undefined);
   } catch (error) {
     console.error("persistListingBriefFields", error);
   }

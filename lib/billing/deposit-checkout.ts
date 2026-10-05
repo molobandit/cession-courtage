@@ -85,8 +85,9 @@ async function placeInvestorPosition(
       data: { status: "UNDER_NEGOTIATION" },
     });
     // Mêmes dossiers à ouvrir que l'acquéreur : on les imprime d'avance.
-    const { warmAfterPositioning } = await import("@/lib/listing/dossier-warmup");
-    void warmAfterPositioning({ listingId: listing.id, userId: investorId, investor: true });
+    void import("@/lib/listing/dossier-warmup")
+      .then((m) => m.scheduleWarmAfterPositioning({ listingId: listing.id, userId: investorId, investor: true }))
+      .catch(() => undefined);
   }
   return position;
 }

@@ -84,8 +84,9 @@ export async function placeDeposit(
      * attendre devant un écran noir à son premier clic.
      */
     if (depositReleasesIdentity(payment.status, stripeConfigured())) {
-      const { warmAfterPositioning } = await import("@/lib/listing/dossier-warmup");
-      void warmAfterPositioning({ listingId: listing.id, userId: actor.id, investor: false });
+      void import("@/lib/listing/dossier-warmup")
+        .then((m) => m.scheduleWarmAfterPositioning({ listingId: listing.id, userId: actor.id, investor: false }))
+        .catch(() => undefined);
     }
 
   return { deposit, position, deal };

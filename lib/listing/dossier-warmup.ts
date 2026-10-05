@@ -5,7 +5,7 @@ import { buildPresentationDossierHtml } from "@/lib/listing/presentation-dossier
 import { presentationDossierAssets } from "@/lib/listing/presentation-dossier-assets";
 import { loadCompanyPresentation } from "@/lib/listing/company-presentation";
 import { buildCompanyPresentationHtml } from "@/lib/listing/company-presentation-html";
-import { warmPresentationDossier } from "@/lib/listing/presentation-dossier-pdf";
+import { detacher, warmPresentationDossier } from "@/lib/listing/presentation-dossier-pdf";
 
 /**
  * Imprimer avant le premier clic.
@@ -156,4 +156,24 @@ export async function warmVisitorDossier(listingId: string): Promise<void> {
   } catch (error) {
     console.error("dossier-warmup: copie visiteur", error);
   }
+}
+
+/*
+ * Les deux entrées que les parcours appellent.
+ *
+ * Elles ne rendent rien et ne lèvent rien : une préimpression n'est qu'un
+ * confort, et un dépôt ne doit pas échouer parce qu'un PDF n'a pas pu être
+ * préparé. Le travail est détaché de la requête qui l'a lancé, pour qu'il
+ * survive à sa réponse.
+ */
+export function scheduleWarmAfterPositioning(input: {
+  listingId: string;
+  userId: string;
+  investor: boolean;
+}): void {
+  detacher(warmAfterPositioning(input).catch(() => undefined));
+}
+
+export function scheduleWarmVisitorDossier(listingId: string): void {
+  detacher(warmVisitorDossier(listingId).catch(() => undefined));
 }

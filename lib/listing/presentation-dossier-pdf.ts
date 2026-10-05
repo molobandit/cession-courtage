@@ -43,7 +43,7 @@ function env(): Env {
  * mourait avec elle, et la requête suivante attendait une promesse qui ne se
  * résolvait jamais : vingt secondes d'écran noir. waitUntil la laisse finir.
  */
-function detacher(travail: Promise<unknown>): void {
+export function detacher(travail: Promise<unknown>): void {
   try {
     getCloudflareContext().ctx.waitUntil(travail.catch(() => undefined));
   } catch {
