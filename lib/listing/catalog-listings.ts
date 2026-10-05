@@ -13,10 +13,13 @@ export const CATALOG_FIRM_ID = "firm_catalog";
 /** Compte cédant du catalogue : celui qui retient les offres et mène les dossiers. */
 export const CATALOG_SELLER = {
   id: "usr_catalog_seller",
-  email: "cedant.catalogue@cession-courtage.demo",
+  email: "m.lefevre@horizon-courtage.demo",
   oriasNumber: "17001090",
   publicAlias: "C90",
-  fullName: "Cédant Catalogue",
+  fullName: "Marc Lefèvre",
+  jobTitle: "Gérant",
+  /* Numéro réservé à la fiction : il ne sonne chez personne. */
+  phone: "01 99 00 12 34",
 } as const;
 /*
  * Huit dossiers de démonstration, pas quatre-vingts.

@@ -76,15 +76,19 @@ export function CompanyDocumentsPanel({
           </div>
         )
       ) : null}
+      {/*
+        Une pièce absente ne regarde que le cédant : c'est sa liste de ce qui
+        reste à envoyer. Un acquéreur ne lit que les pièces qui existent.
+      */}
       <ul className="mt-4 divide-y divide-line">
-        {COMPANY_DOC_KINDS.map((item) => {
+        {COMPANY_DOC_KINDS.filter((item) => canUpload || byKind.has(item.kind)).map((item) => {
           const doc = byKind.get(item.kind);
           return (
             <li key={item.kind} className="flex flex-wrap items-center justify-between gap-2 py-3">
               <div>
                 <p className="text-[14px] font-medium text-ink">{item.label}</p>
                 <p className="text-[13px] text-muted">
-                  {canDownload && doc ? doc.fileName : canDownload ? "Non déposé" : "Verrouillé"}
+                  {canDownload && doc ? doc.fileName : canUpload ? "Non déposé" : "Verrouillé"}
                 </p>
               </div>
               {canDownload && doc ? (

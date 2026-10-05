@@ -227,17 +227,23 @@ export default async function PublicListingPage({
     brief.presentation?.trim() ||
     `Portefeuille de courtage en ${mainBranch.toLowerCase()}, zone ${zone}. ${contractCount.toLocaleString("fr-FR")} contrats pour ${clientCount.toLocaleString("fr-FR")} clients, commissions annuelles de ${formatEuroWhole(annualCommissions)}. Référence : dossier n° ${listing.publicNumber}.`;
 
+  /*
+   * Les informations principales, sans redite ni case vide.
+   *
+   * La clientèle et la branche se lisent déjà dans « Types de risques » et
+   * « Clientèle cible » juste au dessus, et « Raison de la vente : Non
+   * renseigné » n'apprend rien : une ligne sans valeur ne s'affiche pas.
+   */
+  const motif = cessionMotiveLabel(brief.cessionMotive) || brief.cessionMotive?.trim() || "";
   const facts = [
     { label: "Localisation", value: zone },
     { label: "Type", value: brief.portfolioKind?.trim() || "Courtage" },
-    { label: "Type de clientèle", value: segments },
-    { label: "Branche principale", value: mainBranch },
-    { label: "Raison de la vente", value: cessionMotiveLabel(brief.cessionMotive) || brief.cessionMotive?.trim() || EMPTY_CELL },
+    ...(motif ? [{ label: "Raison de la vente", value: motif }] : []),
     ...(brief.desiredCessionDate
       ? [{ label: "Cession souhaitée", value: brief.desiredCessionDate }]
       : []),
     ...regulatoryFacts(brief.regulatory),
-  ];
+  ].filter((f) => f.value && f.value !== EMPTY_CELL);
 
   const cotation = marketStatus({ status: listing.status, offerWindowClosesAt: listing.offerWindowClosesAt });
   const listingPath = `/annonces/${listing.publicNumber}`;
@@ -366,28 +372,35 @@ export default async function PublicListingPage({
        * Ce que le dépôt ouvre, rassemblé en un seul endroit.
        *
        * Avant le dépôt, ce volet n'existe pas : une liste de pièces verrouillées
-       * n'apprend rien et allonge la page. Après, il porte son repère et renvoie
-       * à « Mes documents », où tout se télécharge.
+       * n'apprend rien et allonge la page. Après, l'acquéreur y lit le repère, les
+       * coordonnées du cédant, et prend « Mes documents » pour les pièces. Le
+       * cédant, lui, garde ici la liste de ce qu'il reste à déposer.
        */
       documents={
         ouvert ? (
           <div className="grid gap-6">
-            <p className="inline-flex w-fit rounded-full bg-indigo-soft px-3 py-1 text-[12px] font-semibold text-indigo-dark">
-              Débloqué par votre dépôt
-            </p>
-            {cedantIdentity ? <CedantIdentityCard identity={cedantIdentity} /> : null}
-            <CompanyDocumentsPanel
-              listingId={listing.id}
-              publicNumber={listing.publicNumber}
-              docs={companyDocs}
-              canUpload={isSeller}
-              canDownload
-            />
             {!isSeller ? (
-              <Link href="/app/documents" className="text-[15px] font-medium text-indigo-dark hover:underline">
+              <p className="inline-flex w-fit rounded-full bg-indigo-soft px-3 py-1 text-[12px] font-semibold text-indigo-dark">
+                Débloqué par votre dépôt
+              </p>
+            ) : null}
+            {cedantIdentity && !isSeller ? <CedantIdentityCard identity={cedantIdentity} /> : null}
+            {isSeller ? (
+              <CompanyDocumentsPanel
+                listingId={listing.id}
+                publicNumber={listing.publicNumber}
+                docs={companyDocs}
+                canUpload
+                canDownload
+              />
+            ) : (
+              <Link
+                href="/app/documents"
+                className="inline-flex h-11 w-fit items-center rounded-full border border-indigo-line bg-indigo-soft px-5 text-[15px] font-semibold text-indigo-dark hover:bg-indigo-soft/70"
+              >
                 Mes documents
               </Link>
-            ) : null}
+            )}
           </div>
         ) : null
       }

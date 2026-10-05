@@ -60,7 +60,7 @@ const lines: string[] = [
    * démonstration, recopié depuis l'un d'eux sans jamais apparaître ici. Jamais
    * supprimé par ce script : il porte des dossiers une fois utilisé.
    */
-  `INSERT OR IGNORE INTO User (id, email, passwordHash, role, oriasNumber, oriasVerifiedAt, firmId, kycStatus, publicAlias, fullName, jobTitle, createdAt, updatedAt, financialCapacityStatus) SELECT ${[
+  `INSERT OR IGNORE INTO User (id, email, passwordHash, role, oriasNumber, oriasVerifiedAt, firmId, kycStatus, publicAlias, fullName, jobTitle, phone, createdAt, updatedAt, financialCapacityStatus) SELECT ${[
     CATALOG_SELLER.id,
     CATALOG_SELLER.email,
   ].map(sql).join(", ")}, (SELECT passwordHash FROM User WHERE email = 'marie.lefort@parisienne-courtage.demo'), ${[
@@ -71,7 +71,8 @@ const lines: string[] = [
     "VERIFIED",
     CATALOG_SELLER.publicAlias,
     CATALOG_SELLER.fullName,
-    "Gérant",
+    CATALOG_SELLER.jobTitle,
+    CATALOG_SELLER.phone,
     CATALOG_FIRM.foundedAt,
     CATALOG_FIRM.foundedAt,
     "NONE",
@@ -79,9 +80,11 @@ const lines: string[] = [
   /*
    * Le cabinet est supprimé puis recréé à chaque exécution, ce qui détache le
    * cédant (firmId passe à NULL). L'insertion au-dessus ne le rattrape pas,
-   * puisqu'elle ignore une ligne déjà présente : on le rattache ici.
+   * puisqu'elle ignore une ligne déjà présente : on le rattache ici, et on y
+   * remet aussi son identité, pour qu'un compte déjà créé prenne le nom et les
+   * coordonnées à jour sans qu'on y touche à la main.
    */
-  `UPDATE User SET firmId = ${sql(CATALOG_FIRM.id)}, kycStatus = 'VERIFIED', oriasVerifiedAt = ${sql(CATALOG_FIRM.foundedAt)} WHERE id = ${sql(CATALOG_SELLER.id)};`,
+  `UPDATE User SET firmId = ${sql(CATALOG_FIRM.id)}, kycStatus = 'VERIFIED', oriasVerifiedAt = ${sql(CATALOG_FIRM.foundedAt)}, email = ${sql(CATALOG_SELLER.email)}, fullName = ${sql(CATALOG_SELLER.fullName)}, jobTitle = ${sql(CATALOG_SELLER.jobTitle)}, phone = ${sql(CATALOG_SELLER.phone)} WHERE id = ${sql(CATALOG_SELLER.id)};`,
   "",
 ];
 

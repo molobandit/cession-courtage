@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { CompanyDocumentsPanel } from "@/components/listing/company-documents-panel";
 import { getActor, isInvestor, isOriasVerified } from "@/lib/authz";
 import { companyDocLabel } from "@/lib/listing/company-doc-kinds";
 import { listCompanyDocs } from "@/lib/listing/company-docs";

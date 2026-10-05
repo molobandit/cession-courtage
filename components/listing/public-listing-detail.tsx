@@ -2,7 +2,6 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { SectionTab, SectionTabLink, SectionTabs } from "@/components/ui/section-tabs";
 import { MarketBadge } from "@/components/listing/market-badge";
-import { SALE_PIPELINE } from "@/lib/deal/pipeline";
 import type { ListingActions } from "@/lib/listing/listing-actions";
 import type { MarketTone } from "@/lib/listing/market-status";
 import { TakePositionButton } from "@/components/listing/take-position-button";
@@ -274,21 +273,6 @@ export function PublicListingDetail({
               </SectionTabLink>
             ) : null}
           </div>
-
-          {/* Le cadre : les quatre étapes, dites comme dans le dossier de présentation. */}
-          <section className="mt-6 rounded-3xl border border-line bg-paper p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-ink">Le cadre</h2>
-            <ol className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              {SALE_PIPELINE.map((step) => (
-                <li key={step.key} className="rounded-2xl border border-line p-4">
-                  <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-indigo-dark">
-                    {step.num} · {step.label}
-                  </p>
-                  <p className="mt-2 text-[13px] leading-relaxed text-muted">{step.summary}</p>
-                </li>
-              ))}
-            </ol>
-          </section>
 
           {manageHref ? (
             <Link
