@@ -49,6 +49,15 @@ const listingPublicInclude = {
 };
 
 /** Persist OFFERS_CLOSED when the 21-day window has elapsed (lazy, on GET). */
+/**
+ * Fermeture des fenêtres d'offres.
+ *
+ * Le modèle n'a plus de fenêtre : le montant est arrêté à l'étude et un
+ * acquéreur se positionne en versant son dépôt. Cette écriture s'exécutait
+ * pourtant à chaque lecture d'annonce, sur toutes les fiches et sur la salle
+ * de marché, pour ne jamais rien changer. La tâche quotidienne garde la
+ * fonction, le chemin de lecture ne l'appelle plus.
+ */
 export async function closeExpiredOfferWindows(now = new Date()): Promise<number> {
   const result = await prisma.listing.updateMany({
     where: {
@@ -61,7 +70,6 @@ export async function closeExpiredOfferWindows(now = new Date()): Promise<number
 }
 
 export async function listPublicListings() {
-  await closeExpiredOfferWindows();
   return prisma.listing.findMany({
     where: { status: { in: PUBLIC_STATUSES }, publishedAt: { not: null } },
     orderBy: { publishedAt: "desc" },
@@ -166,7 +174,6 @@ export async function listPublicListingFacets(
 }
 
 export async function getPublicListing(publicNumber: number) {
-  await closeExpiredOfferWindows();
   const listing = await prisma.listing.findFirst({
     where: { publicNumber, status: { in: PUBLIC_STATUSES } },
     include: listingPublicInclude,
@@ -178,7 +185,6 @@ export async function getPublicListing(publicNumber: number) {
  * Public number lookup: published (or owner) → listing; otherwise null (404, never 403).
  */
 export async function getListingByPublicNumber(publicNumber: number, actor: Actor | null) {
-  await closeExpiredOfferWindows();
   const listing = await prisma.listing.findFirst({
     where: { publicNumber },
     include: listingPublicInclude,
@@ -189,7 +195,6 @@ export async function getListingByPublicNumber(publicNumber: number, actor: Acto
 }
 
 export async function findMyListing(listingId: string, actor: Actor) {
-  await closeExpiredOfferWindows();
   const listing = await prisma.listing.findUnique({
     where: { id: listingId },
     include: {
@@ -210,7 +215,6 @@ export async function requireMyListing(listingId: string, actor?: Actor) {
 
 export async function listBuyerMatches(actor?: Actor) {
   const user = actor ?? (await requireOriasVerified());
-  await closeExpiredOfferWindows();
   return prisma.match.findMany({
     where: { mandate: { buyerId: user.id } },
     orderBy: { score: "desc" },

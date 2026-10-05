@@ -39,6 +39,7 @@ export function memberWorkspaceLinks(
   if (isInvestor) {
     return [
       { href: "/app/mes-dossiers", label: "Mes dossiers", short: "Dossiers", icon: "folder", exact: true },
+      { href: "/app/documents", label: "Mes documents", short: "Documents", icon: "doc" },
       { href: "/investisseurs/opportunites", label: "Opportunités", short: "Marché", icon: "chart" },
       { href: "/app/profil", label: "Mon compte", short: "Compte", icon: "user", also: ["/app/notifications"] },
     ];
@@ -66,6 +67,7 @@ export function memberWorkspaceLinks(
     });
   }
   links.push(
+    { href: "/app/documents", label: "Mes documents", short: "Documents", icon: "doc" },
     { href: "/investisseurs", label: "Investir", short: "Investir", icon: "chart" },
     {
       href: "/app/profil",

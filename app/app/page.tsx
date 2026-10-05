@@ -121,11 +121,7 @@ export default async function MemberHomePage() {
                 ))}
               </ul>
             ) : (
-              <Vide
-                texte="Chaque portefeuille de la salle de marché a été étudié et chiffré avant sa mise en ligne. Le montant affiché est celui de l’annonce."
-                href="/annonces"
-                cta="Voir les portefeuilles"
-              />
+              <Vide href="/annonces" cta="Voir les portefeuilles" />
             )}
           </Bloc>
         ) : null}
@@ -298,10 +294,11 @@ function Pastille({ acteur }: { acteur: Acteur }) {
 }
 
 /** Un bloc vide dit quoi faire, et le bouton pour le faire. */
-function Vide({ texte, href, cta }: { texte: string; href: string; cta: string }) {
+/** Un bloc vide : une phrase seulement quand elle apprend quelque chose, et le bouton. */
+function Vide({ texte, href, cta }: { texte?: string; href: string; cta: string }) {
   return (
     <div className="px-5 pb-6 pt-2 text-center">
-      <p className="mx-auto max-w-sm text-[15px] leading-relaxed text-muted">{texte}</p>
+      {texte ? <p className="mx-auto max-w-sm text-[15px] leading-relaxed text-muted">{texte}</p> : null}
       <Button asChild variant="primary" className="mt-4">
         <Link href={href}>{cta}</Link>
       </Button>

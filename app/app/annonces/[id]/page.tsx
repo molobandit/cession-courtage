@@ -145,7 +145,7 @@ export default async function SellerListingPage({
       <section id="echanges" className="mt-6">
         <h2 className="text-lg font-semibold text-ink">Échanges avec les acquéreurs</h2>
         <p className="mt-1 text-[14px] text-muted">
-          Un fil par acquéreur. Les numéros de portable sont bloqués.
+          Un fil par acquéreur.
         </p>
         <div className="mt-3">
           <OfferChat

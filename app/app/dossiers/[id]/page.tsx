@@ -4,7 +4,6 @@ import { DeskPageHeader } from "@/components/app/desk";
 import { OfferChat } from "@/components/chat/offer-chat";
 import { DealJournal, DealProcessPanel, RoomDocsList } from "@/components/deal/deal-process-panel";
 import { PieceUpload, RemovePiece } from "@/components/deal/process-forms";
-import { SalePipeline } from "@/components/deal/sale-pipeline";
 import { PartnerStrip } from "@/components/partners/partner-grid";
 import { SectionTab, SectionTabs } from "@/components/ui/section-tabs";
 import { counterpartyDisplayName, findMyDeal, getActor, isOriasVerified } from "@/lib/authz";
@@ -78,7 +77,6 @@ export default async function DealPage({ params }: { params: Promise<{ id: strin
   const parcours = (
     <div className="grid gap-6">
       <DealProcessPanel p={p} side={side} escrowLive={escrowRailLive()} />
-      <SalePipeline currentKey={etape} />
       <DealJournal p={p} />
       <PartnerStrip partners={presentPartners()} />
     </div>
@@ -225,9 +223,7 @@ export default async function DealPage({ params }: { params: Promise<{ id: strin
   const messages = (
     <section id="echanges">
       <h2 className="text-lg font-semibold text-ink">Échanges</h2>
-      <p className="mt-1 text-[14px] text-muted">
-        Les numéros de portable sont bloqués. La négociation reste sur la plateforme.
-      </p>
+      <p className="mt-1 text-[14px] text-muted"></p>
       <div className="mt-3">
         <OfferChat
           dealId={deal.id}

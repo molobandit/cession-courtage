@@ -43,8 +43,7 @@ export default async function Page() {
               Vous ne suivez aucun dossier.{" "}
               <Link href="/annonces" className="font-semibold text-indigo-dark">
                 Parcourez la salle de marché
-              </Link>{" "}
-              : chaque portefeuille a été étudié et chiffré avant sa mise en ligne.
+              </Link>
             </>
           }
         />

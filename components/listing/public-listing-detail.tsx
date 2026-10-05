@@ -8,7 +8,6 @@ import type { MarketTone } from "@/lib/listing/market-status";
 import { TakePositionButton } from "@/components/listing/take-position-button";
 import { MarketStamp } from "@/components/listing/market-stamp";
 import { MixDonut } from "@/components/charts/mix-donut";
-import { RankedBars } from "@/components/charts/ranked-bars";
 import { UNCERTIFIED_LABEL } from "@/lib/copy/market";
 import { formatCount, formatEuroWhole } from "@/lib/format/number";
 import type { RenewalYear, Share } from "@/lib/portfolio/analytics";
@@ -196,77 +195,6 @@ export function PublicListingDetail({
           </article>
         </div>
 
-        <div className="mt-6 grid gap-6 lg:grid-cols-2">
-          <article className="rounded-3xl border border-line bg-paper p-7 shadow-sm">
-            <h2 className="text-xl font-semibold text-ink">Données financières</h2>
-            <p className="mt-1 text-[14px] text-muted">
-              {hasQualityFigures(quality)
-                ? "Commissions sur trois exercices, part du récurrent et prime gérée, distincte des commissions."
-                : "Commissions annuelles, par profil de clientèle et par branche."}
-              {isPartial
-                ? " Les commissions, contrats et clients sont ceux du lot cédé ; les exercices passés portent sur le portefeuille entier."
-                : ""}
-            </p>
-            <dl className="mt-5 divide-y divide-line">
-              {[
-                { label: isPartial ? "Commissions annuelles du lot" : "Commissions annuelles", value: formatEuroWhole(annualCommissions) },
-                { label: "Mode de perception", value: perceptionModeLine.replace("Mode de perception : ", "") },
-                ...(perceptionAmountLine
-                  ? [{ label: "Montant précompté", value: perceptionAmountLine.replace("Montant précompté : ", "") }]
-                  : []),
-                { label: "Montant", value: formatEuroWhole(askingPrice) },
-                {
-                  label: "Multiple",
-                  value:
-                    multiple !== null
-                      ? `${multiple.toLocaleString("fr-FR", { maximumFractionDigits: 2 })} ×`
-                      : "Non renseigné",
-                },
-                { label: "Contrats", value: formatCount(contractCount) },
-                { label: "Clients", value: formatCount(clientCount) },
-                ...qualityFactRows(quality),
-              ].map((row) => (
-                <div key={row.label} className="flex items-baseline justify-between gap-4 py-3">
-                  <dt className="text-[15px] text-muted">{row.label}</dt>
-                  <dd className="tabular text-[15px] font-semibold text-ink">{row.value}</dd>
-                </div>
-              ))}
-            </dl>
-            <AnnualProfileTable title="Par clientèle, par an" shares={bySegment} />
-            <AnnualProfileTable title="Par branche, par an" shares={byRisk} />
-          </article>
-          <MixDonut
-            title="Mix par branche"
-            subtitle="Part des commissions annuelles."
-            shares={byRisk}
-          />
-        </div>
-
-        <div className="mt-6 grid gap-6 lg:grid-cols-2">
-          <RankedBars
-            title="Compagnies"
-            unit={["compagnie", "compagnies"]}
-            subtitle="Commissions annuelles par porteur."
-            shares={byCarrier}
-          />
-          <RankedBars
-            title="Clientèles"
-            unit={["profil", "profils"]}
-            subtitle="Commissions annuelles par profil : particuliers, professionnels, entreprises."
-            shares={bySegment}
-          />
-        </div>
-
-        <div className="mt-6 grid gap-6 lg:grid-cols-2">
-          <RankedBars
-            title="Zones"
-            unit={["département", "départements"]}
-            subtitle="Départements du portefeuille, grain maximal autorisé. Commissions annuelles."
-            shares={byDepartment}
-          />
-          <YearlyRenewals years={renewals} />
-        </div>
-
         </div>
   );
 
@@ -419,9 +347,11 @@ export function PublicListingDetail({
                 {information}
 
               </SectionTab>
-              <SectionTab id="documents" label="Documents">
-                {documents}
-              </SectionTab>
+              {documents ? (
+                <SectionTab id="documents" label="Documents">
+                  {documents}
+                </SectionTab>
+              ) : null}
               <SectionTab id="position" label="Position">
                 {position}
               </SectionTab>
@@ -514,174 +444,3 @@ export function PublicListingDetail({
   );
 }
 
-function AnnualProfileTable({ title, shares }: { title: string; shares: Share[] }) {
-  if (shares.length === 0) return null;
-  const total = shares.reduce((sum, share) => sum + share.value, 0);
-
-  return (
-    <div className="mt-7">
-      <h3 className="text-[13px] font-semibold uppercase tracking-wide text-muted">{title}</h3>
-      <table className="mt-3 w-full border-collapse text-left">
-        <thead>
-          <tr className="border-b border-line text-[12px] text-muted">
-            <th scope="col" className="py-2 pr-3 font-medium">
-              Profil
-            </th>
-            <th scope="col" className="py-2 pr-3 text-right font-medium">
-              Commissions / an
-            </th>
-            <th scope="col" className="py-2 text-right font-medium">
-              Part
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {shares.map((share) => (
-            <tr key={share.label} className="border-b border-line">
-              <th scope="row" className="py-2.5 pr-3 text-[14px] font-medium text-ink">
-                {share.label}
-              </th>
-              <td className="tabular py-2.5 pr-3 text-right text-[14px] text-ink">
-                {formatEuroWhole(share.value)}
-              </td>
-              <td className="tabular py-2.5 text-right text-[14px] text-ink">
-                {(share.share * 100).toLocaleString("fr-FR", { maximumFractionDigits: 0 })} %
-              </td>
-            </tr>
-          ))}
-        </tbody>
-        <tfoot>
-          <tr>
-            <th scope="row" className="pt-3 pr-3 text-[14px] font-semibold text-ink">
-              Total
-            </th>
-            <td className="tabular pt-3 pr-3 text-right text-[14px] font-semibold text-ink">
-              {formatEuroWhole(total)}
-            </td>
-            <td className="tabular pt-3 text-right text-[14px] font-semibold text-ink">
-              100 %
-            </td>
-          </tr>
-        </tfoot>
-      </table>
-    </div>
-  );
-}
-
-function YearlyRenewals({ years }: { years: RenewalYear[] }) {
-  const hasData = years.some((year) => year.commissions > 0);
-  const passees = years.filter((y) => y.kind === "past");
-  const aVenir = years.filter((y) => y.kind === "upcoming");
-
-  const bloc = (titre: string, lignes: RenewalYear[]) => (
-    <tbody>
-      <tr>
-        <th colSpan={3} scope="colgroup" className="pt-4 pb-1 text-[12px] font-semibold uppercase tracking-wide text-indigo-dark">
-          {titre}
-        </th>
-      </tr>
-      {lignes.map((year) => (
-        <tr key={`${year.kind}-${year.year}`} className="border-b border-line">
-          <th scope="row" className="py-2.5 pr-3 text-[15px] font-medium text-ink">
-            {year.year}
-          </th>
-          <td className="tabular py-2.5 pr-3 text-right text-[15px] text-ink">{formatEuroWhole(year.commissions)}</td>
-          <td className="tabular py-2.5 text-right text-[15px] text-ink">{formatCount(year.contracts)}</td>
-        </tr>
-      ))}
-    </tbody>
-  );
-
-  const max = Math.max(...years.map((y) => y.commissions), 0);
-  const aVenirTotal = aVenir.reduce((somme, y) => somme + y.commissions, 0);
-  const aVenirContrats = aVenir.reduce((somme, y) => somme + y.contracts, 0);
-  const premiere = passees.find((y) => y.commissions > 0);
-  const derniere = passees[passees.length - 1];
-
-  return (
-    <article className="flex h-full flex-col rounded-3xl border border-line bg-paper p-6 shadow-sm">
-      <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0">
-          <h3 className="text-lg font-semibold text-ink">Renouvellements par année</h3>
-          <p className="mt-1 text-sm text-muted">
-            Les quatre dernières années, puis les échéances des douze prochains mois. L’historique est
-            reconstitué sur les contrats encore en portefeuille, d’après leur date d’effet.
-          </p>
-        </div>
-        {hasData ? (
-          <div className="shrink-0 text-right">
-            <p className="tabular text-[20px] font-bold leading-none text-ink">{formatEuroWhole(aVenirTotal)}</p>
-            <p className="mt-1 text-[12px] text-muted">à renouveler · 12 mois</p>
-          </div>
-        ) : null}
-      </div>
-      {!hasData ? (
-        <p className="mt-4 text-[15px] text-muted">Aucune date d’effet ni échéance renseignée.</p>
-      ) : (
-        <>
-        <div className="mt-6">
-          <div className="flex h-40 items-end gap-2 border-b border-line" role="img" aria-label={`Renouvellements : ${years.map((y) => `${y.year} ${formatEuroWhole(y.commissions)}`).join(", ")}`}>
-            {years.map((y) => {
-              const hauteur = max > 0 ? (y.commissions / max) * 100 : 0;
-              return (
-                <div
-                  key={`${y.kind}-${y.year}`}
-                  className="flex h-full flex-1 flex-col items-center justify-end gap-1"
-                  title={`${y.year} · ${y.kind === "past" ? "renouvelé" : "à venir"} : ${formatEuroWhole(y.commissions)} · ${formatCount(y.contracts)} contrats`}
-                >
-                  <span className="tabular whitespace-nowrap text-[11px] font-medium text-ink">
-                    {formatEuroWhole(y.commissions)}
-                  </span>
-                  <div
-                    className={`w-full max-w-12 rounded-t ${y.kind === "past" ? "bg-indigo-line" : "bg-indigo"}`}
-                    style={{ height: `${Math.max(hauteur * 0.82, y.commissions > 0 ? 2 : 0)}%` }}
-                  />
-                </div>
-              );
-            })}
-          </div>
-          <div className="mt-1.5 flex gap-2">
-            {years.map((y) => (
-              <span key={`${y.kind}-${y.year}-l`} className="tabular flex-1 text-center text-[12px] font-semibold text-muted">
-                {y.year}
-              </span>
-            ))}
-          </div>
-          <div className="mt-3 flex flex-wrap gap-4 text-[12px] text-muted">
-            <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-[3px] bg-indigo-line" />Renouvelés</span>
-            <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-[3px] bg-indigo" />À venir</span>
-          </div>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="mt-3 w-full min-w-[20rem] border-collapse text-left">
-            <thead>
-              <tr className="border-b border-line text-[12px] text-muted">
-                <th scope="col" className="py-2 pr-3 font-medium">Année</th>
-                <th scope="col" className="py-2 pr-3 text-right font-medium">Commissions / an</th>
-                <th scope="col" className="py-2 text-right font-medium">Contrats</th>
-              </tr>
-            </thead>
-            {passees.length ? bloc("Renouvelés", passees) : null}
-            {aVenir.length ? bloc("À venir", aVenir) : null}
-          </table>
-        </div>
-        </>
-      )}
-      <div className="flex-1" />
-      {hasData ? (
-        <p className="mt-4 border-t border-line pt-4 text-[13px] leading-relaxed text-muted">
-          <span className="font-medium text-ink">{formatEuroWhole(aVenirTotal)}</span> de commissions
-          arrivent à échéance sur les douze prochains mois ({formatCount(aVenirContrats)} contrats)
-          {premiere && derniere && premiere.year !== derniere.year ? (
-            <>
-              . Sur la clientèle actuelle, les renouvellements sont passés de{" "}
-              <span className="font-medium text-ink">{formatEuroWhole(premiere.commissions)}</span> en {premiere.year} à{" "}
-              <span className="font-medium text-ink">{formatEuroWhole(derniere.commissions)}</span> en {derniere.year}
-            </>
-          ) : null}
-          .
-        </p>
-      ) : null}
-    </article>
-  );
-}

@@ -5,7 +5,7 @@ import { PageIntro } from "@/components/page-intro";
 import { PublicListingList } from "@/components/listing/public-listing-list";
 import { parseSearchPrefs, searchPrefsToFilters } from "@/lib/account/search-prefs";
 import { canBuy, getActor, isOriasVerified } from "@/lib/authz";
-import { MARKET_HALL, MARKET_HALL_LEDE } from "@/lib/copy/market";
+import { MARKET_HALL } from "@/lib/copy/market";
 import { loadPublicListingCards } from "@/lib/listing/load-public-cards";
 import { prisma } from "@/lib/prisma";
 
@@ -33,7 +33,7 @@ export default async function PublicListingsPage() {
 
   return (
     <main>
-      <PageIntro title={MARKET_HALL}>{MARKET_HALL_LEDE}</PageIntro>
+      <PageIntro title={MARKET_HALL} />
       <div className="mx-auto max-w-6xl px-4 py-8">
         {cards.length === 0 ? (
           <div className="rounded-xl border border-line bg-paper p-8">
@@ -41,8 +41,7 @@ export default async function PublicListingsPage() {
               Aucun portefeuille en ligne pour le moment
             </h2>
             <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-muted">
-              Chaque portefeuille est étudié et chiffré avant sa mise en ligne. Dites-nous ce que vous
-              cherchez : nous vous prévenons dès qu’un dossier y correspond.
+              Dites-nous ce que vous cherchez, nous vous prévenons dès qu’un dossier y correspond.
             </p>
             <Button asChild variant="primary" className="mt-6">
               <Link href={contactHref}>Être prévenu des mises en ligne</Link>

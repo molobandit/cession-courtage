@@ -31,7 +31,6 @@ import { actorCanReadCompanyDocs, listCompanyDocs } from "@/lib/listing/company-
 import { loadCedantIdentity } from "@/lib/listing/cedant-identity";
 import { CompanyDocumentsPanel } from "@/components/listing/company-documents-panel";
 import { CedantIdentityCard } from "@/components/listing/cedant-identity-card";
-import { SalePipeline } from "@/components/deal/sale-pipeline";
 import { prisma } from "@/lib/prisma";
 import { findMyDeposit } from "@/lib/listing/deposit";
 import { depositReleasesIdentity } from "@/lib/listing/identity-access";
@@ -44,7 +43,7 @@ import { DepositForm } from "@/components/listing/deposit-form";
 import { loadEngagementReadiness } from "@/lib/buyer/readiness";
 import { breakdownBy, renewalYears, type AnalyticsLine } from "@/lib/portfolio/analytics";
 import { qualityFromPortfolio } from "@/lib/portfolio/quality";
-import { computePortfolioValuation } from "@/lib/valuation/run";
+import { valuePortfolio } from "@/lib/valuation/run";
 
 export async function generateMetadata({
   params,
@@ -60,12 +59,15 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 /**
  * La fourchette d'un dossier qui n'a pas encore d'étude enregistrée.
  *
- * Même algorithme que l'étude, mais en lecture seule : une consultation de
- * fiche ne crée pas de valorisation. Si le calcul échoue, la fiche se tait.
+ * Le calcul lit toutes les lignes de contrat et fait tourner la cascade : le
+ * refaire à chaque consultation coûtait l'essentiel du temps d'ouverture de la
+ * fiche. Il est donc fait une fois, puis rangé, et les visites suivantes
+ * lisent une ligne. Un doublon créé par deux visites simultanées est sans
+ * conséquence : la lecture prend la plus récente.
  */
 async function estimerFourchette(portfolioId: string, listingId: string) {
   try {
-    const breakdown = await computePortfolioValuation(portfolioId, listingId);
+    const { valuationId: _id, breakdown } = await valuePortfolio(portfolioId, listingId);
     if (!(breakdown.lowValue > 0) || !(breakdown.highValue > 0)) return null;
     return { low: Math.round(breakdown.lowValue), high: Math.round(breakdown.highValue) };
   } catch (error) {
@@ -156,25 +158,37 @@ export default async function PublicListingPage({
    * calcule avec le même algorithme, sans rien écrire en base : la fiche doit
    * pouvoir montrer la fourchette de tout dossier en ligne.
    */
-  const valorisation = await prisma.valuation.findFirst({
-    where: { portfolioId: listing.portfolioId },
-    orderBy: { computedAt: "desc" },
-    select: { lowValue: true, highValue: true },
-  });
+  /*
+   * Tout ce qui ne dépend de rien d'autre part en même temps.
+   *
+   * Ces lectures s'enchaînaient une par une : sur D1, chaque aller retour
+   * coûte, et la fiche mettait plusieurs secondes à s'ouvrir. Elles ne se
+   * nourrissent pas l'une l'autre, elles partent donc ensemble.
+   */
+  const [valorisation, myDeposit, readiness, investorPos, certifications, brief, companyDocs] = await Promise.all([
+    prisma.valuation.findFirst({
+      where: { portfolioId: listing.portfolioId },
+      orderBy: { computedAt: "desc" },
+      select: { lowValue: true, highValue: true },
+    }),
+    actor && !isSeller && !isInvestor(actor) ? findMyDeposit(listing.id, actor.id) : Promise.resolve(null),
+    actor && !isSeller && canBuy(actor)
+      ? loadEngagementReadiness(actor, 0, `/annonces/${listing.publicNumber}#position`)
+      : Promise.resolve(null),
+    actor && isInvestor(actor) && !isSeller
+      ? findMyInvestorPosition(listing.id, actor.id)
+      : Promise.resolve(null),
+    listCertificationStatuses([listing.id]),
+    loadListingBriefFields(listing.id),
+    listCompanyDocs(listing.id),
+  ]);
+
   const estimee = valorisation ? null : await estimerFourchette(listing.portfolioId, listing.id);
   const fourchette = valorisation
     ? { low: Math.round(Number(valorisation.lowValue)), high: Math.round(Number(valorisation.highValue)) }
     : estimee;
-  const myDeposit = actor && !isSeller && !isInvestor(actor) ? await findMyDeposit(listing.id, actor.id) : null;
   const depositReceived = myDeposit ? depositReleasesIdentity(myDeposit.paymentStatus, stripeConfigured()) : false;
-  const readiness =
-    actor && !isSeller && canBuy(actor)
-      ? await loadEngagementReadiness(actor, 0, `/annonces/${listing.publicNumber}#position`)
-      : null;
-  const investorPos =
-    actor && isInvestor(actor) && !isSeller ? await findMyInvestorPosition(listing.id, actor.id) : null;
-  const certification =
-    (await listCertificationStatuses([listing.id])).get(listing.id) ?? "NONE";
+  const certification = certifications.get(listing.id) ?? "NONE";
   const certified = certification === "CERTIFIED";
   const sold = listing.status === "SOLD";
   const perception = commissionPerceptionCopy({
@@ -187,11 +201,11 @@ export default async function PublicListingPage({
     ),
     precompteAmount: listing.precompteAmount,
   });
-  const brief = await loadListingBriefFields(listing.id);
   const canReadCompanyDocs = await actorCanReadCompanyDocs(listing.id);
-  const companyDocs = await listCompanyDocs(listing.id);
   const cedantIdentity =
     canReadCompanyDocs && !isSeller ? await loadCedantIdentity(listing.id) : null;
+
+  const ouvert = isSeller || canReadCompanyDocs;
 
   const myDeal = actor
     ? await prisma.deal.findFirst({
@@ -348,21 +362,37 @@ export default async function PublicListingPage({
         defaultTab: myDeal || myDeposit ? "position" : "informations",
       }}
       /* Ce que l'acquéreur regarde en premier : où sont les commissions. */
+      /*
+       * Ce que le dépôt ouvre, rassemblé en un seul endroit.
+       *
+       * Avant le dépôt, ce volet n'existe pas : une liste de pièces verrouillées
+       * n'apprend rien et allonge la page. Après, il porte son repère et renvoie
+       * à « Mes documents », où tout se télécharge.
+       */
       documents={
-        <div className="grid gap-6">
-          {cedantIdentity ? <CedantIdentityCard identity={cedantIdentity} /> : null}
-          <CompanyDocumentsPanel
-            listingId={listing.id}
-            publicNumber={listing.publicNumber}
-            docs={canReadCompanyDocs || isSeller ? companyDocs : []}
-            canUpload={isSeller}
-            canDownload={canReadCompanyDocs || isSeller}
-          />
-        </div>
+        ouvert ? (
+          <div className="grid gap-6">
+            <p className="inline-flex w-fit rounded-full bg-indigo-soft px-3 py-1 text-[12px] font-semibold text-indigo-dark">
+              Débloqué par votre dépôt
+            </p>
+            {cedantIdentity ? <CedantIdentityCard identity={cedantIdentity} /> : null}
+            <CompanyDocumentsPanel
+              listingId={listing.id}
+              publicNumber={listing.publicNumber}
+              docs={companyDocs}
+              canUpload={isSeller}
+              canDownload
+            />
+            {!isSeller ? (
+              <Link href="/app/documents" className="text-[15px] font-medium text-indigo-dark hover:underline">
+                Mes documents
+              </Link>
+            ) : null}
+          </div>
+        ) : null
       }
       position={
         <div className="grid gap-6">
-          <SalePipeline currentKey={myDeal?.stage ?? "POSITION"} />
           {myDeal ? (
             <section className="rounded-3xl border border-indigo-line bg-indigo-soft p-6">
               <h2 className="text-xl font-semibold text-ink">Dossier de cession ouvert</h2>
@@ -495,7 +525,7 @@ export default async function PublicListingPage({
                 <>
                   est reçu dans un trust. La procédure de cession est lancée.
                   Les coordonnées du cédant et les PDF du cabinet sont ouverts dans
-                  l’onglet Documents. Les assurés du portefeuille restent anonymes.
+                  l’onglet Documents.
                 </>
               ) : (
                 <>
@@ -532,8 +562,7 @@ export default async function PublicListingPage({
         <section id="echanges" className="mt-8">
           <h2 className="text-xl font-semibold text-ink">Échanges avec le cédant</h2>
           <p className="mt-1.5 text-[15px] text-muted">
-            Vos questions ne sont visibles que du cédant. Les numéros de portable sont bloqués.
-          </p>
+            Vos questions ne sont visibles que du cédant.</p>
           <div className="mt-4">
             <OfferChat
               listingId={listing.id}

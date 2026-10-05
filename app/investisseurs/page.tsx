@@ -4,7 +4,6 @@ import { ToolIcon, type ToolIconName } from "@/components/app/toolbox";
 import { ADVISOR_BOOKING_HREF, CTA_ADVISOR } from "@/lib/copy/market";
 import {
   INVESTORS_CLOSING_TITLE,
-  INVESTORS_FIGURES,
   INVESTORS_KICKER,
   INVESTORS_LEDE,
   INVESTORS_PROTECTION,
@@ -68,20 +67,6 @@ export default function InvestisseursPage() {
             </Link>
           </div>
         </div>
-      </section>
-
-      {/* 2. Les trois chiffres. */}
-      <section className="border-b border-line bg-paper">
-        <dl className="mx-auto grid max-w-4xl gap-10 px-4 py-14 text-center sm:grid-cols-3 sm:gap-6">
-          {INVESTORS_FIGURES.map((figure) => (
-            <div key={figure.value}>
-              <dt className="tabular text-[2.5rem] font-bold leading-none tracking-tight text-indigo sm:text-[3rem]">
-                {figure.value}
-              </dt>
-              <dd className="mt-3 text-[15px] leading-snug text-muted">{figure.label}</dd>
-            </div>
-          ))}
-        </dl>
       </section>
 
       {/* 3. Les trois étapes. */}

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CardCta } from "@/components/listing/card-cta";
 import { MarketBadge } from "@/components/listing/market-badge";
 import { MarketStamp } from "@/components/listing/market-stamp";
 import { UNCERTIFIED_LABEL } from "@/lib/copy/market";
@@ -52,9 +53,7 @@ export function ListingAdCard({ item }: { item: PublicListingCard }) {
         </dl>
 
         <span className="mt-auto pt-5">
-          <span className="inline-flex h-10 w-full items-center justify-center rounded-full bg-indigo text-[14px] font-semibold !text-white">
-            Voir le dossier
-          </span>
+          <CardCta />
         </span>
       </Link>
     </li>
