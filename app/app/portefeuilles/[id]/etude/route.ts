@@ -48,7 +48,15 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     headers: {
       "Content-Type": "application/pdf",
       "Content-Disposition": `inline; filename="${presentationDossierFileName(study.publicNumber)}"`,
-      "Cache-Control": "private, no-store",
+      /*
+       * Cinq minutes dans le cache du navigateur, pour lui seul.
+       *
+       * Le lecteur PDF réclame le même fichier deux ou trois fois de suite ;
+       * sans cela chaque demande repartait au serveur, et rouvrir le dossier
+       * retéléchargeait 250 ko. La copie est privée : elle ne sort pas du
+       * navigateur du destinataire.
+       */
+      "Cache-Control": "private, max-age=300",
       "X-Content-Type-Options": "nosniff",
     },
   });

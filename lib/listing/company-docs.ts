@@ -97,3 +97,23 @@ export async function actorCanReadCompanyDocs(listingId: string): Promise<boolea
     isInvestor: investor,
   });
 }
+
+/**
+ * Le jour où le dossier a été remis à ce lecteur, c'est-à-dire celui de son
+ * positionnement.
+ *
+ * La mention « Remis à l'acquéreur X le … » entre dans l'empreinte qui sert de
+ * clé au PDF imprimé. Avec la date de lecture, elle changeait chaque jour, et
+ * le premier à ouvrir le dossier attendait une nouvelle impression. La date du
+ * positionnement ne bouge plus : le fichier est imprimé une fois, puis relu.
+ *
+ * Rend null faute de positionnement : l'appelant garde alors sa propre date.
+ */
+export async function positioningDate(listingId: string, actorId: string, investor: boolean): Promise<Date | null> {
+  if (investor) {
+    const position = await findMyInvestorPosition(listingId, actorId);
+    return position?.createdAt ?? null;
+  }
+  const deposit = await findMyDeposit(listingId, actorId);
+  return deposit?.placedAt ?? null;
+}

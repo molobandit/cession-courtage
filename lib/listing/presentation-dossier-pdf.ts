@@ -34,13 +34,32 @@ async function empreinte(html: string): Promise<string> {
   return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
+/*
+ * Les impressions en cours, par clé.
+ *
+ * Le lecteur PDF du navigateur demande le même fichier deux ou trois fois : il
+ * abandonne sa première requête, puis la rejoue. Sans ce registre, chaque appel
+ * lançait son propre navigateur d'impression, et l'attente se multipliait par
+ * trois. Les requêtes qui tombent pendant qu'une impression tourne attendent la
+ * même, et le registre se vide une fois l'impression finie.
+ */
+const enCours = new Map<string, Promise<Uint8Array | null>>();
+
 export async function printPresentationDossier(
   html: string,
   publicNumber: number | null,
   famille: "dossiers" | "cabinets" = "dossiers",
 ): Promise<Uint8Array | null> {
-  const { BROWSER, UPLOADS } = env();
   const key = `${famille}/${publicNumber ?? "estimation"}/${await empreinte(html)}.pdf`;
+  const deja = enCours.get(key);
+  if (deja) return deja;
+  const travail = imprimer(html, key).finally(() => enCours.delete(key));
+  enCours.set(key, travail);
+  return travail;
+}
+
+async function imprimer(html: string, key: string): Promise<Uint8Array | null> {
+  const { BROWSER, UPLOADS } = env();
 
   if (UPLOADS) {
     try {

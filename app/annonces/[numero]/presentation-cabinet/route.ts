@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { getActor, getListingByPublicNumber, isAdmin } from "@/lib/authz";
+import { getActor, getListingByPublicNumber, isAdmin, isInvestor } from "@/lib/authz";
 import { ownsFirm } from "@/lib/authz/policies";
-import { actorCanReadCompanyDocs } from "@/lib/listing/company-docs";
+import { actorCanReadCompanyDocs, positioningDate } from "@/lib/listing/company-docs";
 import { loadCompanyPresentation } from "@/lib/listing/company-presentation";
 import { buildCompanyPresentationHtml, companyPresentationFileName } from "@/lib/listing/company-presentation-html";
 import { renderCompanyPresentationPdf } from "@/lib/listing/company-presentation-pdf";
@@ -35,8 +35,10 @@ export async function GET(request: Request, { params }: { params: Promise<{ nume
   const proprietaire = ownsFirm(actor, listing.portfolio.firmId) || isAdmin(actor);
   const origin = new URL(request.url).origin;
   const download = new URL(request.url).searchParams.has("telecharger");
+  // Remis le jour du positionnement, pas le jour de la lecture : voir positioningDate.
+  const remisLe = proprietaire ? null : ((await positioningDate(listing.id, actor.id, isInvestor(actor))) ?? new Date());
   const html = buildCompanyPresentationHtml(presentation, {
-    recipient: proprietaire ? null : { label: `l'acquéreur ${actor.publicAlias}`, date: new Date() },
+    recipient: remisLe ? { label: `l'acquéreur ${actor.publicAlias}`, date: remisLe } : null,
     ...(await presentationDossierAssets(origin)),
   });
   if (new URL(request.url).searchParams.has("impression")) {
@@ -64,7 +66,15 @@ export async function GET(request: Request, { params }: { params: Promise<{ nume
     headers: {
       "Content-Type": "application/pdf",
       "Content-Disposition": `${download ? "attachment" : "inline"}; filename="${companyPresentationFileName(publicNumber)}"`,
-      "Cache-Control": "private, no-store",
+      /*
+       * Cinq minutes dans le cache du navigateur, pour lui seul.
+       *
+       * Le lecteur PDF réclame le même fichier deux ou trois fois de suite ;
+       * sans cela chaque demande repartait au serveur, et rouvrir le dossier
+       * retéléchargeait 250 ko. La copie est privée : elle ne sort pas du
+       * navigateur du destinataire.
+       */
+      "Cache-Control": "private, max-age=300",
       "X-Content-Type-Options": "nosniff",
     },
   });

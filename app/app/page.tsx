@@ -40,7 +40,6 @@ export default async function MemberHomePage() {
         <h1 className="text-[1.75rem] font-bold tracking-tight text-ink sm:text-[2rem]">
           {prenom ? `Bonjour ${prenom}` : "Bonjour"}
         </h1>
-        <p className="mt-1 text-[16px] text-muted">Voici où en sont vos dossiers.</p>
       </header>
 
       <section

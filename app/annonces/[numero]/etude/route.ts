@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
-import { getActor, isAdmin } from "@/lib/authz";
+import { getActor, isAdmin, isInvestor } from "@/lib/authz";
 import { canViewListing, ownsFirm } from "@/lib/authz/policies";
+import { positioningDate } from "@/lib/listing/company-docs";
 import { loadValuationStudy } from "@/lib/listing/valuation-study";
 import { buildPresentationDossierHtml, presentationDossierFileName, printableDossierHtml } from "@/lib/listing/presentation-dossier";
 import { presentationDossierAssets } from "@/lib/listing/presentation-dossier-assets";
@@ -43,9 +44,16 @@ export async function GET(request: Request, { params }: { params: Promise<{ nume
   const study = await loadValuationStudy({ portfolioId: listing.portfolioId, listingId: listing.id });
   if (!study) return introuvable;
 
-  // Chaque copie porte le pseudonyme de l'acquéreur qui l'ouvre.
+  /*
+   * Chaque copie porte le pseudonyme de l'acquéreur qui l'ouvre.
+   *
+   * Et la date de son positionnement quand il en a un : la mention entre dans
+   * l'empreinte du PDF, donc une date figée évite de réimprimer le dossier
+   * chaque jour. Faute de positionnement, le jour de la lecture fait foi.
+   */
   const owner = actor ? ownsFirm(actor, listing.portfolio.firmId) || isAdmin(actor) : false;
-  const recipient = actor && !owner ? { label: `l'acquéreur ${actor.publicAlias}`, date: new Date() } : null;
+  const remisLe = actor && !owner ? ((await positioningDate(listing.id, actor.id, isInvestor(actor))) ?? new Date()) : null;
+  const recipient = actor && remisLe ? { label: `l'acquéreur ${actor.publicAlias}`, date: remisLe } : null;
   const origin = new URL(request.url).origin;
   const download = new URL(request.url).searchParams.has("telecharger");
   const html = buildPresentationDossierHtml(study, {
@@ -68,7 +76,15 @@ export async function GET(request: Request, { params }: { params: Promise<{ nume
     headers: {
       "Content-Type": "application/pdf",
       "Content-Disposition": `${download ? "attachment" : "inline"}; filename="${presentationDossierFileName(listing.publicNumber)}"`,
-      "Cache-Control": "private, max-age=0, must-revalidate",
+      /*
+       * Cinq minutes dans le cache du navigateur, pour lui seul.
+       *
+       * Le lecteur PDF réclame le même fichier deux ou trois fois de suite ;
+       * sans cela chaque demande repartait au serveur, et rouvrir le dossier
+       * retéléchargeait 250 ko. La copie est privée : elle ne sort pas du
+       * navigateur du destinataire.
+       */
+      "Cache-Control": "private, max-age=300",
       "X-Content-Type-Options": "nosniff",
     },
   });
