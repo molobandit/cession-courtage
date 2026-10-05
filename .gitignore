@@ -68,6 +68,8 @@ worker-configuration.d.ts
 
 .deploy.auth_secret
 .deploy.database_url
+# Sorties de scripts : regenerables, jamais versionnees
+.deploy.*
 
 # Local workstation notes
 CLAUDE.md

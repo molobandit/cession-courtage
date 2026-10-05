@@ -2,6 +2,8 @@ import "server-only";
 import { DealStage, ListingStatus } from "@prisma/client";
 import type { Actor } from "@/lib/authz/actor";
 import { INTEREST_DEPOSIT_LABEL, INTEREST_DEPOSIT_RATE, interestDepositFor } from "@/lib/billing/rates";
+import { depositReleasesIdentity } from "@/lib/listing/identity-access";
+import { stripeConfigured } from "@/lib/billing/stripe";
 import { ensurePosition } from "@/lib/position/load";
 import { prisma } from "@/lib/prisma";
 
@@ -73,6 +75,18 @@ export async function placeDeposit(
         metadata: { amount, rate: INTEREST_DEPOSIT_RATE },
       },
     });
+
+    /*
+     * Ce que l'acquéreur ouvrira ensuite s'imprime maintenant.
+     *
+     * Son dépôt vient de lui ouvrir la présentation du cabinet et le dossier
+     * de présentation ; les imprimer ici, en arrière plan, évite de le faire
+     * attendre devant un écran noir à son premier clic.
+     */
+    if (depositReleasesIdentity(payment.status, stripeConfigured())) {
+      const { warmAfterPositioning } = await import("@/lib/listing/dossier-warmup");
+      void warmAfterPositioning({ listingId: listing.id, userId: actor.id, investor: false });
+    }
 
   return { deposit, position, deal };
 }

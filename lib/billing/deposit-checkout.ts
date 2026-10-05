@@ -84,6 +84,9 @@ async function placeInvestorPosition(
       where: { id: listing.id, status: { notIn: ["SOLD", "WITHDRAWN", "UNDER_NEGOTIATION"] } },
       data: { status: "UNDER_NEGOTIATION" },
     });
+    // Mêmes dossiers à ouvrir que l'acquéreur : on les imprime d'avance.
+    const { warmAfterPositioning } = await import("@/lib/listing/dossier-warmup");
+    void warmAfterPositioning({ listingId: listing.id, userId: investorId, investor: true });
   }
   return position;
 }

@@ -3,6 +3,7 @@ import { actorCanReadCompanyDocs, findCompanyDoc } from "@/lib/listing/company-d
 import { getActor } from "@/lib/authz/actor";
 import { prisma } from "@/lib/prisma";
 import { getObject } from "@/lib/storage/objects";
+import { documentUnavailable } from "@/lib/http/document-unavailable";
 
 export async function GET(
   _request: Request,
@@ -10,10 +11,10 @@ export async function GET(
 ) {
   const { listingId, docId } = await params;
   if (!(await actorCanReadCompanyDocs(listingId))) {
-    return NextResponse.json({ error: "Accès refusé." }, { status: 404 });
+    return documentUnavailable();
   }
   const doc = await findCompanyDoc(listingId, docId);
-  if (!doc) return NextResponse.json({ error: "Pièce introuvable." }, { status: 404 });
+  if (!doc) return documentUnavailable();
   // L'acquéreur d'un dossier ouvert sur l'annonce : son examen des pièces est journalisé.
   const actor = await getActor();
   if (actor) {
@@ -35,6 +36,6 @@ export async function GET(
       },
     });
   } catch {
-    return NextResponse.json({ error: "Fichier introuvable." }, { status: 404 });
+    return documentUnavailable();
   }
 }

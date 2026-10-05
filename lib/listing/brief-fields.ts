@@ -114,6 +114,9 @@ export async function persistListingBriefFields(
         data: { certificationStatus: "PENDING" },
       });
     }
+    // Le dossier a changé : la copie des visiteurs se réimprime, en arrière plan.
+    const { warmVisitorDossier } = await import("@/lib/listing/dossier-warmup");
+    void warmVisitorDossier(listingId);
   } catch (error) {
     console.error("persistListingBriefFields", error);
   }

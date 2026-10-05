@@ -75,6 +75,14 @@ export async function GET(request: Request, { params }: { params: Promise<{ nume
        * navigateur du destinataire.
        */
       "Cache-Control": "private, max-age=300",
+      /*
+       * Pas de requête partielle : le fichier part entier.
+       *
+       * Le lecteur PDF demande volontiers des tranches (en-tête Range). Nous
+       * ne savons pas y répondre en 206, et une réponse 200 à une demande de
+       * tranche le laissait rejouer sa requête. Autant le dire.
+       */
+      "Accept-Ranges": "none",
       "X-Content-Type-Options": "nosniff",
     },
   });

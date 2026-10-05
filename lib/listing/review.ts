@@ -63,6 +63,9 @@ export async function approveListing(listingId: string, adminId: string, price: 
     data: { actorId: adminId, action: "listing.review.approved", entityType: "Listing", entityId: listingId, metadata: { price } },
   });
   await rematchListing(listingId).catch((e: unknown) => console.error("rematchListing", e));
+  // Le dossier de présentation des visiteurs s'imprime à la mise en ligne, pas au premier clic.
+  const { warmVisitorDossier } = await import("@/lib/listing/dossier-warmup");
+  void warmVisitorDossier(listingId);
   if (c.cedant) {
     await notifyPositionEvent({
       key: `listing-approved:${listingId}:${maintenant.getTime()}`,

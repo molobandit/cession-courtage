@@ -35,6 +35,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ nume
       status: true,
       askingPrice: true,
       certificationStatus: true,
+      publishedAt: true,
+      updatedAt: true,
       portfolio: { select: { firmId: true } },
     },
   });
@@ -49,10 +51,14 @@ export async function GET(request: Request, { params }: { params: Promise<{ nume
    *
    * Et la date de son positionnement quand il en a un : la mention entre dans
    * l'empreinte du PDF, donc une date figée évite de réimprimer le dossier
-   * chaque jour. Faute de positionnement, le jour de la lecture fait foi.
+   * chaque jour. Faute de positionnement, c'est la date de publication de
+   * l'annonce, qui ne bouge pas non plus : avec la date du jour, le premier
+   * lecteur de chaque matin attendait une nouvelle impression.
    */
   const owner = actor ? ownsFirm(actor, listing.portfolio.firmId) || isAdmin(actor) : false;
-  const remisLe = actor && !owner ? ((await positioningDate(listing.id, actor.id, isInvestor(actor))) ?? new Date()) : null;
+  const remisLe = actor && !owner
+    ? ((await positioningDate(listing.id, actor.id, isInvestor(actor))) ?? listing.publishedAt ?? listing.updatedAt)
+    : null;
   const recipient = actor && remisLe ? { label: `l'acquéreur ${actor.publicAlias}`, date: remisLe } : null;
   const origin = new URL(request.url).origin;
   const download = new URL(request.url).searchParams.has("telecharger");
@@ -85,6 +91,14 @@ export async function GET(request: Request, { params }: { params: Promise<{ nume
        * navigateur du destinataire.
        */
       "Cache-Control": "private, max-age=300",
+      /*
+       * Pas de requête partielle : le fichier part entier.
+       *
+       * Le lecteur PDF demande volontiers des tranches (en-tête Range). Nous
+       * ne savons pas y répondre en 206, et une réponse 200 à une demande de
+       * tranche le laissait rejouer sa requête. Autant le dire.
+       */
+      "Accept-Ranges": "none",
       "X-Content-Type-Options": "nosniff",
     },
   });
