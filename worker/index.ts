@@ -30,6 +30,8 @@ const SECURITY_HEADERS: Record<string, string> = {
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com data:",
     "img-src 'self' data:",
+    // Le lecteur affiche le dossier depuis une adresse locale (URL.createObjectURL).
+    "frame-src 'self' blob:",
     "connect-src 'self'",
     "frame-ancestors 'none'",
     "base-uri 'self'",
