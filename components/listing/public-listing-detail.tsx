@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { SectionTab, SectionTabLink, SectionTabs } from "@/components/ui/section-tabs";
 import { MarketBadge } from "@/components/listing/market-badge";
+import { DossierLink } from "@/components/listing/dossier-link";
 import type { ListingActions } from "@/lib/listing/listing-actions";
 import type { MarketTone } from "@/lib/listing/market-status";
 import { TakePositionButton } from "@/components/listing/take-position-button";
@@ -39,6 +40,8 @@ export type PublicListingDetailModel = {
   /** Dépôt de positionnement, 2,5 % du montant. */
   /** Dossier de présentation en PDF. */
   studyHref: string;
+  /** Le PDF derrière la page du lecteur : il part dès le survol du lien. */
+  studyPdfHref: string;
   perceptionModeLine: string;
   perceptionAmountLine: string | null;
   contractCount: number;
@@ -125,6 +128,7 @@ export function PublicListingDetail({
     precompteLine,
     valuation,
     studyHref,
+    studyPdfHref,
     perceptionModeLine,
     perceptionAmountLine,
     contractCount,
@@ -258,12 +262,13 @@ export function PublicListingDetail({
 
 
           <div className="mt-3 flex flex-wrap gap-3">
-            <Link
+            <DossierLink
               href={studyHref}
+              pdfHref={studyPdfHref}
               className="inline-flex h-11 items-center rounded-full border border-indigo-line bg-indigo-soft px-5 text-[14px] font-semibold text-indigo-dark hover:bg-indigo-soft/70"
             >
               Ouvrir le dossier de présentation
-            </Link>
+            </DossierLink>
             {actions.askSeller ? (
               <SectionTabLink
                 href={interestHref}

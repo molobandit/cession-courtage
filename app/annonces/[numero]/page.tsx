@@ -307,6 +307,7 @@ export default async function PublicListingPage({
         precompteLine: perception.amountLine ?? perception.modeLine,
         valuation: fourchette,
         studyHref: `/annonces/${listing.publicNumber}/dossier`,
+        studyPdfHref: `/annonces/${listing.publicNumber}/etude`,
         perceptionModeLine: perception.modeLine,
         perceptionAmountLine: perception.amountLine,
         contractCount,

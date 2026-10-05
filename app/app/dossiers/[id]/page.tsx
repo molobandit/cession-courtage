@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { DossierLink } from "@/components/listing/dossier-link";
 import { notFound, redirect } from "next/navigation";
 import { DeskPageHeader } from "@/components/app/desk";
 import { OfferChat } from "@/components/chat/offer-chat";
@@ -161,14 +162,15 @@ export default async function DealPage({ params }: { params: Promise<{ id: strin
         <p className="mt-1 text-[14px] text-muted">
           Déposées sur l’annonce, communes à tout acquéreur du portefeuille. Chaque ouverture par l’acquéreur est journalisée.
         </p>
-        <a
+        <DossierLink
           href={`/annonces/${deal.listing.publicNumber}/cabinet`}
+          pdfHref={`/annonces/${deal.listing.publicNumber}/presentation-cabinet`}
           className="mt-3 flex items-center gap-3 rounded-xl border border-indigo-line bg-indigo-soft px-3 py-2.5 hover:border-indigo"
         >
           <span className="flex h-9 w-7 shrink-0 items-center justify-center rounded bg-indigo text-[9px] font-bold text-white">PDF</span>
           <span className="flex-1 text-[14px] font-semibold text-ink">Présentation détaillée du cabinet</span>
           <span className="text-[13px] font-semibold text-indigo-dark">Ouvrir</span>
-        </a>
+        </DossierLink>
         <div className="mt-3">
           <RoomDocsList p={p} canUpload={isSeller && canUpload} />
         </div>

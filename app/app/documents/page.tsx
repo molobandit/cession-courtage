@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { DossierLink } from "@/components/listing/dossier-link";
 import { redirect } from "next/navigation";
 import { getActor, isInvestor, isOriasVerified } from "@/lib/authz";
 import { companyDocLabel } from "@/lib/listing/company-doc-kinds";
@@ -76,12 +77,13 @@ export default async function MesDocumentsPage() {
                 </Link>
               </div>
               <div className="px-5 py-4">
-                <Link
+                <DossierLink
                   href={`/annonces/${listing.publicNumber}/cabinet`}
+                  pdfHref={`/annonces/${listing.publicNumber}/presentation-cabinet`}
                   className="inline-flex h-11 items-center rounded-full border border-indigo-line bg-indigo-soft px-5 text-[14px] font-semibold text-indigo-dark hover:bg-indigo-soft/70"
                 >
                   Présentation du cabinet
-                </Link>
+                </DossierLink>
                 {docs.length === 0 ? (
                   <p className="mt-4 text-[14px] text-muted">Le cédant n’a pas encore déposé de pièce.</p>
                 ) : (

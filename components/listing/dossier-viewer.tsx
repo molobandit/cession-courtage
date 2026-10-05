@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 /**
  * Lecture du dossier de présentation dans l'application.
@@ -10,6 +10,12 @@ import { useState } from "react";
  * imprimer, télécharger. L'impression passe par une page dédiée qui ne
  * contient que les pages du dossier : le papier
  * reproduit exactement les pages du dossier.
+ *
+ * Le fichier est d'abord téléchargé ici, puis donné au lecteur sous forme
+ * d'adresse locale. En lui donnant l'adresse du serveur, le lecteur PDF de
+ * Chrome abandonnait sa première requête et la rejouait quelques secondes
+ * plus tard, et l'écran restait noir pendant ce temps. Une adresse locale ne
+ * se rejoue pas : le fichier est déjà en mémoire.
  */
 export function DossierViewer({
   publicNumber,
@@ -23,6 +29,40 @@ export function DossierViewer({
   title?: string;
 }) {
   const [pret, setPret] = useState(false);
+  const [source, setSource] = useState<string | null>(null);
+  /** Téléchargement impossible : on laisse le lecteur aller le chercher lui même. */
+  const [echec, setEchec] = useState(false);
+
+  useEffect(() => {
+    /*
+     * Sur téléphone, le lecteur du système ouvre le fichier depuis son
+     * adresse : inutile de le télécharger deux fois.
+     */
+    if (!window.matchMedia("(min-width: 640px)").matches) return;
+
+    let vivant = true;
+    let adresse: string | null = null;
+    void (async () => {
+      try {
+        const reponse = await fetch(pdfHref, { credentials: "include" });
+        const type = reponse.headers.get("content-type") ?? "";
+        if (!reponse.ok || !type.includes("application/pdf")) throw new Error(String(reponse.status));
+        const blob = await reponse.blob();
+        if (!vivant) return;
+        adresse = URL.createObjectURL(blob);
+        setSource(adresse);
+      } catch {
+        if (vivant) setEchec(true);
+      }
+    })();
+
+    return () => {
+      vivant = false;
+      if (adresse) URL.revokeObjectURL(adresse);
+    };
+  }, [pdfHref]);
+
+  const adresseLecteur = source ?? (echec ? pdfHref : null);
 
   return (
     <div className="flex h-[calc(100dvh-4.1rem)] flex-col bg-surface-alt">
@@ -59,16 +99,27 @@ export function DossierViewer({
         </div>
       </header>
 
+      {/*
+        Le message n'a de sens que là où le dossier s'affiche dans la page. Sur
+        téléphone, le bouton plus bas ouvre le lecteur du système, et il n'y a
+        rien à préparer.
+      */}
       {!pret ? (
-        <p className="px-6 pt-6 text-center text-[14px] text-muted">Préparation du dossier, quelques secondes…</p>
+        <p className="hidden px-6 pt-6 text-center text-[14px] text-muted sm:block">
+          Préparation du dossier, quelques secondes…
+        </p>
       ) : null}
 
-      <iframe
-        src={`${pdfHref}#navpanes=0&view=Fit`}
-        title={title}
-        onLoad={() => setPret(true)}
-        className="hidden w-full flex-1 border-0 sm:block"
-      />
+      {adresseLecteur ? (
+        <iframe
+          src={`${adresseLecteur}#navpanes=0&view=Fit`}
+          title={title}
+          onLoad={() => setPret(true)}
+          className="hidden w-full flex-1 border-0 sm:block"
+        />
+      ) : (
+        <div className="hidden flex-1 sm:block" />
+      )}
 
       {/* Sur téléphone, le lecteur PDF du système est plus confortable. */}
       <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 sm:hidden">
